@@ -83,7 +83,43 @@ export class Linter {
       return rule.create(ctx);
     });
 
-    if (/\.(ts|tsx|js|jsx)$/.test(filePath)) {
+    if (/\.svelte$/.test(filePath) || /\.vue$/.test(filePath)) {
+      const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/);
+      const styleMatch = text.match(/<style[^>]*>([\s\S]*?)<\/style>/);
+      const template = text
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/, '')
+        .trim();
+
+      const scriptContent = scriptMatch ? scriptMatch[1] : '';
+      const templateTsx = template
+        .replace(/class=/g, 'className=')
+        .replace(
+          filePath.endsWith('.svelte')
+            ? /style="padding: {([^}]+)}px"/g
+            : /:style="{([^}]+)}"/g,
+          (_, expr) => `style={{ ${expr.trim()} }}`,
+        );
+      const combined = `${scriptContent}\nfunction __render(){ return (${templateTsx}); }`;
+      const source = ts.createSourceFile(
+        filePath,
+        combined,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX,
+      );
+      const visit = (node: ts.Node) => {
+        for (const l of listeners) l.onNode?.(node);
+        ts.forEachChild(node, visit);
+      };
+      visit(source);
+      if (styleMatch) {
+        const decls = parseCSS(styleMatch[1]);
+        for (const decl of decls) {
+          for (const l of listeners) l.onCSSDeclaration?.(decl);
+        }
+      }
+    } else if (/\.(ts|tsx|js|jsx)$/.test(filePath)) {
       const source = ts.createSourceFile(
         filePath,
         text,
@@ -147,7 +183,7 @@ function walk(dir: string, cb: (file: string) => void) {
     const stat = fs.statSync(full);
     if (stat.isDirectory()) {
       walk(full, cb);
-    } else if (/\.(ts|tsx|js|jsx|css)$/.test(full)) {
+    } else if (/\.(ts|tsx|js|jsx|css|svelte|vue)$/.test(full)) {
       cb(full);
     }
   }
