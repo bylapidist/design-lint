@@ -31,5 +31,6 @@ Full documentation is available in the [docs](docs/usage.md) directory.
 - Prevent deprecated or raw HTML component usage
 - Pluggable rule and formatter architecture
 - JSON and SARIF output for CI
+- Auto-fix deprecated tokens and components
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.

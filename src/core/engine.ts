@@ -8,6 +8,7 @@ import type {
   LintMessage,
   DesignTokens,
   CSSDeclaration,
+  Fix,
 } from './types';
 import { builtInRules } from '../rules';
 
@@ -29,7 +30,7 @@ export class Linter {
     }
   }
 
-  async lintFiles(targets: string[]): Promise<LintResult[]> {
+  async lintFiles(targets: string[], fix = false): Promise<LintResult[]> {
     const files: string[] = [];
     for (const t of targets) {
       const full = path.resolve(t);
@@ -51,7 +52,15 @@ export class Linter {
     const results: LintResult[] = [];
     for (const filePath of filtered) {
       const text = fs.readFileSync(filePath, 'utf8');
-      results.push(await this.lintText(text, filePath));
+      let result = await this.lintText(text, filePath);
+      if (fix) {
+        const output = applyFixes(text, result.messages);
+        if (output !== text) {
+          fs.writeFileSync(filePath, output, 'utf8');
+          result = await this.lintText(output, filePath);
+        }
+      }
+      results.push(result);
     }
     return results;
   }
@@ -172,4 +181,17 @@ function parseCSS(text: string): CSSDeclaration[] {
     }
   }
   return decls;
+}
+
+function applyFixes(text: string, messages: LintMessage[]): string {
+  const fixes: Fix[] = messages
+    .filter((m): m is LintMessage & { fix: Fix } => !!m.fix)
+    .map((m) => m.fix);
+  if (fixes.length === 0) return text;
+  fixes.sort((a, b) => b.range[0] - a.range[0]);
+  for (const f of fixes) {
+    const [start, end] = f.range;
+    text = text.slice(0, start) + f.text + text.slice(end);
+  }
+  return text;
 }

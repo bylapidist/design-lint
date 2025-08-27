@@ -17,6 +17,7 @@ export interface LintMessage {
   severity: 'error' | 'warn';
   line: number;
   column: number;
+  fix?: Fix;
 }
 
 export interface LintResult {
@@ -49,4 +50,9 @@ export interface CSSDeclaration {
   value: string;
   line: number;
   column: number;
+}
+
+export interface Fix {
+  range: [number, number];
+  text: string;
 }

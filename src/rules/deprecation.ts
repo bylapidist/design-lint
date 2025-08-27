@@ -19,9 +19,16 @@ export const deprecationRule: RuleModule = {
             message: `Token ${node.text} is deprecated${repl ? `, use ${repl}` : ''}`,
             line: pos.line + 1,
             column: pos.character + 1,
+            fix: repl
+              ? { range: [node.getStart(), node.getEnd()], text: `'${repl}'` }
+              : undefined,
           });
         }
-        if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+        if (
+          ts.isJsxOpeningElement(node) ||
+          ts.isJsxSelfClosingElement(node) ||
+          ts.isJsxClosingElement(node)
+        ) {
           const tag = node.tagName.getText();
           if (names.has(tag)) {
             const repl = deprecations[tag].replacement;
@@ -32,6 +39,12 @@ export const deprecationRule: RuleModule = {
               message: `Component ${tag} is deprecated${repl ? `, use ${repl}` : ''}`,
               line: pos.line + 1,
               column: pos.character + 1,
+              fix: repl
+                ? {
+                    range: [node.tagName.getStart(), node.tagName.getEnd()],
+                    text: repl,
+                  }
+                : undefined,
             });
           }
         }

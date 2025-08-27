@@ -13,7 +13,7 @@ Options:
   --format <name>     Output format (stylish, json, sarif)
   --output <file>     Write report to file
   --quiet             Suppress stdout output
-  --fix               Automatically fix problems (stub)
+  --fix               Automatically fix problems
   --help              Show this message`;
   // eslint-disable-next-line no-console
   console.log(msg);
@@ -41,7 +41,7 @@ export async function run(argv = process.argv.slice(2)) {
   const targets = positionals.length ? positionals : ['.'];
   const config = loadConfig(process.cwd(), values.config);
   const linter = new Linter(config);
-  const results = await linter.lintFiles(targets);
+  const results = await linter.lintFiles(targets, values.fix);
   const formatter = getFormatter(values.format as string);
   const output = formatter(results);
 
@@ -50,10 +50,6 @@ export async function run(argv = process.argv.slice(2)) {
   } else if (!values.quiet) {
     // eslint-disable-next-line no-console
     console.log(output);
-  }
-
-  if (values.fix) {
-    // fixing not yet implemented
   }
 
   const hasErrors = results.some((r) =>

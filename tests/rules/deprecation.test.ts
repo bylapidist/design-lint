@@ -10,4 +10,8 @@ test('design-system/deprecation flags deprecated token', async () => {
   const res = await linter.lintText('const a = "old";', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.ok(res.messages[0].message.includes('new'));
+  assert.deepEqual(res.messages[0].fix, {
+    range: [10, 15],
+    text: `'new'`,
+  });
 });
