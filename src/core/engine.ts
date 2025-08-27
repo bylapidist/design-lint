@@ -1,14 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import fg from 'fast-glob';
 import ts from 'typescript';
-import safeParser from 'postcss-safe-parser';
 import type {
   LintResult,
   RuleModule,
   RuleContext,
   LintMessage,
   DesignTokens,
+  CSSDeclaration,
 } from './types';
 import { builtInRules } from '../rules';
 
@@ -30,19 +29,27 @@ export class Linter {
     }
   }
 
-  async lintFiles(patterns: string[]): Promise<LintResult[]> {
-    const expanded = patterns.map((p) => {
-      if (fs.existsSync(p) && fs.statSync(p).isDirectory()) {
-        return path.join(p, '**/*.{ts,tsx,js,jsx,css}');
+  async lintFiles(targets: string[]): Promise<LintResult[]> {
+    const files: string[] = [];
+    for (const t of targets) {
+      const full = path.resolve(t);
+      if (!fs.existsSync(full)) continue;
+      const stat = fs.statSync(full);
+      if (stat.isDirectory()) {
+        walk(full, (p) => files.push(p));
+      } else {
+        files.push(full);
       }
-      return p;
-    });
-    const entries = await fg(expanded, {
-      ignore: this.config.ignoreFiles,
-      dot: false,
-    });
+    }
+    const filtered = files.filter(
+      (f) =>
+        !isIgnored(
+          path.relative(process.cwd(), f),
+          this.config.ignoreFiles || [],
+        ),
+    );
     const results: LintResult[] = [];
-    for (const filePath of entries) {
+    for (const filePath of filtered) {
       const text = fs.readFileSync(filePath, 'utf8');
       results.push(await this.lintText(text, filePath));
     }
@@ -80,10 +87,10 @@ export class Linter {
       };
       visit(source);
     } else if (/\.css$/.test(filePath)) {
-      const root = safeParser(text);
-      root.walkDecls((decl) => {
+      const decls = parseCSS(text);
+      for (const decl of decls) {
         for (const l of listeners) l.onCSSDeclaration?.(decl);
-      });
+      }
     }
 
     return { filePath, messages };
@@ -123,4 +130,46 @@ export class Linter {
     if (value === 1 || value === 'warn') return 'warn';
     return undefined;
   }
+}
+
+function walk(dir: string, cb: (file: string) => void) {
+  for (const entry of fs.readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) {
+      walk(full, cb);
+    } else if (/\.(ts|tsx|js|jsx|css)$/.test(full)) {
+      cb(full);
+    }
+  }
+}
+
+function isIgnored(relPath: string, patterns: string[]): boolean {
+  return patterns.some((p) => globToRegExp(p).test(relPath));
+}
+
+function globToRegExp(pattern: string): RegExp {
+  let regex = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+  regex = regex.replace(/\*\*/g, '.*');
+  regex = regex.replace(/\*/g, '[^/]*');
+  return new RegExp(`^${regex}$`);
+}
+
+function parseCSS(text: string): CSSDeclaration[] {
+  const decls: CSSDeclaration[] = [];
+  const lines = text.split(/\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const regex = /([^:{}]+):\s*([^;]+);/g;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(line))) {
+      decls.push({
+        prop: match[1].trim(),
+        value: match[2].trim(),
+        line: i + 1,
+        column: match.index + 1,
+      });
+    }
+  }
+  return decls;
 }

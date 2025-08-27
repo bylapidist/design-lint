@@ -1,4 +1,3 @@
-import type { Declaration } from 'postcss';
 import type ts from 'typescript';
 
 export interface DesignTokens {
@@ -42,5 +41,12 @@ export interface RuleModule {
 
 export interface RuleListener {
   onNode?: (node: ts.Node) => void;
-  onCSSDeclaration?: (decl: Declaration) => void;
+  onCSSDeclaration?: (decl: CSSDeclaration) => void;
+}
+
+export interface CSSDeclaration {
+  prop: string;
+  value: string;
+  line: number;
+  column: number;
 }

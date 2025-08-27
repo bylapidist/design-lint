@@ -1,36 +1,59 @@
 #!/usr/bin/env node
 import fs from 'fs';
-import yargs from 'yargs';
+import { parseArgs } from 'node:util';
 import { loadConfig } from '../config/loader';
 import { Linter } from '../core/engine';
 import { getFormatter } from '../formatters';
 
-export async function run(argv = process.argv.slice(2)) {
-  const args = await yargs(argv)
-    .usage('design-lint [files...]')
-    .option('config', { type: 'string', describe: 'Path to config file' })
-    .option('format', {
-      choices: ['stylish', 'json', 'sarif'],
-      default: 'stylish',
-    })
-    .option('output', { type: 'string' })
-    .option('quiet', { type: 'boolean', default: false })
-    .option('fix', { type: 'boolean', default: false })
-    .help()
-    .parseAsync();
+function help() {
+  const msg = `design-lint [files...]
 
-  const targets = args._.length ? (args._ as string[]) : ['.'];
-  const config = loadConfig(process.cwd(), args.config);
+Options:
+  --config <path>     Path to configuration file
+  --format <name>     Output format (stylish, json, sarif)
+  --output <file>     Write report to file
+  --quiet             Suppress stdout output
+  --fix               Automatically fix problems (stub)
+  --help              Show this message`;
+  // eslint-disable-next-line no-console
+  console.log(msg);
+}
+
+export async function run(argv = process.argv.slice(2)) {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    options: {
+      config: { type: 'string' },
+      format: { type: 'string', default: 'stylish' },
+      output: { type: 'string' },
+      quiet: { type: 'boolean', default: false },
+      fix: { type: 'boolean', default: false },
+      help: { type: 'boolean', default: false },
+    },
+    allowPositionals: true,
+  });
+
+  if (values.help) {
+    help();
+    return;
+  }
+
+  const targets = positionals.length ? positionals : ['.'];
+  const config = loadConfig(process.cwd(), values.config);
   const linter = new Linter(config);
   const results = await linter.lintFiles(targets);
-  const formatter = getFormatter(args.format);
+  const formatter = getFormatter(values.format as string);
   const output = formatter(results);
 
-  if (args.output) {
-    fs.writeFileSync(args.output, output, 'utf8');
-  } else if (!args.quiet) {
+  if (values.output) {
+    fs.writeFileSync(values.output as string, output, 'utf8');
+  } else if (!values.quiet) {
     // eslint-disable-next-line no-console
     console.log(output);
+  }
+
+  if (values.fix) {
+    // fixing not yet implemented
   }
 
   const hasErrors = results.some((r) =>

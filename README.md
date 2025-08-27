@@ -8,6 +8,22 @@
 npx design-lint .
 ```
 
+Configure via `designlint.config.json`:
+
+```json
+{
+  "tokens": {
+    "colors": { "primary": "#ff0000" },
+    "spacing": { "sm": 4 },
+    "typography": {
+      "fontSizes": { "base": 16 },
+      "fonts": { "sans": "Inter, sans-serif" }
+    }
+  },
+  "rules": { "design-token/colors": "error" }
+}
+```
+
 Full documentation is available in the [docs](docs/usage.md) directory.
 
 ## Features

@@ -6,11 +6,13 @@ export const spacingRule: RuleModule = {
   meta: { description: 'enforce spacing scale' },
   create(context) {
     const allowed = new Set(Object.values(context.tokens?.spacing || {}));
+    const base = (context.options as { base?: number } | undefined)?.base ?? 4;
+    const isAllowed = (n: number) => allowed.has(n) || n % base === 0;
     return {
       onNode(node) {
         if (ts.isNumericLiteral(node)) {
           const value = Number(node.text);
-          if (!allowed.has(value)) {
+          if (!isAllowed(value)) {
             const pos = node
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
@@ -23,12 +25,12 @@ export const spacingRule: RuleModule = {
         }
       },
       onCSSDeclaration(decl) {
-        const num = parseInt(decl.value, 10);
-        if (!isNaN(num) && !allowed.has(num)) {
+        const num = parseFloat(decl.value);
+        if (!isNaN(num) && !isAllowed(num)) {
           context.report({
             message: `Unexpected spacing ${decl.value}`,
-            line: decl.source?.start?.line || 0,
-            column: decl.source?.start?.column || 0,
+            line: decl.line,
+            column: decl.column,
           });
         }
       },

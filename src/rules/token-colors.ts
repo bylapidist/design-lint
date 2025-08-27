@@ -31,8 +31,8 @@ export const colorsRule: RuleModule = {
           if (!allowed.has(value)) {
             context.report({
               message: `Unexpected color ${value}`,
-              line: decl.source?.start?.line || 0,
-              column: decl.source?.start?.column || 0,
+              line: decl.line,
+              column: decl.column,
             });
           }
         }

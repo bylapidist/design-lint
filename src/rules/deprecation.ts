@@ -41,8 +41,8 @@ export const deprecationRule: RuleModule = {
           const repl = deprecations[decl.value].replacement;
           context.report({
             message: `Token ${decl.value} is deprecated${repl ? `, use ${repl}` : ''}`,
-            line: decl.source?.start?.line || 0,
-            column: decl.source?.start?.column || 0,
+            line: decl.line,
+            column: decl.column,
           });
         }
       },

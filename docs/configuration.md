@@ -1,21 +1,21 @@
 # Configuration
 
-Create a `designlint.config.js` file in your project root:
+Create a `designlint.config.json` file in your project root:
 
-```js
-module.exports = {
-  tokens: {
-    colors: { primary: '#ff0000' },
-    spacing: { sm: 4, md: 8 },
-    typography: {
-      fontSizes: { base: 16 },
-      fonts: { sans: 'Inter, sans-serif' }
+```json
+{
+  "tokens": {
+    "colors": { "primary": "#ff0000" },
+    "spacing": { "sm": 4, "md": 8 },
+    "typography": {
+      "fontSizes": { "base": 16 },
+      "fonts": { "sans": "Inter, sans-serif" }
     }
   },
-  rules: {
-    'design-token/colors': 'error'
+  "rules": {
+    "design-token/colors": "error"
   }
-};
+}
 ```
 
 ## Fields

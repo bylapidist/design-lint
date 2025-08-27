@@ -1,25 +1,25 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import { run } from '../src/cli';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
 
-describe('CLI', () => {
-  it('exits with code 1 on error', async () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dl-'));
-    fs.writeFileSync(
-      path.join(dir, 'designlint.config.js'),
-      'module.exports={tokens:{colors:{primary:"#fff"}},rules:{"design-token/colors":"error"}};',
-    );
-    fs.writeFileSync(path.join(dir, 'a.ts'), 'const c = "#000000";');
-    const logs: string[] = [];
-    const orig = console.log;
-    console.log = (m: unknown) => {
-      logs.push(String(m));
-    };
-    await run([dir]);
-    console.log = orig;
-    expect(process.exitCode).toBe(1);
-    expect(logs.join('\n')).toContain('Unexpected color');
-    process.exitCode = 0;
-  });
+test('CLI exits non-zero on lint errors', () => {
+  const fixture = path.join(__dirname, 'fixtures', 'sample');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const result = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      'ts-node/register',
+      cli,
+      path.join(fixture, 'bad.ts'),
+      '--config',
+      path.join(fixture, 'designlint.config.json'),
+      '--format',
+      'json',
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(result.status, 0);
+  assert.ok(result.stdout.includes('design-token/colors'));
 });

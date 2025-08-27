@@ -17,8 +17,8 @@ export const typographyRule: RuleModule = {
           if (!isNaN(num) && !sizes.has(num)) {
             context.report({
               message: `Unexpected font size ${decl.value}`,
-              line: decl.source?.start?.line || 0,
-              column: decl.source?.start?.column || 0,
+              line: decl.line,
+              column: decl.column,
             });
           }
         }
@@ -26,8 +26,8 @@ export const typographyRule: RuleModule = {
           if (!fonts.has(decl.value)) {
             context.report({
               message: `Unexpected font family ${decl.value}`,
-              line: decl.source?.start?.line || 0,
-              column: decl.source?.start?.column || 0,
+              line: decl.line,
+              column: decl.column,
             });
           }
         }
