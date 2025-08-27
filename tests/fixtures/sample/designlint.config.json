@@ -1,0 +1,4 @@
+{
+  "tokens": { "colors": { "primary": "#000000" } },
+  "rules": { "design-token/colors": "error" }
+}

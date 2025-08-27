@@ -1,0 +1,36 @@
+{
+  "name": "design-lint",
+  "version": "0.1.0",
+  "description": "Design system linter",
+  "main": "dist/index.js",
+  "bin": {
+    "design-lint": "dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
+    "test": "node --require ts-node/register --test",
+    "changeset": "changeset"
+  },
+  "keywords": [
+    "design",
+    "linter",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.2",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "eslint": "^8.56.0",
+    "@changesets/cli": "^2.27.1",
+    "prettier": "^3.0.0",
+    "ts-node": "^10.9.2"
+  }
+}
