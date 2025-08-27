@@ -16,6 +16,8 @@ export function loadConfig(cwd: string, configPath?: string): Config {
 }
 
 function findConfig(cwd: string): string | undefined {
+  const js = path.join(cwd, 'designlint.config.js');
+  if (fs.existsSync(js)) return js;
   const json = path.join(cwd, 'designlint.config.json');
   if (fs.existsSync(json)) return json;
   return undefined;

@@ -8,7 +8,7 @@ npx design-lint [files...]
 
 ## Options
 
-- `--config <path>`: Path to a `designlint.config.json` file.
+- `--config <path>`: Path to a `designlint.config.js` or `.json` file.
 - `--format <stylish|json|sarif>`: Output format (default `stylish`).
 - `--output <file>`: Write report to a file instead of stdout.
 - `--quiet`: Suppress output and rely on exit code.
