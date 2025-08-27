@@ -13,7 +13,7 @@ const sample: LintResult[] = [
 ];
 
 test('stylish', () => {
-  expect(stylish(sample)).toMatchSnapshot();
+  expect(stylish(sample, false)).toMatchSnapshot();
 });
 
 test('json', () => {

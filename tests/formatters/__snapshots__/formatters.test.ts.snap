@@ -56,7 +56,7 @@ exports[`sarif 1`] = `
 `;
 
 exports[`stylish 1`] = `
-"[4mfile.ts[24m
-  1:1  [31merror[39m  msg  rule
+"file.ts
+  1:1  error  msg  rule
 "
 `;
