@@ -1,0 +1,62 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`json 1`] = `
+"[
+  {
+    "filePath": "file.ts",
+    "messages": [
+      {
+        "ruleId": "rule",
+        "message": "msg",
+        "severity": "error",
+        "line": 1,
+        "column": 1
+      }
+    ]
+  }
+]"
+`;
+
+exports[`sarif 1`] = `
+"{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "design-lint",
+          "informationUri": "https://github.com/"
+        }
+      },
+      "results": [
+        {
+          "ruleId": "rule",
+          "message": {
+            "text": "msg"
+          },
+          "level": "error",
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file.ts"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}"
+`;
+
+exports[`stylish 1`] = `
+"[4mfile.ts[24m
+  1:1  [31merror[39m  msg  rule
+"
+`;

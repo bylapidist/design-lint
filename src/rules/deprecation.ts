@@ -1,0 +1,51 @@
+import ts from 'typescript';
+import type { RuleModule } from '../core/types';
+
+export const deprecationRule: RuleModule = {
+  name: 'design-system/deprecation',
+  meta: { description: 'flag deprecated tokens or components' },
+  create(context) {
+    const deprecations: Record<string, { replacement?: string }> =
+      context.tokens?.deprecations || {};
+    const names = new Set(Object.keys(deprecations));
+    return {
+      onNode(node) {
+        if (ts.isStringLiteral(node) && names.has(node.text)) {
+          const repl = deprecations[node.text].replacement;
+          const pos = node
+            .getSourceFile()
+            .getLineAndCharacterOfPosition(node.getStart());
+          context.report({
+            message: `Token ${node.text} is deprecated${repl ? `, use ${repl}` : ''}`,
+            line: pos.line + 1,
+            column: pos.character + 1,
+          });
+        }
+        if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+          const tag = node.tagName.getText();
+          if (names.has(tag)) {
+            const repl = deprecations[tag].replacement;
+            const pos = node
+              .getSourceFile()
+              .getLineAndCharacterOfPosition(node.getStart());
+            context.report({
+              message: `Component ${tag} is deprecated${repl ? `, use ${repl}` : ''}`,
+              line: pos.line + 1,
+              column: pos.character + 1,
+            });
+          }
+        }
+      },
+      onCSSDeclaration(decl) {
+        if (names.has(decl.value)) {
+          const repl = deprecations[decl.value].replacement;
+          context.report({
+            message: `Token ${decl.value} is deprecated${repl ? `, use ${repl}` : ''}`,
+            line: decl.source?.start?.line || 0,
+            column: decl.source?.start?.column || 0,
+          });
+        }
+      },
+    };
+  },
+};
