@@ -4,6 +4,7 @@ import { parseArgs } from 'node:util';
 import path from 'path';
 import { loadConfig } from '../config/loader';
 import { Linter } from '../core/engine';
+import type { LintResult } from '../core/types';
 import { getFormatter } from '../formatters';
 import chalk from 'chalk';
 
@@ -49,6 +50,7 @@ Options:
   --report <file>     Write JSON results to file
   --quiet             Suppress stdout output
   --no-color          Disable colored output
+  --watch             Watch files and re-lint on changes
   --fix               Automatically fix problems
   --version           Show version number
   --help              Show this message`;
@@ -68,6 +70,7 @@ export async function run(argv = process.argv.slice(2)) {
         report: { type: 'string' },
         quiet: { type: 'boolean', default: false },
         fix: { type: 'boolean', default: false },
+        watch: { type: 'boolean', default: false },
         version: { type: 'boolean', default: false },
         help: { type: 'boolean', default: false },
         'no-color': { type: 'boolean', default: false },
@@ -92,7 +95,7 @@ export async function run(argv = process.argv.slice(2)) {
       return;
     }
 
-    let formatter;
+    let formatter: ReturnType<typeof getFormatter>;
     try {
       formatter = getFormatter(values.format as string);
     } catch (err) {
@@ -106,28 +109,47 @@ export async function run(argv = process.argv.slice(2)) {
     const targets = positionals.length ? positionals : ['.'];
     const config = loadConfig(process.cwd(), values.config);
     const linter = new Linter(config);
-    const results = await linter.lintFiles(targets, values.fix);
-    const output = formatter(results, useColor);
+    const cache = new Map<string, { mtime: number; result: LintResult }>();
 
-    if (values.output) {
-      fs.writeFileSync(values.output as string, output, 'utf8');
-    } else if (!values.quiet) {
-      // eslint-disable-next-line no-console
-      console.log(output);
-    }
+    const runLint = async (paths: string[]) => {
+      const results = await linter.lintFiles(paths, values.fix, cache);
+      const output = formatter(results, useColor);
 
-    if (values.report) {
-      fs.writeFileSync(
-        values.report as string,
-        JSON.stringify(results, null, 2),
-        'utf8',
+      if (values.output) {
+        fs.writeFileSync(values.output as string, output, 'utf8');
+      } else if (!values.quiet) {
+        // eslint-disable-next-line no-console
+        console.log(output);
+      }
+
+      if (values.report) {
+        fs.writeFileSync(
+          values.report as string,
+          JSON.stringify(results, null, 2),
+          'utf8',
+        );
+      }
+
+      const hasErrors = results.some((r) =>
+        r.messages.some((m) => m.severity === 'error'),
       );
-    }
+      process.exitCode = hasErrors ? 1 : 0;
+    };
 
-    const hasErrors = results.some((r) =>
-      r.messages.some((m) => m.severity === 'error'),
-    );
-    if (hasErrors) process.exitCode = 1;
+    await runLint(targets);
+
+    if (values.watch) {
+      // eslint-disable-next-line no-console
+      console.log('Watching for changes...');
+      for (const t of targets) {
+        const full = path.resolve(t);
+        fs.watch(full, { recursive: true }, async (_event, filename) => {
+          if (!filename) return;
+          const changed = path.resolve(full, filename);
+          await runLint([changed]);
+        });
+      }
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // eslint-disable-next-line no-console

@@ -5,6 +5,7 @@ import postcss from 'postcss';
 import { createRequire } from 'module';
 import fg from 'fast-glob';
 import ignore from 'ignore';
+import { performance } from 'node:perf_hooks';
 import type {
   LintResult,
   RuleModule,
@@ -117,7 +118,11 @@ export class Linter {
     }
   }
 
-  async lintFiles(targets: string[], fix = false): Promise<LintResult[]> {
+  async lintFiles(
+    targets: string[],
+    fix = false,
+    cache?: Map<string, { mtime: number; result: LintResult }>,
+  ): Promise<LintResult[]> {
     await this.pluginLoad;
     const ignorePatterns = [...defaultIgnore];
     const ignoreFile = path.join(process.cwd(), '.designlintignore');
@@ -139,6 +144,7 @@ export class Linter {
     ig.add(normalizedPatterns);
 
     const files: string[] = [];
+    const scanStart = performance.now();
     for (const t of targets) {
       const full = path.resolve(t);
       const rel = path.relative(process.cwd(), full).replace(/\\/g, '/');
@@ -160,20 +166,43 @@ export class Linter {
         // skip missing files
       }
     }
-
-    const results: LintResult[] = [];
-    for (const filePath of files) {
-      const text = await fs.readFile(filePath, 'utf8');
-      let result = await this.lintText(text, filePath);
-      if (fix) {
-        const output = applyFixes(text, result.messages);
-        if (output !== text) {
-          await fs.writeFile(filePath, output, 'utf8');
-          result = await this.lintText(output, filePath);
-        }
-      }
-      results.push(result);
+    const scanTime = performance.now() - scanStart;
+    if (process.env.DESIGNLINT_PROFILE) {
+      // eslint-disable-next-line no-console
+      console.log(`Scanned ${files.length} files in ${scanTime.toFixed(2)}ms`);
     }
+
+    if (cache) {
+      for (const key of Array.from(cache.keys())) {
+        if (!files.includes(key)) cache.delete(key);
+      }
+    }
+
+    const tasks = files.map(async (filePath) => {
+      try {
+        const stat = await fs.stat(filePath);
+        const cached = cache?.get(filePath);
+        if (cached && cached.mtime === stat.mtimeMs && !fix) {
+          return cached.result;
+        }
+        const text = await fs.readFile(filePath, 'utf8');
+        let result = await this.lintText(text, filePath);
+        if (fix) {
+          const output = applyFixes(text, result.messages);
+          if (output !== text) {
+            await fs.writeFile(filePath, output, 'utf8');
+            result = await this.lintText(output, filePath);
+          }
+        }
+        cache?.set(filePath, { mtime: stat.mtimeMs, result });
+        return result;
+      } catch {
+        cache?.delete(filePath);
+        return { filePath, messages: [] } as LintResult;
+      }
+    });
+
+    const results = await Promise.all(tasks);
     return results;
   }
 
