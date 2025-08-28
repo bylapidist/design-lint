@@ -76,6 +76,8 @@ module.exports = {
 If a plugin cannot be loaded or exports the wrong shape, `design-lint` will
 throw an error during initialization.
 
+See the [Plugin guide](docs/plugins.md) for a step-by-step tutorial on writing and publishing custom rules.
+
 ## Features
 
 - Enforce color, spacing, and typography tokens
