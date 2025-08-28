@@ -11,6 +11,7 @@ Plugins let you extend `@lapidist/design-lint` with custom rules distributed as 
    npm install @lapidist/design-lint
    ```
 2. **Author a rule**
+
    ```ts
    // rules/no-hardcoded-colors.ts
    import type { RuleModule } from '@lapidist/design-lint';
@@ -34,7 +35,9 @@ Plugins let you extend `@lapidist/design-lint` with custom rules distributed as 
      },
    };
    ```
-   This mirrors the built-in [`token-colors` rule](../src/rules/token-colors.ts) which checks CSS and string literals for non-token colours.
+
+   This mirrors the built-in [`token-colors` rule](../src/rules/token-colors.ts) which checks CSS and string literals for non-token colors.
+
 3. **Export the plugin**
    ```ts
    // index.ts
@@ -57,13 +60,14 @@ Plugins let you extend `@lapidist/design-lint` with custom rules distributed as 
 
 ## Troubleshooting
 
-- *Plugin not found*: ensure the package is installed and referenced in the `plugins` array.
-- *Invalid plugin shape*: the default export must be an object like `{ rules: RuleModule[] }`.
-- *Rule never runs*: confirm the rule `name` matches the key used in the configuration.
+- _Plugin not found_: ensure the package is installed and referenced in the `plugins` array.
+- _Invalid plugin shape_: the default export must be an object like `{ rules: RuleModule[] }`.
+- _Rule never runs_: confirm the rule `name` matches the key used in the configuration.
 
 ## API Reference
 
 ### RuleModule
+
 ```ts
 interface RuleModule {
   name: string;
@@ -73,6 +77,7 @@ interface RuleModule {
 ```
 
 ### RuleContext
+
 ```ts
 interface RuleContext {
   report(msg): void;
@@ -83,6 +88,7 @@ interface RuleContext {
 ```
 
 ### RuleListener
+
 ```ts
 interface RuleListener {
   onNode?(node: ts.Node): void;
@@ -91,6 +97,7 @@ interface RuleListener {
 ```
 
 ### PluginModule
+
 ```ts
 interface PluginModule {
   rules: RuleModule[];
@@ -98,4 +105,3 @@ interface PluginModule {
 ```
 
 For more examples, inspect the built-in rules such as [`component-usage`](../src/rules/component-usage.ts).
-
