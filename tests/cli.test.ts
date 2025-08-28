@@ -5,6 +5,13 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 
+const tsNodeRegister = path.join(
+  __dirname,
+  '..',
+  'node_modules',
+  'ts-node/register',
+);
+
 test('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
@@ -28,11 +35,9 @@ test('CLI exits non-zero on lint errors', () => {
 
 test('CLI --fix applies fixes', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = "old";');
-  const config = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
-    config,
+    path.join(dir, 'designlint.config.json'),
     JSON.stringify({
       tokens: { deprecations: { old: { replacement: 'new' } } },
       rules: { 'design-system/deprecation': 'error' },
@@ -41,25 +46,38 @@ test('CLI --fix applies fixes', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
-    ['--require', 'ts-node/register', cli, file, '--config', config, '--fix'],
-    { encoding: 'utf8' },
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--fix',
+    ],
+    { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
-  const out = fs.readFileSync(file, 'utf8');
+  const out = fs.readFileSync(path.join(dir, 'file.ts'), 'utf8');
   assert.equal(out, "const a = 'new';");
 });
 
 test('CLI surfaces config load errors', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
-  const badConfig = path.join(dir, 'designlint.config.json');
-  fs.writeFileSync(badConfig, '{ invalid');
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, '');
+  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{ invalid');
+  fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
-    ['--require', 'ts-node/register', cli, file, '--config', badConfig],
-    { encoding: 'utf8' },
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+    ],
+    { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
   assert.ok(res.stderr.trim().length > 0);
@@ -67,17 +85,77 @@ test('CLI surfaces config load errors', () => {
 
 test('CLI surfaces output write errors', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = 1;');
-  const out = path.join(dir, 'no', 'report.txt');
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
-    ['--require', 'ts-node/register', cli, file, '--output', out],
-    { encoding: 'utf8' },
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--output',
+      path.join('no', 'report.txt'),
+    ],
+    { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
   assert.ok(res.stderr.includes('ENOENT'));
+});
+
+test('CLI writes report to file with --output', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--format',
+      'json',
+      '--output',
+      'report.json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  assert.equal(res.stdout.trim(), '');
+  const report = fs.readFileSync(path.join(dir, 'report.json'), 'utf8');
+  assert.ok(report.includes('design-system/deprecation'));
+});
+
+test('CLI --quiet suppresses stdout output', () => {
+  const fixture = path.join(__dirname, 'fixtures', 'sample');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      path.join(fixture, 'bad.ts'),
+      '--config',
+      path.join(fixture, 'designlint.config.json'),
+      '--quiet',
+      '--format',
+      'json',
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(res.status, 0);
+  assert.equal(res.stdout.trim(), '');
 });
 
 test('CLI reports unknown formatter', () => {
@@ -87,7 +165,7 @@ test('CLI reports unknown formatter', () => {
     process.execPath,
     [
       '--require',
-      'ts-node/register',
+      tsNodeRegister,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -103,12 +181,10 @@ test('CLI reports unknown formatter', () => {
 
 test('CLI loads external plugin rules', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = 1;');
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   const plugin = path.join(__dirname, 'fixtures', 'test-plugin.ts');
-  const config = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
-    config,
+    path.join(dir, 'designlint.config.json'),
     JSON.stringify({ plugins: [plugin], rules: { 'plugin/test': 'error' } }),
   );
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
@@ -116,15 +192,15 @@ test('CLI loads external plugin rules', () => {
     process.execPath,
     [
       '--require',
-      'ts-node/register',
+      tsNodeRegister,
       cli,
-      file,
+      'file.ts',
       '--config',
-      config,
+      'designlint.config.json',
       '--format',
       'json',
     ],
-    { encoding: 'utf8' },
+    { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
   assert.ok(res.stdout.includes('plugin/test'));
@@ -132,16 +208,24 @@ test('CLI loads external plugin rules', () => {
 
 test('CLI reports plugin load errors', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, '');
+  fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const badPlugin = path.join(dir, 'missing-plugin.js');
-  const config = path.join(dir, 'designlint.config.json');
-  fs.writeFileSync(config, JSON.stringify({ plugins: [badPlugin] }));
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ plugins: [badPlugin] }),
+  );
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
-    ['--require', 'ts-node/register', cli, file, '--config', config],
-    { encoding: 'utf8' },
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+    ],
+    { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
   assert.ok(res.stderr.includes('Failed to load plugin'));
@@ -158,28 +242,28 @@ test('CLI ignores common directories by default', () => {
   );
   fs.mkdirSync(path.join(dir, 'dist'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'dist', 'file.ts'), 'const a = "old";');
-  const config = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
-    config,
+    path.join(dir, 'designlint.config.json'),
     JSON.stringify({
       tokens: { deprecations: { old: { replacement: 'new' } } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
+  const parent = path.dirname(dir);
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
       '--require',
-      'ts-node/register',
+      tsNodeRegister,
       cli,
-      dir,
+      path.basename(dir),
       '--config',
-      config,
+      path.join(path.basename(dir), 'designlint.config.json'),
       '--format',
       'json',
     ],
-    { encoding: 'utf8' },
+    { encoding: 'utf8', cwd: parent },
   );
   interface Result {
     filePath: string;
@@ -199,9 +283,8 @@ test('.designlintignore can unignore paths via CLI', () => {
     'const a = "old";',
   );
   fs.writeFileSync(path.join(dir, '.designlintignore'), '!node_modules/**');
-  const config = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
-    config,
+    path.join(dir, 'designlint.config.json'),
     JSON.stringify({
       tokens: { deprecations: { old: { replacement: 'new' } } },
       rules: { 'design-system/deprecation': 'error' },
@@ -212,11 +295,12 @@ test('.designlintignore can unignore paths via CLI', () => {
     process.execPath,
     [
       '--require',
-      'ts-node/register',
+      tsNodeRegister,
       cli,
-      dir,
+      'src',
+      'node_modules',
       '--config',
-      config,
+      'designlint.config.json',
       '--format',
       'json',
     ],
@@ -246,10 +330,9 @@ test('CLI skips directories listed in .designlintignore', () => {
     path.join(dir, 'ignored', 'pkg', 'index.ts'),
     'const a = "old";',
   );
-  fs.writeFileSync(path.join(dir, '.designlintignore'), 'ignored/**');
-  const config = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(path.join(dir, '.designlintignore'), 'ignored');
   fs.writeFileSync(
-    config,
+    path.join(dir, 'designlint.config.json'),
     JSON.stringify({
       tokens: { deprecations: { old: { replacement: 'new' } } },
       rules: { 'design-system/deprecation': 'error' },
@@ -260,15 +343,16 @@ test('CLI skips directories listed in .designlintignore', () => {
     process.execPath,
     [
       '--require',
-      'ts-node/register',
+      tsNodeRegister,
       cli,
-      dir,
+      'src',
+      'ignored',
       '--config',
-      config,
+      'designlint.config.json',
       '--format',
       'json',
     ],
-    { encoding: 'utf8' },
+    { encoding: 'utf8', cwd: dir },
   );
   interface Result {
     filePath: string;

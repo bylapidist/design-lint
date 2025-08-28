@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import type { PluginModule } from '../../src/core/types';
+import type { PluginModule } from '../../../src/core/types';
 
 const plugin: PluginModule = {
   rules: [

@@ -34,3 +34,21 @@ test('loads ESM plugin modules', async () => {
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'plugin/esm');
 });
+
+test('throws for invalid plugin modules', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'invalid-plugin.ts');
+  const linter = new Linter({ plugins: [pluginPath] });
+  await assert.rejects(
+    () => linter.lintText('const a = 1;', 'file.ts'),
+    /Invalid plugin/,
+  );
+});
+
+test('throws when plugin module missing', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'missing-plugin.js');
+  const linter = new Linter({ plugins: [pluginPath] });
+  await assert.rejects(
+    () => linter.lintText('const a = 1;', 'file.ts'),
+    /Failed to load plugin/,
+  );
+});
