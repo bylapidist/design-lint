@@ -384,6 +384,7 @@ export class Linter {
   }
 
   private normalizeSeverity(value: unknown): 'error' | 'warn' | undefined {
+    if (value === 0 || value === 'off') return undefined;
     if (value === 2 || value === 'error') return 'error';
     if (value === 1 || value === 'warn') return 'warn';
     return undefined;

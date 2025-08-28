@@ -4,8 +4,10 @@ import type { Config } from '../core/engine';
 const severitySchema = z.union([
   z.literal('error'),
   z.literal('warn'),
+  z.literal('off'),
   z.literal(2),
   z.literal(1),
+  z.literal(0),
 ]);
 
 const ruleSettingSchema = z.union([

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader';
+import { Linter } from '../src/core/engine';
 
 test('finds config in parent directories', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
@@ -83,4 +84,20 @@ test('loads config when package.json type module', async () => {
   );
   const loaded = await loadConfig(tmp);
   assert.equal(loaded.tokens?.colors?.primary, '#000');
+});
+
+test("rule configured as 'off' is ignored", async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: { colors: { primary: '#000' } },
+      rules: { 'design-token/colors': 'off' },
+    }),
+  );
+  const config = await loadConfig(tmp);
+  const linter = new Linter(config);
+  const res = await linter.lintText('const c = "#fff";', 'file.ts');
+  assert.equal(res.messages.length, 0);
 });
