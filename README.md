@@ -26,6 +26,20 @@ errors are found.
 npx design-lint src
 ```
 
+Generate a starter configuration file with:
+
+```bash
+npx design-lint init
+```
+
+This creates a `designlint.config.json` in the current directory.
+
+Check the CLI version with:
+
+```bash
+npx design-lint --version
+```
+
 ### Options
 
 - `--config <path>` – path to a `designlint.config.js` or `.json` file.
@@ -33,6 +47,7 @@ npx design-lint src
 - `--output <file>` – write report to a file instead of stdout.
 - `--quiet` – suppress output and rely on the exit code.
 - `--fix` – automatically fix problems when possible.
+- `--version` – print the CLI version and exit.
 
 ## Configuration
 
