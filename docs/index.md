@@ -8,10 +8,25 @@ configuration of the linter.
 
 Requires Node.js 22 or later.
 
-Install and run the CLI against your project:
+### One-off usage
+
+Run the CLI without installing:
 
 ```bash
+npx @lapidist/design-lint@latest --help
+```
+
+### Local installation
+
+Add the package to your project and use the generated binary:
+
+```bash
+npm install --save-dev @lapidist/design-lint
 npx design-lint src
+# or
+pnpm design-lint src
+# or
+yarn design-lint src
 ```
 
 Refer to the [Usage](usage.md) guide for all available command line options and

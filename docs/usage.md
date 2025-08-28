@@ -2,10 +2,23 @@
 
 Requires Node.js 22 or later.
 
-Install and run **@lapidist/design-lint** to enforce design system rules in your project.
+### One-off usage
 
 ```bash
+npx @lapidist/design-lint@latest --help
+```
+
+### Local usage
+
+Install the package and run it from your project:
+
+```bash
+npm install --save-dev @lapidist/design-lint
 npx design-lint [files...]
+# or
+pnpm design-lint [files...]
+# or
+yarn design-lint [files...]
 ```
 
 ## Options

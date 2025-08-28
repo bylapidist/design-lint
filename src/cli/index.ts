@@ -2,8 +2,6 @@
 import fs from 'fs';
 import { parseArgs } from 'node:util';
 import path from 'path';
-import { loadConfig } from '../config/loader';
-import { Linter, defaultIgnore } from '../core/engine';
 import type { LintResult } from '../core/types';
 import { getFormatter } from '../formatters';
 import chalk from 'chalk';
@@ -109,6 +107,10 @@ export async function run(argv = process.argv.slice(2)) {
     }
 
     const targets = positionals.length ? positionals : ['.'];
+    const [{ loadConfig }, { Linter, defaultIgnore }] = await Promise.all([
+      import('../config/loader'),
+      import('../core/engine'),
+    ]);
     let config = await loadConfig(process.cwd(), values.config);
     let linter = new Linter(config);
     const cache = new Map<string, { mtime: number; result: LintResult }>();

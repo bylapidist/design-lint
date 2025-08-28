@@ -8,12 +8,25 @@ component usage to help teams stay consistent with their design system.
 
 Requires Node.js 22 or later.
 
-Install the package locally in your project or run it directly via `npx`.
+### One-off usage
+
+Run the CLI without installing it locally:
+
+```bash
+npx @lapidist/design-lint@latest --help
+```
+
+### Local installation
+
+Install the package in your project and use the generated binary:
 
 ```bash
 npm install --save-dev @lapidist/design-lint
-# or
 npx design-lint --help
+# or
+pnpm design-lint --help
+# or
+yarn design-lint --help
 ```
 
 ## CLI Usage

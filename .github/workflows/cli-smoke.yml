@@ -1,0 +1,32 @@
+name: CLI smoke test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Pack
+        run: |
+          PKG=$(npm pack)
+          echo "PKG=$PKG" >> $GITHUB_ENV
+      - name: Scoped npx
+        run: npx --yes "./$PKG" --help
+      - name: Local install bin
+        run: |
+          mkdir -p tmp/test
+          cd tmp/test
+          npm init -y >/dev/null 2>&1
+          npm install -D "../../$PKG" >/dev/null 2>&1
+          npx design-lint --help
