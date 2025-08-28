@@ -8,7 +8,9 @@ import { getFormatter } from '../formatters';
 
 function showVersion() {
   const pkgPath = path.resolve(__dirname, '../../package.json');
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as { version: string };
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
+    version: string;
+  };
   // eslint-disable-next-line no-console
   console.log(pkg.version);
 }
