@@ -1,8 +1,10 @@
-import fs from 'fs';
+import { promises as fs } from 'fs';
 import path from 'path';
 import ts from 'typescript';
 import postcss from 'postcss';
 import { createRequire } from 'module';
+import fg from 'fast-glob';
+import ignore from 'ignore';
 import type {
   LintResult,
   RuleModule,
@@ -69,8 +71,8 @@ export class Linter {
         } else {
           mod = req(resolved);
         }
-      } catch (e: any) {
-        if (e.code === 'ERR_REQUIRE_ESM') {
+      } catch (e: unknown) {
+        if ((e as { code?: string }).code === 'ERR_REQUIRE_ESM') {
           mod = await import(resolved ?? p);
         } else {
           throw new Error(
@@ -103,39 +105,56 @@ export class Linter {
     await this.pluginLoad;
     const ignorePatterns = [...defaultIgnore];
     const ignoreFile = path.join(process.cwd(), '.designlintignore');
-    if (fs.existsSync(ignoreFile)) {
-      const lines = fs
-        .readFileSync(ignoreFile, 'utf8')
+    try {
+      const content = await fs.readFile(ignoreFile, 'utf8');
+      const lines = content
         .split(/\r?\n/)
         .map((l) => l.trim())
         .filter(Boolean);
       ignorePatterns.push(...lines);
+    } catch {
+      // no ignore file
     }
     if (this.config.ignoreFiles)
       ignorePatterns.push(...this.config.ignoreFiles);
 
+    const ig = ignore();
+    ig.add(ignorePatterns.map((p) => p.replace(/\\/g, '/')));
+
     const files: string[] = [];
     for (const t of targets) {
       const full = path.resolve(t);
-      if (!fs.existsSync(full)) continue;
-      const stat = fs.statSync(full);
-      if (stat.isDirectory()) {
-        walk(full, (p) => files.push(p), ignorePatterns);
-      } else {
-        files.push(full);
+      try {
+        const stat = await fs.stat(full);
+        if (stat.isDirectory()) {
+          const entries = await fg('**/*.{ts,tsx,js,jsx,css,svelte,vue}', {
+            cwd: full,
+            absolute: true,
+            dot: true,
+          });
+          files.push(...entries);
+        } else {
+          files.push(full);
+        }
+      } catch {
+        // skip missing files
       }
     }
-    const filtered = files.filter(
-      (f) => !isIgnored(path.relative(process.cwd(), f), ignorePatterns),
+
+    const relFiles = files.map((f) =>
+      path.relative(process.cwd(), f).replace(/\\/g, '/'),
     );
+    const filteredRel = ig.filter(relFiles);
+    const filtered = filteredRel.map((r) => path.resolve(process.cwd(), r));
+
     const results: LintResult[] = [];
     for (const filePath of filtered) {
-      const text = fs.readFileSync(filePath, 'utf8');
+      const text = await fs.readFile(filePath, 'utf8');
       let result = await this.lintText(text, filePath);
       if (fix) {
         const output = applyFixes(text, result.messages);
         if (output !== text) {
-          fs.writeFileSync(filePath, output, 'utf8');
+          await fs.writeFile(filePath, output, 'utf8');
           result = await this.lintText(output, filePath);
         }
       }
@@ -255,42 +274,6 @@ export class Linter {
     if (value === 1 || value === 'warn') return 'warn';
     return undefined;
   }
-}
-
-function walk(dir: string, cb: (file: string) => void, ignores: string[]) {
-  for (const entry of fs.readdirSync(dir)) {
-    const full = path.join(dir, entry);
-    const stat = fs.statSync(full);
-    const rel = path.relative(process.cwd(), full);
-    if (stat.isDirectory()) {
-      if (isIgnored(rel + '/', ignores)) continue;
-      walk(full, cb, ignores);
-    } else if (/\.(ts|tsx|js|jsx|css|svelte|vue)$/.test(full)) {
-      if (isIgnored(rel, ignores)) continue;
-      cb(full);
-    }
-  }
-}
-
-function isIgnored(relPath: string, patterns: string[]): boolean {
-  let ignored = false;
-  for (const raw of patterns) {
-    const negated = raw.startsWith('!');
-    const pattern = negated ? raw.slice(1) : raw;
-    if (!pattern) continue;
-    if (globToRegExp(pattern).test(relPath)) {
-      ignored = !negated;
-    }
-  }
-  return ignored;
-}
-
-function globToRegExp(pattern: string): RegExp {
-  let regex = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-  regex = regex.replace(/\*\*/g, '\0');
-  regex = regex.replace(/\*/g, '[^/]*');
-  regex = regex.replace(/\0/g, '.*');
-  return new RegExp(`^${regex}$`);
 }
 
 function parseCSS(text: string): CSSDeclaration[] {
