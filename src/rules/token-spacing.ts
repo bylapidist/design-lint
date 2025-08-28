@@ -6,9 +6,14 @@ export const spacingRule: RuleModule = {
   meta: { description: 'enforce spacing scale' },
   create(context) {
     const allowed = new Set(Object.values(context.tokens?.spacing || {}));
-    const base = (context.options as { base?: number } | undefined)?.base ?? 4;
+    const opts =
+      (context.options as { base?: number; units?: string[] } | undefined) ??
+      {};
+    const base = opts.base ?? 4;
     const isAllowed = (n: number) => allowed.has(n) || n % base === 0;
-    const allowedUnits = new Set(['px', 'rem', 'em']);
+    const allowedUnits = new Set(
+      (opts.units ?? ['px', 'rem', 'em']).map((u) => u.toLowerCase()),
+    );
     return {
       onNode(node) {
         if (ts.isNumericLiteral(node)) {

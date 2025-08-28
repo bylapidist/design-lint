@@ -37,6 +37,22 @@ syntax message.
 - `ignoreFiles`: Glob patterns to exclude from linting.
 - `plugins`: Additional plugin packages to load.
 
+
+## Rule Options
+
+Rules can also accept configuration objects. For example, the `design-token/spacing`
+rule supports a `units` array to control which CSS units are validated (default
+is `['px', 'rem', 'em']`):
+
+```js
+module.exports = {
+  tokens: { spacing: { sm: 4, md: 8 } },
+  rules: {
+    'design-token/spacing': ['error', { base: 4, units: ['rem', 'vw'] }],
+  },
+};
+```
+
 ### Ignore precedence
 
 Ignore patterns are merged in the following order:

@@ -29,3 +29,12 @@ test('design-token/spacing ignores unsupported units', async () => {
   const res = await linter.lintText('.a{margin:5.5vw 10%;}', 'file.css');
   assert.equal(res.messages.length, 0);
 });
+
+test('design-token/spacing supports custom units', async () => {
+  const linter = new Linter({
+    tokens: { spacing: { sm: 4, md: 8 } },
+    rules: { 'design-token/spacing': ['error', { base: 4, units: ['vw'] }] },
+  });
+  const res = await linter.lintText('.a{margin:5vw;}', 'file.css');
+  assert.equal(res.messages.length, 1);
+});
