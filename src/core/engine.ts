@@ -213,7 +213,7 @@ export class Linter {
       };
       visit(source);
       if (styleMatch) {
-        const decls = parseCSS(styleMatch[1]);
+        const decls = parseCSS(styleMatch[1], messages);
         for (const decl of decls) {
           for (const l of listeners) l.onCSSDeclaration?.(decl);
         }
@@ -231,7 +231,7 @@ export class Linter {
       };
       visit(source);
     } else if (/\.css$/.test(filePath)) {
-      const decls = parseCSS(text);
+      const decls = parseCSS(text, messages);
       for (const decl of decls) {
         for (const l of listeners) l.onCSSDeclaration?.(decl);
       }
@@ -276,7 +276,10 @@ export class Linter {
   }
 }
 
-function parseCSS(text: string): CSSDeclaration[] {
+function parseCSS(
+  text: string,
+  messages: LintMessage[] = [],
+): CSSDeclaration[] {
   const decls: CSSDeclaration[] = [];
   try {
     const root = postcss.parse(text);
@@ -288,8 +291,15 @@ function parseCSS(text: string): CSSDeclaration[] {
         column: d.source?.start?.column || 0,
       });
     });
-  } catch {
-    // ignore parse errors and return what we have
+  } catch (e: unknown) {
+    const err = e as { line?: number; column?: number; message?: string };
+    messages.push({
+      ruleId: 'parse-error',
+      message: err.message || 'Failed to parse CSS',
+      severity: 'error',
+      line: typeof err.line === 'number' ? err.line : 0,
+      column: typeof err.column === 'number' ? err.column : 0,
+    });
   }
   return decls;
 }
