@@ -32,6 +32,28 @@ test('lintFiles ignores common directories by default', async () => {
   }
 });
 
+test('lintFiles respects .gitignore', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
+  fs.writeFileSync(path.join(dir, 'src', 'skip.ts'), 'const a = "old";');
+  fs.writeFileSync(path.join(dir, '.gitignore'), 'src/skip.ts');
+
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    const linter = new Linter({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    });
+    const results = await linter.lintFiles(['.']);
+    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    assert.deepEqual(files, ['src/keep.ts']);
+  } finally {
+    process.chdir(cwd);
+  }
+});
+
 test('.designlintignore can unignore paths', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
@@ -53,6 +75,28 @@ test('.designlintignore can unignore paths', async () => {
     const results = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['node_modules/pkg/index.ts', 'src/file.ts']);
+  } finally {
+    process.chdir(cwd);
+  }
+});
+
+test('.designlintignore overrides .gitignore', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
+  fs.writeFileSync(path.join(dir, '.gitignore'), 'src/file.ts');
+  fs.writeFileSync(path.join(dir, '.designlintignore'), '!src/file.ts');
+
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    const linter = new Linter({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    });
+    const results = await linter.lintFiles(['.']);
+    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    assert.deepEqual(files, ['src/file.ts']);
   } finally {
     process.chdir(cwd);
   }

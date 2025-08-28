@@ -126,23 +126,43 @@ export class Linter {
   ): Promise<LintResult[]> {
     await this.pluginLoad;
     const ignorePatterns = [...defaultIgnore];
-    const ignoreFile = path.join(process.cwd(), '.designlintignore');
+    const ig = ignore();
+    ig.add(defaultIgnore);
+
+    const gitIgnore = path.join(process.cwd(), '.gitignore');
     try {
-      const content = await fs.readFile(ignoreFile, 'utf8');
+      const content = await fs.readFile(gitIgnore, 'utf8');
+      ig.add(content);
       const lines = content
         .split(/\r?\n/)
         .map((l) => l.trim())
-        .filter(Boolean);
+        .filter((l) => l && !l.startsWith('#'));
       ignorePatterns.push(...lines);
     } catch {
-      // no ignore file
+      // no gitignore
     }
-    if (this.config.ignoreFiles)
-      ignorePatterns.push(...this.config.ignoreFiles);
 
-    const ig = ignore();
+    const designIgnore = path.join(process.cwd(), '.designlintignore');
+    try {
+      const content = await fs.readFile(designIgnore, 'utf8');
+      ig.add(content);
+      const lines = content
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith('#'));
+      ignorePatterns.push(...lines);
+    } catch {
+      // no designlintignore
+    }
+    if (this.config.ignoreFiles) {
+      const normalized = this.config.ignoreFiles.map((p) =>
+        p.replace(/\\/g, '/'),
+      );
+      ig.add(normalized);
+      ignorePatterns.push(...normalized);
+    }
+
     const normalizedPatterns = ignorePatterns.map((p) => p.replace(/\\/g, '/'));
-    ig.add(normalizedPatterns);
 
     const files: string[] = [];
     const scanStart = performance.now();

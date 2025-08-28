@@ -113,27 +113,27 @@ export async function run(argv = process.argv.slice(2)) {
     let linter = new Linter(config);
     const cache = new Map<string, { mtime: number; result: LintResult }>();
 
-    const ignoreFile = path.join(process.cwd(), '.designlintignore');
+    const gitIgnore = path.join(process.cwd(), '.gitignore');
+    const designIgnore = path.join(process.cwd(), '.designlintignore');
     let ig = ignore();
 
     const refreshIgnore = () => {
-      const ignorePatterns = [...defaultIgnore];
-      try {
-        const content = fs.readFileSync(ignoreFile, 'utf8');
-        const lines = content
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter(Boolean);
-        ignorePatterns.push(...lines);
-      } catch {
-        // no ignore file
-      }
-      if (config.ignoreFiles) ignorePatterns.push(...config.ignoreFiles);
       ig = ignore();
-      const normalizedPatterns = ignorePatterns.map((p) =>
-        p.replace(/\\/g, '/'),
-      );
-      ig.add(normalizedPatterns);
+      ig.add(defaultIgnore);
+      try {
+        const content = fs.readFileSync(gitIgnore, 'utf8');
+        ig.add(content);
+      } catch {
+        // no gitignore
+      }
+      try {
+        const content = fs.readFileSync(designIgnore, 'utf8');
+        ig.add(content);
+      } catch {
+        // no designlintignore
+      }
+      if (config.ignoreFiles)
+        ig.add(config.ignoreFiles.map((p) => p.replace(/\\/g, '/')));
     };
 
     const runLint = async (paths: string[]) => {
@@ -169,14 +169,14 @@ export async function run(argv = process.argv.slice(2)) {
       refreshIgnore();
       const watchPaths = [...targets];
       if (config.configPath) watchPaths.push(config.configPath);
-      watchPaths.push(ignoreFile);
+      watchPaths.push(designIgnore, gitIgnore);
       const watcher = chokidar.watch(watchPaths, {
         ignored: (p: string) => {
           const rel = path.relative(process.cwd(), p).replace(/\\/g, '/');
           const resolved = path.resolve(p);
           if (config.configPath && resolved === path.resolve(config.configPath))
             return false;
-          if (resolved === ignoreFile) return false;
+          if (resolved === designIgnore || resolved === gitIgnore) return false;
           return ig.ignores(rel);
         },
         ignoreInitial: true,
@@ -194,7 +194,8 @@ export async function run(argv = process.argv.slice(2)) {
         const resolved = path.resolve(filePath);
         if (
           (config.configPath && resolved === path.resolve(config.configPath)) ||
-          resolved === ignoreFile
+          resolved === designIgnore ||
+          resolved === gitIgnore
         ) {
           await reload();
         } else {

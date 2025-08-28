@@ -37,6 +37,17 @@ syntax message.
 - `ignoreFiles`: Glob patterns to exclude from linting.
 - `plugins`: Additional plugin packages to load.
 
+### Ignore precedence
+
+Ignore patterns are merged in the following order:
+
+1. `.gitignore`
+2. `.designlintignore`
+3. `ignoreFiles` from the configuration
+
+Later entries override earlier ones, so patterns in `ignoreFiles` take precedence
+over `.designlintignore`, which in turn can override `.gitignore`.
+
 ## Plugins
 
 Plugins extend `@lapidist/design-lint` with additional rules. Each plugin must export an
