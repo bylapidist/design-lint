@@ -665,6 +665,74 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
   assert.equal(runs, 2);
 });
 
+test('CLI continues watching after plugin load failure', async () => {
+  const dir = makeTmpDir();
+  const pluginPath = path.join(dir, 'plugin.js');
+  const pluginContent = (msg: string) => `const ts = require('typescript');
+module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rule' }, create(context) { return { onNode(node) {
+if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}', line: 1, column: 1 }); } } }; } }] };`;
+  fs.writeFileSync(pluginPath, pluginContent('first'));
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      plugins: ['./plugin.js'],
+      rules: { 'plugin/test': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+      '--no-color',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  proc.stderr.setEncoding('utf8');
+  let sawError = false;
+  let sawSecond = false;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 10000);
+    let stdout = '';
+    proc.stdout.on('data', (data) => {
+      stdout += data;
+      if (stdout.includes('Watching for changes...')) {
+        fs.writeFileSync(pluginPath, "throw new Error('bad plugin');");
+        stdout = '';
+      } else if (stdout.includes('second')) {
+        sawSecond = true;
+        proc.kill('SIGINT');
+      }
+    });
+    proc.stderr.on('data', (data) => {
+      const str = data.toString();
+      if (!sawError && str.includes('bad plugin')) {
+        sawError = true;
+        fs.writeFileSync(pluginPath, pluginContent('second'));
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(sawError, true);
+  assert.equal(sawSecond, true);
+});
+
 test('CLI reloads when nested ignore file changes in watch mode', async () => {
   const dir = makeTmpDir();
   const nested = path.join(dir, 'nested');

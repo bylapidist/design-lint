@@ -222,21 +222,31 @@ export async function run(argv = process.argv.slice(2)) {
       process.once('SIGTERM', cleanup);
 
       const reload = async () => {
-        const req = config.configPath
-          ? createRequire(config.configPath)
-          : require;
-        for (const p of pluginPaths) delete req.cache?.[p];
-        config = await loadConfig(process.cwd(), values.config);
-        linter = new Linter(config);
-        await refreshIgnore();
-        cache.clear();
-        const newPluginPaths = resolvePluginPaths(config);
-        const toRemove = pluginPaths.filter((p) => !newPluginPaths.includes(p));
-        if (toRemove.length) watcher?.unwatch(toRemove);
-        const toAdd = newPluginPaths.filter((p) => !pluginPaths.includes(p));
-        if (toAdd.length) watcher?.add(toAdd);
-        pluginPaths = newPluginPaths;
-        await runLint(targets);
+        try {
+          const req = config.configPath
+            ? createRequire(config.configPath)
+            : require;
+          for (const p of pluginPaths) delete req.cache?.[p];
+          config = await loadConfig(process.cwd(), values.config);
+          linter = new Linter(config);
+          await refreshIgnore();
+          cache.clear();
+          const newPluginPaths = resolvePluginPaths(config);
+          const toRemove = pluginPaths.filter(
+            (p) => !newPluginPaths.includes(p),
+          );
+          if (toRemove.length) watcher?.unwatch(toRemove);
+          const toAdd = newPluginPaths.filter((p) => !pluginPaths.includes(p));
+          if (toAdd.length) watcher?.add(toAdd);
+          pluginPaths = newPluginPaths;
+          await runLint(targets);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          if (!values.quiet) {
+            console.error(useColor ? chalk.red(message) : message);
+          }
+          process.exitCode = 1;
+        }
       };
 
       const handle = async (filePath: string) => {
