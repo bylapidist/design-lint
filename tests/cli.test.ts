@@ -810,3 +810,70 @@ test('CLI closes watcher on SIGINT', async () => {
   });
   assert.equal(exitCode, 0);
 });
+
+test('CLI handles errors from watch callbacks', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = 1;');
+  const plugin = path.join(dir, 'plugin.cjs');
+  fs.writeFileSync(
+    plugin,
+    `module.exports = {\n  rules: [{\n    name: 'test/crash',\n    meta: { description: 'crash' },\n    create() {\n      return {\n        onNode(node) {\n          if (node.getText().includes('CRASH')) {\n            throw new Error('boom');\n          }\n        },\n      };\n    },\n  }],\n};\n`,
+  );
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {},
+      rules: { 'test/crash': 'error' },
+      plugins: ['./plugin.cjs'],
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  proc.stderr.setEncoding('utf8');
+  let stderr = '';
+  let exitCode: number | null = null;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+      reject(new Error('Timed out'));
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('Watching for changes...')) {
+        fs.writeFileSync(file, 'const CRASH = 1;');
+      }
+    });
+    proc.stderr.on('data', (data) => {
+      stderr += data;
+      if (stderr.includes('boom')) {
+        proc.kill('SIGINT');
+      }
+    });
+    proc.on('exit', (code) => {
+      exitCode = code;
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(exitCode, 1);
+  assert.ok(stderr.includes('boom'));
+  assert.ok(!stderr.includes('UnhandledPromise'));
+});

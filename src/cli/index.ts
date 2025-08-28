@@ -165,6 +165,13 @@ export async function run(argv = process.argv.slice(2)) {
       process.exitCode = hasErrors ? 1 : 0;
     };
 
+    const reportError = (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.error(useColor ? chalk.red(message) : message);
+      process.exitCode = 1;
+    };
+
     await runLint(targets);
 
     if (values.watch) {
@@ -227,9 +234,7 @@ export async function run(argv = process.argv.slice(2)) {
         }
       };
 
-      watcher.on('add', handle);
-      watcher.on('change', handle);
-      watcher.on('unlink', async (filePath: string) => {
+      const handleUnlink = async (filePath: string) => {
         const resolved = path.resolve(filePath);
         cache.delete(resolved);
         if (
@@ -242,7 +247,11 @@ export async function run(argv = process.argv.slice(2)) {
         } else {
           await runLint(targets);
         }
-      });
+      };
+
+      watcher.on('add', (p) => handle(p).catch(reportError));
+      watcher.on('change', (p) => handle(p).catch(reportError));
+      watcher.on('unlink', (p) => handleUnlink(p).catch(reportError));
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
