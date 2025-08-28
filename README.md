@@ -79,6 +79,27 @@ Re-run lint on file changes:
 npx design-lint src --watch
 ```
 
+Automatically replace deprecated tokens or components:
+
+```json
+// designlint.config.json
+{
+  "tokens": { "deprecations": { "old": { "replacement": "new" } } },
+  "rules": { "design-system/deprecation": "error" }
+}
+```
+
+```css
+/* button.css */
+.btn { color: old; }
+```
+
+```bash
+npx design-lint button.css --fix
+```
+
+The `design-system/deprecation` rule rewrites `old` to `new` when run with `--fix`.
+
 ## Programmatic Usage
 
 `@lapidist/design-lint` can also run directly in Node.js:

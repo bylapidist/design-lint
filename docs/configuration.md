@@ -38,6 +38,25 @@ syntax message.
 - `plugins`: Additional plugin packages to load.
 - `concurrency`: Maximum number of files processed concurrently. Defaults to the number of CPU cores.
 
+### Token deprecations
+
+The optional `tokens.deprecations` map marks tokens or component names as deprecated.
+Each key is the deprecated name and maps to an object with an optional
+`replacement` string:
+
+```ts
+tokens: {
+  deprecations: {
+    old: { replacement: 'new' },
+    OldButton: { replacement: 'Button' },
+  },
+}
+```
+
+When the `design-system/deprecation` rule is enabled, references to these names
+will trigger warnings. Running the linter with `--fix` will automatically replace
+deprecated names when a `replacement` is provided.
+
 ## Rule Options
 
 Rules can also accept configuration objects. For example, the `design-token/spacing`
