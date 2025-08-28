@@ -188,6 +188,13 @@ export async function run(argv = process.argv.slice(2)) {
         ignoreInitial: true,
       });
 
+      const cleanup = async () => {
+        await watcher.close();
+        process.exit(process.exitCode ?? 0);
+      };
+      process.on('SIGINT', cleanup);
+      process.on('SIGTERM', cleanup);
+
       const reload = async () => {
         const req = config.configPath
           ? createRequire(config.configPath)
