@@ -1,5 +1,7 @@
 # Usage
 
+Requires Node.js 18 or later.
+
 Install and run **design-lint** to enforce design system rules in your project.
 
 ```bash
