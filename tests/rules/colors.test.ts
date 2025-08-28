@@ -12,6 +12,51 @@ test('design-token/colors reports disallowed hex', async () => {
   assert.equal(res.messages[0].ruleId, 'design-token/colors');
 });
 
+test('design-token/colors reports disallowed rgb', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('const c = "rgb(0, 0, 0)";', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/colors reports disallowed rgba', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('const c = "rgba(0,0,0,0.5)";', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/colors reports disallowed hsl', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('const c = "hsl(0, 0%, 0%)";', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/colors reports disallowed named color', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('const c = "red";', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/colors allows configured formats', async () => {
+  const linter = new Linter({
+    tokens: { colors: {} },
+    rules: { 'design-token/colors': ['error', { allow: ['named'] }] },
+  });
+  const res = await linter.lintText('const c = "red";', 'file.ts');
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-token/colors handles gradients', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
