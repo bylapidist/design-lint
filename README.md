@@ -1,6 +1,6 @@
-# design-lint
+# @lapidist/design-lint
 
-`design-lint` is a pluggable linter for enforcing design system rules in
+`@lapidist/design-lint` is a pluggable linter for enforcing design system rules in
 JavaScript, TypeScript and CSS codebases. It validates design tokens and
 component usage to help teams stay consistent with their design system.
 
@@ -11,7 +11,7 @@ Requires Node.js 18 or later.
 Install the package locally in your project or run it directly via `npx`.
 
 ```bash
-npm install --save-dev design-lint
+npm install --save-dev @lapidist/design-lint
 # or
 npx design-lint --help
 ```
@@ -88,7 +88,7 @@ module.exports = {
 };
 ```
 
-If a plugin cannot be loaded or exports the wrong shape, `design-lint` will
+If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint` will
 throw an error during initialization.
 
 See the [Plugin guide](docs/plugins.md) for a step-by-step tutorial on writing and publishing custom rules.

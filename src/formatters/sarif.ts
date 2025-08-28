@@ -15,8 +15,8 @@ export function sarifFormatter(results: LintResult[]): string {
       {
         tool: {
           driver: {
-            name: 'design-lint',
-            informationUri: 'https://github.com/',
+            name: '@lapidist/design-lint',
+            informationUri: 'https://github.com/bylapidist/design-lint',
           },
         },
         results: [],

@@ -1,6 +1,6 @@
 # Writing Rule Plugins
 
-Plugins let you extend `design-lint` with custom rules distributed as normal npm packages. A plugin exports an object with a `rules` array containing one or more `RuleModule` implementations.
+Plugins let you extend `@lapidist/design-lint` with custom rules distributed as normal npm packages. A plugin exports an object with a `rules` array containing one or more `RuleModule` implementations.
 
 ## Step-by-step
 
@@ -8,12 +8,12 @@ Plugins let you extend `design-lint` with custom rules distributed as normal npm
    ```bash
    mkdir design-lint-plugin-example && cd design-lint-plugin-example
    npm init -y
-   npm install design-lint
+   npm install @lapidist/design-lint
    ```
 2. **Author a rule**
    ```ts
    // rules/no-hardcoded-colors.ts
-   import type { RuleModule } from 'design-lint';
+   import type { RuleModule } from '@lapidist/design-lint';
 
    export const noHardcodedColors: RuleModule = {
      name: 'plugin/no-hardcoded-colors',

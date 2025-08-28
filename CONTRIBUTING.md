@@ -1,4 +1,4 @@
-# Contributing to design-lint
+# Contributing to @lapidist/design-lint
 
 Thank you for your interest in contributing! Please:
 

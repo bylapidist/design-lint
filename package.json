@@ -1,5 +1,5 @@
 {
-  "name": "design-lint",
+  "name": "@lapidist/design-lint",
   "version": "0.1.0",
   "description": "Design system linter",
   "main": "dist/index.js",
