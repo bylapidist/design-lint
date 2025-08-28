@@ -127,10 +127,11 @@ export class Linter {
       try {
         const stat = await fs.stat(full);
         if (stat.isDirectory()) {
-          const entries = await fg(
-            '**/*.{ts,tsx,js,jsx,css,svelte,vue}',
-            { cwd: full, absolute: true, dot: true },
-          );
+          const entries = await fg('**/*.{ts,tsx,js,jsx,css,svelte,vue}', {
+            cwd: full,
+            absolute: true,
+            dot: true,
+          });
           files.push(...entries);
         } else {
           files.push(full);

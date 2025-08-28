@@ -88,10 +88,7 @@ test('.designlintignore supports Windows paths', async () => {
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
   fs.writeFileSync(path.join(dir, 'src', 'ignore.ts'), 'const a = "old";');
-  fs.writeFileSync(
-    path.join(dir, '.designlintignore'),
-    'src\\ignore.ts',
-  );
+  fs.writeFileSync(path.join(dir, '.designlintignore'), 'src\\ignore.ts');
 
   const cwd = process.cwd();
   process.chdir(dir);
