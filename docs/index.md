@@ -6,6 +6,8 @@ configuration of the linter.
 
 ## Getting Started
 
+Requires Node.js 18 or later.
+
 Install and run the CLI against your project:
 
 ```bash
