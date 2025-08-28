@@ -414,9 +414,13 @@ export class Linter {
       severity: 'error' | 'warn';
     }[] = [];
     const ruleConfig = (this.config.rules || {}) as Record<string, unknown>;
+    const unknown: string[] = [];
     for (const [name, setting] of Object.entries(ruleConfig)) {
       const rule = this.ruleMap.get(name);
-      if (!rule) continue;
+      if (!rule) {
+        unknown.push(name);
+        continue;
+      }
       let severity: 'error' | 'warn' | undefined;
       let options: unknown = undefined;
       if (Array.isArray(setting)) {
@@ -428,6 +432,13 @@ export class Linter {
       if (severity) {
         entries.push({ rule, options, severity });
       }
+    }
+    if (unknown.length > 0) {
+      throw createEngineError({
+        message: `Unknown rule(s): ${unknown.join(', ')}`,
+        context: 'Config.rules',
+        remediation: 'Remove or correct these rule names.',
+      });
     }
     return entries;
   }

@@ -123,3 +123,18 @@ test("rule configured as 'off' is ignored", async () => {
   const res = await linter.lintText('const c = "#fff";', 'file.ts');
   assert.equal(res.messages.length, 0);
 });
+
+test('throws on unknown rule name', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ rules: { 'unknown/rule': 'error' } }),
+  );
+  const config = await loadConfig(tmp);
+  const linter = new Linter(config);
+  await assert.rejects(
+    () => linter.lintText('const x = 1;', 'file.ts'),
+    /Unknown rule\(s\): unknown\/rule/,
+  );
+});
