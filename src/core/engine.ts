@@ -180,41 +180,110 @@ export class Linter {
       return rule.create(ctx);
     });
 
-    if (/\.svelte$/.test(filePath) || /\.vue$/.test(filePath)) {
-      const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/);
-      const styleMatch = text.match(/<style[^>]*>([\s\S]*?)<\/style>/);
-      const template = text
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/, '')
-        .trim();
-
-      const scriptContent = scriptMatch ? scriptMatch[1] : '';
-      const templateTsx = template
-        .replace(/class=/g, 'className=')
-        .replace(
-          filePath.endsWith('.svelte')
-            ? /style="padding: {([^}]+)}px"/g
-            : /:style="{([^}]+)}"/g,
-          (_, expr) => `style={{ ${expr.trim()} }}`,
-        );
-      const combined = `${scriptContent}\nfunction __render(){ return (${templateTsx}); }`;
-      const source = ts.createSourceFile(
-        filePath,
-        combined,
-        ts.ScriptTarget.Latest,
-        true,
-        ts.ScriptKind.TSX,
-      );
-      const visit = (node: ts.Node) => {
-        for (const l of listeners) l.onNode?.(node);
-        ts.forEachChild(node, visit);
-      };
-      visit(source);
-      if (styleMatch) {
-        const decls = parseCSS(styleMatch[1], messages);
-        for (const decl of decls) {
-          for (const l of listeners) l.onCSSDeclaration?.(decl);
+    if (/\.vue$/.test(filePath)) {
+      try {
+        const { parse } = await import('@vue/compiler-sfc');
+        const { descriptor } = parse(text, { filename: filePath });
+        const template = descriptor.template?.content ?? '';
+        const templateTsx = template
+          .replace(/class=/g, 'className=')
+          .replace(
+            /:style="{([^}]+)}"/g,
+            (_, expr) => `style={{ ${expr.trim()} }}`,
+          );
+        const scripts: string[] = [];
+        if (descriptor.script?.content) scripts.push(descriptor.script.content);
+        if (descriptor.scriptSetup?.content)
+          scripts.push(descriptor.scriptSetup.content);
+        const scriptBlocks = scripts.length ? scripts : [''];
+        for (const scriptContent of scriptBlocks) {
+          const combined = `${scriptContent}\nfunction __render(){ return (${templateTsx}); }`;
+          const source = ts.createSourceFile(
+            filePath,
+            combined,
+            ts.ScriptTarget.Latest,
+            true,
+            ts.ScriptKind.TSX,
+          );
+          const visit = (node: ts.Node) => {
+            for (const l of listeners) l.onNode?.(node);
+            ts.forEachChild(node, visit);
+          };
+          visit(source);
         }
+        for (const style of descriptor.styles) {
+          const decls = parseCSS(style.content, messages);
+          for (const decl of decls) {
+            for (const l of listeners) l.onCSSDeclaration?.(decl);
+          }
+        }
+      } catch (e: unknown) {
+        const err = e as { line?: number; column?: number; message?: string };
+        messages.push({
+          ruleId: 'parse-error',
+          message: err.message || 'Failed to parse Vue component',
+          severity: 'error',
+          line: typeof err.line === 'number' ? err.line : 0,
+          column: typeof err.column === 'number' ? err.column : 0,
+        });
+      }
+    } else if (/\.svelte$/.test(filePath)) {
+      try {
+        const { parse } = await import('svelte/compiler');
+        const ast = parse(text);
+        const scripts: string[] = [];
+        if (ast.instance)
+          scripts.push(
+            text.slice(ast.instance.content.start, ast.instance.content.end),
+          );
+        if (ast.module)
+          scripts.push(
+            text.slice(ast.module.content.start, ast.module.content.end),
+          );
+        const template = ast.html
+          ? text.slice(ast.html.start, ast.html.end)
+          : '';
+        const templateTsx = template
+          .replace(/class=/g, 'className=')
+          .replace(
+            /style="padding: {([^}]+)}px"/g,
+            (_, expr) => `style={{ ${expr.trim()} }}`,
+          );
+        const scriptBlocks = scripts.length ? scripts : [''];
+        for (const scriptContent of scriptBlocks) {
+          const combined = `${scriptContent}\nfunction __render(){ return (${templateTsx}); }`;
+          const source = ts.createSourceFile(
+            filePath,
+            combined,
+            ts.ScriptTarget.Latest,
+            true,
+            ts.ScriptKind.TSX,
+          );
+          const visit = (node: ts.Node) => {
+            for (const l of listeners) l.onNode?.(node);
+            ts.forEachChild(node, visit);
+          };
+          visit(source);
+        }
+        if (ast.css) {
+          const styleText = text.slice(
+            ast.css.content.start,
+            ast.css.content.end,
+          );
+          const decls = parseCSS(styleText, messages);
+          for (const decl of decls) {
+            for (const l of listeners) l.onCSSDeclaration?.(decl);
+          }
+        }
+      } catch (e: unknown) {
+        const err = e as { line?: number; column?: number; message?: string };
+        messages.push({
+          ruleId: 'parse-error',
+          message: err.message || 'Failed to parse Svelte component',
+          severity: 'error',
+          line: typeof err.line === 'number' ? err.line : 0,
+          column: typeof err.column === 'number' ? err.column : 0,
+        });
       }
     } else if (/\.(ts|tsx|js|jsx)$/.test(filePath)) {
       const source = ts.createSourceFile(

@@ -21,8 +21,14 @@ const fixtures: Fixture[] = [
     name: 'react-vite-css-modules',
     files: ['src/App.module.css', 'src/App.tsx'],
   },
-  { name: 'svelte', files: ['src/App.module.css', 'src/App.svelte'] },
-  { name: 'vue', files: ['src/App.module.css', 'src/App.vue'] },
+  {
+    name: 'svelte',
+    files: ['src/App.module.css', 'src/App.svelte', 'src/Multi.svelte'],
+  },
+  {
+    name: 'vue',
+    files: ['src/App.module.css', 'src/App.vue', 'src/Multi.vue'],
+  },
   { name: 'nextjs', files: ['styles/Home.module.css', 'pages/index.tsx'] },
   { name: 'nuxt', files: ['pages/index.module.css', 'pages/index.vue'] },
   { name: 'remix', files: ['app/styles.module.css', 'app/routes/_index.tsx'] },
