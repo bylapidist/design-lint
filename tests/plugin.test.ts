@@ -17,7 +17,7 @@ test('external plugin rules execute', async () => {
 
 test('plugins resolve relative to config file', async () => {
   const dir = path.join(__dirname, 'fixtures', 'plugin-relative');
-  const config = loadConfig(dir);
+  const config = await loadConfig(dir);
   const linter = new Linter(config);
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);

@@ -4,10 +4,10 @@ const { Linter } = require('../../dist/core/engine.js');
 const { loadConfig } = require('../../dist/config/loader.js');
 
 const targets = process.argv.slice(2);
-const config = loadConfig(process.cwd());
-const linter = new Linter(config);
 
 (async () => {
+  const config = await loadConfig(process.cwd());
+  const linter = new Linter(config);
   const start = performance.now();
   await linter.lintFiles(targets.length ? targets : ['.']);
   const end = performance.now();

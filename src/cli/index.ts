@@ -109,7 +109,7 @@ export async function run(argv = process.argv.slice(2)) {
     }
 
     const targets = positionals.length ? positionals : ['.'];
-    const config = loadConfig(process.cwd(), values.config);
+    const config = await loadConfig(process.cwd(), values.config);
     const linter = new Linter(config);
     const cache = new Map<string, { mtime: number; result: LintResult }>();
 

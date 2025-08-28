@@ -6,7 +6,7 @@ import { Linter } from '../src/core/engine';
 
 test('lints large projects without crashing', async () => {
   const dir = path.join(__dirname, 'fixtures', 'large-project');
-  const config = loadConfig(dir);
+  const config = await loadConfig(dir);
   const linter = new Linter(config);
   const results = await linter.lintFiles([dir]);
   assert.equal(results.length, 200);

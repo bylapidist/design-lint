@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader';
 
-test('finds config in parent directories', () => {
+test('finds config in parent directories', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
@@ -14,47 +14,73 @@ test('finds config in parent directories', () => {
   );
   const nested = path.join(tmp, 'a', 'b');
   fs.mkdirSync(nested, { recursive: true });
-  const loaded = loadConfig(nested);
+  const loaded = await loadConfig(nested);
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('throws on malformed JSON config', () => {
+test('throws on malformed JSON config', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, '{ invalid json');
-  assert.throws(() => loadConfig(tmp), /Failed to load config/);
+  await assert.rejects(loadConfig(tmp), /Failed to load config/);
 });
 
-test('throws on malformed JS config', () => {
+test('throws on malformed JS config', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const configPath = path.join(tmp, 'designlint.config.js');
   fs.writeFileSync(configPath, 'module.exports = { tokens: {},');
-  assert.throws(() => loadConfig(tmp), /Failed to load config/);
+  await assert.rejects(loadConfig(tmp), /Failed to load config/);
 });
 
-test('throws on invalid tokens', () => {
+test('throws on invalid tokens', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
     JSON.stringify({ tokens: { colors: { primary: 123 } } }),
   );
-  assert.throws(() => loadConfig(tmp), /Invalid config/);
+  await assert.rejects(loadConfig(tmp), /Invalid config/);
 });
 
-test('throws on invalid rule setting', () => {
+test('throws on invalid rule setting', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
     JSON.stringify({ rules: { 'design-token/colors': 'invalid' } }),
   );
-  assert.throws(() => loadConfig(tmp), /Invalid config/);
+  await assert.rejects(loadConfig(tmp), /Invalid config/);
 });
 
-test('throws on invalid plugin path', () => {
+test('throws on invalid plugin path', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, JSON.stringify({ plugins: [123] }));
-  assert.throws(() => loadConfig(tmp), /Invalid config/);
+  await assert.rejects(loadConfig(tmp), /Invalid config/);
+});
+
+test('loads config from .mjs', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const configPath = path.join(tmp, 'designlint.config.mjs');
+  fs.writeFileSync(
+    configPath,
+    "export default { tokens: { colors: { primary: '#000' } } };",
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.colors?.primary, '#000');
+});
+
+test('loads config when package.json type module', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  fs.writeFileSync(
+    path.join(tmp, 'package.json'),
+    JSON.stringify({ type: 'module' }),
+  );
+  const configPath = path.join(tmp, 'designlint.config.js');
+  fs.writeFileSync(
+    configPath,
+    "export default { tokens: { colors: { primary: '#000' } } };",
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
