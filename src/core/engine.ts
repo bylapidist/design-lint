@@ -6,6 +6,7 @@ import { createRequire } from 'module';
 import fg from 'fast-glob';
 import ignore from 'ignore';
 import { performance } from 'node:perf_hooks';
+import type { parse as svelteParse } from 'svelte/compiler';
 import type {
   LintResult,
   RuleModule,
@@ -274,9 +275,9 @@ export class Linter {
       }
     } else if (/\.svelte$/.test(filePath)) {
       try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - svelte compiler lacks type declarations
-        const { parse } = await import('svelte/compiler');
+        const { parse } = (await import('svelte/compiler')) as {
+          parse: typeof svelteParse;
+        };
         const ast = parse(text);
         const scripts: string[] = [];
         if (ast.instance)
