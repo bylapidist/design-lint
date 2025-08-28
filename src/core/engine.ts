@@ -229,14 +229,17 @@ export class Linter {
           }
           const text = await fs.readFile(filePath, 'utf8');
           let result = await this.lintText(text, filePath);
+          let mtime = stat.mtimeMs;
           if (fix) {
             const output = applyFixes(text, result.messages);
             if (output !== text) {
               await fs.writeFile(filePath, output, 'utf8');
               result = await this.lintText(output, filePath);
+              const newStat = await fs.stat(filePath);
+              mtime = newStat.mtimeMs;
             }
           }
-          cache?.set(filePath, { mtime: stat.mtimeMs, result });
+          cache?.set(filePath, { mtime, result });
           return result;
         } catch {
           cache?.delete(filePath);

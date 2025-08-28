@@ -4,6 +4,8 @@ import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import { Linter } from '../src';
+import type { LintResult } from '../src/core/types';
 
 const tsNodeRegister = path.join(
   __dirname,
@@ -474,6 +476,22 @@ test('CLI re-runs on file change in watch mode', async () => {
     proc.on('error', reject);
   });
   assert.equal(runs, 2);
+});
+
+test('CLI cache updates after --fix run', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = "old";');
+  const config = {
+    tokens: { deprecations: { old: { replacement: 'new' } } },
+    rules: { 'design-system/deprecation': 'error' },
+  };
+  const linter = new Linter(config);
+  const cache = new Map<string, { mtime: number; result: LintResult }>();
+  const res1 = await linter.lintFiles([file], true, cache);
+  const res2 = await linter.lintFiles([file], false, cache);
+  assert.equal(res1[0].messages.length, 0);
+  assert.strictEqual(res1[0], res2[0]);
 });
 
 test('CLI re-runs with updated config in watch mode', async () => {
