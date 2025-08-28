@@ -19,6 +19,25 @@ export interface Config {
   plugins?: string[];
 }
 
+const defaultIgnore = [
+  '**/node_modules/**',
+  'node_modules/**',
+  '**/dist/**',
+  'dist/**',
+  '**/build/**',
+  'build/**',
+  '**/coverage/**',
+  'coverage/**',
+  '**/.next/**',
+  '.next/**',
+  '**/.nuxt/**',
+  '.nuxt/**',
+  '**/out/**',
+  'out/**',
+  '**/.cache/**',
+  '.cache/**',
+];
+
 export class Linter {
   private config: Config;
   private ruleMap: Map<string, RuleModule> = new Map();
@@ -31,23 +50,32 @@ export class Linter {
   }
 
   async lintFiles(targets: string[], fix = false): Promise<LintResult[]> {
+    const ignorePatterns = [...defaultIgnore];
+    const ignoreFile = path.join(process.cwd(), '.designlintignore');
+    if (fs.existsSync(ignoreFile)) {
+      const lines = fs
+        .readFileSync(ignoreFile, 'utf8')
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+      ignorePatterns.push(...lines);
+    }
+    if (this.config.ignoreFiles)
+      ignorePatterns.push(...this.config.ignoreFiles);
+
     const files: string[] = [];
     for (const t of targets) {
       const full = path.resolve(t);
       if (!fs.existsSync(full)) continue;
       const stat = fs.statSync(full);
       if (stat.isDirectory()) {
-        walk(full, (p) => files.push(p));
+        walk(full, (p) => files.push(p), ignorePatterns);
       } else {
         files.push(full);
       }
     }
     const filtered = files.filter(
-      (f) =>
-        !isIgnored(
-          path.relative(process.cwd(), f),
-          this.config.ignoreFiles || [],
-        ),
+      (f) => !isIgnored(path.relative(process.cwd(), f), ignorePatterns),
     );
     const results: LintResult[] = [];
     for (const filePath of filtered) {
@@ -177,26 +205,39 @@ export class Linter {
   }
 }
 
-function walk(dir: string, cb: (file: string) => void) {
+function walk(dir: string, cb: (file: string) => void, ignores: string[]) {
   for (const entry of fs.readdirSync(dir)) {
     const full = path.join(dir, entry);
     const stat = fs.statSync(full);
+    const rel = path.relative(process.cwd(), full);
     if (stat.isDirectory()) {
-      walk(full, cb);
+      if (isIgnored(rel + '/', ignores)) continue;
+      walk(full, cb, ignores);
     } else if (/\.(ts|tsx|js|jsx|css|svelte|vue)$/.test(full)) {
+      if (isIgnored(rel, ignores)) continue;
       cb(full);
     }
   }
 }
 
 function isIgnored(relPath: string, patterns: string[]): boolean {
-  return patterns.some((p) => globToRegExp(p).test(relPath));
+  let ignored = false;
+  for (const raw of patterns) {
+    const negated = raw.startsWith('!');
+    const pattern = negated ? raw.slice(1) : raw;
+    if (!pattern) continue;
+    if (globToRegExp(pattern).test(relPath)) {
+      ignored = !negated;
+    }
+  }
+  return ignored;
 }
 
 function globToRegExp(pattern: string): RegExp {
   let regex = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-  regex = regex.replace(/\*\*/g, '.*');
+  regex = regex.replace(/\*\*/g, '\0');
   regex = regex.replace(/\*/g, '[^/]*');
+  regex = regex.replace(/\0/g, '.*');
   return new RegExp(`^${regex}$`);
 }
 
