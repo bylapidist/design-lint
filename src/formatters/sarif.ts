@@ -8,7 +8,11 @@ interface SarifLog {
   }>;
 }
 
-export function sarifFormatter(results: LintResult[]): string {
+export function sarifFormatter(
+  results: LintResult[],
+  _useColor = true,
+): string {
+  void _useColor;
   const sarif: SarifLog = {
     version: '2.1.0',
     runs: [

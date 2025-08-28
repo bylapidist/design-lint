@@ -361,3 +361,62 @@ test('CLI skips directories listed in .designlintignore', () => {
   const files = parsed.map((r) => path.relative(dir, r.filePath)).sort();
   assert.deepEqual(files, ['src/file.ts']);
 });
+
+test('CLI plugin load errors include context and remediation', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ plugins: ['missing-plugin'] }),
+  );
+  fs.writeFileSync(path.join(dir, 'file.ts'), '');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /Context:/);
+  assert.match(res.stderr, /Remediation:/);
+});
+
+test('CLI --report outputs JSON log', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  const report = path.join(dir, 'report.json');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--report',
+      'report.json',
+      '--format',
+      'json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.ok(fs.existsSync(report));
+  const log = JSON.parse(fs.readFileSync(report, 'utf8'));
+  assert.equal(path.relative(dir, log[0].filePath), 'file.ts');
+  assert.equal(log[0].messages[0].ruleId, 'design-system/deprecation');
+});

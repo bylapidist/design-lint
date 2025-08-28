@@ -44,6 +44,18 @@ const defaultIgnore = [
   '.cache/**',
 ];
 
+interface EngineErrorOptions {
+  message: string;
+  context: string;
+  remediation: string;
+}
+
+function createEngineError(opts: EngineErrorOptions): Error {
+  return new Error(
+    `${opts.message}\nContext: ${opts.context}\nRemediation: ${opts.remediation}`,
+  );
+}
+
 export class Linter {
   private config: Config;
   private ruleMap: Map<string, RuleModule> = new Map();
@@ -75,11 +87,13 @@ export class Linter {
         if ((e as { code?: string }).code === 'ERR_REQUIRE_ESM') {
           mod = await import(resolved ?? p);
         } else {
-          throw new Error(
-            `Failed to load plugin "${p}": ${
+          throw createEngineError({
+            message: `Failed to load plugin "${p}": ${
               e instanceof Error ? e.message : String(e)
             }`,
-          );
+            context: `Plugin "${p}"`,
+            remediation: 'Ensure the plugin is installed and resolvable.',
+          });
         }
       }
       const plugin =
@@ -91,9 +105,11 @@ export class Linter {
         typeof plugin !== 'object' ||
         !Array.isArray((plugin as PluginModule).rules)
       ) {
-        throw new Error(
-          `Invalid plugin "${p}": expected { rules: RuleModule[] }`,
-        );
+        throw createEngineError({
+          message: `Invalid plugin "${p}": expected { rules: RuleModule[] }`,
+          context: `Plugin "${p}"`,
+          remediation: 'Export an object with a "rules" array.',
+        });
       }
       for (const rule of plugin.rules) {
         this.ruleMap.set(rule.name, rule);

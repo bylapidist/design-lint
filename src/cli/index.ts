@@ -5,6 +5,7 @@ import path from 'path';
 import { loadConfig } from '../config/loader';
 import { Linter } from '../core/engine';
 import { getFormatter } from '../formatters';
+import chalk from 'chalk';
 
 function showVersion() {
   const pkgPath = path.resolve(__dirname, '../../package.json');
@@ -45,7 +46,9 @@ Options:
   --config <path>     Path to configuration file
   --format <name>     Output format (stylish, json, sarif)
   --output <file>     Write report to file
+  --report <file>     Write JSON results to file
   --quiet             Suppress stdout output
+  --no-color          Disable colored output
   --fix               Automatically fix problems
   --version           Show version number
   --help              Show this message`;
@@ -54,6 +57,7 @@ Options:
 }
 
 export async function run(argv = process.argv.slice(2)) {
+  let useColor = true;
   try {
     const { values, positionals } = parseArgs({
       args: argv,
@@ -61,13 +65,17 @@ export async function run(argv = process.argv.slice(2)) {
         config: { type: 'string' },
         format: { type: 'string', default: 'stylish' },
         output: { type: 'string' },
+        report: { type: 'string' },
         quiet: { type: 'boolean', default: false },
         fix: { type: 'boolean', default: false },
         version: { type: 'boolean', default: false },
         help: { type: 'boolean', default: false },
+        'no-color': { type: 'boolean', default: false },
       },
       allowPositionals: true,
     });
+
+    useColor = !values['no-color'];
 
     if (values.version) {
       showVersion();
@@ -90,7 +98,7 @@ export async function run(argv = process.argv.slice(2)) {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       // eslint-disable-next-line no-console
-      console.error(message);
+      console.error(useColor ? chalk.red(message) : message);
       process.exitCode = 1;
       return;
     }
@@ -99,13 +107,21 @@ export async function run(argv = process.argv.slice(2)) {
     const config = loadConfig(process.cwd(), values.config);
     const linter = new Linter(config);
     const results = await linter.lintFiles(targets, values.fix);
-    const output = formatter(results);
+    const output = formatter(results, useColor);
 
     if (values.output) {
       fs.writeFileSync(values.output as string, output, 'utf8');
     } else if (!values.quiet) {
       // eslint-disable-next-line no-console
       console.log(output);
+    }
+
+    if (values.report) {
+      fs.writeFileSync(
+        values.report as string,
+        JSON.stringify(results, null, 2),
+        'utf8',
+      );
     }
 
     const hasErrors = results.some((r) =>
@@ -115,7 +131,7 @@ export async function run(argv = process.argv.slice(2)) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     // eslint-disable-next-line no-console
-    console.error(message);
+    console.error(useColor ? chalk.red(message) : message);
     process.exitCode = 1;
   }
 }

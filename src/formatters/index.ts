@@ -3,7 +3,7 @@ import { stylish } from './stylish';
 import { jsonFormatter } from './json';
 import { sarifFormatter } from './sarif';
 
-type Formatter = (results: LintResult[]) => string;
+type Formatter = (results: LintResult[], useColor?: boolean) => string;
 
 export function getFormatter(name: string): Formatter {
   switch (name) {
