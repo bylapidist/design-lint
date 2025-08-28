@@ -36,7 +36,7 @@ syntax message.
 - `rules`: Map of rule name to severity or `[severity, options]`.
 - `ignoreFiles`: Glob patterns to exclude from linting.
 - `plugins`: Additional plugin packages to load.
-
+- `concurrency`: Maximum number of files processed concurrently. Defaults to the number of CPU cores.
 
 ## Rule Options
 

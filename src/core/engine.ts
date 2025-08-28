@@ -5,6 +5,7 @@ import postcss from 'postcss';
 import { createRequire } from 'module';
 import fg from 'fast-glob';
 import pLimit from 'p-limit';
+import os from 'node:os';
 import { performance } from 'node:perf_hooks';
 import type { parse as svelteParse } from 'svelte/compiler';
 import type {
@@ -27,6 +28,7 @@ export interface Config {
   ignoreFiles?: string[];
   plugins?: string[];
   configPath?: string;
+  concurrency?: number;
 }
 
 interface EngineErrorOptions {
@@ -166,7 +168,7 @@ export class Linter {
       }
     }
 
-    const limit = pLimit(20);
+    const limit = pLimit(this.config.concurrency ?? os.cpus().length);
     const tasks = files.map((filePath) =>
       limit(async () => {
         try {

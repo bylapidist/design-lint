@@ -38,6 +38,7 @@ export const configSchema: z.ZodSchema<Config> = z
     ignoreFiles: z.array(z.string()).optional(),
     plugins: z.array(z.string()).optional(),
     configPath: z.string().optional(),
+    concurrency: z.number().int().positive().optional(),
   })
   .strict();
 
