@@ -44,6 +44,15 @@ test('throws for invalid plugin modules', async () => {
   );
 });
 
+test('throws for invalid plugin rules', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'invalid-rule-plugin.ts');
+  const linter = new Linter({ plugins: [pluginPath] });
+  await assert.rejects(
+    () => linter.lintText('const a = 1;', 'file.ts'),
+    /Invalid rule/,
+  );
+});
+
 test('throws when plugin module missing', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'missing-plugin.js');
   const linter = new Linter({ plugins: [pluginPath] });

@@ -115,6 +115,24 @@ export class Linter {
         });
       }
       for (const rule of plugin.rules) {
+        if (
+          !rule ||
+          typeof rule.name !== 'string' ||
+          rule.name.trim() === '' ||
+          !rule.meta ||
+          typeof rule.meta.description !== 'string' ||
+          rule.meta.description.trim() === '' ||
+          typeof rule.create !== 'function'
+        ) {
+          throw createEngineError({
+            message:
+              `Invalid rule "${(rule as { name?: string }).name ?? '<unknown>'}" in plugin "${p}": ` +
+              'expected { name: string; meta: { description: string }; create: Function }',
+            context: `Plugin "${p}"`,
+            remediation:
+              'Ensure each rule has a non-empty name, meta.description, and a create function.',
+          });
+        }
         this.ruleMap.set(rule.name, rule);
       }
     }
