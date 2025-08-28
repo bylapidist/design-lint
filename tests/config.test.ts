@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
+import { makeTmpDir } from '../src/utils/tmp';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader';
 import { Linter } from '../src/core/engine';
 
 test('finds config in parent directories', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
@@ -20,21 +20,21 @@ test('finds config in parent directories', async () => {
 });
 
 test('throws on malformed JSON config', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, '{ invalid json');
   await assert.rejects(loadConfig(tmp), /Failed to load config/);
 });
 
 test('throws on malformed JS config', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.js');
   fs.writeFileSync(configPath, 'module.exports = { tokens: {},');
   await assert.rejects(loadConfig(tmp), /Failed to load config/);
 });
 
 test('throws on invalid tokens', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
@@ -44,7 +44,7 @@ test('throws on invalid tokens', async () => {
 });
 
 test('throws on invalid rule setting', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
@@ -54,14 +54,14 @@ test('throws on invalid rule setting', async () => {
 });
 
 test('throws on invalid plugin path', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, JSON.stringify({ plugins: [123] }));
   await assert.rejects(loadConfig(tmp), /Invalid config/);
 });
 
 test('loads config from .mjs', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.mjs');
   fs.writeFileSync(
     configPath,
@@ -72,7 +72,7 @@ test('loads config from .mjs', async () => {
 });
 
 test('loads async config from .mjs', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.mjs');
   fs.writeFileSync(
     configPath,
@@ -83,7 +83,7 @@ test('loads async config from .mjs', async () => {
 });
 
 test('loads config from .ts', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
   fs.writeFileSync(
     configPath,
@@ -94,7 +94,7 @@ test('loads config from .ts', async () => {
 });
 
 test('loads config when package.json type module', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'package.json'),
     JSON.stringify({ type: 'module' }),
@@ -109,7 +109,7 @@ test('loads config when package.json type module', async () => {
 });
 
 test("rule configured as 'off' is ignored", async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
@@ -125,7 +125,7 @@ test("rule configured as 'off' is ignored", async () => {
 });
 
 test('throws on unknown rule name', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
     configPath,

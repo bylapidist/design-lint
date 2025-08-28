@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
+import { makeTmpDir } from '../src/utils/tmp';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader';
 import { Linter } from '../src/core/engine';
@@ -15,7 +15,7 @@ test('lints large projects without crashing', async () => {
 });
 
 test('lints very large projects without EMFILE', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   fs.writeFileSync(path.join(tmp, 'designlint.config.json'), '{}');
   const count = 2000;
   for (let i = 0; i < count; i++) {
@@ -29,7 +29,7 @@ test('lints very large projects without EMFILE', async () => {
 });
 
 test('respects configured concurrency limit', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({ concurrency: 2 }),

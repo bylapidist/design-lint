@@ -3,12 +3,15 @@ import fs from 'fs';
 import { parseArgs } from 'node:util';
 import path from 'path';
 import { createRequire } from 'module';
+import { once } from 'node:events';
 import type { LintResult } from '../core/types';
 import type { Config } from '../core/engine';
-import { getFormatter } from '../formatters';
+import { getFormatter } from '../formatters/index.js';
 import chalk from 'chalk';
 import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
+import { relFromCwd, realpathIfExists } from '../utils/paths';
+import { writeFileAtomicSync } from '../utils/atomicWrite';
 
 function showVersion() {
   const pkgPath = path.resolve(__dirname, '../../package.json');
@@ -110,11 +113,15 @@ export async function run(argv = process.argv.slice(2)) {
       import('../core/ignore.js'),
     ]);
     let config = await loadConfig(process.cwd(), values.config);
+    if (config.configPath)
+      config.configPath = realpathIfExists(config.configPath);
     let linter = new Linter(config);
     const cache = new Map<string, { mtime: number; result: LintResult }>();
 
-    const gitIgnore = path.join(process.cwd(), '.gitignore');
-    const designIgnore = path.join(process.cwd(), '.designlintignore');
+    const gitIgnore = realpathIfExists(path.join(process.cwd(), '.gitignore'));
+    const designIgnore = realpathIfExists(
+      path.join(process.cwd(), '.designlintignore'),
+    );
     let ig = ignore();
 
     const refreshIgnore = async () => {
@@ -127,9 +134,9 @@ export async function run(argv = process.argv.slice(2)) {
       const paths: string[] = [];
       for (const p of cfg.plugins || []) {
         try {
-          paths.push(req.resolve(p));
+          paths.push(realpathIfExists(req.resolve(p)));
         } catch {
-          paths.push(path.resolve(p));
+          paths.push(realpathIfExists(path.resolve(p)));
         }
       }
       return paths;
@@ -152,16 +159,15 @@ export async function run(argv = process.argv.slice(2)) {
       const output = formatter(results, useColor);
 
       if (values.output) {
-        fs.writeFileSync(values.output as string, output, 'utf8');
+        writeFileAtomicSync(values.output as string, output);
       } else if (!values.quiet) {
         console.log(output);
       }
 
       if (values.report) {
-        fs.writeFileSync(
+        writeFileAtomicSync(
           values.report as string,
           JSON.stringify(results, null, 2),
-          'utf8',
         );
       }
 
@@ -193,24 +199,27 @@ export async function run(argv = process.argv.slice(2)) {
       );
       watcher = chokidar.watch(watchPaths, {
         ignored: (p: string) => {
-          const rel = path.relative(process.cwd(), p).replace(/\\/g, '/');
-          const resolved = path.resolve(p);
-          if (config.configPath && resolved === path.resolve(config.configPath))
-            return false;
+          const rel = relFromCwd(realpathIfExists(p));
+          const resolved = realpathIfExists(path.resolve(p));
+          if (config.configPath && resolved === config.configPath) return false;
           if (resolved === designIgnore || resolved === gitIgnore) return false;
           if (pluginPaths.includes(resolved)) return false;
           if (ignoreFilePaths.includes(resolved)) return false;
           return ig.ignores(rel);
         },
         ignoreInitial: true,
+        awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 50 },
+        usePolling: process.platform === 'win32',
+        interval: 100,
       });
+      await once(watcher, 'ready');
 
       const cleanup = async () => {
         await watcher?.close();
         process.exit(process.exitCode ?? 0);
       };
-      process.on('SIGINT', cleanup);
-      process.on('SIGTERM', cleanup);
+      process.once('SIGINT', cleanup);
+      process.once('SIGTERM', cleanup);
 
       const reload = async () => {
         const req = config.configPath
@@ -231,9 +240,9 @@ export async function run(argv = process.argv.slice(2)) {
       };
 
       const handle = async (filePath: string) => {
-        const resolved = path.resolve(filePath);
+        const resolved = realpathIfExists(path.resolve(filePath));
         if (
-          (config.configPath && resolved === path.resolve(config.configPath)) ||
+          (config.configPath && resolved === config.configPath) ||
           resolved === designIgnore ||
           resolved === gitIgnore ||
           pluginPaths.includes(resolved) ||
@@ -241,15 +250,15 @@ export async function run(argv = process.argv.slice(2)) {
         ) {
           await reload();
         } else {
-          await runLint([filePath]);
+          await runLint([resolved]);
         }
       };
 
       const handleUnlink = async (filePath: string) => {
-        const resolved = path.resolve(filePath);
+        const resolved = realpathIfExists(path.resolve(filePath));
         cache.delete(resolved);
         if (
-          (config.configPath && resolved === path.resolve(config.configPath)) ||
+          (config.configPath && resolved === config.configPath) ||
           resolved === designIgnore ||
           resolved === gitIgnore ||
           pluginPaths.includes(resolved) ||

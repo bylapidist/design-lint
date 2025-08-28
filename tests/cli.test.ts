@@ -3,16 +3,12 @@ import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
-import os from 'node:os';
+import { makeTmpDir } from '../src/utils/tmp';
+import { readWhenReady } from './helpers/fs';
 import { Linter } from '../src';
 import type { LintResult } from '../src/core/types';
 
-const tsNodeRegister = path.join(
-  __dirname,
-  '..',
-  'node_modules',
-  'ts-node/register',
-);
+const tsNodeRegister = require.resolve('ts-node/register');
 
 test('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
@@ -36,7 +32,7 @@ test('CLI exits non-zero on lint errors', () => {
 });
 
 test('CLI --fix applies fixes', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -65,7 +61,7 @@ test('CLI --fix applies fixes', () => {
 });
 
 test('CLI surfaces config load errors', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{ invalid');
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
@@ -86,7 +82,7 @@ test('CLI surfaces config load errors', () => {
 });
 
 test('CLI surfaces output write errors', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -106,7 +102,7 @@ test('CLI surfaces output write errors', () => {
 });
 
 test('CLI writes report to file with --output', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -134,7 +130,7 @@ test('CLI writes report to file with --output', () => {
   );
   assert.notEqual(res.status, 0);
   assert.equal(res.stdout.trim(), '');
-  const report = fs.readFileSync(path.join(dir, 'report.json'), 'utf8');
+  const report = readWhenReady(path.join(dir, 'report.json'));
   assert.ok(report.includes('design-system/deprecation'));
 });
 
@@ -182,7 +178,7 @@ test('CLI reports unknown formatter', () => {
 });
 
 test('CLI outputs SARIF reports', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   try {
     fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
     fs.writeFileSync(
@@ -217,7 +213,7 @@ test('CLI outputs SARIF reports', () => {
 });
 
 test('CLI loads external plugin rules', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   const plugin = path.join(__dirname, 'fixtures', 'test-plugin.ts');
   fs.writeFileSync(
@@ -244,7 +240,7 @@ test('CLI loads external plugin rules', () => {
 });
 
 test('CLI reports plugin load errors', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const badPlugin = path.join(dir, 'missing-plugin.js');
   fs.writeFileSync(
@@ -269,7 +265,7 @@ test('CLI reports plugin load errors', () => {
 });
 
 test('CLI ignores common directories by default', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
   fs.mkdirSync(path.join(dir, 'node_modules', 'pkg'), { recursive: true });
@@ -311,7 +307,7 @@ test('CLI ignores common directories by default', () => {
 });
 
 test('.designlintignore can unignore paths via CLI', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
   fs.mkdirSync(path.join(dir, 'node_modules', 'pkg'), { recursive: true });
@@ -359,7 +355,7 @@ test('.designlintignore can unignore paths via CLI', () => {
 });
 
 test('CLI skips directories listed in .designlintignore', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
   fs.mkdirSync(path.join(dir, 'ignored', 'pkg'), { recursive: true });
@@ -400,7 +396,7 @@ test('CLI skips directories listed in .designlintignore', () => {
 });
 
 test('CLI plugin load errors include context and remediation', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ plugins: ['missing-plugin'] }),
@@ -425,7 +421,7 @@ test('CLI plugin load errors include context and remediation', () => {
 });
 
 test('CLI --report outputs JSON log', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -453,13 +449,13 @@ test('CLI --report outputs JSON log', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.ok(fs.existsSync(report));
-  const log = JSON.parse(fs.readFileSync(report, 'utf8'));
+  const log = JSON.parse(readWhenReady(report));
   assert.equal(path.relative(dir, log[0].filePath), 'file.ts');
   assert.equal(log[0].messages[0].ruleId, 'design-system/deprecation');
 });
 
 test('CLI re-runs on file change in watch mode', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(file, 'const a = "old";');
   fs.writeFileSync(
@@ -514,7 +510,7 @@ test('CLI re-runs on file change in watch mode', async () => {
 });
 
 test('CLI cache updates after --fix run', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(file, 'const a = "old";');
   const config = {
@@ -530,7 +526,7 @@ test('CLI cache updates after --fix run', async () => {
 });
 
 test('CLI re-runs with updated config in watch mode', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(file, 'const a = "old";');
   const configPath = path.join(dir, 'designlint.config.json');
@@ -590,7 +586,7 @@ test('CLI re-runs with updated config in watch mode', async () => {
 });
 
 test('CLI reloads plugins on change in watch mode', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const pluginPath = path.join(dir, 'plugin.js');
   const pluginContent = (msg: string) => `const ts = require('typescript');
 module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rule' }, create(context) { return { onNode(node) { if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}', line: 1, column: 1 }); } } }; } }] };`;
@@ -647,7 +643,7 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
 });
 
 test('CLI reloads when nested ignore file changes in watch mode', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const nested = path.join(dir, 'nested');
   fs.mkdirSync(nested);
   const file = path.join(nested, 'file.ts');
@@ -704,7 +700,7 @@ test('CLI reloads when nested ignore file changes in watch mode', async () => {
 });
 
 test('CLI clears cache when a watched file is deleted', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(file, 'const a = "old";');
   fs.writeFileSync(
@@ -759,7 +755,7 @@ test('CLI clears cache when a watched file is deleted', async () => {
 });
 
 test('CLI continues linting after deleting a watched file', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const fileA = path.join(dir, 'a.ts');
   const fileB = path.join(dir, 'b.ts');
   fs.writeFileSync(fileA, 'const a = "old";');
@@ -821,7 +817,7 @@ test('CLI continues linting after deleting a watched file', async () => {
 });
 
 test('CLI closes watcher on SIGINT', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(file, 'const a = 1;');
   fs.writeFileSync(
@@ -869,7 +865,7 @@ test('CLI closes watcher on SIGINT', async () => {
 });
 
 test('CLI handles errors from watch callbacks', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(file, 'const a = 1;');
   const plugin = path.join(dir, 'plugin.cjs');

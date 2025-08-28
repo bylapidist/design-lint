@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
+import { makeTmpDir } from '../src/utils/tmp';
 import { Linter } from '../src/core/engine';
 
 test('lintFiles ignores common directories by default', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
   fs.mkdirSync(path.join(dir, 'node_modules', 'pkg'), { recursive: true });
@@ -33,7 +33,7 @@ test('lintFiles ignores common directories by default', async () => {
 });
 
 test('lintFiles respects .gitignore', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
   fs.writeFileSync(path.join(dir, 'src', 'skip.ts'), 'const a = "old";');
@@ -55,7 +55,7 @@ test('lintFiles respects .gitignore', async () => {
 });
 
 test('.designlintignore can unignore paths', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
   fs.mkdirSync(path.join(dir, 'node_modules', 'pkg'), { recursive: true });
@@ -81,7 +81,7 @@ test('.designlintignore can unignore paths', async () => {
 });
 
 test('.designlintignore overrides .gitignore', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
   fs.writeFileSync(path.join(dir, '.gitignore'), 'src/file.ts');
@@ -103,7 +103,7 @@ test('.designlintignore overrides .gitignore', async () => {
 });
 
 test('.designlintignore supports negative patterns', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
   fs.writeFileSync(path.join(dir, 'src', 'skip.ts'), 'const a = "old";');
@@ -128,7 +128,7 @@ test('.designlintignore supports negative patterns', async () => {
 });
 
 test('.designlintignore supports Windows paths', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
   fs.writeFileSync(path.join(dir, 'src', 'ignore.ts'), 'const a = "old";');
@@ -150,7 +150,7 @@ test('.designlintignore supports Windows paths', async () => {
 });
 
 test('config ignoreFiles are respected', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
   fs.writeFileSync(path.join(dir, 'src', 'skip.ts'), 'const a = "old";');
@@ -172,7 +172,7 @@ test('config ignoreFiles are respected', async () => {
 });
 
 test('lintFiles respects nested .gitignore', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'nested'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'nested', 'keep.ts'), 'const a = "old";');
   fs.writeFileSync(path.join(dir, 'nested', 'skip.ts'), 'const a = "old";');
@@ -194,7 +194,7 @@ test('lintFiles respects nested .gitignore', async () => {
 });
 
 test('nested .designlintignore overrides parent patterns', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
   fs.writeFileSync(path.join(dir, 'src', 'skip.ts'), 'const a = "old";');

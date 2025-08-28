@@ -3,29 +3,36 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 import type { Config } from '../core/engine';
 import { configSchema } from './schema';
+import { realpathIfExists } from '../utils/paths';
 
-const dynamicImport = (specifier: string): Promise<unknown> =>
-  import(specifier);
+async function loadEsmConfig(absPath: string) {
+  const url = pathToFileURL(absPath);
+  const mod = await import(url.href);
+  return (mod as { default?: unknown }).default ?? mod;
+}
 
 export async function loadConfig(
   cwd: string,
   configPath?: string,
 ): Promise<Config> {
   const resolved = configPath ? path.resolve(cwd, configPath) : findConfig(cwd);
+  const abs = resolved ? realpathIfExists(resolved) : undefined;
   const base: Config = {
     tokens: {},
     rules: {},
     ignoreFiles: [],
     plugins: [],
-    configPath: resolved,
+    configPath: abs,
   };
-  if (resolved && fs.existsSync(resolved)) {
+  if (abs && fs.existsSync(abs)) {
     try {
       let loaded: Config = {};
-      if (resolved.endsWith('.ts') || resolved.endsWith('.mts')) {
+      if (abs.endsWith('.ts') || abs.endsWith('.mts')) {
         try {
-          await dynamicImport('ts-node/register');
-          if (resolved.endsWith('.mts')) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          await import('ts-node/register');
+          if (abs.endsWith('.mts')) {
             require.extensions['.mts'] = require.extensions['.ts'];
           }
         } catch {
@@ -34,28 +41,23 @@ export async function loadConfig(
           );
         }
       }
-      if (resolved.endsWith('.json')) {
-        loaded = JSON.parse(fs.readFileSync(resolved, 'utf8')) as Config;
-      } else if (isESM(resolved)) {
-        const mod = (await dynamicImport(pathToFileURL(resolved).href)) as {
-          default?: unknown;
-        };
-        loaded = (mod.default || mod) as Config;
+      if (abs.endsWith('.json')) {
+        loaded = JSON.parse(fs.readFileSync(abs, 'utf8')) as Config;
+      } else if (isESM(abs)) {
+        loaded = (await loadEsmConfig(abs)) as Config;
       } else {
-        const mod = require(resolved) as { default?: unknown };
+        const mod = require(abs) as { default?: unknown };
         loaded = (mod?.default as Config) || (mod as Config) || {};
       }
-      const merged = { ...base, ...loaded, configPath: resolved };
+      const merged = { ...base, ...loaded, configPath: abs };
       const result = configSchema.safeParse(merged);
       if (!result.success) {
-        throw new Error(
-          `Invalid config at ${resolved}: ${result.error.message}`,
-        );
+        throw new Error(`Invalid config at ${abs}: ${result.error.message}`);
       }
       return result.data;
     } catch (err) {
       throw new Error(
-        `Failed to load config at ${resolved}: ${(err as Error).message}`,
+        `Failed to load config at ${abs}: ${(err as Error).message}`,
       );
     }
   }

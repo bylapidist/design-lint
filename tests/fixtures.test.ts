@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+const tsNodeRegister = require.resolve('ts-node/register');
 
 const builtInRules = [
   'design-system/component-usage',
@@ -53,7 +54,7 @@ for (const { name, files } of fixtures) {
       process.execPath,
       [
         '--require',
-        'ts-node/register',
+        tsNodeRegister,
         cli,
         fixture,
         '--config',

@@ -20,6 +20,7 @@ import type {
 } from './types';
 import { builtInRules } from '../rules';
 import { loadIgnore } from './ignore';
+import { relFromCwd, realpathIfExists } from '../utils/paths';
 export { defaultIgnore } from './ignore';
 
 export interface Config {
@@ -151,12 +152,14 @@ export class Linter {
     }
 
     const readNestedIgnore = async (dir: string) => {
-      const ignoreFiles = await fg(['**/.gitignore', '**/.designlintignore'], {
-        cwd: dir,
-        absolute: true,
-        dot: true,
-        ignore: normalizedPatterns,
-      });
+      const ignoreFiles = (
+        await fg(['**/.gitignore', '**/.designlintignore'], {
+          cwd: dir,
+          absolute: true,
+          dot: true,
+          ignore: normalizedPatterns,
+        })
+      ).map(realpathIfExists);
       ignoreFiles.sort(
         (a, b) => a.split(path.sep).length - b.split(path.sep).length,
       );
@@ -164,9 +167,7 @@ export class Linter {
         if (seenIgnore.has(file)) continue;
         seenIgnore.add(file);
         const dirOfFile = path.dirname(file);
-        const relDir = path
-          .relative(process.cwd(), dirOfFile)
-          .replace(/\\/g, '/');
+        const relDir = relFromCwd(dirOfFile);
         if (relDir === '') continue;
         try {
           const content = await fs.readFile(file, 'utf8');
@@ -196,8 +197,8 @@ export class Linter {
     const files: string[] = [];
     const scanStart = performance.now();
     for (const t of targets) {
-      const full = path.resolve(t);
-      const rel = path.relative(process.cwd(), full).replace(/\\/g, '/');
+      const full = realpathIfExists(path.resolve(t));
+      const rel = relFromCwd(full);
       if (ig.ignores(rel)) continue;
       try {
         const stat = await fs.stat(full);
@@ -212,7 +213,7 @@ export class Linter {
               ignore: normalizedPatterns,
             },
           );
-          files.push(...entries);
+          for (const e of entries) files.push(realpathIfExists(e));
         } else {
           files.push(full);
         }
