@@ -12,6 +12,7 @@ module.exports = [
     rules: {
       ...tsPlugin.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
 ];

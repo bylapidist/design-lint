@@ -1,6 +1,6 @@
 # Usage
 
-Requires Node.js 18 or later.
+Requires Node.js 22 or later.
 
 Install and run **@lapidist/design-lint** to enforce design system rules in your project.
 

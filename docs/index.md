@@ -6,7 +6,7 @@ configuration of the linter.
 
 ## Getting Started
 
-Requires Node.js 18 or later.
+Requires Node.js 22 or later.
 
 Install and run the CLI against your project:
 
@@ -16,4 +16,3 @@ npx design-lint src
 
 Refer to the [Usage](usage.md) guide for all available command line options and
 to [Configuration](configuration.md) for setting up design tokens and rules.
-

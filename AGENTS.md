@@ -1,6 +1,6 @@
 # AGENTS
 
-This repository requires Node.js >= 18 and follows strict [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/) (Angular style) for commit messages.
+This repository requires Node.js >= 22 and follows strict [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/) (Angular style) for commit messages.
 
 ## Before committing
 

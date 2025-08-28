@@ -32,7 +32,7 @@ const tokensSchema = z
 export const configSchema: z.ZodSchema<Config> = z
   .object({
     tokens: tokensSchema.optional(),
-    rules: z.record(ruleSettingSchema).optional(),
+    rules: z.record(z.string(), ruleSettingSchema).optional(),
     ignoreFiles: z.array(z.string()).optional(),
     plugins: z.array(z.string()).optional(),
     configPath: z.string().optional(),

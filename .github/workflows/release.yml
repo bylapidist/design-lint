@@ -14,12 +14,12 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
       - run: npm ci
       - uses: changesets/action@v1
         with:
-          commit: "chore: update versions"
+          commit: 'chore: update versions'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npx changeset tag
