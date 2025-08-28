@@ -25,14 +25,15 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "postcss": "^8.5.6",
     "typescript": "5.3.3"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.1",
     "@types/node": "^20.4.2",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "@typescript-eslint/parser": "^6.7.2",
     "eslint": "^8.56.0",
-    "@changesets/cli": "^2.27.1",
     "prettier": "^3.0.0",
     "ts-node": "^10.9.2",
     "vitepress": "^1.6.4"

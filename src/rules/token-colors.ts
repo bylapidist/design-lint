@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types';
 
-const colorRegex = /#([0-9a-fA-F]{3,8})/;
+const colorRegex = /#([0-9a-fA-F]{3,8})/g;
 
 export const colorsRule: RuleModule = {
   name: 'design-token/colors',
@@ -10,30 +10,37 @@ export const colorsRule: RuleModule = {
     const allowed = new Set(Object.values(context.tokens?.colors || {}));
     return {
       onNode(node) {
-        if (ts.isStringLiteral(node) && colorRegex.test(node.text)) {
-          const value = node.text;
-          if (!allowed.has(value)) {
-            const pos = node
-              .getSourceFile()
-              .getLineAndCharacterOfPosition(node.getStart());
-            context.report({
-              message: `Unexpected color ${value}`,
-              line: pos.line + 1,
-              column: pos.character + 1,
-            });
+        if (ts.isStringLiteral(node)) {
+          const matches = node.text.match(colorRegex);
+          if (matches) {
+            for (const value of matches) {
+              if (!allowed.has(value)) {
+                const pos = node
+                  .getSourceFile()
+                  .getLineAndCharacterOfPosition(node.getStart());
+                context.report({
+                  message: `Unexpected color ${value}`,
+                  line: pos.line + 1,
+                  column: pos.character + 1,
+                });
+                break;
+              }
+            }
           }
         }
       },
       onCSSDeclaration(decl) {
-        const match = decl.value.match(colorRegex);
-        if (match) {
-          const value = match[0];
-          if (!allowed.has(value)) {
-            context.report({
-              message: `Unexpected color ${value}`,
-              line: decl.line,
-              column: decl.column,
-            });
+        const matches = decl.value.match(colorRegex);
+        if (matches) {
+          for (const value of matches) {
+            if (!allowed.has(value)) {
+              context.report({
+                message: `Unexpected color ${value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+              break;
+            }
           }
         }
       },

@@ -82,6 +82,11 @@ throw an error during initialization.
 - JSON and SARIF output for CI
 - Auto-fix deprecated tokens and components
 
+CSS is parsed using [PostCSS](https://postcss.org/). The default parser handles
+standard CSS syntax including multi-line declarations. Preprocessor-specific
+syntax (such as Sass or Less) is not supported unless transformed before
+linting.
+
 ## Documentation
 
 This repository contains Markdown guides under the [`docs/`](docs) directory.

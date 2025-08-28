@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import ts from 'typescript';
+import postcss from 'postcss';
 import type {
   LintResult,
   RuleModule,
@@ -270,19 +271,18 @@ function globToRegExp(pattern: string): RegExp {
 
 function parseCSS(text: string): CSSDeclaration[] {
   const decls: CSSDeclaration[] = [];
-  const lines = text.split(/\n/);
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const regex = /([^:{}]+):\s*([^;]+);/g;
-    let match: RegExpExecArray | null;
-    while ((match = regex.exec(line))) {
+  try {
+    const root = postcss.parse(text);
+    root.walkDecls((d) => {
       decls.push({
-        prop: match[1].trim(),
-        value: match[2].trim(),
-        line: i + 1,
-        column: match.index + 1,
+        prop: d.prop,
+        value: d.value,
+        line: d.source?.start?.line || 0,
+        column: d.source?.start?.column || 0,
       });
-    }
+    });
+  } catch {
+    // ignore parse errors and return what we have
   }
   return decls;
 }
