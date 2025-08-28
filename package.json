@@ -36,7 +36,7 @@
     "ignore": "^7.0.5",
     "chalk": "^5.0.0",
     "chokidar": "^4.0.3",
-    "color-name": "^1.1.4",
+    "color-name": "^2.0.0",
     "p-limit": "^7.0.0",
     "postcss": "^8.5.6",
     "svelte": "^5.38.6",
@@ -45,7 +45,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.6",
     "@types/node": "^24.3.0",
-    "@types/color-name": "^1.1.2",
+    "@types/color-name": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
     "eslint": "^9.34.0",
