@@ -210,7 +210,8 @@ export async function run(argv = process.argv.slice(2)) {
         cache.delete(resolved);
         if (
           (config.configPath && resolved === path.resolve(config.configPath)) ||
-          resolved === ignoreFile
+          resolved === designIgnore ||
+          resolved === gitIgnore
         ) {
           await reload();
         } else {

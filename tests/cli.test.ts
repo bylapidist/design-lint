@@ -590,3 +590,65 @@ test('CLI clears cache when a watched file is deleted', async () => {
   });
   assert.equal(sawEmpty, true);
 });
+
+test('CLI continues linting after deleting a watched file', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const fileA = path.join(dir, 'a.ts');
+  const fileB = path.join(dir, 'b.ts');
+  fs.writeFileSync(fileA, 'const a = "old";');
+  fs.writeFileSync(fileB, 'const b = "old";');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'a.ts',
+      'b.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let runs = 0;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('Watching for changes...')) {
+        buffer = '';
+      } else if (buffer.includes('design-system/deprecation')) {
+        runs++;
+        if (runs === 1) {
+          fs.unlinkSync(fileA);
+          buffer = '';
+        } else if (runs === 2) {
+          assert.ok(buffer.includes('b.ts'));
+          assert.ok(!buffer.includes('a.ts'));
+          proc.kill();
+        }
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(runs, 2);
+});
