@@ -12,6 +12,7 @@
     "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
     "test": "node --require ts-node/register --test",
+    "test:coverage": "node --require ts-node/register --test --experimental-test-coverage",
     "changeset": "changeset",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
