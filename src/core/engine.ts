@@ -310,8 +310,8 @@ export class Linter {
           ruleId: 'parse-error',
           message: err.message || 'Failed to parse Vue component',
           severity: 'error',
-          line: typeof err.line === 'number' ? err.line : 0,
-          column: typeof err.column === 'number' ? err.column : 0,
+          line: typeof err.line === 'number' ? err.line : 1,
+          column: typeof err.column === 'number' ? err.column : 1,
         });
       }
     } else if (/\.svelte$/.test(filePath)) {
@@ -370,8 +370,8 @@ export class Linter {
           ruleId: 'parse-error',
           message: err.message || 'Failed to parse Svelte component',
           severity: 'error',
-          line: typeof err.line === 'number' ? err.line : 0,
-          column: typeof err.column === 'number' ? err.column : 0,
+          line: typeof err.line === 'number' ? err.line : 1,
+          column: typeof err.column === 'number' ? err.column : 1,
         });
       }
     } else if (/\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(filePath)) {
@@ -444,8 +444,8 @@ function parseCSS(
       decls.push({
         prop: d.prop,
         value: d.value,
-        line: d.source?.start?.line || 0,
-        column: d.source?.start?.column || 0,
+        line: d.source?.start?.line || 1,
+        column: d.source?.start?.column || 1,
       });
     });
   } catch (e: unknown) {
@@ -454,8 +454,8 @@ function parseCSS(
       ruleId: 'parse-error',
       message: err.message || 'Failed to parse CSS',
       severity: 'error',
-      line: typeof err.line === 'number' ? err.line : 0,
-      column: typeof err.column === 'number' ? err.column : 0,
+      line: typeof err.line === 'number' ? err.line : 1,
+      column: typeof err.column === 'number' ? err.column : 1,
     });
   }
   return decls;
