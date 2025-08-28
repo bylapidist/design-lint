@@ -1,6 +1,6 @@
 # Configuration
 
-Create a `designlint.config.js` (or `.json`) file in your project root:
+Create a `designlint.config.js` (or `.ts`, `.mjs`, `.mts`, `.json`) file in your project root:
 
 ```js
 module.exports = {
@@ -20,8 +20,11 @@ module.exports = {
 
 @lapidist/design-lint searches for configuration starting from the current working
 directory and walking up parent directories. In each directory it looks for
-`designlint.config.js` first, then `designlint.config.json`. The first file
-found is used.
+`designlint.config.js`, `designlint.config.cjs`, `designlint.config.mjs`,
+`designlint.config.ts`, `designlint.config.mts`, then
+`designlint.config.json`. The first file found is used. Loading TypeScript
+config files requires [`ts-node`](https://typestrong.org/ts-node/) to be
+installed.
 
 If the discovered configuration file contains invalid JSON or JavaScript,
 @lapidist/design-lint will throw an error including the file path and the underlying

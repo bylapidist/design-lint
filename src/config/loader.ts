@@ -24,6 +24,18 @@ export async function loadConfig(
   if (resolved && fs.existsSync(resolved)) {
     try {
       let loaded: Config = {};
+      if (resolved.endsWith('.ts') || resolved.endsWith('.mts')) {
+        try {
+          await dynamicImport('ts-node/register');
+          if (resolved.endsWith('.mts')) {
+            require.extensions['.mts'] = require.extensions['.ts'];
+          }
+        } catch {
+          throw new Error(
+            'To load TypeScript config files, please install ts-node.',
+          );
+        }
+      }
       if (resolved.endsWith('.json')) {
         loaded = JSON.parse(fs.readFileSync(resolved, 'utf8')) as Config;
       } else if (isESM(resolved)) {
@@ -32,7 +44,8 @@ export async function loadConfig(
         };
         loaded = (mod.default || mod) as Config;
       } else {
-        loaded = (require(resolved) as Config) || {};
+        const mod = require(resolved) as { default?: unknown };
+        loaded = (mod?.default as Config) || (mod as Config) || {};
       }
       const merged = { ...base, ...loaded, configPath: resolved };
       const result = configSchema.safeParse(merged);
@@ -65,6 +78,10 @@ function findConfig(cwd: string): string | undefined {
     if (fs.existsSync(cjs)) return cjs;
     const mjs = path.join(dir, 'designlint.config.mjs');
     if (fs.existsSync(mjs)) return mjs;
+    const ts = path.join(dir, 'designlint.config.ts');
+    if (fs.existsSync(ts)) return ts;
+    const mts = path.join(dir, 'designlint.config.mts');
+    if (fs.existsSync(mts)) return mts;
     const json = path.join(dir, 'designlint.config.json');
     if (fs.existsSync(json)) return json;
     const parent = path.dirname(dir);
@@ -76,8 +93,8 @@ function findConfig(cwd: string): string | undefined {
 function isESM(filePath: string): boolean {
   const ext = path.extname(filePath);
   if (ext === '.mjs') return true;
-  if (ext === '.cjs') return false;
-  if (ext !== '.js') return false;
+  if (ext === '.cjs' || ext === '.cts' || ext === '.mts') return false;
+  if (ext !== '.js' && ext !== '.ts') return false;
   let dir = path.dirname(filePath);
   while (true) {
     const pkgPath = path.join(dir, 'package.json');
