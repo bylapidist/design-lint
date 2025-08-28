@@ -181,6 +181,41 @@ test('CLI reports unknown formatter', () => {
   assert.ok(res.stderr.includes('Unknown formatter'));
 });
 
+test('CLI outputs SARIF reports', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  try {
+    fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
+    fs.writeFileSync(
+      path.join(dir, 'designlint.config.json'),
+      JSON.stringify({
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      }),
+    );
+    const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+    const res = spawnSync(
+      process.execPath,
+      [
+        '--require',
+        tsNodeRegister,
+        cli,
+        'file.ts',
+        '--config',
+        'designlint.config.json',
+        '--format',
+        'sarif',
+      ],
+      { encoding: 'utf8', cwd: dir },
+    );
+    assert.notEqual(res.status, 0);
+    const report = JSON.parse(res.stdout);
+    assert.ok(Array.isArray(report.runs));
+    assert.ok(Array.isArray(report.runs[0].results));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('CLI loads external plugin rules', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
