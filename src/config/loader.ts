@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { Config } from '../core/engine';
+import { configSchema } from './schema';
 
 export function loadConfig(cwd: string, configPath?: string): Config {
   const resolved = configPath ? path.resolve(cwd, configPath) : findConfig(cwd);
@@ -17,14 +18,25 @@ export function loadConfig(cwd: string, configPath?: string): Config {
         ? (JSON.parse(fs.readFileSync(resolved, 'utf8')) as Config)
         : // eslint-disable-next-line @typescript-eslint/no-var-requires
           (require(resolved) as Config) || {};
-      return { ...base, ...loaded, configPath: resolved };
+      const merged = { ...base, ...loaded, configPath: resolved };
+      const result = configSchema.safeParse(merged);
+      if (!result.success) {
+        throw new Error(
+          `Invalid config at ${resolved}: ${result.error.message}`,
+        );
+      }
+      return result.data;
     } catch (err) {
       throw new Error(
         `Failed to load config at ${resolved}: ${(err as Error).message}`,
       );
     }
   }
-  return base;
+  const result = configSchema.safeParse(base);
+  if (!result.success) {
+    throw new Error(`Invalid config: ${result.error.message}`);
+  }
+  return result.data;
 }
 
 function findConfig(cwd: string): string | undefined {

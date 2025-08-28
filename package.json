@@ -34,7 +34,8 @@
     "ignore": "^7.0.5",
     "postcss": "^8.5.6",
     "svelte": "^5.38.6",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
