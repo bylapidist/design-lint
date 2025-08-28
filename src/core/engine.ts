@@ -128,7 +128,52 @@ export class Linter {
     cache?: Map<string, { mtime: number; result: LintResult }>,
   ): Promise<LintResult[]> {
     await this.pluginLoad;
-    const { ig, patterns: normalizedPatterns } = await loadIgnore(this.config);
+    const { ig, patterns } = await loadIgnore(this.config);
+    const normalizedPatterns = [...patterns];
+    const seenIgnore = new Set<string>();
+
+    const readNestedIgnore = async (dir: string) => {
+      const ignoreFiles = await fg(['**/.gitignore', '**/.designlintignore'], {
+        cwd: dir,
+        absolute: true,
+        dot: true,
+        ignore: normalizedPatterns,
+      });
+      ignoreFiles.sort(
+        (a, b) => a.split(path.sep).length - b.split(path.sep).length,
+      );
+      for (const file of ignoreFiles) {
+        if (seenIgnore.has(file)) continue;
+        seenIgnore.add(file);
+        const dirOfFile = path.dirname(file);
+        const relDir = path
+          .relative(process.cwd(), dirOfFile)
+          .replace(/\\/g, '/');
+        if (relDir === '') continue;
+        try {
+          const content = await fs.readFile(file, 'utf8');
+          const lines = content
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter((l) => l && !l.startsWith('#'))
+            .map((l) => {
+              const neg = l.startsWith('!');
+              const pattern = neg ? l.slice(1) : l;
+              const cleaned = pattern
+                .replace(/^[\\/]+/, '')
+                .replace(/\\/g, '/');
+              const combined = relDir
+                ? path.posix.join(relDir, cleaned)
+                : cleaned;
+              return neg ? `!${combined}` : combined;
+            });
+          ig.add(lines);
+          normalizedPatterns.push(...lines);
+        } catch {
+          // ignore
+        }
+      }
+    };
 
     const files: string[] = [];
     const scanStart = performance.now();
@@ -139,6 +184,7 @@ export class Linter {
       try {
         const stat = await fs.stat(full);
         if (stat.isDirectory()) {
+          await readNestedIgnore(full);
           const entries = await fg(
             '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}',
             {
