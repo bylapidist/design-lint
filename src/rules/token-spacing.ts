@@ -25,13 +25,18 @@ export const spacingRule: RuleModule = {
         }
       },
       onCSSDeclaration(decl) {
-        const num = parseFloat(decl.value);
-        if (!isNaN(num) && !isAllowed(num)) {
-          context.report({
-            message: `Unexpected spacing ${decl.value}`,
-            line: decl.line,
-            column: decl.column,
-          });
+        const matches = decl.value.match(/-?\d*\.?\d+/g);
+        if (!matches) return;
+        for (const m of matches) {
+          const num = parseFloat(m);
+          if (!isNaN(num) && !isAllowed(num)) {
+            context.report({
+              message: `Unexpected spacing ${m}`,
+              line: decl.line,
+              column: decl.column,
+            });
+            break;
+          }
         }
       },
     };

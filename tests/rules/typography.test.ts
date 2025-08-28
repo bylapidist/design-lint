@@ -13,3 +13,15 @@ test('design-token/typography reports invalid font-size', async () => {
   const res = await linter.lintText(css, 'file.css');
   assert.equal(res.messages.length, 1);
 });
+
+test('design-token/typography handles multi-line font-family', async () => {
+  const linter = new Linter({
+    tokens: {
+      typography: { fontSizes: { base: 16 }, fonts: { sans: 'Inter' } },
+    },
+    rules: { 'design-token/typography': 'error' },
+  });
+  const css = `.a{\n  font-family:\n    'Inter',\n    Arial;\n}`;
+  const res = await linter.lintText(css, 'file.css');
+  assert.equal(res.messages.length, 1);
+});

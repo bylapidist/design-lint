@@ -72,3 +72,11 @@ module.exports = {
 If a plugin cannot be resolved or does not export the expected shape, the
 linter throws an error such as `Failed to load plugin "my-plugin"` or
 `Invalid plugin "my-plugin": expected { rules: RuleModule[] }`.
+
+## CSS Parsing
+
+Design-lint uses [PostCSS](https://postcss.org/) to parse CSS. The default
+parser understands standard CSS syntax and supports multi-line declarations.
+Preprocessor-specific features such as Sass or Less syntax are not supported
+unless the source is transformed beforehand. The parser currently exposes no
+additional configuration options.

@@ -23,12 +23,18 @@ export const typographyRule: RuleModule = {
           }
         }
         if (decl.prop === 'font-family') {
-          if (!fonts.has(decl.value)) {
-            context.report({
-              message: `Unexpected font family ${decl.value}`,
-              line: decl.line,
-              column: decl.column,
-            });
+          const families = decl.value
+            .split(',')
+            .map((f) => f.trim().replace(/^['"]|['"]$/g, ''));
+          for (const fam of families) {
+            if (!fonts.has(fam)) {
+              context.report({
+                message: `Unexpected font family ${fam}`,
+                line: decl.line,
+                column: decl.column,
+              });
+              break;
+            }
           }
         }
       },
