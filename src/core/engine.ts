@@ -229,7 +229,8 @@ export class Linter {
       }
     } else if (/\.svelte$/.test(filePath)) {
       try {
-        // @ts-expect-error - svelte compiler lacks type declarations
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - svelte compiler lacks type declarations
         const { parse } = await import('svelte/compiler');
         const ast = parse(text);
         const scripts: string[] = [];
