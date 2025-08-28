@@ -4,14 +4,20 @@ import type { Config } from '../core/engine';
 
 export function loadConfig(cwd: string, configPath?: string): Config {
   const resolved = configPath ? path.resolve(cwd, configPath) : findConfig(cwd);
-  const base: Config = { tokens: {}, rules: {}, ignoreFiles: [] };
+  const base: Config = {
+    tokens: {},
+    rules: {},
+    ignoreFiles: [],
+    plugins: [],
+    configPath: resolved,
+  };
   if (resolved && fs.existsSync(resolved)) {
     try {
       const loaded = resolved.endsWith('.json')
         ? (JSON.parse(fs.readFileSync(resolved, 'utf8')) as Config)
         : // eslint-disable-next-line @typescript-eslint/no-var-requires
           (require(resolved) as Config) || {};
-      return { ...base, ...loaded };
+      return { ...base, ...loaded, configPath: resolved };
     } catch (err) {
       throw new Error(
         `Failed to load config at ${resolved}: ${(err as Error).message}`,
