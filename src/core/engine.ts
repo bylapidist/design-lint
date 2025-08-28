@@ -187,7 +187,10 @@ export class Linter {
         const template = descriptor.template?.content ?? '';
         const templateTsx = template
           .replace(/class=/g, 'className=')
-          .replace(/:style="{([^}]+)}"/g, (_, expr) => `style={{ ${expr.trim()} }}`);
+          .replace(
+            /:style="{([^}]+)}"/g,
+            (_, expr) => `style={{ ${expr.trim()} }}`,
+          );
         const scripts: string[] = [];
         if (descriptor.script?.content) scripts.push(descriptor.script.content);
         if (descriptor.scriptSetup?.content)
@@ -230,9 +233,13 @@ export class Linter {
         const ast = parse(text);
         const scripts: string[] = [];
         if (ast.instance)
-          scripts.push(text.slice(ast.instance.content.start, ast.instance.content.end));
+          scripts.push(
+            text.slice(ast.instance.content.start, ast.instance.content.end),
+          );
         if (ast.module)
-          scripts.push(text.slice(ast.module.content.start, ast.module.content.end));
+          scripts.push(
+            text.slice(ast.module.content.start, ast.module.content.end),
+          );
         const template = ast.html
           ? text.slice(ast.html.start, ast.html.end)
           : '';
