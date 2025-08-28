@@ -89,8 +89,8 @@ import { Linter, loadConfig, getFormatter } from '@lapidist/design-lint';
 const config = await loadConfig();
 const linter = new Linter(config);
 const results = await linter.lintFiles(['src']);
-const formatter = await getFormatter('stylish');
-console.log(formatter.format(results));
+const formatter = getFormatter('stylish');
+console.log(formatter(results));
 ```
 
 Additional exports such as `applyFixes` and `builtInRules` are also available.
