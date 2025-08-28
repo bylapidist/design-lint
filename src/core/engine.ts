@@ -4,7 +4,6 @@ import ts from 'typescript';
 import postcss from 'postcss';
 import { createRequire } from 'module';
 import fg from 'fast-glob';
-import ignore from 'ignore';
 import pLimit from 'p-limit';
 import { performance } from 'node:perf_hooks';
 import type { parse as svelteParse } from 'svelte/compiler';
@@ -19,6 +18,8 @@ import type {
   PluginModule,
 } from './types';
 import { builtInRules } from '../rules';
+import { loadIgnore } from './ignore';
+export { defaultIgnore } from './ignore';
 
 export interface Config {
   tokens?: DesignTokens;
@@ -27,25 +28,6 @@ export interface Config {
   plugins?: string[];
   configPath?: string;
 }
-
-export const defaultIgnore = [
-  '**/node_modules/**',
-  'node_modules/**',
-  '**/dist/**',
-  'dist/**',
-  '**/build/**',
-  'build/**',
-  '**/coverage/**',
-  'coverage/**',
-  '**/.next/**',
-  '.next/**',
-  '**/.nuxt/**',
-  '.nuxt/**',
-  '**/out/**',
-  'out/**',
-  '**/.cache/**',
-  '.cache/**',
-];
 
 interface EngineErrorOptions {
   message: string;
@@ -144,44 +126,7 @@ export class Linter {
     cache?: Map<string, { mtime: number; result: LintResult }>,
   ): Promise<LintResult[]> {
     await this.pluginLoad;
-    const ignorePatterns = [...defaultIgnore];
-    const ig = ignore();
-    ig.add(defaultIgnore);
-
-    const gitIgnore = path.join(process.cwd(), '.gitignore');
-    try {
-      const content = await fs.readFile(gitIgnore, 'utf8');
-      ig.add(content);
-      const lines = content
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter((l) => l && !l.startsWith('#'));
-      ignorePatterns.push(...lines);
-    } catch {
-      // no gitignore
-    }
-
-    const designIgnore = path.join(process.cwd(), '.designlintignore');
-    try {
-      const content = await fs.readFile(designIgnore, 'utf8');
-      ig.add(content);
-      const lines = content
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter((l) => l && !l.startsWith('#'));
-      ignorePatterns.push(...lines);
-    } catch {
-      // no designlintignore
-    }
-    if (this.config.ignoreFiles) {
-      const normalized = this.config.ignoreFiles.map((p) =>
-        p.replace(/\\/g, '/'),
-      );
-      ig.add(normalized);
-      ignorePatterns.push(...normalized);
-    }
-
-    const normalizedPatterns = ignorePatterns.map((p) => p.replace(/\\/g, '/'));
+    const { ig, patterns: normalizedPatterns } = await loadIgnore(this.config);
 
     const files: string[] = [];
     const scanStart = performance.now();

@@ -107,9 +107,10 @@ export async function run(argv = process.argv.slice(2)) {
     }
 
     const targets = positionals.length ? positionals : ['.'];
-    const [{ loadConfig }, { Linter, defaultIgnore }] = await Promise.all([
+    const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
       import('../config/loader'),
       import('../core/engine'),
+      import('../core/ignore'),
     ]);
     let config = await loadConfig(process.cwd(), values.config);
     let linter = new Linter(config);
@@ -119,23 +120,9 @@ export async function run(argv = process.argv.slice(2)) {
     const designIgnore = path.join(process.cwd(), '.designlintignore');
     let ig = ignore();
 
-    const refreshIgnore = () => {
-      ig = ignore();
-      ig.add(defaultIgnore);
-      try {
-        const content = fs.readFileSync(gitIgnore, 'utf8');
-        ig.add(content);
-      } catch {
-        // no gitignore
-      }
-      try {
-        const content = fs.readFileSync(designIgnore, 'utf8');
-        ig.add(content);
-      } catch {
-        // no designlintignore
-      }
-      if (config.ignoreFiles)
-        ig.add(config.ignoreFiles.map((p) => p.replace(/\\/g, '/')));
+    const refreshIgnore = async () => {
+      const { ig: newIg } = await loadIgnore(config);
+      ig = newIg;
     };
 
     const runLint = async (paths: string[]) => {
@@ -168,7 +155,7 @@ export async function run(argv = process.argv.slice(2)) {
     if (values.watch) {
       // eslint-disable-next-line no-console
       console.log('Watching for changes...');
-      refreshIgnore();
+      await refreshIgnore();
       const watchPaths = [...targets];
       if (config.configPath) watchPaths.push(config.configPath);
       watchPaths.push(designIgnore, gitIgnore);
@@ -187,7 +174,7 @@ export async function run(argv = process.argv.slice(2)) {
       const reload = async () => {
         config = await loadConfig(process.cwd(), values.config);
         linter = new Linter(config);
-        refreshIgnore();
+        await refreshIgnore();
         cache.clear();
         await runLint(targets);
       };
