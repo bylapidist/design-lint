@@ -156,6 +156,29 @@ test('CLI --quiet suppresses stdout output', () => {
   assert.equal(res.stdout.trim(), '');
 });
 
+test('CLI disables colors when stdout is not a TTY', () => {
+  const fixture = path.join(__dirname, 'fixtures', 'sample');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      path.join(fixture, 'bad.ts'),
+      '--config',
+      path.join(fixture, 'designlint.config.json'),
+    ],
+    {
+      encoding: 'utf8',
+      env: { ...process.env, FORCE_COLOR: '1' },
+    },
+  );
+  assert.notEqual(res.status, 0);
+  assert.ok(res.stdout.includes('bad.ts'));
+  assert.ok(!/\x1b\[[0-9;]*m/.test(res.stdout));
+});
+
 test('CLI reports unknown formatter', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');

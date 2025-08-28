@@ -7,7 +7,7 @@ import { once } from 'node:events';
 import type { LintResult } from '../core/types';
 import type { Config } from '../core/engine';
 import { getFormatter } from '../formatters/index.js';
-import chalk from 'chalk';
+import chalk, { supportsColor } from 'chalk';
 import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths';
@@ -60,7 +60,7 @@ Options:
 }
 
 export async function run(argv = process.argv.slice(2)) {
-  let useColor = true;
+  let useColor = Boolean(process.stdout.isTTY && supportsColor);
   try {
     const { values, positionals } = parseArgs({
       args: argv,
@@ -79,7 +79,7 @@ export async function run(argv = process.argv.slice(2)) {
       allowPositionals: true,
     });
 
-    useColor = !values['no-color'];
+    if (values['no-color']) useColor = false;
 
     if (values.version) {
       showVersion();
