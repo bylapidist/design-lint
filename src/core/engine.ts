@@ -40,8 +40,13 @@ export class Linter {
           }`,
         );
       }
-      const plugin = (mod as { default?: PluginModule }).default || (mod as PluginModule);
-      if (!plugin || typeof plugin !== 'object' || !Array.isArray((plugin as PluginModule).rules)) {
+      const plugin =
+        (mod as { default?: PluginModule }).default || (mod as PluginModule);
+      if (
+        !plugin ||
+        typeof plugin !== 'object' ||
+        !Array.isArray((plugin as PluginModule).rules)
+      ) {
         throw new Error(
           `Invalid plugin "${p}": expected { rules: RuleModule[] }`,
         );
