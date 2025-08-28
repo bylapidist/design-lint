@@ -5,6 +5,7 @@ import postcss from 'postcss';
 import { createRequire } from 'module';
 import fg from 'fast-glob';
 import ignore from 'ignore';
+import pLimit from 'p-limit';
 import { performance } from 'node:perf_hooks';
 import type { parse as svelteParse } from 'svelte/compiler';
 import type {
@@ -199,29 +200,32 @@ export class Linter {
       }
     }
 
-    const tasks = files.map(async (filePath) => {
-      try {
-        const stat = await fs.stat(filePath);
-        const cached = cache?.get(filePath);
-        if (cached && cached.mtime === stat.mtimeMs && !fix) {
-          return cached.result;
-        }
-        const text = await fs.readFile(filePath, 'utf8');
-        let result = await this.lintText(text, filePath);
-        if (fix) {
-          const output = applyFixes(text, result.messages);
-          if (output !== text) {
-            await fs.writeFile(filePath, output, 'utf8');
-            result = await this.lintText(output, filePath);
+    const limit = pLimit(20);
+    const tasks = files.map((filePath) =>
+      limit(async () => {
+        try {
+          const stat = await fs.stat(filePath);
+          const cached = cache?.get(filePath);
+          if (cached && cached.mtime === stat.mtimeMs && !fix) {
+            return cached.result;
           }
+          const text = await fs.readFile(filePath, 'utf8');
+          let result = await this.lintText(text, filePath);
+          if (fix) {
+            const output = applyFixes(text, result.messages);
+            if (output !== text) {
+              await fs.writeFile(filePath, output, 'utf8');
+              result = await this.lintText(output, filePath);
+            }
+          }
+          cache?.set(filePath, { mtime: stat.mtimeMs, result });
+          return result;
+        } catch {
+          cache?.delete(filePath);
+          return { filePath, messages: [] } as LintResult;
         }
-        cache?.set(filePath, { mtime: stat.mtimeMs, result });
-        return result;
-      } catch {
-        cache?.delete(filePath);
-        return { filePath, messages: [] } as LintResult;
-      }
-    });
+      }),
+    );
 
     const results = await Promise.all(tasks);
     return results;
