@@ -236,3 +236,44 @@ test('.designlintignore can unignore paths via CLI', () => {
   const files = parsed.map((r) => path.relative(dir, r.filePath)).sort();
   assert.deepEqual(files, ['node_modules/pkg/index.ts', 'src/file.ts']);
 });
+
+test('CLI skips directories listed in .designlintignore', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
+  fs.mkdirSync(path.join(dir, 'ignored', 'pkg'), { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, 'ignored', 'pkg', 'index.ts'),
+    'const a = "old";',
+  );
+  fs.writeFileSync(path.join(dir, '.designlintignore'), 'ignored/**');
+  const config = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(
+    config,
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      'ts-node/register',
+      cli,
+      dir,
+      '--config',
+      config,
+      '--format',
+      'json',
+    ],
+    { encoding: 'utf8' },
+  );
+  interface Result {
+    filePath: string;
+  }
+  const parsed: Result[] = JSON.parse(res.stdout);
+  const files = parsed.map((r) => path.relative(dir, r.filePath)).sort();
+  assert.deepEqual(files, ['src/file.ts']);
+});

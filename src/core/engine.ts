@@ -119,11 +119,14 @@ export class Linter {
       ignorePatterns.push(...this.config.ignoreFiles);
 
     const ig = ignore();
-    ig.add(ignorePatterns.map((p) => p.replace(/\\/g, '/')));
+    const normalizedPatterns = ignorePatterns.map((p) => p.replace(/\\/g, '/'));
+    ig.add(normalizedPatterns);
 
     const files: string[] = [];
     for (const t of targets) {
       const full = path.resolve(t);
+      const rel = path.relative(process.cwd(), full).replace(/\\/g, '/');
+      if (ig.ignores(rel)) continue;
       try {
         const stat = await fs.stat(full);
         if (stat.isDirectory()) {
@@ -131,6 +134,7 @@ export class Linter {
             cwd: full,
             absolute: true,
             dot: true,
+            ignore: normalizedPatterns,
           });
           files.push(...entries);
         } else {
@@ -141,14 +145,8 @@ export class Linter {
       }
     }
 
-    const relFiles = files.map((f) =>
-      path.relative(process.cwd(), f).replace(/\\/g, '/'),
-    );
-    const filteredRel = ig.filter(relFiles);
-    const filtered = filteredRel.map((r) => path.resolve(process.cwd(), r));
-
     const results: LintResult[] = [];
-    for (const filePath of filtered) {
+    for (const filePath of files) {
       const text = await fs.readFile(filePath, 'utf8');
       let result = await this.lintText(text, filePath);
       if (fix) {
