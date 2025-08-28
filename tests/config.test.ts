@@ -31,3 +31,30 @@ test('throws on malformed JS config', () => {
   fs.writeFileSync(configPath, 'module.exports = { tokens: {},');
   assert.throws(() => loadConfig(tmp), /Failed to load config/);
 });
+
+test('throws on invalid tokens', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ tokens: { colors: { primary: 123 } } }),
+  );
+  assert.throws(() => loadConfig(tmp), /Invalid config/);
+});
+
+test('throws on invalid rule setting', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ rules: { 'design-token/colors': 'invalid' } }),
+  );
+  assert.throws(() => loadConfig(tmp), /Invalid config/);
+});
+
+test('throws on invalid plugin path', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(configPath, JSON.stringify({ plugins: [123] }));
+  assert.throws(() => loadConfig(tmp), /Invalid config/);
+});
