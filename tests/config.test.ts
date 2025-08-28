@@ -71,6 +71,17 @@ test('loads config from .mjs', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
+test('loads async config from .mjs', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const configPath = path.join(tmp, 'designlint.config.mjs');
+  fs.writeFileSync(
+    configPath,
+    "export default await Promise.resolve({ tokens: { colors: { primary: '#000' } } });",
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.colors?.primary, '#000');
+});
+
 test('loads config from .ts', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const configPath = path.join(tmp, 'designlint.config.ts');

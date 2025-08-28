@@ -4,10 +4,8 @@ import { pathToFileURL } from 'url';
 import type { Config } from '../core/engine';
 import { configSchema } from './schema';
 
-const dynamicImport = new Function(
-  'specifier',
-  'return import(specifier);',
-) as (specifier: string) => Promise<unknown>;
+const dynamicImport = (specifier: string): Promise<unknown> =>
+  import(specifier);
 
 export async function loadConfig(
   cwd: string,
