@@ -117,6 +117,13 @@ export class Linter {
               'Ensure each rule has a non-empty name, meta.description, and a create function.',
           });
         }
+        if (this.ruleMap.has(rule.name)) {
+          throw createEngineError({
+            message: `Rule "${rule.name}" from plugin "${p}" conflicts with an existing rule`,
+            context: `Plugin "${p}"`,
+            remediation: 'Use a unique rule name to avoid collisions.',
+          });
+        }
         this.ruleMap.set(rule.name, rule);
       }
     }

@@ -61,3 +61,12 @@ test('throws when plugin module missing', async () => {
     /Failed to load plugin/,
   );
 });
+
+test('throws when plugin rule conflicts with existing rule', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'conflict-plugin.ts');
+  const linter = new Linter({ plugins: [pluginPath] });
+  await assert.rejects(
+    () => linter.lintText('const a = 1;', 'file.ts'),
+    /conflicts with an existing rule/,
+  );
+});
