@@ -8,6 +8,7 @@ export const spacingRule: RuleModule = {
     const allowed = new Set(Object.values(context.tokens?.spacing || {}));
     const base = (context.options as { base?: number } | undefined)?.base ?? 4;
     const isAllowed = (n: number) => allowed.has(n) || n % base === 0;
+    const allowedUnits = new Set(['px', 'rem', 'em']);
     return {
       onNode(node) {
         if (ts.isNumericLiteral(node)) {
@@ -25,13 +26,13 @@ export const spacingRule: RuleModule = {
         }
       },
       onCSSDeclaration(decl) {
-        const matches = decl.value.match(/-?\d*\.?\d+/g);
-        if (!matches) return;
+        const matches = decl.value.matchAll(/(-?\d*\.?\d+)([a-z%]*)/gi);
         for (const m of matches) {
-          const num = parseFloat(m);
-          if (!isNaN(num) && !isAllowed(num)) {
+          const num = parseFloat(m[1]);
+          const unit = m[2].toLowerCase();
+          if (!isNaN(num) && allowedUnits.has(unit) && !isAllowed(num)) {
             context.report({
-              message: `Unexpected spacing ${m}`,
+              message: `Unexpected spacing ${m[0]}`,
               line: decl.line,
               column: decl.column,
             });

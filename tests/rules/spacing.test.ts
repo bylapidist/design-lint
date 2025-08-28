@@ -16,7 +16,16 @@ test('design-token/spacing handles multi-line CSS', async () => {
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
   });
-  const css = `.a{\n  margin:\n    5px\n    8px;\n}`;
+  const css = `.a{\n  margin:\n    0.5rem\n    8px\n    10vw;\n}`;
   const res = await linter.lintText(css, 'file.css');
   assert.equal(res.messages.length, 1);
+});
+
+test('design-token/spacing ignores unsupported units', async () => {
+  const linter = new Linter({
+    tokens: { spacing: { sm: 4, md: 8 } },
+    rules: { 'design-token/spacing': ['error', { base: 4 }] },
+  });
+  const res = await linter.lintText('.a{margin:5.5vw 10%;}', 'file.css');
+  assert.equal(res.messages.length, 0);
 });
