@@ -2,7 +2,9 @@
 import fs from 'fs';
 import { parseArgs } from 'node:util';
 import path from 'path';
+import { createRequire } from 'module';
 import type { LintResult } from '../core/types';
+import type { Config } from '../core/engine';
 import { getFormatter } from '../formatters';
 import chalk from 'chalk';
 import ignore from 'ignore';
@@ -125,6 +127,19 @@ export async function run(argv = process.argv.slice(2)) {
       ig = newIg;
     };
 
+    const resolvePluginPaths = (cfg: Config): string[] => {
+      const req = cfg.configPath ? createRequire(cfg.configPath) : require;
+      const paths: string[] = [];
+      for (const p of cfg.plugins || []) {
+        try {
+          paths.push(req.resolve(p));
+        } catch {
+          paths.push(path.resolve(p));
+        }
+      }
+      return paths;
+    };
+
     const runLint = async (paths: string[]) => {
       const results = await linter.lintFiles(paths, values.fix, cache);
       const output = formatter(results, useColor);
@@ -156,9 +171,10 @@ export async function run(argv = process.argv.slice(2)) {
       // eslint-disable-next-line no-console
       console.log('Watching for changes...');
       await refreshIgnore();
+      let pluginPaths = resolvePluginPaths(config);
       const watchPaths = [...targets];
       if (config.configPath) watchPaths.push(config.configPath);
-      watchPaths.push(designIgnore, gitIgnore);
+      watchPaths.push(designIgnore, gitIgnore, ...pluginPaths);
       const watcher = chokidar.watch(watchPaths, {
         ignored: (p: string) => {
           const rel = path.relative(process.cwd(), p).replace(/\\/g, '/');
@@ -166,16 +182,27 @@ export async function run(argv = process.argv.slice(2)) {
           if (config.configPath && resolved === path.resolve(config.configPath))
             return false;
           if (resolved === designIgnore || resolved === gitIgnore) return false;
+          if (pluginPaths.includes(resolved)) return false;
           return ig.ignores(rel);
         },
         ignoreInitial: true,
       });
 
       const reload = async () => {
+        const req = config.configPath
+          ? createRequire(config.configPath)
+          : require;
+        for (const p of pluginPaths) delete req.cache?.[p];
         config = await loadConfig(process.cwd(), values.config);
         linter = new Linter(config);
         await refreshIgnore();
         cache.clear();
+        const newPluginPaths = resolvePluginPaths(config);
+        const toRemove = pluginPaths.filter((p) => !newPluginPaths.includes(p));
+        if (toRemove.length) watcher.unwatch(toRemove);
+        const toAdd = newPluginPaths.filter((p) => !pluginPaths.includes(p));
+        if (toAdd.length) watcher.add(toAdd);
+        pluginPaths = newPluginPaths;
         await runLint(targets);
       };
 
@@ -184,7 +211,8 @@ export async function run(argv = process.argv.slice(2)) {
         if (
           (config.configPath && resolved === path.resolve(config.configPath)) ||
           resolved === designIgnore ||
-          resolved === gitIgnore
+          resolved === gitIgnore ||
+          pluginPaths.includes(resolved)
         ) {
           await reload();
         } else {
@@ -200,7 +228,8 @@ export async function run(argv = process.argv.slice(2)) {
         if (
           (config.configPath && resolved === path.resolve(config.configPath)) ||
           resolved === designIgnore ||
-          resolved === gitIgnore
+          resolved === gitIgnore ||
+          pluginPaths.includes(resolved)
         ) {
           await reload();
         } else {

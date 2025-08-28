@@ -554,6 +554,63 @@ test('CLI re-runs with updated config in watch mode', async () => {
   assert.equal(saw, true);
 });
 
+test('CLI reloads plugins on change in watch mode', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const pluginPath = path.join(dir, 'plugin.js');
+  const pluginContent = (msg: string) => `const ts = require('typescript');
+module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rule' }, create(context) { return { onNode(node) { if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}', line: 1, column: 1 }); } } }; } }] };`;
+  fs.writeFileSync(pluginPath, pluginContent('first'));
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      plugins: ['./plugin.js'],
+      rules: { 'plugin/test': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let runs = 0;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('first')) {
+        runs++;
+        fs.writeFileSync(pluginPath, pluginContent('second'));
+        buffer = '';
+      } else if (buffer.includes('second')) {
+        runs++;
+        proc.kill();
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(runs, 2);
+});
+
 test('CLI clears cache when a watched file is deleted', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const file = path.join(dir, 'file.ts');
