@@ -109,9 +109,32 @@ export async function run(argv = process.argv.slice(2)) {
     }
 
     const targets = positionals.length ? positionals : ['.'];
-    const config = await loadConfig(process.cwd(), values.config);
-    const linter = new Linter(config);
+    let config = await loadConfig(process.cwd(), values.config);
+    let linter = new Linter(config);
     const cache = new Map<string, { mtime: number; result: LintResult }>();
+
+    const ignoreFile = path.join(process.cwd(), '.designlintignore');
+    let ig = ignore();
+
+    const refreshIgnore = () => {
+      const ignorePatterns = [...defaultIgnore];
+      try {
+        const content = fs.readFileSync(ignoreFile, 'utf8');
+        const lines = content
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean);
+        ignorePatterns.push(...lines);
+      } catch {
+        // no ignore file
+      }
+      if (config.ignoreFiles) ignorePatterns.push(...config.ignoreFiles);
+      ig = ignore();
+      const normalizedPatterns = ignorePatterns.map((p) =>
+        p.replace(/\\/g, '/'),
+      );
+      ig.add(normalizedPatterns);
+    };
 
     const runLint = async (paths: string[]) => {
       const results = await linter.lintFiles(paths, values.fix, cache);
@@ -143,35 +166,44 @@ export async function run(argv = process.argv.slice(2)) {
     if (values.watch) {
       // eslint-disable-next-line no-console
       console.log('Watching for changes...');
-      const ignorePatterns = [...defaultIgnore];
-      const ignoreFile = path.join(process.cwd(), '.designlintignore');
-      try {
-        const content = fs.readFileSync(ignoreFile, 'utf8');
-        const lines = content
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter(Boolean);
-        ignorePatterns.push(...lines);
-      } catch {
-        // no ignore file
-      }
-      if (config.ignoreFiles) ignorePatterns.push(...config.ignoreFiles);
-      const ig = ignore();
-      const normalizedPatterns = ignorePatterns.map((p) =>
-        p.replace(/\\/g, '/'),
-      );
-      ig.add(normalizedPatterns);
-      const watcher = chokidar.watch(targets, {
-        ignored: (p: string) =>
-          ig.ignores(path.relative(process.cwd(), p).replace(/\\/g, '/')),
+      refreshIgnore();
+      const watchPaths = [...targets];
+      if (config.configPath) watchPaths.push(config.configPath);
+      watchPaths.push(ignoreFile);
+      const watcher = chokidar.watch(watchPaths, {
+        ignored: (p: string) => {
+          const rel = path.relative(process.cwd(), p).replace(/\\/g, '/');
+          const resolved = path.resolve(p);
+          if (config.configPath && resolved === path.resolve(config.configPath))
+            return false;
+          if (resolved === ignoreFile) return false;
+          return ig.ignores(rel);
+        },
         ignoreInitial: true,
       });
-      watcher.on('add', async (filePath) => {
-        await runLint([filePath]);
-      });
-      watcher.on('change', async (filePath) => {
-        await runLint([filePath]);
-      });
+
+      const reload = async () => {
+        config = await loadConfig(process.cwd(), values.config);
+        linter = new Linter(config);
+        refreshIgnore();
+        cache.clear();
+        await runLint(targets);
+      };
+
+      const handle = async (filePath: string) => {
+        const resolved = path.resolve(filePath);
+        if (
+          (config.configPath && resolved === path.resolve(config.configPath)) ||
+          resolved === ignoreFile
+        ) {
+          await reload();
+        } else {
+          await runLint([filePath]);
+        }
+      };
+
+      watcher.on('add', handle);
+      watcher.on('change', handle);
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

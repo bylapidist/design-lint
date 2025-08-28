@@ -475,3 +475,63 @@ test('CLI re-runs on file change in watch mode', async () => {
   });
   assert.equal(runs, 2);
 });
+
+test('CLI re-runs with updated config in watch mode', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = "old";');
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: {},
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let saw = false;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('Watching for changes...')) {
+        fs.writeFileSync(
+          configPath,
+          JSON.stringify({
+            tokens: { deprecations: { old: { replacement: 'new' } } },
+            rules: { 'design-system/deprecation': 'error' },
+          }),
+        );
+        buffer = '';
+      } else if (buffer.includes('design-system/deprecation')) {
+        saw = true;
+        proc.kill();
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(saw, true);
+});
