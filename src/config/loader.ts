@@ -25,6 +25,10 @@ export async function loadConfig(
     configPath: abs,
   };
   if (abs && fs.existsSync(abs)) {
+    let originalMtsHandler:
+      | ((m: NodeModule, filename: string) => unknown)
+      | undefined;
+    let replacedMtsHandler = false;
     try {
       let loaded: Config = {};
       if (abs.endsWith('.ts') || abs.endsWith('.mts')) {
@@ -33,7 +37,9 @@ export async function loadConfig(
           // @ts-ignore
           await import('ts-node/register');
           if (abs.endsWith('.mts')) {
+            originalMtsHandler = require.extensions['.mts'];
             require.extensions['.mts'] = require.extensions['.ts'];
+            replacedMtsHandler = true;
           }
         } catch {
           throw new Error(
@@ -59,6 +65,14 @@ export async function loadConfig(
       throw new Error(
         `Failed to load config at ${abs}: ${(err as Error).message}`,
       );
+    } finally {
+      if (replacedMtsHandler) {
+        if (originalMtsHandler) {
+          require.extensions['.mts'] = originalMtsHandler;
+        } else {
+          delete require.extensions['.mts'];
+        }
+      }
     }
   }
   const result = configSchema.safeParse(base);

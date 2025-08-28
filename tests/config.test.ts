@@ -93,6 +93,37 @@ test('loads config from .ts', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
+test('restores original .mts handler after loading config', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.mts');
+  fs.writeFileSync(
+    configPath,
+    "module.exports = { tokens: { colors: { primary: '#000' } } };",
+  );
+  const otherPath = path.join(tmp, 'other.mts');
+  fs.writeFileSync(otherPath, '');
+  let called = false;
+  const original = require.extensions['.mts'];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    require.extensions['.mts'] = (mod: NodeModule, _filename: string) => {
+      called = true;
+      mod.exports = { handled: true };
+    };
+    await loadConfig(tmp);
+    assert.equal(called, false);
+    const result = require(otherPath);
+    assert.deepEqual(result, { handled: true });
+    assert.equal(called, true);
+  } finally {
+    if (original) {
+      require.extensions['.mts'] = original;
+    } else {
+      delete require.extensions['.mts'];
+    }
+  }
+});
+
 test('loads config when package.json type module', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
