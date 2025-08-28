@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import ts from 'typescript';
 import postcss from 'postcss';
+import { createRequire } from 'module';
 import type {
   LintResult,
   RuleModule,
@@ -19,6 +20,7 @@ export interface Config {
   rules?: Record<string, unknown>;
   ignoreFiles?: string[];
   plugins?: string[];
+  configPath?: string;
 }
 
 const defaultIgnore = [
@@ -43,25 +45,45 @@ const defaultIgnore = [
 export class Linter {
   private config: Config;
   private ruleMap: Map<string, RuleModule> = new Map();
+  private pluginLoad: Promise<void>;
 
   constructor(config: Config) {
     this.config = config;
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, rule);
     }
-    for (const p of config.plugins || []) {
+    this.pluginLoad = this.loadPlugins();
+  }
+
+  private async loadPlugins(): Promise<void> {
+    const req = this.config.configPath
+      ? createRequire(this.config.configPath)
+      : require;
+    for (const p of this.config.plugins || []) {
       let mod: unknown;
+      let resolved: string | undefined;
       try {
-        mod = require(p);
-      } catch (e) {
-        throw new Error(
-          `Failed to load plugin "${p}": ${
-            e instanceof Error ? e.message : String(e)
-          }`,
-        );
+        resolved = req.resolve(p);
+        if (resolved.endsWith('.mjs')) {
+          mod = await import(resolved);
+        } else {
+          mod = req(resolved);
+        }
+      } catch (e: any) {
+        if (e.code === 'ERR_REQUIRE_ESM') {
+          mod = await import(resolved ?? p);
+        } else {
+          throw new Error(
+            `Failed to load plugin "${p}": ${
+              e instanceof Error ? e.message : String(e)
+            }`,
+          );
+        }
       }
       const plugin =
-        (mod as { default?: PluginModule }).default || (mod as PluginModule);
+        (mod as { default?: PluginModule; plugin?: PluginModule }).default ??
+        (mod as { plugin?: PluginModule }).plugin ??
+        (mod as PluginModule);
       if (
         !plugin ||
         typeof plugin !== 'object' ||
@@ -78,6 +100,7 @@ export class Linter {
   }
 
   async lintFiles(targets: string[], fix = false): Promise<LintResult[]> {
+    await this.pluginLoad;
     const ignorePatterns = [...defaultIgnore];
     const ignoreFile = path.join(process.cwd(), '.designlintignore');
     if (fs.existsSync(ignoreFile)) {
@@ -122,6 +145,7 @@ export class Linter {
   }
 
   async lintText(text: string, filePath = 'unknown'): Promise<LintResult> {
+    await this.pluginLoad;
     const enabled = this.getEnabledRules();
     const messages: LintResult['messages'] = [];
     const contextBase: Omit<RuleContext, 'options'> = {
