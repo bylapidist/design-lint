@@ -18,6 +18,15 @@ module.exports = {
 };
 ```
 
+Design-lint searches for configuration starting from the current working
+directory and walking up parent directories. In each directory it looks for
+`designlint.config.js` first, then `designlint.config.json`. The first file
+found is used.
+
+If the discovered configuration file contains invalid JSON or JavaScript,
+design-lint will throw an error including the file path and the underlying
+syntax message.
+
 ## Fields
 
 - `tokens`: Design token definitions such as colors, spacing and typography.
