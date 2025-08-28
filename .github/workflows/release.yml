@@ -22,3 +22,12 @@ jobs:
           commit: "chore: update versions"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npx changeset tag
+      - name: Push tags
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git push --follow-tags
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
