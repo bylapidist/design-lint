@@ -3,10 +3,12 @@ import fs from 'fs';
 import { parseArgs } from 'node:util';
 import path from 'path';
 import { loadConfig } from '../config/loader';
-import { Linter } from '../core/engine';
+import { Linter, defaultIgnore } from '../core/engine';
 import type { LintResult } from '../core/types';
 import { getFormatter } from '../formatters';
 import chalk from 'chalk';
+import ignore from 'ignore';
+import chokidar from 'chokidar';
 
 function showVersion() {
   const pkgPath = path.resolve(__dirname, '../../package.json');
@@ -141,14 +143,35 @@ export async function run(argv = process.argv.slice(2)) {
     if (values.watch) {
       // eslint-disable-next-line no-console
       console.log('Watching for changes...');
-      for (const t of targets) {
-        const full = path.resolve(t);
-        fs.watch(full, { recursive: true }, async (_event, filename) => {
-          if (!filename) return;
-          const changed = path.resolve(full, filename);
-          await runLint([changed]);
-        });
+      const ignorePatterns = [...defaultIgnore];
+      const ignoreFile = path.join(process.cwd(), '.designlintignore');
+      try {
+        const content = fs.readFileSync(ignoreFile, 'utf8');
+        const lines = content
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean);
+        ignorePatterns.push(...lines);
+      } catch {
+        // no ignore file
       }
+      if (config.ignoreFiles) ignorePatterns.push(...config.ignoreFiles);
+      const ig = ignore();
+      const normalizedPatterns = ignorePatterns.map((p) =>
+        p.replace(/\\/g, '/'),
+      );
+      ig.add(normalizedPatterns);
+      const watcher = chokidar.watch(targets, {
+        ignored: (p: string) =>
+          ig.ignores(path.relative(process.cwd(), p).replace(/\\/g, '/')),
+        ignoreInitial: true,
+      });
+      watcher.on('add', async (filePath) => {
+        await runLint([filePath]);
+      });
+      watcher.on('change', async (filePath) => {
+        await runLint([filePath]);
+      });
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

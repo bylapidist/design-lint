@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -419,4 +419,59 @@ test('CLI --report outputs JSON log', () => {
   const log = JSON.parse(fs.readFileSync(report, 'utf8'));
   assert.equal(path.relative(dir, log[0].filePath), 'file.ts');
   assert.equal(log[0].messages[0].ruleId, 'design-system/deprecation');
+});
+
+test('CLI re-runs on file change in watch mode', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = "old";');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let runs = 0;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('design-system/deprecation')) {
+        runs++;
+        buffer = '';
+        if (runs === 1) {
+          fs.writeFileSync(file, 'const a = "old2";');
+        } else if (runs === 2) {
+          proc.kill();
+        }
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(runs, 2);
 });

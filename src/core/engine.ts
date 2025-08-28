@@ -26,7 +26,7 @@ export interface Config {
   configPath?: string;
 }
 
-const defaultIgnore = [
+export const defaultIgnore = [
   '**/node_modules/**',
   'node_modules/**',
   '**/dist/**',
