@@ -9,6 +9,7 @@ import type {
   DesignTokens,
   CSSDeclaration,
   Fix,
+  PluginModule,
 } from './types';
 import { builtInRules } from '../rules';
 
@@ -27,6 +28,32 @@ export class Linter {
     this.config = config;
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, rule);
+    }
+    for (const p of config.plugins || []) {
+      let mod: unknown;
+      try {
+        mod = require(p);
+      } catch (e) {
+        throw new Error(
+          `Failed to load plugin "${p}": ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
+      }
+      const plugin =
+        (mod as { default?: PluginModule }).default || (mod as PluginModule);
+      if (
+        !plugin ||
+        typeof plugin !== 'object' ||
+        !Array.isArray((plugin as PluginModule).rules)
+      ) {
+        throw new Error(
+          `Invalid plugin "${p}": expected { rules: RuleModule[] }`,
+        );
+      }
+      for (const rule of plugin.rules) {
+        this.ruleMap.set(rule.name, rule);
+      }
     }
   }
 
