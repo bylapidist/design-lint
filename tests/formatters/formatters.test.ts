@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { stylish } from '../../src/formatters/stylish';
 import { jsonFormatter } from '../../src/formatters/json';
 import { sarifFormatter } from '../../src/formatters/sarif';
+import { getFormatter } from '../../src/formatters';
 import type { LintResult } from '../../src/core/types';
 
 test('stylish formatter outputs text', () => {
@@ -62,4 +63,12 @@ test('sarif formatter outputs sarif log', () => {
   const out = sarifFormatter(results);
   const parsed = JSON.parse(out);
   assert.equal(parsed.runs[0].results[0].ruleId, 'rule');
+});
+
+test('getFormatter returns formatter for valid name', () => {
+  assert.equal(getFormatter('json'), jsonFormatter);
+});
+
+test('getFormatter throws for invalid name', () => {
+  assert.throws(() => getFormatter('unknown'), /Unknown formatter/);
 });

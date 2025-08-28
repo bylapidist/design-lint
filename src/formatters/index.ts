@@ -7,11 +7,13 @@ type Formatter = (results: LintResult[]) => string;
 
 export function getFormatter(name: string): Formatter {
   switch (name) {
+    case 'stylish':
+      return stylish;
     case 'json':
       return jsonFormatter;
     case 'sarif':
       return sarifFormatter;
     default:
-      return stylish;
+      throw new Error(`Unknown formatter: ${name}`);
   }
 }

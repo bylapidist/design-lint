@@ -39,11 +39,21 @@ export async function run(argv = process.argv.slice(2)) {
       return;
     }
 
+    let formatter;
+    try {
+      formatter = getFormatter(values.format as string);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      // eslint-disable-next-line no-console
+      console.error(message);
+      process.exitCode = 1;
+      return;
+    }
+
     const targets = positionals.length ? positionals : ['.'];
     const config = loadConfig(process.cwd(), values.config);
     const linter = new Linter(config);
     const results = await linter.lintFiles(targets, values.fix);
-    const formatter = getFormatter(values.format as string);
     const output = formatter(results);
 
     if (values.output) {

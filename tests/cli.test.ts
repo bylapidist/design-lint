@@ -79,3 +79,24 @@ test('CLI surfaces output write errors', () => {
   assert.notEqual(res.status, 0);
   assert.ok(res.stderr.includes('ENOENT'));
 });
+
+test('CLI reports unknown formatter', () => {
+  const fixture = path.join(__dirname, 'fixtures', 'sample');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      'ts-node/register',
+      cli,
+      path.join(fixture, 'bad.ts'),
+      '--config',
+      path.join(fixture, 'designlint.config.json'),
+      '--format',
+      'unknown',
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(res.status, 0);
+  assert.ok(res.stderr.includes('Unknown formatter'));
+});
