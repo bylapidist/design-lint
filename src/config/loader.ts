@@ -6,19 +6,31 @@ export function loadConfig(cwd: string, configPath?: string): Config {
   const resolved = configPath ? path.resolve(cwd, configPath) : findConfig(cwd);
   const base: Config = { tokens: {}, rules: {}, ignoreFiles: [] };
   if (resolved && fs.existsSync(resolved)) {
-    const loaded = resolved.endsWith('.json')
-      ? (JSON.parse(fs.readFileSync(resolved, 'utf8')) as Config)
-      : // eslint-disable-next-line @typescript-eslint/no-var-requires
-        (require(resolved) as Config) || {};
-    return { ...base, ...loaded };
+    try {
+      const loaded = resolved.endsWith('.json')
+        ? (JSON.parse(fs.readFileSync(resolved, 'utf8')) as Config)
+        : // eslint-disable-next-line @typescript-eslint/no-var-requires
+          (require(resolved) as Config) || {};
+      return { ...base, ...loaded };
+    } catch (err) {
+      throw new Error(
+        `Failed to load config at ${resolved}: ${(err as Error).message}`,
+      );
+    }
   }
   return base;
 }
 
 function findConfig(cwd: string): string | undefined {
-  const js = path.join(cwd, 'designlint.config.js');
-  if (fs.existsSync(js)) return js;
-  const json = path.join(cwd, 'designlint.config.json');
-  if (fs.existsSync(json)) return json;
-  return undefined;
+  let dir = cwd;
+  // Walk up parent directories looking for a config file
+  while (true) {
+    const js = path.join(dir, 'designlint.config.js');
+    if (fs.existsSync(js)) return js;
+    const json = path.join(dir, 'designlint.config.json');
+    if (fs.existsSync(json)) return json;
+    const parent = path.dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
 }
