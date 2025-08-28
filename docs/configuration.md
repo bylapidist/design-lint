@@ -18,13 +18,13 @@ module.exports = {
 };
 ```
 
-Design-lint searches for configuration starting from the current working
+@lapidist/design-lint searches for configuration starting from the current working
 directory and walking up parent directories. In each directory it looks for
 `designlint.config.js` first, then `designlint.config.json`. The first file
 found is used.
 
 If the discovered configuration file contains invalid JSON or JavaScript,
-design-lint will throw an error including the file path and the underlying
+@lapidist/design-lint will throw an error including the file path and the underlying
 syntax message.
 
 ## Fields
@@ -36,7 +36,7 @@ syntax message.
 
 ## Plugins
 
-Plugins extend `design-lint` with additional rules. Each plugin must export an
+Plugins extend `@lapidist/design-lint` with additional rules. Each plugin must export an
 object of the form `{ rules: RuleModule[] }`. For example:
 
 ```js

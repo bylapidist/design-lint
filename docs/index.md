@@ -1,6 +1,6 @@
-# design-lint Documentation
+# @lapidist/design-lint Documentation
 
-`design-lint` helps teams enforce design system rules across JavaScript,
+`@lapidist/design-lint` helps teams enforce design system rules across JavaScript,
 TypeScript and CSS codebases. These docs cover installation, usage and
 configuration of the linter.
 
