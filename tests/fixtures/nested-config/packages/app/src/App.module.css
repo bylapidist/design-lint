@@ -1,0 +1,10 @@
+.container {
+  color: #ff0000;
+  background: linear-gradient(#ff0000, #00ff00);
+  padding: 8px;
+}
+
+.container .child:hover,
+.container .child:focus {
+  border: 1px solid #ff0000;
+}
