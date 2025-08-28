@@ -48,6 +48,18 @@ test('design-token/colors reports disallowed named color', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/colors reports various named colors', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText(
+    'const a = "papayawhip"; const b = "rebeccapurple";',
+    'file.ts',
+  );
+  assert.equal(res.messages.length, 2);
+});
+
 test('design-token/colors allows configured formats', async () => {
   const linter = new Linter({
     tokens: { colors: {} },
