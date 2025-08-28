@@ -25,7 +25,7 @@ test('applyFixes handles adjacent fix ranges', () => {
   assert.equal(applyFixes('123456', messages), 'abcdef');
 });
 
-test('applyFixes handles overlapping fix ranges', () => {
+test('applyFixes skips overlapping fix ranges', () => {
   const messages: LintMessage[] = [
     {
       ruleId: 'a',
@@ -44,5 +44,27 @@ test('applyFixes handles overlapping fix ranges', () => {
       fix: { range: [1, 4], text: 'B' },
     },
   ];
-  assert.equal(applyFixes('abcdef', messages), 'Af');
+  assert.equal(applyFixes('abcdef', messages), 'Adef');
+});
+
+test('applyFixes is order-independent for overlapping ranges', () => {
+  const messages: LintMessage[] = [
+    {
+      ruleId: 'b',
+      message: '',
+      severity: 'error',
+      line: 0,
+      column: 0,
+      fix: { range: [1, 4], text: 'B' },
+    },
+    {
+      ruleId: 'a',
+      message: '',
+      severity: 'error',
+      line: 0,
+      column: 0,
+      fix: { range: [0, 3], text: 'A' },
+    },
+  ];
+  assert.equal(applyFixes('abcdef', messages), 'Adef');
 });

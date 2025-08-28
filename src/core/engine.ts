@@ -462,15 +462,31 @@ function parseCSS(
   return decls;
 }
 
+/**
+ * Apply text fixes to the given source. Fix ranges are expected to be
+ * non-overlapping; if overlapping ranges are detected, later fixes are skipped
+ * in favor of earlier ones to avoid conflicting updates.
+ */
 export function applyFixes(text: string, messages: LintMessage[]): string {
   const fixes: Fix[] = messages
     .filter((m): m is LintMessage & { fix: Fix } => !!m.fix)
     .map((m) => m.fix);
   if (fixes.length === 0) return text;
-  fixes.sort((a, b) => b.range[0] - a.range[0]);
+
+  // Sort by start position to detect and skip overlapping ranges
+  fixes.sort((a, b) => a.range[0] - b.range[0]);
+  const filtered: Fix[] = [];
+  let lastEnd = -1;
   for (const f of fixes) {
-    const [start, end] = f.range;
-    text = text.slice(0, start) + f.text + text.slice(end);
+    if (f.range[0] < lastEnd) continue; // overlapping with previous fix
+    filtered.push(f);
+    lastEnd = f.range[1];
+  }
+
+  // Apply fixes from right to left to avoid messing up subsequent ranges
+  for (let i = filtered.length - 1; i >= 0; i--) {
+    const [start, end] = filtered[i].range;
+    text = text.slice(0, start) + filtered[i].text + text.slice(end);
   }
   return text;
 }
