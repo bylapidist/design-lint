@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 0.3.1
+
+### Patch Changes
+
+- eb3064e: fix npm publish by setting access to public
+
 ## 0.3.0
 
 ### Minor Changes
