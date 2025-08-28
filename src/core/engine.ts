@@ -192,12 +192,15 @@ export class Linter {
       try {
         const stat = await fs.stat(full);
         if (stat.isDirectory()) {
-          const entries = await fg('**/*.{ts,tsx,js,jsx,css,svelte,vue}', {
-            cwd: full,
-            absolute: true,
-            dot: true,
-            ignore: normalizedPatterns,
-          });
+          const entries = await fg(
+            '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}',
+            {
+              cwd: full,
+              absolute: true,
+              dot: true,
+              ignore: normalizedPatterns,
+            },
+          );
           files.push(...entries);
         } else {
           files.push(full);
@@ -378,7 +381,7 @@ export class Linter {
           column: typeof err.column === 'number' ? err.column : 0,
         });
       }
-    } else if (/\.(ts|tsx|js|jsx)$/.test(filePath)) {
+    } else if (/\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(filePath)) {
       const source = ts.createSourceFile(
         filePath,
         text,

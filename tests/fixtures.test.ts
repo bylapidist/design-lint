@@ -32,7 +32,17 @@ const fixtures: Fixture[] = [
   { name: 'nextjs', files: ['styles/Home.module.css', 'pages/index.tsx'] },
   { name: 'nuxt', files: ['pages/index.module.css', 'pages/index.vue'] },
   { name: 'remix', files: ['app/styles.module.css', 'app/routes/_index.tsx'] },
-  { name: 'web-components', files: ['src/component.css', 'src/component.tsx'] },
+  {
+    name: 'web-components',
+    files: [
+      'src/component.css',
+      'src/component.tsx',
+      'src/component.mjs',
+      'src/component.cjs',
+      'src/component.mts',
+      'src/component.cts',
+    ],
+  },
 ];
 
 for (const { name, files } of fixtures) {
