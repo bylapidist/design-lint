@@ -204,6 +204,18 @@ export async function run(argv = process.argv.slice(2)) {
 
       watcher.on('add', handle);
       watcher.on('change', handle);
+      watcher.on('unlink', async (filePath: string) => {
+        const resolved = path.resolve(filePath);
+        cache.delete(resolved);
+        if (
+          (config.configPath && resolved === path.resolve(config.configPath)) ||
+          resolved === ignoreFile
+        ) {
+          await reload();
+        } else {
+          await runLint(targets);
+        }
+      });
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
