@@ -45,9 +45,26 @@ npx design-lint --version
 - `--config <path>` – path to a `designlint.config.js` or `.json` file.
 - `--format <stylish|json|sarif>` – output format (default `stylish`).
 - `--output <file>` – write report to a file instead of stdout.
+- `--report <file>` – write JSON results to a file.
 - `--quiet` – suppress output and rely on the exit code.
+- `--no-color` – disable colored output.
+- `--watch` – watch files and re-lint on changes.
 - `--fix` – automatically fix problems when possible.
 - `--version` – print the CLI version and exit.
+
+#### Examples
+
+Write a JSON report to a file:
+
+```bash
+npx design-lint src --report report.json --format json
+```
+
+Re-run lint on file changes:
+
+```bash
+npx design-lint src --watch
+```
 
 ## Configuration
 
