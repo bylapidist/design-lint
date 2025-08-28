@@ -56,6 +56,24 @@ module.exports = {
 See the [Usage guide](docs/usage.md) and [Configuration guide](docs/configuration.md)
 for a detailed breakdown of available options.
 
+## Plugins
+
+Plugins can supply additional rules. Each plugin should export an object like
+`{ rules: RuleModule[] }` and be listed in the `plugins` field of your
+configuration:
+
+```js
+module.exports = {
+  plugins: ['my-plugin'],
+  rules: {
+    'my-plugin/example': 'error',
+  },
+};
+```
+
+If a plugin cannot be loaded or exports the wrong shape, `design-lint` will
+throw an error during initialization.
+
 ## Features
 
 - Enforce color, spacing, and typography tokens

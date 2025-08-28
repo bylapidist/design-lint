@@ -45,6 +45,10 @@ export interface RuleListener {
   onCSSDeclaration?: (decl: CSSDeclaration) => void;
 }
 
+export interface PluginModule {
+  rules: RuleModule[];
+}
+
 export interface CSSDeclaration {
   prop: string;
   value: string;
