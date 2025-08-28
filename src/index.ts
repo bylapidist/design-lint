@@ -1,4 +1,4 @@
-export { Linter, type Config } from './core/engine';
+export { Linter, type Config, applyFixes } from './core/engine';
 export { loadConfig } from './config/loader';
 export { getFormatter } from './formatters';
 export { builtInRules } from './rules';

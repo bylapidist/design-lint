@@ -440,7 +440,7 @@ function parseCSS(
   return decls;
 }
 
-function applyFixes(text: string, messages: LintMessage[]): string {
+export function applyFixes(text: string, messages: LintMessage[]): string {
   const fixes: Fix[] = messages
     .filter((m): m is LintMessage & { fix: Fix } => !!m.fix)
     .map((m) => m.fix);
