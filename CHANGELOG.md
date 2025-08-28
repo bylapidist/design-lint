@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 0.3.0
+
+### Minor Changes
+
+- ae5605a: add watch mode with incremental caching and benchmarking scripts
+
 ## 0.2.0
 
 ### Minor Changes
