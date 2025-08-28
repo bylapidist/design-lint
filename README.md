@@ -79,6 +79,25 @@ Re-run lint on file changes:
 npx design-lint src --watch
 ```
 
+## Programmatic Usage
+
+`@lapidist/design-lint` can also run directly in Node.js:
+
+```js
+import { Linter, loadConfig, getFormatter } from '@lapidist/design-lint';
+
+const config = await loadConfig();
+const linter = new Linter(config);
+const results = await linter.lintFiles(['src']);
+const formatter = await getFormatter('stylish');
+console.log(formatter.format(results));
+```
+
+Additional exports such as `applyFixes` and `builtInRules` are also available.
+See the [Configuration guide](docs/configuration.md) for `loadConfig`
+details and the [Usage guide](docs/usage.md#options) for available
+formatters. A full list of exports is in the [API guide](docs/api.md).
+
 ## Configuration
 
 Create a `designlint.config.js` (or `.json`) file in your project root to define

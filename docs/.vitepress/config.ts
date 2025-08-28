@@ -4,14 +4,16 @@ export default {
   themeConfig: {
     nav: [
       { text: 'Usage', link: '/usage' },
-      { text: 'Configuration', link: '/configuration' }
+      { text: 'Configuration', link: '/configuration' },
+      { text: 'API', link: '/api' }
     ],
     sidebar: [
       {
         text: 'Guide',
         items: [
           { text: 'Usage', link: '/usage' },
-          { text: 'Configuration', link: '/configuration' }
+          { text: 'Configuration', link: '/configuration' },
+          { text: 'API', link: '/api' }
         ]
       }
     ]
