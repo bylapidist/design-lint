@@ -110,9 +110,9 @@ export async function run(argv = process.argv.slice(2)) {
 
     const targets = positionals.length ? positionals : ['.'];
     const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
-      import('../config/loader'),
-      import('../core/engine'),
-      import('../core/ignore'),
+      import('../config/loader.js'),
+      import('../core/engine.js'),
+      import('../core/ignore.js'),
     ]);
     let config = await loadConfig(process.cwd(), values.config);
     let linter = new Linter(config);

@@ -6,11 +6,23 @@
   "bin": {
     "design-lint": "dist/cli/index.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/esm/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli/index.d.ts",
+      "require": "./dist/cli/index.js",
+      "import": "./dist/esm/cli/index.js"
+    }
+  },
   "engines": {
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json",
     "postbuild": "node scripts/postbuild.js",
     "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
