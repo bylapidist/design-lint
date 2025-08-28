@@ -646,6 +646,63 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
   assert.equal(runs, 2);
 });
 
+test('CLI reloads when nested ignore file changes in watch mode', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
+  const nested = path.join(dir, 'nested');
+  fs.mkdirSync(nested);
+  const file = path.join(nested, 'file.ts');
+  fs.writeFileSync(file, 'const a = "old";');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  const ignorePath = path.join(nested, '.designlintignore');
+  fs.writeFileSync(ignorePath, 'file.ts\n');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'nested',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let saw = false;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('Watching for changes...')) {
+        fs.writeFileSync(ignorePath, '');
+        buffer = '';
+      } else if (buffer.includes('design-system/deprecation')) {
+        saw = true;
+        proc.kill();
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(saw, true);
+});
+
 test('CLI clears cache when a watched file is deleted', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'designlint-'));
   const file = path.join(dir, 'file.ts');

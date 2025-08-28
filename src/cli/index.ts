@@ -8,21 +8,19 @@ import type { Config } from '../core/engine';
 import { getFormatter } from '../formatters';
 import chalk from 'chalk';
 import ignore from 'ignore';
-import chokidar from 'chokidar';
+import chokidar, { FSWatcher } from 'chokidar';
 
 function showVersion() {
   const pkgPath = path.resolve(__dirname, '../../package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
     version: string;
   };
-  // eslint-disable-next-line no-console
   console.log(pkg.version);
 }
 
 function initConfig() {
   const configPath = path.resolve(process.cwd(), 'designlint.config.json');
   if (fs.existsSync(configPath)) {
-    // eslint-disable-next-line no-console
     console.log('designlint.config.json already exists');
     return;
   }
@@ -35,7 +33,6 @@ function initConfig() {
     `${JSON.stringify(defaultConfig, null, 2)}\n`,
     'utf8',
   );
-  // eslint-disable-next-line no-console
   console.log('Created designlint.config.json');
 }
 
@@ -56,7 +53,6 @@ Options:
   --fix               Automatically fix problems
   --version           Show version number
   --help              Show this message`;
-  // eslint-disable-next-line no-console
   console.log(msg);
 }
 
@@ -102,7 +98,6 @@ export async function run(argv = process.argv.slice(2)) {
       formatter = getFormatter(values.format as string);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      // eslint-disable-next-line no-console
       console.error(useColor ? chalk.red(message) : message);
       process.exitCode = 1;
       return;
@@ -140,14 +135,25 @@ export async function run(argv = process.argv.slice(2)) {
       return paths;
     };
 
+    let watcher: FSWatcher | null = null;
+    let ignoreFilePaths: string[] = [];
+
     const runLint = async (paths: string[]) => {
       const results = await linter.lintFiles(paths, values.fix, cache);
+      const newIgnore = results.ignoreFiles ?? [];
+      if (values.watch && watcher) {
+        const toAdd = newIgnore.filter((p) => !ignoreFilePaths.includes(p));
+        if (toAdd.length) watcher.add(toAdd);
+        const toRemove = ignoreFilePaths.filter((p) => !newIgnore.includes(p));
+        if (toRemove.length) watcher.unwatch(toRemove);
+      }
+      ignoreFilePaths = newIgnore;
+
       const output = formatter(results, useColor);
 
       if (values.output) {
         fs.writeFileSync(values.output as string, output, 'utf8');
       } else if (!values.quiet) {
-        // eslint-disable-next-line no-console
         console.log(output);
       }
 
@@ -167,7 +173,6 @@ export async function run(argv = process.argv.slice(2)) {
 
     const reportError = (err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
-      // eslint-disable-next-line no-console
       console.error(useColor ? chalk.red(message) : message);
       process.exitCode = 1;
     };
@@ -175,14 +180,18 @@ export async function run(argv = process.argv.slice(2)) {
     await runLint(targets);
 
     if (values.watch) {
-      // eslint-disable-next-line no-console
       console.log('Watching for changes...');
       await refreshIgnore();
       let pluginPaths = resolvePluginPaths(config);
       const watchPaths = [...targets];
       if (config.configPath) watchPaths.push(config.configPath);
-      watchPaths.push(designIgnore, gitIgnore, ...pluginPaths);
-      const watcher = chokidar.watch(watchPaths, {
+      watchPaths.push(
+        designIgnore,
+        gitIgnore,
+        ...pluginPaths,
+        ...ignoreFilePaths,
+      );
+      watcher = chokidar.watch(watchPaths, {
         ignored: (p: string) => {
           const rel = path.relative(process.cwd(), p).replace(/\\/g, '/');
           const resolved = path.resolve(p);
@@ -190,13 +199,14 @@ export async function run(argv = process.argv.slice(2)) {
             return false;
           if (resolved === designIgnore || resolved === gitIgnore) return false;
           if (pluginPaths.includes(resolved)) return false;
+          if (ignoreFilePaths.includes(resolved)) return false;
           return ig.ignores(rel);
         },
         ignoreInitial: true,
       });
 
       const cleanup = async () => {
-        await watcher.close();
+        await watcher?.close();
         process.exit(process.exitCode ?? 0);
       };
       process.on('SIGINT', cleanup);
@@ -213,9 +223,9 @@ export async function run(argv = process.argv.slice(2)) {
         cache.clear();
         const newPluginPaths = resolvePluginPaths(config);
         const toRemove = pluginPaths.filter((p) => !newPluginPaths.includes(p));
-        if (toRemove.length) watcher.unwatch(toRemove);
+        if (toRemove.length) watcher?.unwatch(toRemove);
         const toAdd = newPluginPaths.filter((p) => !pluginPaths.includes(p));
-        if (toAdd.length) watcher.add(toAdd);
+        if (toAdd.length) watcher?.add(toAdd);
         pluginPaths = newPluginPaths;
         await runLint(targets);
       };
@@ -226,7 +236,8 @@ export async function run(argv = process.argv.slice(2)) {
           (config.configPath && resolved === path.resolve(config.configPath)) ||
           resolved === designIgnore ||
           resolved === gitIgnore ||
-          pluginPaths.includes(resolved)
+          pluginPaths.includes(resolved) ||
+          ignoreFilePaths.includes(resolved)
         ) {
           await reload();
         } else {
@@ -241,7 +252,8 @@ export async function run(argv = process.argv.slice(2)) {
           (config.configPath && resolved === path.resolve(config.configPath)) ||
           resolved === designIgnore ||
           resolved === gitIgnore ||
-          pluginPaths.includes(resolved)
+          pluginPaths.includes(resolved) ||
+          ignoreFilePaths.includes(resolved)
         ) {
           await reload();
         } else {
@@ -249,13 +261,12 @@ export async function run(argv = process.argv.slice(2)) {
         }
       };
 
-      watcher.on('add', (p) => handle(p).catch(reportError));
-      watcher.on('change', (p) => handle(p).catch(reportError));
-      watcher.on('unlink', (p) => handleUnlink(p).catch(reportError));
+      watcher.on('add', (p: string) => handle(p).catch(reportError));
+      watcher.on('change', (p: string) => handle(p).catch(reportError));
+      watcher.on('unlink', (p: string) => handleUnlink(p).catch(reportError));
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    // eslint-disable-next-line no-console
     console.error(useColor ? chalk.red(message) : message);
     process.exitCode = 1;
   }

@@ -133,11 +133,22 @@ export class Linter {
     targets: string[],
     fix = false,
     cache?: Map<string, { mtime: number; result: LintResult }>,
-  ): Promise<LintResult[]> {
+  ): Promise<LintResult[] & { ignoreFiles: string[] }> {
     await this.pluginLoad;
     const { ig, patterns } = await loadIgnore(this.config);
     const normalizedPatterns = [...patterns];
     const seenIgnore = new Set<string>();
+
+    // track root ignore files if they exist
+    for (const root of ['.gitignore', '.designlintignore']) {
+      const full = path.resolve(process.cwd(), root);
+      try {
+        await fs.access(full);
+        seenIgnore.add(full);
+      } catch {
+        // ignore missing
+      }
+    }
 
     const readNestedIgnore = async (dir: string) => {
       const ignoreFiles = await fg(['**/.gitignore', '**/.designlintignore'], {
@@ -211,7 +222,6 @@ export class Linter {
     }
     const scanTime = performance.now() - scanStart;
     if (process.env.DESIGNLINT_PROFILE) {
-      // eslint-disable-next-line no-console
       console.log(`Scanned ${files.length} files in ${scanTime.toFixed(2)}ms`);
     }
 
@@ -252,7 +262,7 @@ export class Linter {
     );
 
     const results = await Promise.all(tasks);
-    return results;
+    return Object.assign(results, { ignoreFiles: Array.from(seenIgnore) });
   }
 
   async lintText(text: string, filePath = 'unknown'): Promise<LintResult> {
