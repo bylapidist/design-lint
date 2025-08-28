@@ -16,13 +16,15 @@ jobs:
         with:
           node-version: 22
           cache: 'npm'
+          registry-url: 'https://registry.npmjs.org/'
       - run: npm ci
       - uses: changesets/action@v1
         with:
           commit: 'chore: update versions'
           publish: 'npm run release'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: npx changeset tag
       - name: Push tags
         run: |
