@@ -4,7 +4,7 @@ export interface DesignTokens {
   colors?: Record<string, string>;
   spacing?: Record<string, number>;
   typography?: {
-    fontSizes?: Record<string, number>;
+    fontSizes?: Record<string, number | string>;
     fonts?: Record<string, string>;
   };
   deprecations?: Record<string, { replacement?: string }>;

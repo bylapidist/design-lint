@@ -21,7 +21,9 @@ const tokensSchema = z
     spacing: z.record(z.string(), z.number()).optional(),
     typography: z
       .object({
-        fontSizes: z.record(z.string(), z.number()).optional(),
+        fontSizes: z
+          .record(z.string(), z.union([z.number(), z.string()]))
+          .optional(),
         fonts: z.record(z.string(), z.string()).optional(),
       })
       .optional(),

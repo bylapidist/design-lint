@@ -26,6 +26,25 @@ test('design-token/typography handles multi-line font-family', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/typography accepts unit-based font-sizes', async () => {
+  const linter = new Linter({
+    tokens: {
+      typography: {
+        fontSizes: { base: '1rem', lg: '2rem' },
+        fonts: { sans: 'Inter' },
+      },
+    },
+    rules: { 'design-token/typography': 'error' },
+  });
+  const valid = await linter.lintText(
+    '.a{font-size:16px;} .b{font-size:1rem;}',
+    'file.css',
+  );
+  assert.equal(valid.messages.length, 0);
+  const invalid = await linter.lintText('.c{font-size:3rem;}', 'file.css');
+  assert.equal(invalid.messages.length, 1);
+});
+
 test('design-token/typography warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/typography': 'warn' },

@@ -25,13 +25,30 @@ export const typographyRule: RuleModule = {
       });
       return {};
     }
-    const sizes = new Set(Object.values(fontSizes));
+    const parseSize = (val: unknown): number | null => {
+      if (typeof val === 'number') return val;
+      if (typeof val === 'string') {
+        const match = val.trim().match(/^(\d*\.?\d+)(px|rem|em)$/);
+        if (match) {
+          const [, num, unit] = match;
+          const n = parseFloat(num);
+          const factor = unit === 'px' ? 1 : 16;
+          return n * factor;
+        }
+      }
+      return null;
+    };
+    const sizes = new Set(
+      Object.values(fontSizes)
+        .map((s) => parseSize(s))
+        .filter((s): s is number => s !== null),
+    );
     const fonts = new Set(Object.values(fontFamilies));
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'font-size') {
-          const num = parseInt(decl.value, 10);
-          if (!isNaN(num) && !sizes.has(num)) {
+          const num = parseSize(decl.value);
+          if (num !== null && !sizes.has(num)) {
             context.report({
               message: `Unexpected font size ${decl.value}`,
               line: decl.line,
