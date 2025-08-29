@@ -347,15 +347,106 @@ export class Linter {
           scripts.push(
             text.slice(ast.module.content.start, ast.module.content.end),
           );
-        const template = ast.html
-          ? text.slice(ast.html.start, ast.html.end)
-          : '';
-        const templateTsx = template
-          .replace(/class=/g, 'className=')
-          .replace(
-            /style="padding: {([^}]+)}px"/g,
-            (_, expr) => `style={{ ${expr.trim()} }}`,
-          );
+
+        const styleDecls: CSSDeclaration[] = [];
+        const replacements: { start: number; end: number; text: string }[] = [];
+
+        const getLineAndColumn = (pos: number) => {
+          const sliced = text.slice(0, pos).split(/\r?\n/);
+          const line = sliced.length;
+          const column = sliced[sliced.length - 1].length + 1;
+          return { line, column };
+        };
+
+        const extractStyleAttribute = (attr: {
+          start: number;
+          end: number;
+          value: Array<{
+            type: string;
+            data?: string;
+            expression?: { start: number; end: number };
+          }>;
+        }): CSSDeclaration[] => {
+          const exprs: string[] = [];
+          let content = '';
+          for (const part of attr.value) {
+            if (part.type === 'Text') content += part.data ?? '';
+            else if (part.type === 'MustacheTag') {
+              const i = exprs.length;
+              exprs.push(
+                text.slice(part.expression!.start, part.expression!.end),
+              );
+              content += `__EXPR_${i}__`;
+            }
+          }
+          const attrText = text.slice(attr.start, attr.end);
+          const eqIdx = attrText.indexOf('=');
+          const valueStart = attr.start + eqIdx + 2; // after opening quote
+          const regex = /([\w-]+)\s*:\s*([^;]+)(?:;|$)/g;
+          const decls: CSSDeclaration[] = [];
+          let m: RegExpExecArray | null;
+          while ((m = regex.exec(content))) {
+            const prop = m[1].trim();
+            let value = m[2]
+              .trim()
+              .replace(/__EXPR_(\d+)__/g, (_, i) => exprs[Number(i)]);
+            const { line, column } = getLineAndColumn(valueStart + m.index);
+            decls.push({ prop, value, line, column });
+          }
+          return decls;
+        };
+
+        const walk = (node: unknown): void => {
+          const n = node as { attributes?: unknown[]; children?: unknown[] };
+          if (!n) return;
+          for (const attrRaw of n.attributes ?? []) {
+            const attr = attrRaw as {
+              type: string;
+              name: string;
+              start: number;
+              end: number;
+              value: Array<{
+                type: string;
+                data?: string;
+                expression?: { start: number; end: number };
+              }>;
+            };
+            if (attr.type === 'Attribute' && attr.name === 'style') {
+              styleDecls.push(...extractStyleAttribute(attr));
+              replacements.push({
+                start: attr.start,
+                end: attr.end,
+                text: 'style={{}}',
+              });
+            } else if (attr.type === 'StyleDirective') {
+              const value = attr.value
+                .map((v) =>
+                  v.type === 'Text'
+                    ? v.data
+                    : text.slice(v.expression!.start, v.expression!.end),
+                )
+                .join('')
+                .trim();
+              const { line, column } = getLineAndColumn(attr.start);
+              styleDecls.push({ prop: attr.name, value, line, column });
+              replacements.push({ start: attr.start, end: attr.end, text: '' });
+            }
+          }
+          for (const child of n.children ?? []) walk(child);
+        };
+        walk(ast.html);
+
+        const templateStart = ast.html?.start ?? 0;
+        let template = ast.html ? text.slice(ast.html.start, ast.html.end) : '';
+        replacements
+          .sort((a, b) => b.start - a.start)
+          .forEach((r) => {
+            const start = r.start - templateStart;
+            const end = r.end - templateStart;
+            template = template.slice(0, start) + r.text + template.slice(end);
+          });
+        const templateTsx = template.replace(/class=/g, 'className=');
+
         const scriptBlocks = scripts.length ? scripts : [''];
         for (const scriptContent of scriptBlocks) {
           const combined = `${scriptContent}\nfunction __render(){ return (${templateTsx}); }`;
@@ -371,6 +462,9 @@ export class Linter {
             ts.forEachChild(node, visit);
           };
           visit(source);
+        }
+        for (const decl of styleDecls) {
+          for (const l of listeners) l.onCSSDeclaration?.(decl);
         }
         if (ast.css) {
           const styleText = text.slice(
