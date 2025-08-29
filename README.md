@@ -234,18 +234,20 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 ## Rules
 
+- [design-token/border-radius](docs/rules/design-token/border-radius.md)
+- [design-token/border-width](docs/rules/design-token/border-width.md)
+- [design-token/box-shadow](docs/rules/design-token/box-shadow.md)
 - [design-token/colors](docs/rules/design-token/colors.md)
-- [design-token/line-height](docs/rules/design-token/line-height.md)
+- [design-token/duration](docs/rules/design-token/duration.md)
+- [design-token/font-family](docs/rules/design-token/font-family.md)
+- [design-token/font-size](docs/rules/design-token/font-size.md)
 - [design-token/font-weight](docs/rules/design-token/font-weight.md)
 - [design-token/letter-spacing](docs/rules/design-token/letter-spacing.md)
-- [design-token/border-radius](docs/rules/design-token/border-radius.md)
-- [design-token/box-shadow](docs/rules/design-token/box-shadow.md)
+- [design-token/line-height](docs/rules/design-token/line-height.md)
 - [design-token/spacing](docs/rules/design-token/spacing.md)
-- [design-token/font-size](docs/rules/design-token/font-size.md)
-- [design-token/font-family](docs/rules/design-token/font-family.md)
 - [design-token/z-index](docs/rules/design-token/z-index.md)
-- [design-system/deprecation](docs/rules/design-system/deprecation.md)
 - [design-system/component-usage](docs/rules/design-system/component-usage.md)
+- [design-system/deprecation](docs/rules/design-system/deprecation.md)
 
 ## CI
 
