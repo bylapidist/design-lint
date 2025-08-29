@@ -138,13 +138,14 @@ export class Linter {
     ignorePaths?: string[],
     cacheLocation?: string,
   ): Promise<LintResult> {
-    const [res] = await this.lintFiles(
+    const { results } = await this.lintFiles(
       [filePath],
       fix,
       cache,
       ignorePaths ?? [],
       cacheLocation,
     );
+    const [res] = results;
     return res ?? { filePath, messages: [] };
   }
 
