@@ -9,7 +9,9 @@ const fixtureDir = path.join(__dirname, 'fixtures', 'vue');
 async function lint(file: string) {
   const config = await loadConfig(fixtureDir);
   const linter = new Linter(config);
-  const [res] = await linter.lintFiles([path.join(fixtureDir, 'src', file)]);
+  const {
+    results: [res],
+  } = await linter.lintFiles([path.join(fixtureDir, 'src', file)]);
   return res;
 }
 

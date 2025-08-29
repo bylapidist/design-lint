@@ -11,6 +11,6 @@ test('lintFile delegates to lintFiles', async () => {
   const linter = new Linter(config);
   const file = path.join(fixtureDir, 'src', 'App.svelte');
   const res1 = await linter.lintFile(file);
-  const res2 = await linter.lintFiles([file]);
+  const { results: res2 } = await linter.lintFiles([file]);
   assert.deepEqual(res1, res2[0]);
 });

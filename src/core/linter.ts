@@ -104,7 +104,11 @@ export class Linter {
     cache?: CacheMap,
     additionalIgnorePaths: string[] = [],
     cacheLocation?: string,
-  ): Promise<{ results: LintResult[]; ignoreFiles: string[] }> {
+  ): Promise<{
+    results: LintResult[];
+    ignoreFiles: string[];
+    warning?: string;
+  }> {
     await this.pluginLoad;
     if (cacheLocation && cache && !this.cacheLoaded) {
       await loadCache(cache, cacheLocation);
@@ -116,8 +120,11 @@ export class Linter {
       additionalIgnorePaths,
     );
     if (files.length === 0) {
-      console.warn('No files matched the provided patterns.');
-      return { results: [], ignoreFiles };
+      return {
+        results: [],
+        ignoreFiles,
+        warning: 'No files matched the provided patterns.',
+      };
     }
     if (cache) {
       for (const key of Array.from(cache.keys())) {
