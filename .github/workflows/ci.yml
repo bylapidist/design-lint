@@ -44,6 +44,8 @@ jobs:
       - run: npm run format:check
       - run: npm run test:coverage
         if: steps.changes.outputs['non-docs'] == 'true'
+      - run: npm run docs:build
+        if: steps.changes.outputs['docs'] == 'true'
       - run: node scripts/generate-coverage-comment.mjs
         if: steps.changes.outputs['non-docs'] == 'true'
       - name: Comment coverage
