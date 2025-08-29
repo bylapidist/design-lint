@@ -23,16 +23,17 @@ reporting and to enable file-type-specific parsing.
 const res = await linter.lintText('const c = "#fff";', 'file.ts');
 ```
 
-### `lintFile(filePath, fix?, cache?)`
+### `lintFile(filePath, fix?, cache?, ignorePaths?, cacheLocation?)`
 
-Lints a single file on disk. Pass `fix` to apply autofixes and an optional
-`cache` map to reuse results between runs.
+Lints a single file on disk. Pass `fix` to apply autofixes, an optional
+`cache` map to reuse results between runs, additional `ignorePaths`, and a
+`cacheLocation` to persist cache data.
 
 ```ts
-const res = await linter.lintFile('src/file.ts', true);
+const res = await linter.lintFile('src/file.ts', true, undefined, ['**/dist/**']);
 ```
 
-### `lintFiles(files, fix?, cache?, ignorePaths?)`
+### `lintFiles(files, fix?, cache?, ignorePaths?, cacheLocation?)`
 
 Lints multiple files or directories. Returns an object with a `results` array
 and `ignoreFiles` array containing any ignore files that were honored.

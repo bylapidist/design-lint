@@ -130,6 +130,23 @@ export class Linter {
     }
   }
 
+  async lintFile(
+    filePath: string,
+    fix = false,
+    cache?: Map<string, { mtime: number; result: LintResult }>,
+    ignorePaths?: string[],
+    cacheLocation?: string,
+  ): Promise<LintResult> {
+    const [res] = await this.lintFiles(
+      [filePath],
+      fix,
+      cache,
+      ignorePaths ?? [],
+      cacheLocation,
+    );
+    return res ?? { filePath, messages: [] };
+  }
+
   async lintFiles(
     targets: string[],
     fix = false,
