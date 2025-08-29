@@ -20,17 +20,29 @@ export const componentUsageRule: RuleModule = {
     const disallowed = new Set(Object.keys(lowerSubs));
     return {
       onNode(node) {
-        if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+        if (
+          ts.isJsxOpeningElement(node) ||
+          ts.isJsxSelfClosingElement(node) ||
+          ts.isJsxClosingElement(node)
+        ) {
           const tag = node.tagName.getText();
           const tagLower = tag.toLowerCase();
           if (disallowed.has(tagLower)) {
             const pos = node
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
+            const replacement = lowerSubs[tagLower];
+            const tagText = ts.isJsxClosingElement(node)
+              ? `</${tag}>`
+              : `<${tag}>`;
             context.report({
-              message: `Use ${lowerSubs[tagLower]} instead of <${tag}>`,
+              message: `Use ${replacement} instead of ${tagText}`,
               line: pos.line + 1,
               column: pos.character + 1,
+              fix: {
+                range: [node.tagName.getStart(), node.tagName.getEnd()],
+                text: replacement,
+              },
             });
           }
         }
