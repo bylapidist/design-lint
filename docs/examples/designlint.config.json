@@ -25,7 +25,8 @@
   "rules": {
     "design-token/colors": "error",
     "design-token/spacing": "warn",
-    "design-token/typography": "warn",
+    "design-token/font-size": "warn",
+    "design-token/font-family": "warn",
     "design-system/component-usage": ["error", { "substitutions": { "button": "DSButton" } }],
     "design-system/deprecation": "warn"
   }

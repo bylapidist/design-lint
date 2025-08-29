@@ -1,6 +1,7 @@
 import { colorsRule } from './token-colors.js';
 import { spacingRule } from './token-spacing.js';
-import { typographyRule } from './token-typography.js';
+import { fontSizeRule } from './token-font-size.js';
+import { fontFamilyRule } from './token-font-family.js';
 import { lineHeightRule } from './token-line-height.js';
 import { fontWeightRule } from './token-font-weight.js';
 import { letterSpacingRule } from './token-letter-spacing.js';
@@ -15,7 +16,8 @@ import { deprecationRule } from './deprecation.js';
 export const builtInRules = [
   colorsRule,
   spacingRule,
-  typographyRule,
+  fontSizeRule,
+  fontFamilyRule,
   lineHeightRule,
   fontWeightRule,
   letterSpacingRule,

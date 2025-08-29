@@ -47,6 +47,7 @@ See the [CI guide](ci.md) for sample configurations in GitHub Actions and other 
  - [design-token/letter-spacing](rules/design-token/letter-spacing.md)
  - [design-token/spacing](rules/design-token/spacing.md)
  - [design-token/duration](rules/design-token/duration.md)
- - [design-token/typography](rules/design-token/typography.md)
+ - [design-token/font-size](rules/design-token/font-size.md)
+ - [design-token/font-family](rules/design-token/font-family.md)
   - [design-system/deprecation](rules/design-system/deprecation.md)
   - [design-system/component-usage](rules/design-system/component-usage.md)

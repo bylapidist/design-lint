@@ -14,7 +14,8 @@
   "rules": {
     "design-token/colors": "error",
     "design-token/spacing": "error",
-    "design-token/typography": "error",
+    "design-token/font-size": "error",
+    "design-token/font-family": "error",
     "design-system/component-usage": [
       "error",
       { "substitutions": { "button": "DSButton" } }

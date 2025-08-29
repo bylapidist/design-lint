@@ -18,5 +18,6 @@ Design-lint includes several built-in rules categorized by domain.
 - [box-shadow](./design-token/box-shadow)
 - [duration](./design-token/duration)
 - [spacing](./design-token/spacing)
-- [typography](./design-token/typography)
+- [font-size](./design-token/font-size)
+- [font-family](./design-token/font-family)
 - [z-index](./design-token/z-index)

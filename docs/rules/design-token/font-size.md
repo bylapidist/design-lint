@@ -1,6 +1,6 @@
-# design-token/typography
+# design-token/font-size
 
-Ensures `font-size` and `font-family` declarations use values from your typography tokens.
+Ensures `font-size` declarations use values from your typography `fontSizes` tokens.
 
 ## Configuration
 
@@ -12,7 +12,7 @@ Ensures `font-size` and `font-family` declarations use values from your typograp
       "fonts": { "sans": "Inter, sans-serif" }
     }
   },
-  "rules": { "design-token/typography": "error" }
+  "rules": { "design-token/font-size": "error" }
 }
 ```
 
@@ -26,7 +26,6 @@ comparison.
 
 ```css
 .title { font-size: 18px; }
-.title { font-family: 'Arial'; }
 ```
 
 ### Valid
@@ -34,5 +33,4 @@ comparison.
 ```css
 .title { font-size: 1rem; }
 .title { font-size: 20px; }
-.title { font-family: "Inter, sans-serif"; }
 ```

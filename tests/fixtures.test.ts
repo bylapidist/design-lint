@@ -9,7 +9,8 @@ const builtInRules = [
   'design-system/deprecation',
   'design-token/colors',
   'design-token/spacing',
-  'design-token/typography',
+  'design-token/font-size',
+  'design-token/font-family',
 ];
 
 interface Fixture {
