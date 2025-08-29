@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 0.6.1
+
+### Patch Changes
+
+- fce614e: fix: support ESM chalk in CLI
+
 ## 0.6.0
 
 ### Minor Changes
