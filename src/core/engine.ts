@@ -273,7 +273,7 @@ export class Linter {
       }
     }
 
-    const { default: pLimit } = await eval('import("p-limit")');
+    const { default: pLimit } = await import('p-limit');
     const limit = pLimit(this.config.concurrency ?? os.cpus().length);
     const tasks = files.map((filePath) =>
       limit(async () => {
