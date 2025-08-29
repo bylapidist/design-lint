@@ -14,6 +14,9 @@ import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import { writeFileAtomic } from '../utils/atomicWrite.js';
 
+/**
+ * Print the package version to stdout.
+ */
 function showVersion() {
   const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
@@ -22,6 +25,10 @@ function showVersion() {
   console.log(pkg.version);
 }
 
+/**
+ * Create a starter configuration file in the current directory.
+ * Side effect: writes "designlint.config.json".
+ */
 function initConfig() {
   const configPath = path.resolve(process.cwd(), 'designlint.config.json');
   if (fs.existsSync(configPath)) {
@@ -40,6 +47,9 @@ function initConfig() {
   console.log('Created designlint.config.json');
 }
 
+/**
+ * Display CLI usage information.
+ */
 function help() {
   const msg = `Usage: design-lint [files...]
 
@@ -64,6 +74,12 @@ Options:
   console.log(msg);
 }
 
+/**
+ * Execute the CLI.
+ * @param argv Command line arguments.
+ * @returns Resolves when processing completes.
+ * Side effects: reads and writes files, prints to console, sets process.exitCode.
+ */
 export async function run(argv = process.argv.slice(2)) {
   const current = process.versions.node;
   const [major] = current.split('.').map(Number);

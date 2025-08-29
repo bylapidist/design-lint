@@ -5,6 +5,11 @@ import { sarifFormatter } from './sarif.js';
 
 type Formatter = (results: LintResult[], useColor?: boolean) => string;
 
+/**
+ * Retrieve a formatter by name.
+ * @param name Formatter identifier.
+ * @returns Formatter function for rendering results.
+ */
 export function getFormatter(name: string): Formatter {
   switch (name) {
     case 'stylish':

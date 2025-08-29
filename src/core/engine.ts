@@ -45,12 +45,19 @@ function createEngineError(opts: EngineErrorOptions): Error {
   );
 }
 
+/**
+ * Lints files using built-in and plugin-provided rules.
+ */
 export class Linter {
   private config: Config;
   private ruleMap: Map<string, RuleModule> = new Map();
   private pluginLoad: Promise<void>;
   private cacheLoaded = false;
 
+  /**
+   * Create a new Linter instance.
+   * @param config Linter configuration.
+   */
   constructor(config: Config) {
     this.config = config;
     for (const rule of builtInRules) {
@@ -59,6 +66,11 @@ export class Linter {
     this.pluginLoad = this.loadPlugins();
   }
 
+  /**
+   * Load configured plugins and register their rules.
+   * @throws Error if a plugin fails to load or is invalid.
+   * @returns Resolves when all plugins are processed.
+   */
   private async loadPlugins(): Promise<void> {
     const req = this.config.configPath
       ? createRequire(this.config.configPath)
@@ -133,6 +145,15 @@ export class Linter {
     }
   }
 
+  /**
+   * Lint a single file.
+   * @param filePath Path to the file.
+   * @param fix Apply fixes to the file.
+   * @param cache Optional in-memory result cache.
+   * @param ignorePaths Additional ignore pattern files.
+   * @param cacheLocation Path to persistent cache file.
+   * @returns The lint result for the file.
+   */
   async lintFile(
     filePath: string,
     fix = false,
@@ -151,6 +172,15 @@ export class Linter {
     return res ?? { filePath, messages: [] };
   }
 
+  /**
+   * Lint multiple files or directories.
+   * @param targets Paths or globs to lint.
+   * @param fix Apply fixes to matching files.
+   * @param cache Optional in-memory cache map.
+   * @param additionalIgnorePaths Additional ignore files.
+   * @param cacheLocation Persistent cache file location.
+   * @returns Lint results and list of ignore files encountered.
+   */
   async lintFiles(
     targets: string[],
     fix = false,
@@ -322,6 +352,12 @@ export class Linter {
     return { results, ignoreFiles: Array.from(seenIgnore) };
   }
 
+  /**
+   * Lint raw text.
+   * @param text Source content to lint.
+   * @param filePath Pseudo path used in messages.
+   * @returns Lint result containing messages.
+   */
   async lintText(text: string, filePath = 'unknown'): Promise<LintResult> {
     await this.pluginLoad;
     const enabled = this.getEnabledRules();
@@ -643,9 +679,10 @@ function parseCSS(
 }
 
 /**
- * Apply text fixes to the given source. Fix ranges are expected to be
- * non-overlapping; if overlapping ranges are detected, later fixes are skipped
- * in favor of earlier ones to avoid conflicting updates.
+ * Apply fixes to source text.
+ * @param text Original source code.
+ * @param messages Messages that may include fixes.
+ * @returns Text with all non-overlapping fixes applied.
  */
 export function applyFixes(text: string, messages: LintMessage[]): string {
   const fixes: Fix[] = messages

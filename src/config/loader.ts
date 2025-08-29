@@ -5,12 +5,23 @@ import type { Config } from '../core/engine.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../utils/paths.js';
 
+/**
+ * Dynamically import an ECMAScript config file.
+ * @param absPath Absolute path to the module.
+ * @returns Loaded configuration object.
+ */
 async function loadEsmConfig(absPath: string) {
   const url = pathToFileURL(absPath);
   const mod = await import(url.href);
   return (mod as { default?: unknown }).default ?? mod;
 }
 
+/**
+ * Resolve and load configuration for the linter.
+ * @param cwd Current working directory.
+ * @param configPath Optional explicit config path.
+ * @returns Parsed and validated config object.
+ */
 export async function loadConfig(
   cwd: string,
   configPath?: string,
@@ -68,6 +79,11 @@ export async function loadConfig(
   return result.data;
 }
 
+/**
+ * Search upward from a directory for a configuration file.
+ * @param cwd Directory to start from.
+ * @returns Absolute path to config if found.
+ */
 function findConfig(cwd: string): string | undefined {
   let dir = cwd;
   // Walk up parent directories looking for a config file
@@ -90,6 +106,11 @@ function findConfig(cwd: string): string | undefined {
   }
 }
 
+/**
+ * Determine whether a file should be loaded as ESM.
+ * @param filePath Path to the file.
+ * @returns True if the file uses ESM semantics.
+ */
 function isESM(filePath: string): boolean {
   const ext = path.extname(filePath);
   if (ext === '.mjs' || ext === '.mts') return true;
