@@ -233,3 +233,6 @@ See [SECURITY.md](SECURITY.md) for information on reporting vulnerabilities.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+
+This project is released with a [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+By participating in this project, you agree to abide by its terms.
