@@ -42,9 +42,6 @@ and `ignoreFiles` array containing any ignore files that were honored.
 const { results, ignoreFiles } = await linter.lintFiles(['src', 'tests']);
 ```
 
-> **Note:** A deprecated `lintFilesLegacy` method is available for the previous
-> array-based return value and will be removed in a future release.
-
 ## Exports
 
 - `Linter` – core engine for linting files.
