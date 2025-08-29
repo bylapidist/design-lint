@@ -3,6 +3,7 @@ import path from 'path';
 import ts from 'typescript';
 import postcss from 'postcss';
 import { createRequire } from 'module';
+import { pathToFileURL } from 'url';
 import fg from 'fast-glob';
 import os from 'node:os';
 import { performance } from 'node:perf_hooks';
@@ -68,13 +69,14 @@ export class Linter {
       try {
         resolved = req.resolve(p);
         if (resolved.endsWith('.mjs')) {
-          mod = await import(resolved);
+          mod = await import(`${pathToFileURL(resolved).href}?t=${Date.now()}`);
         } else {
           mod = req(resolved);
         }
       } catch (e: unknown) {
         if ((e as { code?: string }).code === 'ERR_REQUIRE_ESM') {
-          mod = await import(resolved ?? p);
+          const esmPath = resolved ?? p;
+          mod = await import(`${pathToFileURL(esmPath).href}?t=${Date.now()}`);
         } else {
           throw createEngineError({
             message: `Failed to load plugin "${p}": ${

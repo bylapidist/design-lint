@@ -4,6 +4,7 @@ import { parseArgs } from 'node:util';
 import path from 'path';
 import { createRequire } from 'module';
 import { once } from 'node:events';
+import { pathToFileURL } from 'url';
 import type { LintResult } from '../core/types';
 import type { Config } from '../core/engine';
 import { getFormatter } from '../formatters/index.js';
@@ -177,14 +178,24 @@ export async function run(argv = process.argv.slice(2)) {
       ig = newIg;
     };
 
-    const resolvePluginPaths = (cfg: Config): string[] => {
+    const resolvePluginPaths = (cfg: Config, cacheBust = false): string[] => {
       const req = cfg.configPath ? createRequire(cfg.configPath) : require;
       const paths: string[] = [];
       for (const p of cfg.plugins || []) {
         try {
-          paths.push(realpathIfExists(req.resolve(p)));
+          const resolved = realpathIfExists(req.resolve(p));
+          paths.push(
+            cacheBust && resolved.endsWith('.mjs')
+              ? `${pathToFileURL(resolved).href}?t=${Date.now()}`
+              : resolved,
+          );
         } catch {
-          paths.push(realpathIfExists(path.resolve(p)));
+          const resolved = realpathIfExists(path.resolve(p));
+          paths.push(
+            cacheBust && resolved.endsWith('.mjs')
+              ? `${pathToFileURL(resolved).href}?t=${Date.now()}`
+              : resolved,
+          );
         }
       }
       return paths;
@@ -288,7 +299,8 @@ export async function run(argv = process.argv.slice(2)) {
           const req = config.configPath
             ? createRequire(config.configPath)
             : require;
-          for (const p of pluginPaths) delete req.cache?.[p];
+          for (const p of resolvePluginPaths(config, true))
+            delete req.cache?.[p];
           config = await loadConfig(process.cwd(), values.config);
           linter = new Linter(config);
           await refreshIgnore();

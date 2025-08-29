@@ -962,6 +962,78 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
   assert.equal(runs, 2);
 });
 
+test('CLI reloads ESM plugins on change in watch mode', async () => {
+  const dir = makeTmpDir();
+  const pluginPath = path.join(dir, 'plugin.mjs');
+  const pluginContent = (msg: string) => `import ts from 'typescript';
+export const plugin = {
+  rules: [{
+    name: 'plugin/test',
+    meta: { description: 'test rule' },
+    create(context) {
+      return {
+        onNode(node) {
+          if (node.kind === ts.SyntaxKind.SourceFile) {
+            context.report({ message: '${msg}', line: 1, column: 1 });
+          }
+        },
+      };
+    },
+  }],
+};
+export default plugin;`;
+  fs.writeFileSync(pluginPath, pluginContent('first'));
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      plugins: ['./plugin.mjs'],
+      rules: { 'plugin/test': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let runs = 0;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('first')) {
+        runs++;
+        fs.writeFileSync(pluginPath, pluginContent('second'));
+        buffer = '';
+      } else if (buffer.includes('second')) {
+        runs++;
+        proc.kill();
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(runs, 2);
+});
+
 test('CLI continues watching after plugin load failure', async () => {
   const dir = makeTmpDir();
   const pluginPath = path.join(dir, 'plugin.js');
