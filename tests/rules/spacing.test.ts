@@ -48,6 +48,30 @@ test('design-token/spacing ignores var() fallbacks', async () => {
   assert.equal(res.messages.length, 0);
 });
 
+test('design-token/spacing ignores nested functions', async () => {
+  const linter = new Linter({
+    tokens: { spacing: { sm: 4, md: 8 } },
+    rules: { 'design-token/spacing': ['error', { base: 4 }] },
+  });
+  const res = await linter.lintText(
+    '.a{margin:calc(var(--m, 5px) + 4px);}',
+    'file.css',
+  );
+  assert.equal(res.messages.length, 0);
+});
+
+test('design-token/spacing ignores nested var() fallbacks', async () => {
+  const linter = new Linter({
+    tokens: { spacing: { sm: 4, md: 8 } },
+    rules: { 'design-token/spacing': ['error', { base: 4 }] },
+  });
+  const res = await linter.lintText(
+    '.a{margin:var(--m, var(--n, 5px));}',
+    'file.css',
+  );
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-token/spacing supports custom units', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
