@@ -29,8 +29,10 @@ pnpm design-lint src
 yarn design-lint src
 ```
 
-Refer to the [Usage](usage.md) guide for all available command line options and
-to [Configuration](configuration.md) for setting up design tokens and rules.
+Refer to the [Usage](usage.md) guide for all available command line options,
+to [Configuration](configuration.md) for setting up design tokens and rules, and
+to [Formatters](formatters.md) for output formats and custom formatter
+examples.
 
 ## Rules
 

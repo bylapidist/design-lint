@@ -8,7 +8,7 @@ import { Linter, loadConfig, getFormatter } from '@lapidist/design-lint';
 const config = await loadConfig();
 const linter = new Linter(config);
 const { results } = await linter.lintFiles(['src']);
-const formatter = getFormatter('stylish');
+const formatter = await getFormatter('stylish');
 console.log(formatter(results));
 ```
 
@@ -119,24 +119,30 @@ See [Configuration](./configuration.md) for details.
 
 ## `getFormatter(name)` ([source](../src/formatters/index.ts))
 
-Retrieves a built-in formatter.
+Retrieve a formatter by built-in name or module path.
 
 **Parameters**
 
-- `name` `string` – one of `'stylish'`, `'json'`, or `'sarif'`.
+- `name` `string` – `'stylish'`, `'json'`, `'sarif'`, or a path to a formatter module.
 
 **Returns**
 
-- `(results: LintResult[], useColor?: boolean) => string` – formatter function.
+- `Promise<(results: LintResult[], useColor?: boolean) => string>` – formatter function.
 
-**Example**
+**Examples**
 
 ```ts
-const formatter = getFormatter('stylish');
+const formatter = await getFormatter('stylish');
 console.log(formatter(results));
 ```
 
-See [Usage](./usage.md#options) for command‑line equivalents.
+```ts
+const formatter = await getFormatter('./minimal-formatter.js');
+console.log(formatter(results));
+```
+
+See [Formatters](./formatters.md) for built-in options and instructions on adding custom ones, and
+[Usage](./usage.md#options) for command‑line equivalents.
 
 ## `applyFixes(text, messages)` ([source](../src/core/engine.ts))
 

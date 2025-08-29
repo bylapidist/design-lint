@@ -65,7 +65,9 @@ npx design-lint --version
 
 - `--config <path>` – path to a `designlint.config.js` or `.json` file. The CLI
   throws an error if the file cannot be found.
-- `--format <stylish|json|sarif>` – output format (default `stylish`).
+- `--format <formatter>` – output format (default `stylish`). Accepts built-in
+  names (`stylish`, `json`, `sarif`) or a path to a custom formatter module.
+  See the [Formatters guide](docs/formatters.md) for details.
 - `--output <file>` – write report to a file instead of stdout.
 - `--report <file>` – write JSON results to a file.
 - `--ignore-path <file>` – load additional ignore patterns from a file.  
@@ -139,14 +141,15 @@ import { Linter, loadConfig, getFormatter } from '@lapidist/design-lint';
 const config = await loadConfig();
 const linter = new Linter(config);
 const { results } = await linter.lintFiles(['src']);
-const formatter = getFormatter('stylish');
+const formatter = await getFormatter('stylish');
 console.log(formatter(results));
 ```
 
 Additional exports, such as `applyFixes` and `builtInRules`, are also available.
-See the [Configuration guide](docs/configuration.md) for `loadConfig` details and
-the [Usage guide](docs/usage.md#options) for available formatters. A full list of
-exports is in the [API guide](docs/api.md).
+See the [Configuration guide](docs/configuration.md) for `loadConfig` details,
+the [Formatters guide](docs/formatters.md) for formatter usage, and the
+[Usage guide](docs/usage.md#options) for CLI options. A full list of exports is
+in the [API guide](docs/api.md).
 
 ## Configuration
 

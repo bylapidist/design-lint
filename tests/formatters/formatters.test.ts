@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { stylish } from '../../src/formatters/stylish.ts';
 import { jsonFormatter } from '../../src/formatters/json.ts';
 import { sarifFormatter } from '../../src/formatters/sarif.ts';
@@ -77,10 +79,18 @@ test('sarif formatter outputs rules and links results', () => {
   assert.equal(run.results[0].ruleIndex, 0);
 });
 
-test('getFormatter returns formatter for valid name', () => {
-  assert.equal(getFormatter('json'), jsonFormatter);
+test('getFormatter returns formatter for valid name', async () => {
+  assert.equal(await getFormatter('json'), jsonFormatter);
 });
 
-test('getFormatter throws for invalid name', () => {
-  assert.throws(() => getFormatter('unknown'), /Unknown formatter/);
+test('getFormatter loads formatter from path', async () => {
+  const __dirname = fileURLToPath(new URL('.', import.meta.url));
+  const formatterPath = join(__dirname, 'fixtures', 'custom-formatter.ts');
+  const formatter = await getFormatter(formatterPath);
+  const out = formatter([{ filePath: 'a', messages: [] }]);
+  assert.equal(out, 'custom:1');
+});
+
+test('getFormatter throws for invalid name', async () => {
+  await assert.rejects(() => getFormatter('unknown'), /Unknown formatter/);
 });

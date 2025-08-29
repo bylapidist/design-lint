@@ -58,7 +58,7 @@ Commands:
 
 Options:
   --config <path>       Path to configuration file
-  --format <name>       Output format (stylish, json, sarif)
+  --format <name|path>  Output format (stylish, json, sarif, or path to module)
   --output <file>       Write report to file
   --report <file>       Write JSON results to file
   --ignore-path <file>  Load additional ignore patterns from file
@@ -130,9 +130,9 @@ export async function run(argv = process.argv.slice(2)) {
       return;
     }
 
-    let formatter: ReturnType<typeof getFormatter>;
+    let formatter: Awaited<ReturnType<typeof getFormatter>>;
     try {
-      formatter = getFormatter(values.format as string);
+      formatter = await getFormatter(values.format as string);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(useColor ? chalk.red(message) : message);

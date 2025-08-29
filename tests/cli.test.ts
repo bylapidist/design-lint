@@ -371,6 +371,33 @@ test('CLI reports unknown formatter', () => {
   assert.ok(res.stderr.includes('Unknown formatter'));
 });
 
+test('CLI loads formatter from module path', () => {
+  const fixture = path.join(__dirname, 'fixtures', 'sample');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const formatterPath = path.join(
+    __dirname,
+    'formatters',
+    'fixtures',
+    'custom-formatter.ts',
+  );
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--loader',
+      tsNodeLoader,
+      cli,
+      path.join(fixture, 'bad.ts'),
+      '--config',
+      path.join(fixture, 'designlint.config.json'),
+      '--format',
+      formatterPath,
+    ],
+    { encoding: 'utf8' },
+  );
+  assert.notEqual(res.status, 0);
+  assert.ok(res.stdout.includes('custom:1'));
+});
+
 test('CLI outputs SARIF reports', () => {
   const dir = makeTmpDir();
   try {

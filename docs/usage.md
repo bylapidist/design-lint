@@ -32,7 +32,8 @@ npx design-lint init
 ## Options
 
 - `--config <path>`: Path to a `designlint.config.js` or `.json` file.
-- `--format <stylish|json|sarif>`: Output format (default `stylish`).
+- `--format <formatter>`: Output format (default `stylish`). Accepts built-in
+  names (`stylish`, `json`, `sarif`) or a path to a custom formatter module.
 - `--output <file>`: Write report to a file instead of stdout.
 - `--report <file>`: Write JSON results to a file.
 - `--ignore-path <file>`: Load additional ignore patterns from a file. The
@@ -56,6 +57,12 @@ Write a JSON report to a file:
 
 ```bash
 npx design-lint src --report report.json --format json
+```
+
+Use a custom formatter module:
+
+```bash
+npx design-lint src --format ./minimal-formatter.js
 ```
 
 Re-run lint on file changes:
