@@ -176,6 +176,32 @@ test('CLI errors on invalid --max-warnings', () => {
   assert.ok(res.stderr.includes('non-negative integer'));
 });
 
+test('CLI reports missing ignore file', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: {}, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--loader',
+      tsNodeLoader,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--ignore-path',
+      'missing.ignore',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  assert.ok(res.stderr.includes('Ignore file not found'));
+});
+
 test('CLI --fix applies fixes', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');

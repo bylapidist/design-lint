@@ -35,7 +35,8 @@ npx design-lint init
 - `--format <stylish|json|sarif>`: Output format (default `stylish`).
 - `--output <file>`: Write report to a file instead of stdout.
 - `--report <file>`: Write JSON results to a file.
-- `--ignore-path <file>`: Load additional ignore patterns from a file.  
+- `--ignore-path <file>`: Load additional ignore patterns from a file. The
+  path must exist; otherwise the CLI exits with an error.
   Example: `npx design-lint src --ignore-path .lintignore`
 - `--concurrency <n>`: Limit the number of files processed in parallel.
 - `--max-warnings <n>`: Number of warnings to trigger a non-zero exit code.  

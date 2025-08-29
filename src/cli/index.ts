@@ -160,9 +160,17 @@ export async function run(argv = process.argv.slice(2)) {
       ? path.resolve(process.cwd(), '.designlintcache')
       : undefined;
 
-    const ignorePath = values['ignore-path']
-      ? realpathIfExists(path.resolve(values['ignore-path'] as string))
-      : undefined;
+    let ignorePath: string | undefined;
+    if (values['ignore-path']) {
+      const resolved = path.resolve(values['ignore-path'] as string);
+      if (!fs.existsSync(resolved)) {
+        const message = `Ignore file not found: "${relFromCwd(resolved)}"`;
+        console.error(useColor ? chalk.red(message) : message);
+        process.exitCode = 1;
+        return;
+      }
+      ignorePath = realpathIfExists(resolved);
+    }
 
     const gitIgnore = realpathIfExists(path.join(process.cwd(), '.gitignore'));
     const designIgnore = realpathIfExists(
