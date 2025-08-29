@@ -11,7 +11,7 @@ Enforces `box-shadow` values to match the shadows tokens defined in your configu
 }
 ```
 
-Shadow tokens must be strings representing complete `box-shadow` declarations.
+Shadow tokens must be strings representing complete `box-shadow` declarations. Each declaration should include all required lengths and color values; no default units are assumed.
 
 ## Examples
 

@@ -50,6 +50,27 @@ export default defineConfig({
 });
 ```
 
+## Token definitions
+
+`@lapidist/design-lint` expects tokens to use specific formats:
+
+- **radii** / **borderRadius**: numbers or strings with `px`, `rem`, or `em` units. Numbers are treated as `px`.
+- **borderWidths** / **borderWidth**: numbers or strings with `px`, `rem`, or `em` units. Numbers are treated as `px`.
+- **shadows**: strings representing complete `box-shadow` declarations.
+- **durations** or **motion.durations**: numbers (milliseconds) or strings with `ms` or `s` units.
+
+```js
+module.exports = {
+  tokens: {
+    radii: { sm: 2, lg: '8px' },
+    borderWidths: { thin: 1, thick: '2px' },
+    shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
+    durations: { short: 100 },
+    motion: { durations: { long: '250ms' } },
+  },
+};
+```
+
 See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/letter-spacing](rules/design-token/letter-spacing.md), [design-token/border-radius](rules/design-token/border-radius.md), [design-token/border-width](rules/design-token/border-width.md), [design-token/spacing](rules/design-token/spacing.md), [design-token/box-shadow](rules/design-token/box-shadow.md), [design-token/duration](rules/design-token/duration.md), [design-token/z-index](rules/design-token/z-index.md), [design-token/font-size](rules/design-token/font-size.md), and [design-token/font-family](rules/design-token/font-family.md) for rule details.
 
 @lapidist/design-lint searches for configuration starting from the current working

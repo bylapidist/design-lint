@@ -6,7 +6,10 @@ Enforces transition and animation duration values to match the duration tokens d
 
 ```json
 {
-  "tokens": { "durations": { "short": "100ms", "long": "250ms" } },
+  "tokens": {
+    "durations": { "short": "100ms" },
+    "motion": { "durations": { "long": 250 } }
+  },
   "rules": { "design-token/duration": "error" }
 }
 ```

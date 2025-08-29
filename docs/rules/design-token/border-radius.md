@@ -6,12 +6,15 @@ Enforces `border-radius` values to match the radii tokens defined in your config
 
 ```json
 {
-  "tokens": { "radii": { "sm": 2, "md": 4 } },
+  "tokens": {
+    "radii": { "sm": 2 },
+    "borderRadius": { "lg": "8px" }
+  },
   "rules": { "design-token/border-radius": "error" }
 }
 ```
 
-Radii tokens may be defined under `tokens.radii` or `tokens.borderRadius` and may be numbers or strings with `px`, `rem`, or `em` units.
+Radii tokens may be defined under `tokens.radii` or `tokens.borderRadius`. Numbers are treated as pixel values; strings may use `px`, `rem`, or `em` units.
 
 ## Examples
 
