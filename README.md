@@ -63,7 +63,8 @@ npx design-lint --version
 
 ### Options
 
-- `--config <path>` – path to a `designlint.config.js` or `.json` file.
+- `--config <path>` – path to a `designlint.config.js` or `.json` file. The CLI
+  throws an error if the file cannot be found.
 - `--format <stylish|json|sarif>` – output format (default `stylish`).
 - `--output <file>` – write report to a file instead of stdout.
 - `--report <file>` – write JSON results to a file.

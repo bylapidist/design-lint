@@ -24,6 +24,9 @@ export async function loadConfig(
     plugins: [],
     configPath: abs,
   };
+  if (configPath && (!abs || !fs.existsSync(abs))) {
+    throw new Error(`Config file not found at ${abs ?? resolved}`);
+  }
   if (abs && fs.existsSync(abs)) {
     try {
       let loaded: Config = {};

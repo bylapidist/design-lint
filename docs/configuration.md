@@ -26,7 +26,9 @@ directory and walking up parent directories. In each directory it looks for
 `designlint.config.ts`, `designlint.config.mts`, then
 `designlint.config.json`. The first file found is used. Loading TypeScript
 config files requires [`ts-node`](https://typestrong.org/ts-node/) to be
-installed.
+installed. When a configuration path is explicitly provided (for example via
+`loadConfig(cwd, 'path')` or the CLI `--config` flag) and the file does not
+exist, the linter throws an error.
 
 If the discovered configuration file contains invalid JSON or JavaScript,
 @lapidist/design-lint will throw an error including the file path and the underlying

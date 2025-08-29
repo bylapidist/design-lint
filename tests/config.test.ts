@@ -33,6 +33,14 @@ test('throws on malformed JS config', async () => {
   await assert.rejects(loadConfig(tmp), /Failed to load config/);
 });
 
+test('throws when specified config file is missing', async () => {
+  const tmp = makeTmpDir();
+  await assert.rejects(
+    loadConfig(tmp, 'designlint.config.json'),
+    /Config file not found/,
+  );
+});
+
 test('throws on invalid tokens', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
