@@ -1,14 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import path from 'node:path';
-import fs from 'node:fs';
-import { loadCache, type CacheMap } from '../src/core/cache.ts';
+import { promises as fs } from 'node:fs';
+import { loadCache, saveCache, type CacheMap } from '../src/core/cache.ts';
 import type { LintResult } from '../src/core/types.ts';
-import { makeTmpDir } from '../src/utils/tmp.ts';
 
-test('loadCache populates cache from valid file', async () => {
-  const dir = makeTmpDir();
-  const cacheFile = path.join(dir, 'cache.json');
+test('loadCache loads valid cache data', async (t) => {
+  const cache: CacheMap = new Map();
   const entry: [string, { mtime: number; result: LintResult }] = [
     'foo',
     {
@@ -16,39 +13,93 @@ test('loadCache populates cache from valid file', async () => {
       result: { filePath: 'foo', messages: [] },
     },
   ];
-  fs.writeFileSync(cacheFile, JSON.stringify([entry]), 'utf8');
-  const cache: CacheMap = new Map();
-  await loadCache(cache, cacheFile);
+  t.mock.method(fs, 'readFile', async () => JSON.stringify([entry]));
+
+  await loadCache(cache, '/cache.json');
+
   assert.deepEqual(cache.get('foo'), entry[1]);
 });
 
-test('loadCache warns on malformed cache', async () => {
-  const dir = makeTmpDir();
-  const cacheFile = path.join(dir, 'cache.json');
-  const badData = [['foo', { result: { filePath: 'foo', messages: [] } }]];
-  fs.writeFileSync(cacheFile, JSON.stringify(badData), 'utf8');
+test('loadCache handles corrupted JSON', async (t) => {
   const cache: CacheMap = new Map();
-  const originalWarn = console.warn;
-  let out = '';
-  console.warn = (msg?: unknown) => {
-    out += String(msg);
-  };
-  await loadCache(cache, cacheFile);
-  console.warn = originalWarn;
+  t.mock.method(fs, 'readFile', async () => '{bad');
+  const warn = t.mock.method(console, 'warn');
+
+  await loadCache(cache, '/cache.json');
+
   assert.equal(cache.size, 0);
-  assert.match(out, /Invalid cache format/);
+  assert.ok(
+    warn.mock.calls[0]?.arguments[0].startsWith('Failed to parse cache'),
+  );
 });
 
-test('loadCache warns when cache cannot be read', async () => {
-  const cacheFile = path.join(makeTmpDir(), 'missing.json');
+test('loadCache handles missing cache file', async (t) => {
   const cache: CacheMap = new Map();
-  const originalWarn = console.warn;
-  let out = '';
-  console.warn = (msg?: unknown) => {
-    out += String(msg);
-  };
-  await loadCache(cache, cacheFile);
-  console.warn = originalWarn;
+  t.mock.method(fs, 'readFile', async () => {
+    throw Object.assign(new Error('not found'), { code: 'ENOENT' });
+  });
+  const warn = t.mock.method(console, 'warn');
+
+  await loadCache(cache, '/cache.json');
+
   assert.equal(cache.size, 0);
-  assert.match(out, /Failed to read cache/);
+  assert.ok(
+    warn.mock.calls[0]?.arguments[0].startsWith('Failed to read cache'),
+  );
+});
+
+test('saveCache writes valid JSON', async (t) => {
+  const cache: CacheMap = new Map([
+    [
+      'foo',
+      {
+        mtime: 1,
+        result: { filePath: 'foo', messages: [] },
+      },
+    ],
+  ]);
+
+  t.mock.method(fs, 'mkdir', async () => {});
+  const write = t.mock.method(fs, 'writeFile', async () => {});
+
+  await saveCache(cache, '/cache.json');
+
+  assert.equal(write.mock.callCount(), 1);
+  const json = write.mock.calls[0].arguments[1] as string;
+  assert.deepEqual(JSON.parse(json), [...cache.entries()]);
+});
+
+test('saveCache ignores serialization errors', async (t) => {
+  const result: LintResult & { self?: unknown } = {
+    filePath: 'foo',
+    messages: [],
+  };
+  result.self = result;
+  const cache: CacheMap = new Map([['foo', { mtime: 1, result }]]);
+
+  t.mock.method(fs, 'mkdir', async () => {});
+  const write = t.mock.method(fs, 'writeFile', async () => {});
+
+  await saveCache(cache, '/cache.json');
+
+  assert.equal(write.mock.callCount(), 0);
+});
+
+test('saveCache ignores write errors', async (t) => {
+  const cache: CacheMap = new Map([
+    [
+      'foo',
+      {
+        mtime: 1,
+        result: { filePath: 'foo', messages: [] },
+      },
+    ],
+  ]);
+
+  t.mock.method(fs, 'mkdir', async () => {});
+  t.mock.method(fs, 'writeFile', async () => {
+    throw new Error('disk full');
+  });
+
+  await saveCache(cache, '/cache.json');
 });
