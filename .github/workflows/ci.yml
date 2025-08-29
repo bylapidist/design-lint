@@ -29,6 +29,7 @@ jobs:
               - '**'
               - '!docs/**'
               - '!**/*.md'
+              - '!*.md'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
