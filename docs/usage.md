@@ -40,7 +40,7 @@ npx design-lint init
   path must exist; otherwise the CLI exits with an error.
   Example: `npx design-lint src --ignore-path .lintignore`
 - `--concurrency <n>`: Limit the number of files processed in parallel.
-- `--max-warnings <n>`: Number of warnings to trigger a non-zero exit code.  
+- <a id="max-warnings"></a>`--max-warnings <n>`: Number of warnings to trigger a non-zero exit code.
   Example: `npx design-lint src --max-warnings 0`
 - `--quiet`: Suppress output and rely on exit code.
 - `--no-color`: Disable colored output.
@@ -49,9 +49,23 @@ npx design-lint init
 - `--watch`: Watch files and re-lint on changes.
 - `--fix`: Automatically fix problems when possible.
 
-The command exits with a non-zero code when errors are found, making it suitable for CI workflows.
+## Exit codes
+
+- **0**: No errors and warnings ≤ [`--max-warnings`](#max-warnings).
+- **1**: Any rule errors or warnings exceeding [`--max-warnings`](#max-warnings).
+
+These codes allow CI pipelines to fail when issues are found. See [CI usage](#ci-usage) for an example.
 
 ## Examples
+
+### CI usage
+
+```yaml
+# .github/workflows/lint.yml
+steps:
+  - uses: actions/checkout@v4
+  - run: npx design-lint src --max-warnings 0
+```
 
 Write a JSON report to a file:
 
