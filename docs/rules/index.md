@@ -16,6 +16,7 @@ Design-lint includes several built-in rules categorized by domain.
 - [border-radius](./design-token/border-radius)
 - [border-width](./design-token/border-width)
 - [box-shadow](./design-token/box-shadow)
+- [duration](./design-token/duration)
 - [spacing](./design-token/spacing)
 - [typography](./design-token/typography)
 - [z-index](./design-token/z-index)
