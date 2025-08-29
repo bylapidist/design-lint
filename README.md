@@ -222,7 +222,9 @@ linting.
 This repository contains Markdown guides under the [`docs/`](docs) directory.
 For an overview of the core engine, rule lifecycle, plugin system and
 configuration resolution, see the [Architecture guide](docs/architecture.md).
-A full documentation site can be built with:
+Common runtime issues are covered in the
+[Troubleshooting guide](docs/troubleshooting.md). A full documentation site can
+be built with:
 
 ```bash
 npm run docs:build
