@@ -23,15 +23,23 @@ yarn design-lint [files...]
 
 ### Initialize configuration
 
-Create a starter `designlint.config.json` with:
+Create a starter config with:
 
 ```bash
 npx design-lint init
 ```
 
+By default this writes `designlint.config.json`. If TypeScript is detected in
+your project (`tsconfig.json` or a `typescript` dependency), a
+`designlint.config.ts` is created instead. Override the format with
+`--init-format <format>` where `<format>` is one of `js`, `cjs`, `mjs`, `ts`,
+`mts`, or `json`.
+
 ## Options
 
-- `--config <path>`: Path to a `designlint.config.js` or `.json` file.
+- `--config <path>`: Path to a `designlint.config.*` file.
+- `--init-format <format>`: Format for `design-lint init` (`js`, `cjs`, `mjs`,
+  `ts`, `mts`, `json`).
 - `--format <formatter>`: Output format (default `stylish`). Accepts built-in
   names (`stylish`, `json`, `sarif`) or a path to a custom formatter module.
 - `--output <file>`: Write report to a file instead of stdout.

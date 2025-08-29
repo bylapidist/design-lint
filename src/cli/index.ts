@@ -12,7 +12,7 @@ import { getFormatter } from '../formatters/index.js';
 import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
-import { writeFileAtomic } from '../utils/atomicWrite.js';
+import { writeFileAtomic, writeFileAtomicSync } from '../utils/atomicWrite.js';
 
 /**
  * Print the package version to stdout.
@@ -27,24 +27,65 @@ function showVersion() {
 
 /**
  * Create a starter configuration file in the current directory.
- * Side effect: writes "designlint.config.json".
+ * Side effect: writes "designlint.config.*".
+ * @param initFormat Optional format override.
  */
-function initConfig() {
-  const configPath = path.resolve(process.cwd(), 'designlint.config.json');
-  if (fs.existsSync(configPath)) {
-    console.log('designlint.config.json already exists');
+function initConfig(initFormat?: string) {
+  const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
+  let format = initFormat;
+  if (format && !supported.has(format)) {
+    console.error(
+      `Unsupported init format: "${format}". Supported formats: ${[...supported].join(', ')}`,
+    );
+    process.exitCode = 1;
     return;
   }
-  const defaultConfig = {
-    tokens: {},
-    rules: {},
-  };
-  fs.writeFileSync(
-    configPath,
-    `${JSON.stringify(defaultConfig, null, 2)}\n`,
-    'utf8',
-  );
-  console.log('Created designlint.config.json');
+  if (!format) {
+    const tsconfigPath = path.resolve(process.cwd(), 'tsconfig.json');
+    if (fs.existsSync(tsconfigPath)) {
+      format = 'ts';
+    } else {
+      const pkgPath = path.resolve(process.cwd(), 'package.json');
+      if (fs.existsSync(pkgPath)) {
+        try {
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
+            dependencies?: Record<string, unknown>;
+            devDependencies?: Record<string, unknown>;
+          };
+          if (pkg.dependencies?.typescript || pkg.devDependencies?.typescript)
+            format = 'ts';
+        } catch {}
+      }
+    }
+    if (!format) format = 'json';
+  }
+
+  const configPath = path.resolve(process.cwd(), `designlint.config.${format}`);
+  if (fs.existsSync(configPath)) {
+    console.log(`designlint.config.${format} already exists`);
+    return;
+  }
+
+  let contents = '';
+  switch (format) {
+    case 'json':
+      contents = `${JSON.stringify({ tokens: {}, rules: {} }, null, 2)}\n`;
+      break;
+    case 'js':
+    case 'cjs':
+      contents = `module.exports = {\n  tokens: {},\n  rules: {},\n};\n`;
+      break;
+    case 'mjs':
+      contents = `export default {\n  tokens: {},\n  rules: {},\n};\n`;
+      break;
+    case 'ts':
+    case 'mts':
+      contents = `import type { Config } from '@lapidist/design-lint';\n\nexport default {\n  tokens: {},\n  rules: {},\n} satisfies Config;\n`;
+      break;
+  }
+
+  writeFileAtomicSync(configPath, contents);
+  console.log(`Created designlint.config.${format}`);
 }
 
 /**
@@ -54,9 +95,10 @@ function help() {
   const msg = `Usage: design-lint [files...]
 
 Commands:
-  init                  Create a starter designlint.config.json
+  init                  Create a starter designlint.config.*
 
 Options:
+  --init-format <fmt>   Config format for 'init' (js, cjs, mjs, ts, mts, json)
   --config <path>       Path to configuration file
   --format <name|path>  Output format (stylish, json, sarif, or path to module)
   --output <file>       Write report to file
@@ -97,6 +139,7 @@ export async function run(argv = process.argv.slice(2)) {
       options: {
         config: { type: 'string' },
         format: { type: 'string', default: 'stylish' },
+        'init-format': { type: 'string' },
         output: { type: 'string' },
         report: { type: 'string' },
         'ignore-path': { type: 'string' },
@@ -126,7 +169,7 @@ export async function run(argv = process.argv.slice(2)) {
     }
 
     if (positionals[0] === 'init') {
-      initConfig();
+      initConfig(values['init-format'] as string | undefined);
       return;
     }
 

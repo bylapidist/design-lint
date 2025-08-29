@@ -10,7 +10,9 @@ required fields.
 - Ensure `designlint.config.json` is valid JSON or that a `.js` file exports an
   object.
 - Confirm the path passed with `--config` exists.
-- Run `npx design-lint init` to generate a starter config.
+- Run `npx design-lint init` to generate a starter config (`--init-format <format>`
+  can override the detected format with `js`, `cjs`, `mjs`, `ts`, `mts`, or
+  `json`).
 
 ## Plugin load failures
 

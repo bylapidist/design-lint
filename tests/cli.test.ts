@@ -42,6 +42,59 @@ test('CLI runs when executed via a symlink', () => {
   assert.match(res.stdout, /Usage: design-lint/);
 });
 
+test('init creates json config by default', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const dir = makeTmpDir();
+  const res = spawnSync(
+    process.execPath,
+    ['--loader', tsNodeLoader, cli, 'init'],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 0);
+  assert.ok(fs.existsSync(path.join(dir, 'designlint.config.json')));
+});
+
+test('init detects TypeScript and creates ts config', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
+  const res = spawnSync(
+    process.execPath,
+    ['--loader', tsNodeLoader, cli, 'init'],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 0);
+  assert.ok(fs.existsSync(path.join(dir, 'designlint.config.ts')));
+});
+
+test('--init-format overrides detection', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
+  const res = spawnSync(
+    process.execPath,
+    ['--loader', tsNodeLoader, cli, 'init', '--init-format', 'json'],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 0);
+  assert.ok(fs.existsSync(path.join(dir, 'designlint.config.json')));
+});
+
+test('--init-format supports all formats', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const formats = ['js', 'cjs', 'mjs', 'ts', 'mts', 'json'] as const;
+  for (const fmt of formats) {
+    const dir = makeTmpDir();
+    const res = spawnSync(
+      process.execPath,
+      ['--loader', tsNodeLoader, cli, 'init', '--init-format', fmt],
+      { encoding: 'utf8', cwd: dir },
+    );
+    assert.equal(res.status, 0);
+    assert.ok(fs.existsSync(path.join(dir, `designlint.config.${fmt}`)));
+  }
+});
+
 test('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');

@@ -55,7 +55,10 @@ Generate a starter configuration file:
 npx design-lint init
 ```
 
-This creates a `designlint.config.json` in the current directory.
+By default this creates a `designlint.config.json` in the current directory. If
+TypeScript is detected (via `tsconfig.json` or a `typescript` dependency), a
+`designlint.config.ts` is generated instead. Use `--init-format` to explicitly
+set the format (`js`, `cjs`, `mjs`, `ts`, `mts`, or `json`).
 
 Check the CLI version:
 
@@ -65,8 +68,10 @@ npx design-lint --version
 
 ### Options
 
-- `--config <path>` – path to a `designlint.config.js` or `.json` file. The CLI
-  throws an error if the file cannot be found.
+- `--config <path>` – path to a `designlint.config.*` file. The CLI throws an
+  error if the file cannot be found.
+- `--init-format <format>` – format for `design-lint init` (`js`, `cjs`, `mjs`,
+  `ts`, `mts`, `json`).
 - `--format <formatter>` – output format (default `stylish`). Accepts built-in
   names (`stylish`, `json`, `sarif`) or a path to a custom formatter module.
   See the [Formatters guide](docs/formatters.md) for details.
