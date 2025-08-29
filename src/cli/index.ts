@@ -80,7 +80,7 @@ function initConfig(initFormat?: string) {
       break;
     case 'ts':
     case 'mts':
-      contents = `import type { Config } from '@lapidist/design-lint';\n\nexport default {\n  tokens: {},\n  rules: {},\n} satisfies Config;\n`;
+      contents = `import { defineConfig } from '@lapidist/design-lint';\n\nexport default defineConfig({\n  tokens: {},\n  rules: {},\n});\n`;
       break;
   }
 

@@ -124,12 +124,13 @@ test('loads async config from .mjs', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads config from .ts', async () => {
+test('loads config from .ts using defineConfig', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
+  const rel = path.relative(tmp, path.resolve('src.ts')).replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
-    "module.exports = { tokens: { colors: { primary: '#000' } } };",
+    `const { defineConfig } = require('${rel}');\nmodule.exports = defineConfig({ tokens: { colors: { primary: '#000' } } });`,
   );
   const loaded = await loadConfig(tmp);
   assert.equal(loaded.tokens?.colors?.primary, '#000');

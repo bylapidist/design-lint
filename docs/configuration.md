@@ -1,6 +1,8 @@
 # Configuration
 
-Create a `designlint.config.js` (or `.ts`, `.mjs`, `.mts`, `.json`) file in your project root:
+Create a `designlint.config.js` (or `.ts`, `.mjs`, `.mts`, `.json`) file in your project root.
+
+For JavaScript:
 
 ```js
 module.exports = {
@@ -21,6 +23,31 @@ module.exports = {
     'design-token/box-shadow': 'error',
   },
 };
+```
+
+For TypeScript, construct the config with `defineConfig`:
+
+```ts
+import { defineConfig } from '@lapidist/design-lint';
+
+export default defineConfig({
+  tokens: {
+    colors: { primary: '#ff0000' },
+    radii: { sm: 2, md: 4 },
+    spacing: { sm: 4, md: 8 },
+    shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
+    zIndex: { modal: 1000 },
+    typography: {
+      fontSizes: { base: 16 },
+      fonts: { sans: 'Inter, sans-serif' },
+    },
+  },
+  rules: {
+    'design-token/colors': 'error',
+    'design-token/border-radius': 'error',
+    'design-token/box-shadow': 'error',
+  },
+});
 ```
 
 See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/letter-spacing](rules/design-token/letter-spacing.md), [design-token/border-radius](rules/design-token/border-radius.md), [design-token/border-width](rules/design-token/border-width.md), [design-token/spacing](rules/design-token/spacing.md), [design-token/box-shadow](rules/design-token/box-shadow.md), [design-token/duration](rules/design-token/duration.md), [design-token/z-index](rules/design-token/z-index.md), and [design-token/typography](rules/design-token/typography.md) for rule details.

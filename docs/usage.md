@@ -31,9 +31,9 @@ npx design-lint init
 
 By default this writes `designlint.config.json`. If TypeScript is detected in
 your project (`tsconfig.json` or a `typescript` dependency), a
-`designlint.config.ts` is created instead. Override the format with
-`--init-format <format>` where `<format>` is one of `js`, `cjs`, `mjs`, `ts`,
-`mts`, or `json`.
+`designlint.config.ts` is created instead using the `defineConfig` helper.
+Override the format with `--init-format <format>` where `<format>` is one of
+`js`, `cjs`, `mjs`, `ts`, `mts`, or `json`.
 
 ## Options
 

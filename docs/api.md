@@ -3,7 +3,7 @@
 `@lapidist/design-lint` exposes a small Node API for advanced scenarios.
 
 ```js
-import { Linter, loadConfig, getFormatter } from '@lapidist/design-lint';
+import { Linter, loadConfig, getFormatter, defineConfig } from '@lapidist/design-lint';
 
 const config = await loadConfig();
 const linter = new Linter(config);
@@ -116,6 +116,29 @@ const config = await loadConfig(process.cwd());
 ```
 
 See [Configuration](./configuration.md) for details.
+
+## `defineConfig(config)` ([source](../src/config/define-config.ts))
+
+Helper to provide type checking when writing configuration files.
+
+### Parameters
+
+- `config` `Config` – configuration object.
+
+### Returns
+
+- `Config` – the provided configuration.
+
+### Example
+
+```ts
+import { defineConfig } from '@lapidist/design-lint';
+
+export default defineConfig({
+  tokens: { colors: { primary: '#ff0000' } },
+  rules: { 'design-token/colors': 'error' },
+});
+```
 
 ## `getFormatter(name)` ([source](../src/formatters/index.ts))
 

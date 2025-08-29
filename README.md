@@ -67,7 +67,7 @@ Generate a starter configuration:
 npx design-lint init
 ```
 
-By default this writes `designlint.config.json` to the current directory. If TypeScript is detected, a `designlint.config.ts` file is produced instead. Use `--init-format` to choose `js`, `cjs`, `mjs`, `ts`, `mts`, or `json`.
+By default this writes `designlint.config.json` to the current directory. If TypeScript is detected, a `designlint.config.ts` file using `defineConfig` is produced instead. Use `--init-format` to choose `js`, `cjs`, `mjs`, `ts`, `mts`, or `json`.
 
 Check the CLI version:
 
@@ -172,6 +172,31 @@ module.exports = {
     'design-token/box-shadow': 'error',
   },
 };
+```
+
+For TypeScript, use the `defineConfig` helper:
+
+```ts
+import { defineConfig } from '@lapidist/design-lint';
+
+export default defineConfig({
+  tokens: {
+    colors: { primary: '#ff0000' },
+    radii: { sm: 2 },
+    spacing: { sm: 4 },
+    shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
+    zIndex: { modal: 1000 },
+    typography: {
+      fontSizes: { base: 16 },
+      fonts: { sans: 'Inter, sans-serif' },
+    },
+  },
+  rules: {
+    'design-token/colors': 'error',
+    'design-token/border-radius': 'error',
+    'design-token/box-shadow': 'error',
+  },
+});
 ```
 
 See the [Usage guide](docs/usage.md) and [Configuration guide](docs/configuration.md) for full details.

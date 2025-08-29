@@ -64,7 +64,10 @@ test('init detects TypeScript and creates ts config', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
-  assert.ok(fs.existsSync(path.join(dir, 'designlint.config.ts')));
+  const cfg = path.join(dir, 'designlint.config.ts');
+  assert.ok(fs.existsSync(cfg));
+  const contents = fs.readFileSync(cfg, 'utf8');
+  assert.ok(contents.includes('defineConfig'));
 });
 
 test('--init-format overrides detection', () => {

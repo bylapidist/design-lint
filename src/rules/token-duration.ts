@@ -7,8 +7,13 @@ export const durationRule: RuleModule = {
   meta: { description: 'enforce motion duration tokens' },
   create(context) {
     const durationTokens =
-      (context.tokens as any)?.durations ??
-      (context.tokens as any)?.motion?.durations;
+      (context.tokens as { durations?: Record<string, unknown> } | undefined)
+        ?.durations ??
+      (
+        context.tokens as
+          | { motion?: { durations?: Record<string, unknown> } }
+          | undefined
+      )?.motion?.durations;
     if (!durationTokens || Object.keys(durationTokens).length === 0) {
       context.report({
         message:
