@@ -534,6 +534,45 @@ test('CLI skips directories listed in .designlintignore', () => {
   assert.deepEqual(files, ['src/file.ts']);
 });
 
+test('CLI --ignore-path excludes files', () => {
+  const dir = makeTmpDir();
+  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
+  fs.writeFileSync(path.join(dir, 'src', 'skip.ts'), 'const a = "old";');
+  fs.writeFileSync(path.join(dir, '.extraignore'), 'src/skip.ts');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'src',
+      '--config',
+      'designlint.config.json',
+      '--format',
+      'json',
+      '--ignore-path',
+      '.extraignore',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  interface Result {
+    filePath: string;
+  }
+  const parsed: Result[] = JSON.parse(res.stdout);
+  const files = parsed.map((r) => path.relative(dir, r.filePath)).sort();
+  assert.deepEqual(files, ['src/keep.ts']);
+});
+
 test('CLI --concurrency limits parallel lint tasks', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
