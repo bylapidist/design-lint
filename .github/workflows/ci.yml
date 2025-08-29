@@ -30,3 +30,9 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run test:coverage
+      - run: node scripts/generate-coverage-comment.mjs
+      - name: Comment coverage
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: coverage/coverage-comment.md
