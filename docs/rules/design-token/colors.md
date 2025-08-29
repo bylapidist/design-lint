@@ -19,6 +19,8 @@ Enable the rule in `designlint.config.*`:
 
 - `allow` (`"hex" | "rgb" | "rgba" | "hsl" | "named"`[]): formats that may appear as raw values. Defaults to `[]`.
 
+Token values and matched color strings are normalized to lowercase before comparison, making hex colors case-insensitive.
+
 ## Examples
 
 **Invalid**

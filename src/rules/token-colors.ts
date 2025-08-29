@@ -4,7 +4,8 @@ import type { RuleModule } from '../core/types';
 
 type ColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl' | 'named';
 
-const hexRegex = /#([0-9a-fA-F]{3,8})\b/g;
+const hexRegex =
+  /#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g;
 const rgbRegex = /rgb\(\s*(?:\d{1,3}\s*,\s*){2}\d{1,3}\s*\)/gi;
 const rgbaRegex = /rgba\(\s*(?:\d{1,3}\s*,\s*){3}(?:0|1|0?\.\d+)\s*\)/gi;
 const hslRegex = /hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)/gi;
@@ -37,7 +38,9 @@ export const colorsRule: RuleModule = {
       });
       return {};
     }
-    const allowed = new Set(Object.values(colorTokens));
+    const allowed = new Set(
+      Object.values(colorTokens).map((value) => value.toLowerCase()),
+    );
     const opts = (context.options as ColorRuleOptions) || {};
     const allowFormats = new Set(opts.allow || []);
 
@@ -48,7 +51,7 @@ export const colorsRule: RuleModule = {
         const matches = text.match(regex);
         if (matches) {
           for (const value of matches) {
-            if (!allowed.has(value)) {
+            if (!allowed.has(value.toLowerCase())) {
               context.report({
                 message: `Unexpected color ${value}`,
                 line,

@@ -7,9 +7,27 @@ test('design-token/colors reports disallowed hex', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "#000000";', 'file.ts');
+  const res = await linter.lintText('const c = "#AaBbCc";', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'design-token/colors');
+});
+
+test('design-token/colors ignores hex case', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#FFFFFF' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('const c = "#ffffff";', 'file.ts');
+  assert.equal(res.messages.length, 0);
+});
+
+test('design-token/colors ignores invalid hex lengths', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#fff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('const c = "#12345";', 'file.ts');
+  assert.equal(res.messages.length, 0);
 });
 
 test('design-token/colors reports disallowed rgb', async () => {
