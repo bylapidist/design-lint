@@ -7,7 +7,7 @@ import { once } from 'node:events';
 import type { LintResult } from '../core/types';
 import type { Config } from '../core/engine';
 import { getFormatter } from '../formatters/index.js';
-import chalk, { supportsColor } from 'chalk';
+// chalk is ESM-only, so we use a dynamic import inside run()
 import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths';
@@ -62,6 +62,9 @@ Options:
 }
 
 export async function run(argv = process.argv.slice(2)) {
+  const chalkModule = await import('chalk');
+  const chalk = chalkModule.default;
+  const { supportsColor } = chalkModule;
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
   try {
     const { values, positionals } = parseArgs({
