@@ -18,7 +18,7 @@ module.exports = {
 };
 ```
 
-See [design-token/colors](rules/design-token/colors.md), [design-token/spacing](rules/design-token/spacing.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
+See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/spacing](rules/design-token/spacing.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
 
 @lapidist/design-lint searches for configuration starting from the current working
 directory and walking up parent directories. In each directory it looks for
@@ -50,6 +50,7 @@ without providing the corresponding tokens results in a configuration warning:
 
 - `design-token/colors` requires `tokens.colors`
 - `design-token/spacing` requires `tokens.spacing`
+- `design-token/line-height` requires `tokens.typography.lineHeights`
 - `design-token/typography` requires `tokens.typography.fontSizes` and
   `tokens.typography.fonts`
 - `design-system/deprecation` requires `tokens.deprecations`

@@ -10,5 +10,6 @@ Design-lint includes several built-in rules categorized by domain.
 ## Design Token
 
 - [colors](./design-token/colors)
-- [typography](./design-token/typography)
+- [line-height](./design-token/line-height)
 - [spacing](./design-token/spacing)
+- [typography](./design-token/typography)

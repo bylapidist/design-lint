@@ -42,8 +42,9 @@ See the [CI guide](ci.md) for sample configurations in GitHub Actions and other 
 
 ## Rules
 
-- [design-token/colors](rules/design-token/colors.md)
-- [design-token/spacing](rules/design-token/spacing.md)
-- [design-token/typography](rules/design-token/typography.md)
-- [design-system/deprecation](rules/design-system/deprecation.md)
-- [design-system/component-usage](rules/design-system/component-usage.md)
+ - [design-token/colors](rules/design-token/colors.md)
+ - [design-token/line-height](rules/design-token/line-height.md)
+ - [design-token/spacing](rules/design-token/spacing.md)
+ - [design-token/typography](rules/design-token/typography.md)
+ - [design-system/deprecation](rules/design-system/deprecation.md)
+ - [design-system/component-usage](rules/design-system/component-usage.md)
