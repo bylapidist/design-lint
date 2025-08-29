@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 0.7.2
+
+### Patch Changes
+
+- f461269: fix CLI to dynamically import chalk in CommonJS build
+
 ## 0.7.1
 
 ### Patch Changes
