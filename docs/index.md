@@ -2,7 +2,8 @@
 
 `@lapidist/design-lint` helps teams enforce design system rules across JavaScript,
 TypeScript and CSS codebases. These docs cover installation, usage and
-configuration of the linter.
+configuration of the linter. For a high-level look at how the tool works under
+the hood, see the [Architecture overview](architecture.md).
 
 ## Getting Started
 

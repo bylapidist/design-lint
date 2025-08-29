@@ -218,6 +218,8 @@ linting.
 ## Documentation
 
 This repository contains Markdown guides under the [`docs/`](docs) directory.
+For an overview of the core engine, rule lifecycle, plugin system and
+configuration resolution, see the [Architecture guide](docs/architecture.md).
 A full documentation site can be built with:
 
 ```bash
