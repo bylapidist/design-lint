@@ -196,6 +196,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 - [design-token/colors](docs/rules/design-token/colors.md)
 - [design-token/line-height](docs/rules/design-token/line-height.md)
+- [design-token/font-weight](docs/rules/design-token/font-weight.md)
 - [design-token/spacing](docs/rules/design-token/spacing.md)
 - [design-token/typography](docs/rules/design-token/typography.md)
 - [design-system/deprecation](docs/rules/design-system/deprecation.md)

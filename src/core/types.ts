@@ -7,6 +7,7 @@ export interface DesignTokens {
     fontSizes?: Record<string, number | string>;
     fonts?: Record<string, string>;
     lineHeights?: Record<string, number | string>;
+    fontWeights?: Record<string, number | string>;
   };
   deprecations?: Record<string, { replacement?: string }>;
   [key: string]: unknown;
