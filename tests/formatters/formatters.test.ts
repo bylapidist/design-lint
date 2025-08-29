@@ -45,24 +45,36 @@ test('json formatter outputs json', () => {
   assert.equal(parsed[0].filePath, 'file.ts');
 });
 
-test('sarif formatter outputs sarif log', () => {
+test('sarif formatter outputs rules and links results', () => {
   const results: LintResult[] = [
     {
       filePath: 'file.ts',
       messages: [
         {
           ruleId: 'rule',
-          message: 'msg',
+          message: 'desc',
           severity: 'error',
           line: 1,
           column: 1,
+        },
+        {
+          ruleId: 'rule',
+          message: 'desc',
+          severity: 'error',
+          line: 2,
+          column: 2,
         },
       ],
     },
   ];
   const out = sarifFormatter(results);
   const parsed = JSON.parse(out);
-  assert.equal(parsed.runs[0].results[0].ruleId, 'rule');
+  const run = parsed.runs[0];
+  assert.equal(run.tool.driver.rules.length, 1);
+  assert.equal(run.tool.driver.rules[0].id, 'rule');
+  assert.equal(run.tool.driver.rules[0].shortDescription.text, 'desc');
+  assert.equal(run.results[0].ruleId, 'rule');
+  assert.equal(run.results[0].ruleIndex, 0);
 });
 
 test('getFormatter returns formatter for valid name', () => {
