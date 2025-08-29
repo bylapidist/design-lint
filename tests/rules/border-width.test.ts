@@ -30,6 +30,33 @@ test('design-token/border-width reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/border-width reports template literal', async () => {
+  const linter = new Linter({
+    tokens: { borderWidths: { sm: 1, md: 2 } },
+    rules: { 'design-token/border-width': 'error' },
+  });
+  const res = await linter.lintText('const w = `3`;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/border-width reports template expression', async () => {
+  const linter = new Linter({
+    tokens: { borderWidths: { sm: 1, md: 2 } },
+    rules: { 'design-token/border-width': 'error' },
+  });
+  const res = await linter.lintText('const w = `3${"px"}`;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/border-width reports prefix unary', async () => {
+  const linter = new Linter({
+    tokens: { borderWidths: { sm: 1, md: 2 } },
+    rules: { 'design-token/border-width': 'error' },
+  });
+  const res = await linter.lintText('const w = -3;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
 test('design-token/border-width warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/border-width': 'warn' },

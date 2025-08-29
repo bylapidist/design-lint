@@ -25,19 +25,63 @@ export const spacingRule: RuleModule = {
     const allowedUnits = new Set(
       (opts.units ?? ['px', 'rem', 'em']).map((u) => u.toLowerCase()),
     );
+    const parse = (text: string): number | null => {
+      const trimmed = text.trim();
+      if (trimmed === '') return null;
+      const parsed = valueParser.unit(trimmed);
+      if (parsed) {
+        const num = parseFloat(parsed.number);
+        return isNaN(num) ? null : num;
+      }
+      const num = Number(trimmed);
+      return isNaN(num) ? null : num;
+    };
     return {
       onNode(node) {
-        if (ts.isNumericLiteral(node)) {
-          const value = Number(node.text);
+        const report = (raw: string, value: number, n: ts.Node) => {
           if (!isAllowed(value)) {
-            const pos = node
+            const pos = n
               .getSourceFile()
-              .getLineAndCharacterOfPosition(node.getStart());
+              .getLineAndCharacterOfPosition(n.getStart());
             context.report({
-              message: `Unexpected spacing ${value}`,
+              message: `Unexpected spacing ${raw}`,
               line: pos.line + 1,
               column: pos.character + 1,
             });
+          }
+        };
+        if (ts.isNumericLiteral(node)) {
+          if (node.parent && ts.isPrefixUnaryExpression(node.parent)) return;
+          report(node.getText(), Number(node.text), node);
+        } else if (
+          ts.isPrefixUnaryExpression(node) &&
+          ts.isNumericLiteral(node.operand)
+        ) {
+          const value = Number(node.operand.text);
+          const num =
+            node.operator === ts.SyntaxKind.MinusToken ? -value : value;
+          report(node.getText(), num, node);
+        } else if (ts.isNoSubstitutionTemplateLiteral(node)) {
+          const num = parse(node.text);
+          if (num !== null) report(node.text, num, node);
+        } else if (ts.isTemplateExpression(node)) {
+          const sf = node.getSourceFile();
+          const checkLiteral = (
+            lit: ts.TemplateHead | ts.TemplateMiddle | ts.TemplateTail,
+          ) => {
+            const num = parse(lit.text);
+            if (num !== null && !isAllowed(num)) {
+              const pos = sf.getLineAndCharacterOfPosition(lit.getStart());
+              context.report({
+                message: `Unexpected spacing ${lit.text}`,
+                line: pos.line + 1,
+                column: pos.character + 1,
+              });
+            }
+          };
+          checkLiteral(node.head);
+          for (const span of node.templateSpans) {
+            checkLiteral(span.literal);
           }
         }
       },

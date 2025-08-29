@@ -19,6 +19,7 @@ export const lineHeightRule: RuleModule = {
       if (typeof val === 'number') return val;
       if (typeof val === 'string') {
         const v = val.trim();
+        if (v === '') return null;
         const unitMatch = v.match(/^(\d*\.?\d+)(px|rem|em)$/);
         if (unitMatch) {
           const [, num, unit] = unitMatch;
@@ -42,17 +43,50 @@ export const lineHeightRule: RuleModule = {
     );
     return {
       onNode(node) {
-        if (ts.isNumericLiteral(node)) {
-          const value = Number(node.text);
+        const report = (raw: string, value: number, n: ts.Node) => {
           if (!allowed.has(value)) {
-            const pos = node
+            const pos = n
               .getSourceFile()
-              .getLineAndCharacterOfPosition(node.getStart());
+              .getLineAndCharacterOfPosition(n.getStart());
             context.report({
-              message: `Unexpected line height ${value}`,
+              message: `Unexpected line height ${raw}`,
               line: pos.line + 1,
               column: pos.character + 1,
             });
+          }
+        };
+        if (ts.isNumericLiteral(node)) {
+          if (node.parent && ts.isPrefixUnaryExpression(node.parent)) return;
+          report(node.getText(), Number(node.text), node);
+        } else if (
+          ts.isPrefixUnaryExpression(node) &&
+          ts.isNumericLiteral(node.operand)
+        ) {
+          const value = Number(node.operand.text);
+          const num =
+            node.operator === ts.SyntaxKind.MinusToken ? -value : value;
+          report(node.getText(), num, node);
+        } else if (ts.isNoSubstitutionTemplateLiteral(node)) {
+          const num = parse(node.text);
+          if (num !== null) report(node.text, num, node);
+        } else if (ts.isTemplateExpression(node)) {
+          const sf = node.getSourceFile();
+          const checkLiteral = (
+            lit: ts.TemplateHead | ts.TemplateMiddle | ts.TemplateTail,
+          ) => {
+            const num = parse(lit.text);
+            if (num !== null && !allowed.has(num)) {
+              const pos = sf.getLineAndCharacterOfPosition(lit.getStart());
+              context.report({
+                message: `Unexpected line height ${lit.text}`,
+                line: pos.line + 1,
+                column: pos.character + 1,
+              });
+            }
+          };
+          checkLiteral(node.head);
+          for (const span of node.templateSpans) {
+            checkLiteral(span.literal);
           }
         }
       },

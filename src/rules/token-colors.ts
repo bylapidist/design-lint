@@ -86,11 +86,21 @@ export const colorsRule: RuleModule = {
 
     return {
       onNode(node) {
-        if (ts.isStringLiteral(node)) {
-          const pos = node
-            .getSourceFile()
-            .getLineAndCharacterOfPosition(node.getStart());
-          check(node.text, pos.line + 1, pos.character + 1);
+        const sourceFile = node.getSourceFile();
+        const handle = (text: string, n: ts.Node) => {
+          const pos = sourceFile.getLineAndCharacterOfPosition(n.getStart());
+          check(text, pos.line + 1, pos.character + 1);
+        };
+        if (
+          ts.isStringLiteral(node) ||
+          ts.isNoSubstitutionTemplateLiteral(node)
+        ) {
+          handle(node.text, node);
+        } else if (ts.isTemplateExpression(node)) {
+          handle(node.head.text, node.head);
+          for (const span of node.templateSpans) {
+            handle(span.literal.text, span.literal);
+          }
         }
       },
       onCSSDeclaration(decl) {

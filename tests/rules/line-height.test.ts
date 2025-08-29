@@ -32,6 +32,33 @@ test('design-token/line-height reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/line-height reports template literal', async () => {
+  const linter = new Linter({
+    tokens: { typography: { lineHeights: { base: 1.5 } } },
+    rules: { 'design-token/line-height': 'error' },
+  });
+  const res = await linter.lintText('const lh = `2`;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/line-height reports template expression', async () => {
+  const linter = new Linter({
+    tokens: { typography: { lineHeights: { base: 1.5 } } },
+    rules: { 'design-token/line-height': 'error' },
+  });
+  const res = await linter.lintText('const lh = `2${"px"}`;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/line-height reports prefix unary', async () => {
+  const linter = new Linter({
+    tokens: { typography: { lineHeights: { base: 1.5 } } },
+    rules: { 'design-token/line-height': 'error' },
+  });
+  const res = await linter.lintText('const lh = -2;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
 test('design-token/line-height warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/line-height': 'warn' },

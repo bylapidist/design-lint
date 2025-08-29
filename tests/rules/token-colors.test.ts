@@ -40,3 +40,24 @@ test('design-token/colors reports disallowed color()', async () => {
   );
   assert.equal(res.messages.length, 1);
 });
+
+test('design-token/colors reports template literal', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('const c = `hwb(0, 0%, 0%)`;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/colors reports template expression', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText(
+    'const c = `hwb(0, 0%, 0%) ${foo}`;',
+    'file.ts',
+  );
+  assert.equal(res.messages.length, 1);
+});

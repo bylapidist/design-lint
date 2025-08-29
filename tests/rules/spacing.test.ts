@@ -11,6 +11,33 @@ test('design-token/spacing enforces multiples', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/spacing reports template literal', async () => {
+  const linter = new Linter({
+    tokens: { spacing: { sm: 4, md: 8 } },
+    rules: { 'design-token/spacing': ['error', { base: 4 }] },
+  });
+  const res = await linter.lintText('const s = `5`;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/spacing reports template expression', async () => {
+  const linter = new Linter({
+    tokens: { spacing: { sm: 4, md: 8 } },
+    rules: { 'design-token/spacing': ['error', { base: 4 }] },
+  });
+  const res = await linter.lintText('const s = `5${"px"}`;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
+test('design-token/spacing reports prefix unary', async () => {
+  const linter = new Linter({
+    tokens: { spacing: { sm: 4, md: 8 } },
+    rules: { 'design-token/spacing': ['error', { base: 4 }] },
+  });
+  const res = await linter.lintText('const s = -5;', 'file.ts');
+  assert.equal(res.messages.length, 1);
+});
+
 test('design-token/spacing handles multi-line CSS', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
