@@ -64,7 +64,9 @@ Options:
 }
 
 export async function run(argv = process.argv.slice(2)) {
-  const chalkModule = await import('chalk');
+  const chalkModule = await (Function('return import("chalk")')() as Promise<
+    typeof import('chalk')
+  >);
   const chalk = chalkModule.default;
   const { supportsColor } = chalkModule;
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
