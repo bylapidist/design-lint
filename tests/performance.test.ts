@@ -10,7 +10,7 @@ test('lints large projects without crashing', async () => {
   const dir = path.join(__dirname, 'fixtures', 'large-project');
   const config = await loadConfig(dir);
   const linter = new Linter(config);
-  const results = await linter.lintFiles([dir]);
+  const { results } = await linter.lintFiles([dir]);
   assert.equal(results.length, 200);
 });
 
@@ -23,7 +23,7 @@ test('lints very large projects without EMFILE', async () => {
   }
   const config = await loadConfig(tmp);
   const linter = new Linter(config);
-  const results = await linter.lintFiles([tmp]);
+  const { results } = await linter.lintFiles([tmp]);
   assert.equal(results.length, count);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
@@ -67,7 +67,7 @@ test('respects configured concurrency limit', async () => {
 
   const config = await loadConfig(tmp);
   const linter = new Linter(config);
-  const results = await linter.lintFiles([tmp]);
+  const { results } = await linter.lintFiles([tmp]);
   assert.equal(results.length, count);
   assert.ok(max <= 2);
   fsp.readFile = origRead;

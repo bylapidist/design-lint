@@ -190,14 +190,13 @@ export async function run(argv = process.argv.slice(2)) {
     let ignoreFilePaths: string[] = [];
 
     const runLint = async (paths: string[]) => {
-      const results = await linter.lintFiles(
+      const { results, ignoreFiles: newIgnore = [] } = await linter.lintFiles(
         paths,
         values.fix,
         cache,
         ignorePath ? [ignorePath] : [],
         cacheLocation,
       );
-      const newIgnore = results.ignoreFiles ?? [];
       if (values.watch && watcher) {
         const toAdd = newIgnore.filter((p) => !ignoreFilePaths.includes(p));
         if (toAdd.length) watcher.add(toAdd);
@@ -217,7 +216,7 @@ export async function run(argv = process.argv.slice(2)) {
       if (values.report) {
         await writeFileAtomic(
           values.report as string,
-          JSON.stringify(results, null, 2),
+          JSON.stringify({ results, ignoreFiles: newIgnore }, null, 2),
         );
       }
 

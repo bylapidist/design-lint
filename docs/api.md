@@ -7,7 +7,7 @@ import { Linter, loadConfig, getFormatter } from '@lapidist/design-lint';
 
 const config = await loadConfig();
 const linter = new Linter(config);
-const results = await linter.lintFiles(['src']);
+const { results } = await linter.lintFiles(['src']);
 const formatter = getFormatter('stylish');
 console.log(formatter(results));
 ```
@@ -34,12 +34,15 @@ const res = await linter.lintFile('src/file.ts', true);
 
 ### `lintFiles(files, fix?, cache?, ignorePaths?)`
 
-Lints multiple files or directories. Returns an array of results along with
-any ignore files that were honored.
+Lints multiple files or directories. Returns an object with a `results` array
+and `ignoreFiles` array containing any ignore files that were honored.
 
 ```ts
-const results = await linter.lintFiles(['src', 'tests']);
+const { results, ignoreFiles } = await linter.lintFiles(['src', 'tests']);
 ```
+
+> **Note:** A deprecated `lintFilesLegacy` method is available for the previous
+> array-based return value and will be removed in a future release.
 
 ## Exports
 

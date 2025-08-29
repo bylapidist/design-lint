@@ -751,8 +751,8 @@ test('CLI cache updates after --fix run', async () => {
   };
   const linter = new Linter(config);
   const cache = new Map<string, { mtime: number; result: LintResult }>();
-  const res1 = await linter.lintFiles([file], true, cache);
-  const res2 = await linter.lintFiles([file], false, cache);
+  const { results: res1 } = await linter.lintFiles([file], true, cache);
+  const { results: res2 } = await linter.lintFiles([file], false, cache);
   assert.equal(res1[0].messages.length, 0);
   assert.strictEqual(res1[0], res2[0]);
 });

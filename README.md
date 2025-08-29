@@ -127,7 +127,7 @@ import { Linter, loadConfig, getFormatter } from '@lapidist/design-lint';
 
 const config = await loadConfig();
 const linter = new Linter(config);
-const results = await linter.lintFiles(['src']);
+const { results } = await linter.lintFiles(['src']);
 const formatter = getFormatter('stylish');
 console.log(formatter(results));
 ```

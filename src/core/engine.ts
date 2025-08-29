@@ -137,7 +137,7 @@ export class Linter {
     cache?: Map<string, { mtime: number; result: LintResult }>,
     additionalIgnorePaths: string[] = [],
     cacheLocation?: string,
-  ): Promise<LintResult[] & { ignoreFiles: string[] }> {
+  ): Promise<{ results: LintResult[]; ignoreFiles: string[] }> {
     await this.pluginLoad;
     if (cacheLocation && cache && !this.cacheLoaded) {
       try {
@@ -298,7 +298,30 @@ export class Linter {
         // ignore
       }
     }
-    return Object.assign(results, { ignoreFiles: Array.from(seenIgnore) });
+    return { results, ignoreFiles: Array.from(seenIgnore) };
+  }
+
+  /**
+   * @deprecated Use `lintFiles()` which returns an object instead of an array.
+   */
+  async lintFilesLegacy(
+    targets: string[],
+    fix = false,
+    cache?: Map<string, { mtime: number; result: LintResult }>,
+    additionalIgnorePaths: string[] = [],
+    cacheLocation?: string,
+  ): Promise<LintResult[] & { ignoreFiles: string[] }> {
+    console.warn(
+      'lintFilesLegacy is deprecated. lintFiles now returns `{ results, ignoreFiles }`.',
+    );
+    const { results, ignoreFiles } = await this.lintFiles(
+      targets,
+      fix,
+      cache,
+      additionalIgnorePaths,
+      cacheLocation,
+    );
+    return Object.assign(results, { ignoreFiles });
   }
 
   async lintText(text: string, filePath = 'unknown'): Promise<LintResult> {
