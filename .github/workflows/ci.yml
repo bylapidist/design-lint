@@ -17,6 +17,18 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 1
+      - name: Detect docs-only changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            non-docs:
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -27,12 +39,15 @@ jobs:
         if: github.event_name == 'push'
         run: npm audit --production --audit-level=high
       - run: npm run build
+        if: steps.changes.outputs['non-docs'] == 'true'
       - run: npm run lint
       - run: npm run format:check
       - run: npm run test:coverage
+        if: steps.changes.outputs['non-docs'] == 'true'
       - run: node scripts/generate-coverage-comment.mjs
+        if: steps.changes.outputs['non-docs'] == 'true'
       - name: Comment coverage
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.changes.outputs['non-docs'] == 'true'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: coverage/coverage-comment.md
