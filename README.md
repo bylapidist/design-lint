@@ -59,9 +59,15 @@ npx design-lint --version
 - `--format <stylish|json|sarif>` – output format (default `stylish`).
 - `--output <file>` – write report to a file instead of stdout.
 - `--report <file>` – write JSON results to a file.
+- `--ignore-path <file>` – load additional ignore patterns from a file.  
+  Example: `npx design-lint src --ignore-path .lintignore`
 - `--concurrency <n>` – limit the number of files processed in parallel.
+- `--max-warnings <n>` – number of warnings to trigger a non-zero exit code.  
+  Example: `npx design-lint src --max-warnings 0`
 - `--quiet` – suppress output and rely on the exit code.
 - `--no-color` – disable colored output.
+- `--cache` – enable persistent caching.  
+  Example: `npx design-lint src --cache`
 - `--watch` – watch files and re-lint on changes.
 - `--fix` – automatically fix problems when possible.
 - `--version` – print the CLI version and exit.
