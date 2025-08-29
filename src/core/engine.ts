@@ -50,7 +50,8 @@ function createEngineError(opts: EngineErrorOptions): Error {
  */
 export class Linter {
   private config: Config;
-  private ruleMap: Map<string, RuleModule> = new Map();
+  private ruleMap: Map<string, { rule: RuleModule; source: string }> =
+    new Map();
   private pluginLoad: Promise<void>;
   private cacheLoaded = false;
 
@@ -61,7 +62,7 @@ export class Linter {
   constructor(config: Config) {
     this.config = config;
     for (const rule of builtInRules) {
-      this.ruleMap.set(rule.name, rule);
+      this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
     this.pluginLoad = this.loadPlugins();
   }
@@ -99,6 +100,7 @@ export class Linter {
           });
         }
       }
+      const pluginSource = resolved ?? p;
       const plugin =
         (mod as { default?: PluginModule; plugin?: PluginModule }).default ??
         (mod as { plugin?: PluginModule }).plugin ??
@@ -109,8 +111,8 @@ export class Linter {
         !Array.isArray((plugin as PluginModule).rules)
       ) {
         throw createEngineError({
-          message: `Invalid plugin "${p}": expected { rules: RuleModule[] }`,
-          context: `Plugin "${p}"`,
+          message: `Invalid plugin "${pluginSource}": expected { rules: RuleModule[] }`,
+          context: `Plugin "${pluginSource}"`,
           remediation: 'Export an object with a "rules" array.',
         });
       }
@@ -126,21 +128,22 @@ export class Linter {
         ) {
           throw createEngineError({
             message:
-              `Invalid rule "${(rule as { name?: string }).name ?? '<unknown>'}" in plugin "${p}": ` +
+              `Invalid rule "${(rule as { name?: string }).name ?? '<unknown>'}" in plugin "${pluginSource}": ` +
               'expected { name: string; meta: { description: string }; create: Function }',
-            context: `Plugin "${p}"`,
+            context: `Plugin "${pluginSource}"`,
             remediation:
               'Ensure each rule has a non-empty name, meta.description, and a create function.',
           });
         }
-        if (this.ruleMap.has(rule.name)) {
+        const existing = this.ruleMap.get(rule.name);
+        if (existing) {
           throw createEngineError({
-            message: `Rule "${rule.name}" from plugin "${p}" conflicts with an existing rule`,
-            context: `Plugin "${p}"`,
+            message: `Rule "${rule.name}" from plugin "${pluginSource}" conflicts with rule from "${existing.source}"`,
+            context: `Plugin "${pluginSource}"`,
             remediation: 'Use a unique rule name to avoid collisions.',
           });
         }
-        this.ruleMap.set(rule.name, rule);
+        this.ruleMap.set(rule.name, { rule, source: pluginSource });
       }
     }
   }
@@ -615,11 +618,12 @@ export class Linter {
     const ruleConfig = (this.config.rules || {}) as Record<string, unknown>;
     const unknown: string[] = [];
     for (const [name, setting] of Object.entries(ruleConfig)) {
-      const rule = this.ruleMap.get(name);
-      if (!rule) {
+      const entry = this.ruleMap.get(name);
+      if (!entry) {
         unknown.push(name);
         continue;
       }
+      const rule = entry.rule;
       let severity: 'error' | 'warn' | undefined;
       let options: unknown = undefined;
       if (Array.isArray(setting)) {

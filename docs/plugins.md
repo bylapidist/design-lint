@@ -36,7 +36,9 @@ Plugins let you extend `@lapidist/design-lint` with custom rules distributed as 
    };
    ```
 
-   This mirrors the built-in [`token-colors` rule](../src/rules/token-colors.ts) which checks CSS and string literals for non-token colors.
+    This mirrors the built-in [`token-colors` rule](../src/rules/token-colors.ts) which checks CSS and string literals for non-token colors.
+
+    > **Note:** Rule names must be unique across all plugins. Duplicates will cause an engine error during plugin loading.
 
 3. **Export the plugin**
    ```ts

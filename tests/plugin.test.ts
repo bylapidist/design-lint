@@ -70,3 +70,18 @@ test('throws when plugin rule conflicts with existing rule', async () => {
     /conflicts with an existing rule/,
   );
 });
+
+test('throws when two plugins define the same rule name', async () => {
+  const pluginA = path.join(__dirname, 'fixtures', 'test-plugin.ts');
+  const pluginB = path.join(__dirname, 'fixtures', 'duplicate-rule-plugin.ts');
+  const linter = new Linter({ plugins: [pluginA, pluginB] });
+  await assert.rejects(
+    () => linter.lintText('const a = 1;', 'file.ts'),
+    (err) => {
+      assert.ok(err instanceof Error);
+      assert.ok(err.message.includes(pluginA));
+      assert.ok(err.message.includes(pluginB));
+      return true;
+    },
+  );
+});
