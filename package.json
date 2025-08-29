@@ -40,7 +40,15 @@
     "linter",
     "cli"
   ],
-  "author": "",
+  "author": "Brett Dorrans <hello@lapidist.net>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bylapidist/design-lint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bylapidist/design-lint/issues"
+  },
+  "homepage": "https://design-lint.lapidist.net",
   "license": "MIT",
   "dependencies": {
     "@vue/compiler-sfc": "^3.5.20",
