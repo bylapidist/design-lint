@@ -226,6 +226,10 @@ npm run docs:build
 
 The generated site will be output to `docs/.vitepress/dist`.
 
+## Security
+
+See [SECURITY.md](SECURITY.md) for information on reporting vulnerabilities.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
