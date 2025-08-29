@@ -45,4 +45,4 @@ You can supply your own formatter module without modifying
 
 Formatters receive a `useColor` boolean as the second argument. Respect this
 flag if your formatter supports colored output. For inspiration, see the
-built-in formatter implementations in [`src/formatters/`](../src/formatters/).
+built-in formatter implementations in [`src/formatters`](https://github.com/lapidist/design-lint/tree/main/src/formatters).
