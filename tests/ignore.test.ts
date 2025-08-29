@@ -171,6 +171,29 @@ test('config ignoreFiles are respected', async () => {
   }
 });
 
+test('additional ignore file is respected', async () => {
+  const dir = makeTmpDir();
+  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
+  fs.writeFileSync(path.join(dir, 'src', 'skip.ts'), 'const a = "old";');
+  const extra = path.join(dir, '.customignore');
+  fs.writeFileSync(extra, 'src/skip.ts');
+
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    const linter = new Linter({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    });
+    const results = await linter.lintFiles(['.'], false, undefined, [extra]);
+    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    assert.deepEqual(files, ['src/keep.ts']);
+  } finally {
+    process.chdir(cwd);
+  }
+});
+
 test('lintFiles respects nested .gitignore', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'nested'), { recursive: true });

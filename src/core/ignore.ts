@@ -22,7 +22,10 @@ export const defaultIgnore = [
   '.cache/**',
 ];
 
-export async function loadIgnore(config?: Config): Promise<{
+export async function loadIgnore(
+  config?: Config,
+  additionalPaths: string[] = [],
+): Promise<{
   ig: ignore.Ignore;
   patterns: string[];
 }> {
@@ -46,7 +49,11 @@ export async function loadIgnore(config?: Config): Promise<{
     }
   };
 
-  await Promise.all([readIgnore(gitIgnore), readIgnore(designIgnore)]);
+  await Promise.all([
+    readIgnore(gitIgnore),
+    readIgnore(designIgnore),
+    ...additionalPaths.map(readIgnore),
+  ]);
 
   if (config?.ignoreFiles) {
     const normalized = config.ignoreFiles.map((p) => p.replace(/\\/g, '/'));

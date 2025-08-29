@@ -134,14 +134,22 @@ export class Linter {
     targets: string[],
     fix = false,
     cache?: Map<string, { mtime: number; result: LintResult }>,
+    additionalIgnorePaths: string[] = [],
   ): Promise<LintResult[] & { ignoreFiles: string[] }> {
     await this.pluginLoad;
-    const { ig, patterns } = await loadIgnore(this.config);
+    const { ig, patterns } = await loadIgnore(
+      this.config,
+      additionalIgnorePaths,
+    );
     const normalizedPatterns = [...patterns];
     const seenIgnore = new Set<string>();
 
     // track root ignore files if they exist
-    for (const root of ['.gitignore', '.designlintignore']) {
+    for (const root of [
+      '.gitignore',
+      '.designlintignore',
+      ...additionalIgnorePaths,
+    ]) {
       const full = path.resolve(process.cwd(), root);
       try {
         await fs.access(full);

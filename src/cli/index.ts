@@ -43,20 +43,21 @@ function help() {
   const msg = `Usage: design-lint [files...]
 
 Commands:
-  init                Create a starter designlint.config.json
+  init                  Create a starter designlint.config.json
 
 Options:
-  --config <path>     Path to configuration file
-  --format <name>     Output format (stylish, json, sarif)
-  --output <file>     Write report to file
-  --report <file>     Write JSON results to file
-  --concurrency <n>   Maximum number of files processed concurrently
-  --quiet             Suppress stdout output
-  --no-color          Disable colored output
-  --watch             Watch files and re-lint on changes
-  --fix               Automatically fix problems
-  --version           Show version number
-  --help              Show this message`;
+  --config <path>       Path to configuration file
+  --format <name>       Output format (stylish, json, sarif)
+  --output <file>       Write report to file
+  --report <file>       Write JSON results to file
+  --ignore-path <file>  Load additional ignore patterns from file
+  --concurrency <n>     Maximum number of files processed concurrently
+  --quiet               Suppress stdout output
+  --no-color            Disable colored output
+  --watch               Watch files and re-lint on changes
+  --fix                 Automatically fix problems
+  --version             Show version number
+  --help                Show this message`;
   console.log(msg);
 }
 
@@ -70,6 +71,7 @@ export async function run(argv = process.argv.slice(2)) {
         format: { type: 'string', default: 'stylish' },
         output: { type: 'string' },
         report: { type: 'string' },
+        'ignore-path': { type: 'string' },
         concurrency: { type: 'string' },
         quiet: { type: 'boolean', default: false },
         fix: { type: 'boolean', default: false },
@@ -124,6 +126,10 @@ export async function run(argv = process.argv.slice(2)) {
     let linter = new Linter(config);
     const cache = new Map<string, { mtime: number; result: LintResult }>();
 
+    const ignorePath = values['ignore-path']
+      ? realpathIfExists(path.resolve(values['ignore-path'] as string))
+      : undefined;
+
     const gitIgnore = realpathIfExists(path.join(process.cwd(), '.gitignore'));
     const designIgnore = realpathIfExists(
       path.join(process.cwd(), '.designlintignore'),
@@ -131,7 +137,10 @@ export async function run(argv = process.argv.slice(2)) {
     let ig = ignore();
 
     const refreshIgnore = async () => {
-      const { ig: newIg } = await loadIgnore(config);
+      const { ig: newIg } = await loadIgnore(
+        config,
+        ignorePath ? [ignorePath] : [],
+      );
       ig = newIg;
     };
 
@@ -152,7 +161,12 @@ export async function run(argv = process.argv.slice(2)) {
     let ignoreFilePaths: string[] = [];
 
     const runLint = async (paths: string[]) => {
-      const results = await linter.lintFiles(paths, values.fix, cache);
+      const results = await linter.lintFiles(
+        paths,
+        values.fix,
+        cache,
+        ignorePath ? [ignorePath] : [],
+      );
       const newIgnore = results.ignoreFiles ?? [];
       if (values.watch && watcher) {
         const toAdd = newIgnore.filter((p) => !ignoreFilePaths.includes(p));

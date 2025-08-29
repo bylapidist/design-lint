@@ -27,6 +27,7 @@ yarn design-lint [files...]
 - `--format <stylish|json|sarif>`: Output format (default `stylish`).
 - `--output <file>`: Write report to a file instead of stdout.
 - `--report <file>`: Write JSON results to a file.
+- `--ignore-path <file>`: Load additional ignore patterns from a file.
 - `--concurrency <n>`: Limit the number of files processed in parallel.
 - `--quiet`: Suppress output and rely on exit code.
 - `--no-color`: Disable colored output.
