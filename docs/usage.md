@@ -44,10 +44,23 @@ npx design-lint init
   Example: `npx design-lint src --max-warnings 0`
 - `--quiet`: Suppress output and rely on exit code.
 - `--no-color`: Disable colored output.
-- `--cache`: Enable persistent caching.  
+- `--cache`: Enable persistent caching. Results are stored in the
+  default `.designlintcache` file and reused on later runs to skip unchanged
+  files. Remove the file to reset the cache.
   Example: `npx design-lint src --cache`
 - `--watch`: Watch files and re-lint on changes.
 - `--fix`: Automatically fix problems when possible.
+
+## Cache management
+
+When run with `--cache`, results are written to `.designlintcache`. Entries are
+skipped on later runs if a file's modification time hasn't changed. In watch
+mode, edits to configuration, plugins, or ignore files automatically clear the
+cache. Delete the file to force a full re-lint:
+
+```bash
+rm .designlintcache
+```
 
 ## Exit codes
 
@@ -122,7 +135,9 @@ Flag deprecated tokens or components and automatically replace them with [`desig
 
 ```css
 /* button.css */
-.btn { color: old; }
+.btn {
+  color: old;
+}
 ```
 
 ```bash
