@@ -4,7 +4,6 @@ import ts from 'typescript';
 import postcss from 'postcss';
 import { createRequire } from 'module';
 import fg from 'fast-glob';
-import pLimit from 'p-limit';
 import os from 'node:os';
 import { performance } from 'node:perf_hooks';
 import type { parse as svelteParse } from 'svelte/compiler';
@@ -255,6 +254,7 @@ export class Linter {
       }
     }
 
+    const { default: pLimit } = await eval('import("p-limit")');
     const limit = pLimit(this.config.concurrency ?? os.cpus().length);
     const tasks = files.map((filePath) =>
       limit(async () => {
