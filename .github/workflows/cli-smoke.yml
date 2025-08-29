@@ -41,11 +41,17 @@ jobs:
           npx design-lint init
           cat > designlint.config.json <<'EOF'
           {
-            "tokens": { "deprecations": { "old": { "replacement": "new" } } },
-            "rules": { "design-system/deprecation": "error" }
+            "tokens": {
+              "deprecations": { "old": { "replacement": "new" } },
+              "colors": { "primary": "#fff" }
+            },
+            "rules": {
+              "design-system/deprecation": "error",
+              "design-token/colors": "error"
+            }
           }
           EOF
-          echo "const a = 'old';" > file.ts
+          echo "const a = 'old'; const b = '#000';" > file.ts
           npx design-lint file.ts --config designlint.config.json --format json || true
           npx design-lint file.ts --config designlint.config.json --format json --output report.txt || true
           test -f report.txt
