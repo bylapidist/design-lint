@@ -1,5 +1,18 @@
 # @lapidist/design-lint
 
+## 2.0.0
+
+### Major Changes
+
+- 3c9cc8f: convert package to pure ESM and simplify build and tests
+
+### Patch Changes
+
+- 3c9cc8f: fix CLI to run when invoked through a symlink
+- 3c9cc8f: fix CLI main check for ESM runtime
+- 3838305: populate package metadata
+- 3a39138: prevent watch mode re-lint loops from output and report files
+
 ## 1.0.0
 
 ### Major Changes
