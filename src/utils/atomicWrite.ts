@@ -3,6 +3,12 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { FileHandle } from 'node:fs/promises';
 
+/**
+ * Write data to a file atomically by using a temporary file and rename.
+ * @param target Destination file path.
+ * @param data Data to write.
+ * @returns Resolves once the file has been written.
+ */
 export async function writeFileAtomic(target: string, data: string | Buffer) {
   const dir = path.dirname(target);
   await fs.promises.mkdir(dir, { recursive: true });
@@ -27,6 +33,11 @@ export async function writeFileAtomic(target: string, data: string | Buffer) {
   }
 }
 
+/**
+ * Synchronously write data to a file atomically.
+ * @param target Destination file path.
+ * @param data Data to write.
+ */
 export function writeFileAtomicSync(target: string, data: string | Buffer) {
   const dir = path.dirname(target);
   fs.mkdirSync(dir, { recursive: true });
