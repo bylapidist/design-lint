@@ -1325,6 +1325,70 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
   assert.equal(sawSecond, true);
 });
 
+test('CLI continues watching after deleting plugin file in watch mode', async () => {
+  const dir = makeTmpDir();
+  const pluginPath = path.join(dir, 'plugin.js');
+  const pluginContent = (msg: string) => `const ts = require('typescript');
+module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rule' }, create(context) { return { onNode(node) {
+if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}', line: 1, column: 1 }); } } }; } }] };`;
+  fs.writeFileSync(pluginPath, pluginContent('first'));
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      plugins: ['./plugin.js'],
+      rules: { 'plugin/test': 'error' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--loader',
+      tsNodeLoader,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+      '--no-color',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let runs = 0;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 10000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('Watching for changes...')) {
+        fs.unlinkSync(pluginPath);
+        setTimeout(() => {
+          fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 2;');
+        }, 100);
+        buffer = '';
+      } else if (buffer.includes('plugin/test')) {
+        runs++;
+        if (runs === 2) {
+          proc.kill('SIGINT');
+        }
+        buffer = '';
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(runs, 2);
+});
+
 test('CLI reloads when nested ignore file changes in watch mode', async () => {
   const dir = makeTmpDir();
   const nested = path.join(dir, 'nested');
@@ -1436,6 +1500,67 @@ test('CLI updates ignore list when .gitignore changes in watch mode', async () =
     proc.on('error', reject);
   });
   assert.equal(ignored, true);
+});
+
+test('CLI continues watching after deleting ignore files in watch mode', async () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = "old";');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  const gitIgnorePath = path.join(dir, '.gitignore');
+  const designIgnorePath = path.join(dir, '.designlintignore');
+  fs.writeFileSync(gitIgnorePath, '');
+  fs.writeFileSync(designIgnorePath, '');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--loader',
+      tsNodeLoader,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let runs = 0;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('Watching for changes...')) {
+        fs.unlinkSync(gitIgnorePath);
+        fs.unlinkSync(designIgnorePath);
+        buffer = '';
+      } else if (buffer.includes('design-system/deprecation')) {
+        runs++;
+        if (runs === 2) {
+          proc.kill();
+        }
+        buffer = '';
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(runs, 2);
 });
 
 test('CLI clears cache when a watched file is deleted', async () => {

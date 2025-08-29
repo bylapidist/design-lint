@@ -343,11 +343,11 @@ export async function run(argv = process.argv.slice(2)) {
       await refreshIgnore();
       const watchPaths = [...targets];
       if (config.configPath) watchPaths.push(config.configPath);
+      if (fs.existsSync(designIgnore)) watchPaths.push(designIgnore);
+      if (fs.existsSync(gitIgnore)) watchPaths.push(gitIgnore);
       watchPaths.push(
-        designIgnore,
-        gitIgnore,
-        ...pluginPaths,
-        ...ignoreFilePaths,
+        ...pluginPaths.filter((p) => fs.existsSync(p)),
+        ...ignoreFilePaths.filter((p) => fs.existsSync(p)),
       );
       const outputPath = values.output
         ? realpathIfExists(path.resolve(values.output as string))
