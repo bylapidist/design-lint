@@ -157,6 +157,7 @@ module.exports = {
     colors: { primary: '#ff0000' },
     radii: { sm: 2 },
     spacing: { sm: 4 },
+    shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
     typography: {
       fontSizes: { base: 16 },
@@ -166,6 +167,7 @@ module.exports = {
   rules: {
     'design-token/colors': 'error',
     'design-token/border-radius': 'error',
+    'design-token/box-shadow': 'error',
   },
 };
 ```
@@ -189,7 +191,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 ## Features
 
-- Enforce color, spacing, border radius, z-index, and typography tokens
+- Enforce color, spacing, border radius, box shadow, z-index, and typography tokens
 - Prevent deprecated or raw HTML component usage
 - Pluggable rule and formatter architecture
 - JSON and SARIF output for CI
@@ -201,6 +203,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 - [design-token/line-height](docs/rules/design-token/line-height.md)
 - [design-token/font-weight](docs/rules/design-token/font-weight.md)
 - [design-token/border-radius](docs/rules/design-token/border-radius.md)
+- [design-token/box-shadow](docs/rules/design-token/box-shadow.md)
 - [design-token/spacing](docs/rules/design-token/spacing.md)
 - [design-token/typography](docs/rules/design-token/typography.md)
 - [design-token/z-index](docs/rules/design-token/z-index.md)

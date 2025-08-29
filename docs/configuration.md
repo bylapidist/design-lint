@@ -8,6 +8,7 @@ module.exports = {
     colors: { primary: '#ff0000' },
     radii: { sm: 2, md: 4 },
     spacing: { sm: 4, md: 8 },
+    shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
     typography: {
       fontSizes: { base: 16 },
@@ -17,11 +18,12 @@ module.exports = {
   rules: {
     'design-token/colors': 'error',
     'design-token/border-radius': 'error',
+    'design-token/box-shadow': 'error',
   },
 };
 ```
 
-See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/border-radius](rules/design-token/border-radius.md), [design-token/spacing](rules/design-token/spacing.md), [design-token/z-index](rules/design-token/z-index.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
+See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/border-radius](rules/design-token/border-radius.md), [design-token/spacing](rules/design-token/spacing.md), [design-token/box-shadow](rules/design-token/box-shadow.md), [design-token/z-index](rules/design-token/z-index.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
 
 @lapidist/design-lint searches for configuration starting from the current working
 directory and walking up parent directories. In each directory it looks for
@@ -54,6 +56,7 @@ without providing the corresponding tokens results in a configuration warning:
 - `design-token/colors` requires `tokens.colors`
 - `design-token/spacing` requires `tokens.spacing`
 - `design-token/border-radius` requires `tokens.radii` or `tokens.borderRadius`
+- `design-token/box-shadow` requires `tokens.shadows`
 - `design-token/line-height` requires `tokens.typography.lineHeights`
 - `design-token/font-weight` requires `tokens.typography.fontWeights`
 - `design-token/z-index` requires `tokens.zIndex`
