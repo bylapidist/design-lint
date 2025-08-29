@@ -27,7 +27,9 @@ export async function loadConfig(
   cwd: string,
   configPath?: string,
 ): Promise<Config> {
-  const resolved = configPath ? path.resolve(cwd, configPath) : findConfig(cwd);
+  const resolved = configPath
+    ? path.resolve(cwd, configPath)
+    : await findConfig(cwd);
   const abs = resolved ? realpathIfExists(resolved) : undefined;
   const base: Config = {
     tokens: {},
@@ -36,10 +38,24 @@ export async function loadConfig(
     plugins: [],
     configPath: abs,
   };
-  if (configPath && (!abs || !fs.existsSync(abs))) {
-    throw new Error(`Config file not found at ${abs ?? resolved}`);
+  if (configPath) {
+    const target = abs ?? resolved;
+    try {
+      if (target) await fs.promises.access(target);
+    } catch {
+      throw new Error(`Config file not found at ${target}`);
+    }
   }
-  if (abs && fs.existsSync(abs)) {
+  let exists = false;
+  if (abs) {
+    try {
+      await fs.promises.access(abs);
+      exists = true;
+    } catch {
+      exists = false;
+    }
+  }
+  if (abs && exists) {
     try {
       let loaded: Config = {};
       if (abs.endsWith('.ts') || abs.endsWith('.mts')) {
@@ -54,7 +70,8 @@ export async function loadConfig(
         }
       }
       if (abs.endsWith('.json')) {
-        loaded = JSON.parse(fs.readFileSync(abs, 'utf8')) as Config;
+        const data = await fs.promises.readFile(abs, 'utf8');
+        loaded = JSON.parse(data) as Config;
       } else if (isESM(abs)) {
         loaded = (await loadEsmConfig(abs)) as Config;
       } else {
@@ -86,22 +103,40 @@ export async function loadConfig(
  * @param cwd Directory to start from.
  * @returns Absolute path to config if found.
  */
-function findConfig(cwd: string): string | undefined {
+async function findConfig(cwd: string): Promise<string | undefined> {
   let dir = cwd;
   // Walk up parent directories looking for a config file
   while (true) {
     const js = path.join(dir, 'designlint.config.js');
-    if (fs.existsSync(js)) return js;
+    try {
+      const stats = await fs.promises.stat(js);
+      if (stats.isFile()) return js;
+    } catch {}
     const cjs = path.join(dir, 'designlint.config.cjs');
-    if (fs.existsSync(cjs)) return cjs;
+    try {
+      const stats = await fs.promises.stat(cjs);
+      if (stats.isFile()) return cjs;
+    } catch {}
     const mjs = path.join(dir, 'designlint.config.mjs');
-    if (fs.existsSync(mjs)) return mjs;
+    try {
+      const stats = await fs.promises.stat(mjs);
+      if (stats.isFile()) return mjs;
+    } catch {}
     const ts = path.join(dir, 'designlint.config.ts');
-    if (fs.existsSync(ts)) return ts;
+    try {
+      const stats = await fs.promises.stat(ts);
+      if (stats.isFile()) return ts;
+    } catch {}
     const mts = path.join(dir, 'designlint.config.mts');
-    if (fs.existsSync(mts)) return mts;
+    try {
+      const stats = await fs.promises.stat(mts);
+      if (stats.isFile()) return mts;
+    } catch {}
     const json = path.join(dir, 'designlint.config.json');
-    if (fs.existsSync(json)) return json;
+    try {
+      const stats = await fs.promises.stat(json);
+      if (stats.isFile()) return json;
+    } catch {}
     const parent = path.dirname(dir);
     if (parent === dir) return undefined;
     dir = parent;
@@ -137,3 +172,9 @@ function isESM(filePath: string): boolean {
   }
   return false;
 }
+
+export {
+  loadEsmConfig as _loadEsmConfig,
+  findConfig as _findConfig,
+  isESM as _isESM,
+};

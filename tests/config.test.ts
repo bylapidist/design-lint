@@ -6,6 +6,18 @@ import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
 import { Linter } from '../src/core/engine.ts';
 
+test('returns default config when none found', async () => {
+  const tmp = makeTmpDir();
+  const config = await loadConfig(tmp);
+  assert.deepEqual(config, {
+    tokens: {},
+    rules: {},
+    ignoreFiles: [],
+    plugins: [],
+    configPath: undefined,
+  });
+});
+
 test('finds config in parent directories', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
@@ -74,6 +86,28 @@ test('loads config from .mjs', async () => {
   fs.writeFileSync(
     configPath,
     "export default { tokens: { colors: { primary: '#000' } } };",
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.colors?.primary, '#000');
+});
+
+test('loads config from .js', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.js');
+  fs.writeFileSync(
+    configPath,
+    "module.exports = { tokens: { colors: { primary: '#000' } } };",
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.colors?.primary, '#000');
+});
+
+test('loads config from .cjs', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.cjs');
+  fs.writeFileSync(
+    configPath,
+    "module.exports = { tokens: { colors: { primary: '#000' } } };",
   );
   const loaded = await loadConfig(tmp);
   assert.equal(loaded.tokens?.colors?.primary, '#000');
