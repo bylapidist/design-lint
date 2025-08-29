@@ -4,6 +4,14 @@
 JavaScript, TypeScript, and CSS codebases. It validates design tokens and
 component usage to help teams stay consistent with their design system.
 
+## Why?
+
+General-purpose linters like ESLint or Biome focus on code correctness and style,
+but they are unaware of your design system. `@lapidist/design-lint` fills that
+gap by validating design tokens and component usage so interfaces stay aligned
+with shared design guidelines. It works alongside existing tools, adding
+design-system-specific rules rather than replacing your current lint setup.
+
 ## Installation
 
 Requires Node.js 22 or later.
@@ -62,7 +70,7 @@ npx design-lint --version
 - `--ignore-path <file>` – load additional ignore patterns from a file.  
   Example: `npx design-lint src --ignore-path .lintignore`
 - `--concurrency <n>` – limit the number of files processed in parallel.
- - `--max-warnings <n>` – maximum number of warnings allowed before exiting with a non-zero code. Use `0` to fail on any warning.
+- `--max-warnings <n>` – maximum number of warnings allowed before exiting with a non-zero code. Use `0` to fail on any warning.
   Example: `npx design-lint src --max-warnings 0`
 - `--quiet` – suppress output and rely on the exit code.
 - `--no-color` – disable colored output.
@@ -98,7 +106,9 @@ Automatically replace deprecated tokens or components:
 
 ```css
 /* button.css */
-.btn { color: old; }
+.btn {
+  color: old;
+}
 ```
 
 ```bash
@@ -187,6 +197,7 @@ See the [Plugin guide](docs/plugins.md) for a step-by-step tutorial on writing a
 - Pluggable rule and formatter architecture
 - JSON and SARIF output for CI
 - Auto-fix deprecated tokens and components
+
 ## Rules
 
 - [design-token/colors](docs/rules/design-token/colors.md)
