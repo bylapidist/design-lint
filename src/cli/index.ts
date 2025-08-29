@@ -219,8 +219,9 @@ export async function run(argv = process.argv.slice(2)) {
     };
 
     const reportError = (err: unknown) => {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(useColor ? chalk.red(message) : message);
+      const output =
+        err instanceof Error && err.stack ? err.stack : String(err);
+      console.error(useColor ? chalk.red(output) : output);
       process.exitCode = 1;
     };
 
@@ -253,6 +254,7 @@ export async function run(argv = process.argv.slice(2)) {
         usePolling: process.platform === 'win32',
         interval: 100,
       });
+      watcher.on('error', (err) => reportError(err));
       await once(watcher, 'ready');
 
       const cleanup = async () => {
