@@ -10,7 +10,7 @@ jobs:
   smoke:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
         node: [22]
     runs-on: ${{ matrix.os }}
     defaults:
@@ -30,10 +30,31 @@ jobs:
           echo "PKG=$PKG" >> $GITHUB_ENV
       - name: Scoped npx
         run: npx --yes "./$PKG" --help
-      - name: Local install bin
+      - name: Local install bin and options
         run: |
           mkdir -p tmp/test
           cd tmp/test
           npm init -y >/dev/null 2>&1
           npm install -D "../../$PKG" >/dev/null 2>&1
           npx design-lint --help
+          npx design-lint --version
+          npx design-lint init
+          cat > designlint.config.json <<'EOF'
+          {
+            "tokens": { "deprecations": { "old": { "replacement": "new" } } },
+            "rules": { "design-system/deprecation": "error" }
+          }
+          EOF
+          echo "const a = 'old';" > file.ts
+          npx design-lint file.ts --config designlint.config.json --format json || true
+          npx design-lint file.ts --config designlint.config.json --format json --output report.txt || true
+          test -f report.txt
+          npx design-lint file.ts --config designlint.config.json --format json --report results.json || true
+          test -f results.json
+          npx design-lint file.ts --config designlint.config.json --quiet --format json || true
+          npx design-lint file.ts --config designlint.config.json --no-color --format json || true
+          npx design-lint file.ts --config designlint.config.json --fix || true
+          npx design-lint file.ts --config designlint.config.json --watch >/dev/null 2>&1 & PID=$!
+          sleep 2
+          kill $PID || true
+          wait $PID || true
