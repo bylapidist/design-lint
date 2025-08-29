@@ -1,5 +1,19 @@
 # @lapidist/design-lint
 
+## 0.7.0
+
+### Minor Changes
+
+- dee912a: Add async writeFileAtomic using fs.promises and update CLI.
+- ca7edda: feat: allow custom file patterns via `patterns` config option
+- 2b320f6: Add lintFile convenience method delegating to lintFiles.
+- 6821757: feat: return object from lintFiles
+
+### Patch Changes
+
+- fc13c4b: Add autofix for component usage rule
+- 21f3d3e: use dynamic import for p-limit to support esm deps
+
 ## 0.6.1
 
 ### Patch Changes
