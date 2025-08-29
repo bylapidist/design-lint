@@ -2,9 +2,22 @@
 
 This document describes the major pieces that power `@lapidist/design-lint`.
 
-## Core Engine
+```mermaid
+flowchart TD
+  CLI[CLI] --> ConfigLoader
+  ConfigLoader --> Linter
+  Linter --> PluginLoader
+  Linter --> FileScanner
+  FileScanner --> Files
+  Linter --> Rules
+  Rules --> Formatter
+  Linter --> Cache
+  Formatter --> Output
+```
 
-The `Linter` class in [`src/core/engine.ts`](../src/core/engine.ts) drives the
+## Linter Core
+
+The `Linter` class in [`src/core/linter.ts`](../src/core/linter.ts) drives the
 linting process. On construction it registers built-in rules, loads any
 configured plugins, and then scans files using glob patterns while honoring
 ignore rules. Files are parsed according to their extensions—TypeScript and
@@ -26,19 +39,26 @@ are collected and applied after all listeners finish.
 ## Plugin Loading
 
 Plugins extend the rule set by exporting an object like `{ rules: RuleModule[] }`.
-During startup the engine resolves each plugin relative to the config file and
-uses `require` or dynamic `import` depending on the module type. Each rule is
+[`plugin-loader.ts`](../src/core/plugin-loader.ts) resolves each plugin relative
+to the config file and uses dynamic `import` when necessary. Each rule is
 validated for shape and uniqueness before being added to the rule map. Loading
 errors clearly identify the plugin and suggest remediation.
+
+## File Scanning and Ignoring
+
+The [`file-scanner.ts`](../src/core/file-scanner.ts) module gathers target files
+based on glob patterns and consults ignore files via [`ignore.ts`](../src/core/ignore.ts).
+This keeps the core linter focused on analysis while delegating filesystem
+concerns to dedicated helpers.
 
 ## Configuration Resolution
 
 Configuration is resolved through [`loadConfig`](../src/config/loader.ts). It
 searches upward from the current directory for `designlint.config.*` files,
-supporting JavaScript, TypeScript (via `ts-node`), JSON, and ESM/CJS variants.
-Loaded settings are merged with defaults, validated against a schema, and
-returned with absolute paths. The resulting object supplies tokens, rule
-settings, plugins, and ignore patterns consumed by the engine.
+supporting JavaScript, TypeScript, JSON, and ESM/CJS variants. Loaded settings
+are merged with defaults, validated against a schema, and returned with absolute
+paths. The resulting object supplies tokens, rule settings, plugins, and ignore
+patterns consumed by the engine.
 
 ## Caching Subsystem
 
@@ -46,8 +66,15 @@ To avoid reprocessing unchanged files, the engine accepts an optional cache map
 and location. When `lintFiles` runs it populates the map with each file’s
 modification time and `LintResult`, reading and writing to disk when
 `cacheLocation` is provided. Stale entries are pruned and results are persisted
-after every run. This behavior lives in
-[`src/core/engine.ts`](../src/core/engine.ts).
+after every run. Cache serialization lives in
+[`src/core/cache.ts`](../src/core/cache.ts), orchestrated by the linter.
+
+## Formatting
+
+Results are rendered through formatters such as `stylish`, `json`, or `sarif`.
+`getFormatter` in [`src/formatters/index.ts`](../src/formatters/index.ts)
+resolves a formatter by name and applies it to the collected `LintResult`s to
+produce CLI output or machine-readable reports.
 
 ## Watch Workflow
 
