@@ -2,13 +2,13 @@
 
 Requires Node.js 22 or later.
 
-### One-off usage
+## One-off usage
 
 ```bash
 npx @lapidist/design-lint@latest --help
 ```
 
-### Local usage
+## Local usage
 
 Install the package and run it from your project:
 
@@ -21,7 +21,7 @@ pnpm design-lint [files...]
 yarn design-lint [files...]
 ```
 
-### Initialize configuration
+## Initialize configuration
 
 Create a starter config with:
 
@@ -48,7 +48,7 @@ your project (`tsconfig.json` or a `typescript` dependency), a
   path must exist; otherwise the CLI exits with an error.
   Example: `npx design-lint src --ignore-path .lintignore`
 - `--concurrency <n>`: Limit the number of files processed in parallel.
-- <a id="max-warnings"></a>`--max-warnings <n>`: Number of warnings to trigger a non-zero exit code.
+- `--max-warnings <n>`: Number of warnings to trigger a non-zero exit code.
   Example: `npx design-lint src --max-warnings 0`
 - `--quiet`: Suppress output and rely on exit code.
 - `--no-color`: Disable colored output.
@@ -72,8 +72,8 @@ rm .designlintcache
 
 ## Exit codes
 
-- **0**: No errors and warnings ≤ [`--max-warnings`](#max-warnings).
-- **1**: Any rule errors or warnings exceeding [`--max-warnings`](#max-warnings).
+- **0**: No errors and warnings ≤ `--max-warnings`.
+- **1**: Any rule errors or warnings exceeding `--max-warnings`.
 
 These codes allow CI pipelines to fail when issues are found. See [CI usage](#ci-usage) for an example.
 

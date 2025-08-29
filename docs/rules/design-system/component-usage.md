@@ -21,13 +21,13 @@ Disallows raw HTML elements when a design system component should be used instea
 
 ## Examples
 
-**Invalid**
+### Invalid
 
 ```tsx
 <button>Save</button>
 ```
 
-**Valid**
+### Valid
 
 ```tsx
 <DSButton>Save</DSButton>

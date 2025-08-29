@@ -9,6 +9,7 @@ This repository requires Node.js >= 22 and follows strict [Semantic Versioning](
    - `npm run lint`
    - `npm run format:check`
    - `npm test`
+   - If Markdown files were modified, run `npm run lint:md`
 
 ## Changesets and releases
 
@@ -17,7 +18,7 @@ This repository requires Node.js >= 22 and follows strict [Semantic Versioning](
   - Do **not** run the Changesets CLI.
 - Each changeset file must follow this format:
 
-  ```
+  ```md
   ---
   '@lapidist/design-lint': patch
   ---

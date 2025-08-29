@@ -22,13 +22,13 @@ Numbers that appear inside CSS functions (e.g., `calc()`, `var()`) are ignored.
 
 ## Examples
 
-**Invalid**
+### Invalid
 
 ```css
 .box { margin: 5px; }
 ```
 
-**Valid**
+### Valid
 
 ```css
 .box { margin: 8px; }

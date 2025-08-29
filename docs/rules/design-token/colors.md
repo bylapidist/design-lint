@@ -31,13 +31,13 @@ Token values and matched color strings are normalized to lowercase before compar
 
 ## Examples
 
-**Invalid**
+### Invalid
 
 ```css
 .button { color: #00ff00; }
 ```
 
-**Valid**
+### Valid
 
 ```css
 .button { color: #ff0000; }

@@ -17,7 +17,7 @@ Use `type(scope): description` in your commit messages, for example
 Every functional change should also include a [changeset](./.changeset/README.md)
 to help generate the changelog and version bump. Create one with:
 
-```
+```sh
 npm run changeset
 ```
 

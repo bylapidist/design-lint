@@ -22,14 +22,14 @@ comparison.
 
 ## Examples
 
-**Invalid**
+### Invalid
 
 ```css
 .title { font-size: 18px; }
 .title { font-family: 'Arial'; }
 ```
 
-**Valid**
+### Valid
 
 ```css
 .title { font-size: 1rem; }

@@ -17,7 +17,7 @@ No additional options.
 
 ## Examples
 
-**Invalid**
+### Invalid
 
 ```css
 .button { color: old; }
@@ -27,7 +27,7 @@ No additional options.
 <button>Click</button>
 ```
 
-**Valid**
+### Valid
 
 ```css
 .button { color: new; }

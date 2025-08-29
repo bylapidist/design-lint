@@ -20,11 +20,11 @@ Core engine for linting files and applying rules.
 
 `new Linter(config)`
 
-**Parameters**
+#### Parameters
 
 - `config` [`Config`](../src/core/engine.ts) – configuration object controlling tokens, rules and plugins.
 
-**Example**
+#### Example
 
 ```ts
 const config = await loadConfig(process.cwd());
@@ -37,16 +37,16 @@ const linter = new Linter(config);
 
 Lints a string of code. Optionally provide a `filePath` for accurate reporting and to enable file-type-specific parsing.
 
-**Parameters**
+##### Parameters
 
 - `text` `string` – source code to lint.
 - `filePath?` `string` – optional path used for parsing and reporting.
 
-**Returns**
+##### Returns
 
 - `Promise<LintResult>` – lint result for the provided text.
 
-**Example**
+##### Example
 
 ```ts
 const res = await linter.lintText('const c = "#fff";', 'file.ts');
@@ -56,7 +56,7 @@ const res = await linter.lintText('const c = "#fff";', 'file.ts');
 
 Lints a single file on disk.
 
-**Parameters**
+##### Parameters
 
 - `filePath` `string` – path to the file to lint.
 - `fix?` `boolean` – apply autofixes. Defaults to `false`.
@@ -64,11 +64,11 @@ Lints a single file on disk.
 - `ignorePaths?` `string[]` – additional ignore globs.
 - `cacheLocation?` `string` – location to persist cache data.
 
-**Returns**
+##### Returns
 
 - `Promise<LintResult>` – lint result for the file.
 
-**Example**
+##### Example
 
 ```ts
 const res = await linter.lintFile('src/file.ts', true, undefined, ['**/dist/**']);
@@ -78,7 +78,7 @@ const res = await linter.lintFile('src/file.ts', true, undefined, ['**/dist/**']
 
 Lints multiple files or directories.
 
-**Parameters**
+##### Parameters
 
 - `files` `string[]` – targets to lint.
 - `fix?` `boolean` – apply autofixes.
@@ -86,11 +86,11 @@ Lints multiple files or directories.
 - `ignorePaths?` `string[]` – additional ignore globs.
 - `cacheLocation?` `string` – location to persist cache data.
 
-**Returns**
+##### Returns
 
 - `Promise<{ results: LintResult[]; ignoreFiles: string[] }>` – lint results and ignore files that were honored.
 
-**Example**
+##### Example
 
 ```ts
 const { results, ignoreFiles } = await linter.lintFiles(['src', 'tests']);
@@ -100,16 +100,16 @@ const { results, ignoreFiles } = await linter.lintFiles(['src', 'tests']);
 
 Loads a `designlint.config.*` file and validates its contents.
 
-**Parameters**
+### Parameters
 
 - `cwd` `string` – directory to search from.
 - `configPath?` `string` – explicit path to a config file.
 
-**Returns**
+### Returns
 
 - `Promise<Config>` – merged configuration object.
 
-**Example**
+### Example
 
 ```ts
 const config = await loadConfig(process.cwd());
@@ -121,15 +121,15 @@ See [Configuration](./configuration.md) for details.
 
 Retrieve a formatter by built-in name or module path.
 
-**Parameters**
+### Parameters
 
 - `name` `string` – `'stylish'`, `'json'`, `'sarif'`, or a path to a formatter module.
 
-**Returns**
+### Returns
 
 - `Promise<(results: LintResult[], useColor?: boolean) => string>` – formatter function.
 
-**Examples**
+### Examples
 
 ```ts
 const formatter = await getFormatter('stylish');
@@ -148,16 +148,16 @@ See [Formatters](./formatters.md) for built-in options and instructions on addin
 
 Apply autofixes to file contents using message fix data.
 
-**Parameters**
+### Parameters
 
 - `text` `string` – original source code.
 - `messages` `LintMessage[]` – messages containing `fix` entries.
 
-**Returns**
+### Returns
 
 - `string` – fixed source code.
 
-**Example**
+### Example
 
 ```ts
 const fixed = applyFixes(code, res.messages);
@@ -175,11 +175,11 @@ Includes:
 - [`component-usage`](./rules/design-system/component-usage.md)
 - [`deprecation`](./rules/design-system/deprecation.md)
 
-**Returns**
+### Returns
 
 - `RuleModule[]` – list of built-in rules.
 
-**Example**
+### Example
 
 ```ts
 console.log(builtInRules.map((r) => r.name));
