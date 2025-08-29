@@ -49,7 +49,7 @@ test('CLI exits 0 when warnings are within --max-warnings', () => {
       '--config',
       'designlint.config.json',
       '--max-warnings',
-      '0',
+      '1',
       '--format',
       'json',
     ],
@@ -119,6 +119,32 @@ test('CLI exits 1 when warnings exceed --max-warnings', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 1);
+});
+
+test('CLI errors on invalid --max-warnings', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: {}, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--max-warnings',
+      '0',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  assert.ok(res.stderr.includes('positive integer'));
 });
 
 test('CLI --fix applies fixes', () => {
@@ -537,6 +563,29 @@ test('CLI --concurrency limits parallel lint tasks', () => {
   assert.equal(res.status, 0);
   const max = parseInt(fs.readFileSync(out, 'utf8'), 10);
   assert.ok(max <= 2);
+});
+
+test('CLI errors on invalid --concurrency', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--concurrency',
+      '0',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  assert.ok(res.stderr.includes('positive integer'));
 });
 
 test('CLI plugin load errors include context and remediation', () => {

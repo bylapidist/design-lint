@@ -126,7 +126,24 @@ export async function run(argv = process.argv.slice(2)) {
     let config = await loadConfig(process.cwd(), values.config);
     if (values.concurrency) {
       const n = Number(values.concurrency);
-      if (!Number.isNaN(n) && n > 0) config.concurrency = n;
+      if (!Number.isInteger(n) || n <= 0) {
+        const message = `Invalid value for --concurrency: "${values.concurrency}". Expected a positive integer.`;
+        console.error(useColor ? chalk.red(message) : message);
+        process.exitCode = 1;
+        return;
+      }
+      config.concurrency = n;
+    }
+    let maxWarnings: number | undefined;
+    if (values['max-warnings'] !== undefined) {
+      const max = Number(values['max-warnings']);
+      if (!Number.isInteger(max) || max <= 0) {
+        const message = `Invalid value for --max-warnings: "${values['max-warnings']}". Expected a positive integer.`;
+        console.error(useColor ? chalk.red(message) : message);
+        process.exitCode = 1;
+        return;
+      }
+      maxWarnings = max;
     }
     if (config.configPath)
       config.configPath = realpathIfExists(config.configPath);
@@ -211,10 +228,7 @@ export async function run(argv = process.argv.slice(2)) {
         0,
       );
       let exit = hasErrors ? 1 : 0;
-      if (values['max-warnings'] !== undefined) {
-        const max = Number(values['max-warnings']);
-        if (!Number.isNaN(max) && warningCount > max) exit = 1;
-      }
+      if (maxWarnings !== undefined && warningCount > maxWarnings) exit = 1;
       process.exitCode = exit;
     };
 
