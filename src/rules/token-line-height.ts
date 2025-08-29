@@ -5,11 +5,11 @@ export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',
   meta: { description: 'enforce line-height tokens' },
   create(context) {
-    const lineHeights = context.tokens?.typography?.lineHeights;
+    const lineHeights = context.tokens?.lineHeights;
     if (!lineHeights || Object.keys(lineHeights).length === 0) {
       context.report({
         message:
-          'design-token/line-height requires typography.lineHeights tokens; configure tokens.typography.lineHeights to enable this rule.',
+          'design-token/line-height requires lineHeights tokens; configure tokens.lineHeights to enable this rule.',
         line: 1,
         column: 1,
       });

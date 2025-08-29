@@ -5,7 +5,8 @@ import { Linter } from '../../src/core/linter.ts';
 test('design-token/font-family reports invalid font-family', async () => {
   const linter = new Linter({
     tokens: {
-      typography: { fontSizes: { base: 16 }, fonts: { sans: 'Inter' } },
+      fontSizes: { base: 16 },
+      fonts: { sans: 'Inter' },
     },
     rules: { 'design-token/font-family': 'error' },
   });
@@ -20,5 +21,5 @@ test('design-token/font-family warns when tokens missing', async () => {
   });
   const res = await linter.lintText('', 'file.css');
   assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].message.includes('typography.fonts'));
+  assert.ok(res.messages[0].message.includes('tokens.fonts'));
 });

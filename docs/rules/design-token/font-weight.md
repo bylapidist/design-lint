@@ -6,7 +6,7 @@ Enforces `font-weight` values to match the font weight tokens defined in your co
 
 ```json
 {
-  "tokens": { "typography": { "fontWeights": { "regular": 400, "bold": "700", "emphasis": "bold" } } },
+  "tokens": { "fontWeights": { "regular": 400, "bold": "700", "emphasis": "bold" } },
   "rules": { "design-token/font-weight": "error" }
 }
 ```

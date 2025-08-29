@@ -4,7 +4,7 @@ import { Linter } from '../../src/core/linter.ts';
 
 test('design-token/font-weight reports invalid value', async () => {
   const linter = new Linter({
-    tokens: { typography: { fontWeights: { regular: 400 } } },
+    tokens: { fontWeights: { regular: 400 } },
     rules: { 'design-token/font-weight': 'error' },
   });
   const res = await linter.lintText('.a{font-weight:500;}', 'file.css');
@@ -13,7 +13,7 @@ test('design-token/font-weight reports invalid value', async () => {
 
 test('design-token/font-weight accepts valid values', async () => {
   const linter = new Linter({
-    tokens: { typography: { fontWeights: { regular: 400, bold: '700' } } },
+    tokens: { fontWeights: { regular: 400, bold: '700' } },
     rules: { 'design-token/font-weight': 'error' },
   });
   const css = '.a{font-weight:400;} .b{font-weight:700;}';
@@ -23,7 +23,7 @@ test('design-token/font-weight accepts valid values', async () => {
 
 test('design-token/font-weight reports numeric literals', async () => {
   const linter = new Linter({
-    tokens: { typography: { fontWeights: { regular: 400 } } },
+    tokens: { fontWeights: { regular: 400 } },
     rules: { 'design-token/font-weight': 'error' },
   });
   const res = await linter.lintText('const w = 500;', 'file.ts');
@@ -36,5 +36,5 @@ test('design-token/font-weight warns when tokens missing', async () => {
   });
   const res = await linter.lintText('', 'file.ts');
   assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].message.includes('fontWeights'));
+  assert.ok(res.messages[0].message.includes('tokens.fontWeights'));
 });

@@ -5,11 +5,11 @@ export const fontWeightRule: RuleModule = {
   name: 'design-token/font-weight',
   meta: { description: 'enforce font-weight tokens' },
   create(context) {
-    const fontWeights = context.tokens?.typography?.fontWeights;
+    const fontWeights = context.tokens?.fontWeights;
     if (!fontWeights || Object.keys(fontWeights).length === 0) {
       context.report({
         message:
-          'design-token/font-weight requires typography.fontWeights tokens; configure tokens.typography.fontWeights to enable this rule.',
+          'design-token/font-weight requires fontWeights tokens; configure tokens.fontWeights to enable this rule.',
         line: 1,
         column: 1,
       });

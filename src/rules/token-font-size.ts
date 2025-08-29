@@ -4,11 +4,11 @@ export const fontSizeRule: RuleModule = {
   name: 'design-token/font-size',
   meta: { description: 'enforce font-size tokens' },
   create(context) {
-    const fontSizes = context.tokens?.typography?.fontSizes;
+    const fontSizes = context.tokens?.fontSizes;
     if (!fontSizes || Object.keys(fontSizes).length === 0) {
       context.report({
         message:
-          'design-token/font-size requires typography.fontSizes tokens; configure tokens.typography.fontSizes to enable this rule.',
+          'design-token/font-size requires fontSizes tokens; configure tokens.fontSizes to enable this rule.',
         line: 1,
         column: 1,
       });

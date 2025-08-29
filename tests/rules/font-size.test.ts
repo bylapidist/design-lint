@@ -5,7 +5,8 @@ import { Linter } from '../../src/core/linter.ts';
 test('design-token/font-size reports invalid font-size', async () => {
   const linter = new Linter({
     tokens: {
-      typography: { fontSizes: { base: 16 }, fonts: { sans: 'Inter' } },
+      fontSizes: { base: 16 },
+      fonts: { sans: 'Inter' },
     },
     rules: { 'design-token/font-size': 'error' },
   });
@@ -17,10 +18,8 @@ test('design-token/font-size reports invalid font-size', async () => {
 test('design-token/font-size accepts unit-based font-sizes', async () => {
   const linter = new Linter({
     tokens: {
-      typography: {
-        fontSizes: { base: '1rem', lg: '2rem' },
-        fonts: { sans: 'Inter' },
-      },
+      fontSizes: { base: '1rem', lg: '2rem' },
+      fonts: { sans: 'Inter' },
     },
     rules: { 'design-token/font-size': 'error' },
   });
@@ -39,5 +38,5 @@ test('design-token/font-size warns when tokens missing', async () => {
   });
   const res = await linter.lintText('', 'file.css');
   assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].message.includes('typography.fontSizes'));
+  assert.ok(res.messages[0].message.includes('tokens.fontSizes'));
 });

@@ -5,11 +5,11 @@ export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',
   meta: { description: 'enforce letter-spacing tokens' },
   create(context) {
-    const letterSpacings = context.tokens?.typography?.letterSpacings;
+    const letterSpacings = context.tokens?.letterSpacings;
     if (!letterSpacings || Object.keys(letterSpacings).length === 0) {
       context.report({
         message:
-          'design-token/letter-spacing requires typography.letterSpacings tokens; configure tokens.typography.letterSpacings to enable this rule.',
+          'design-token/letter-spacing requires letterSpacings tokens; configure tokens.letterSpacings to enable this rule.',
         line: 1,
         column: 1,
       });

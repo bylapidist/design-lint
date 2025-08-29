@@ -7,7 +7,7 @@ Enforces `line-height` values to match the line-height tokens defined in your co
 ```json
 {
   "tokens": {
-    "typography": { "lineHeights": { "base": 1.5, "tight": "20px" } }
+    "lineHeights": { "base": 1.5, "tight": "20px" }
   },
   "rules": { "design-token/line-height": "error" }
 }

@@ -4,7 +4,7 @@ import { Linter } from '../../src/core/linter.ts';
 
 test('design-token/line-height reports invalid value', async () => {
   const linter = new Linter({
-    tokens: { typography: { lineHeights: { base: 1.5 } } },
+    tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
   });
   const res = await linter.lintText('.a{line-height:2;}', 'file.css');
@@ -14,7 +14,7 @@ test('design-token/line-height reports invalid value', async () => {
 test('design-token/line-height accepts valid values', async () => {
   const linter = new Linter({
     tokens: {
-      typography: { lineHeights: { base: 1.5, tight: '20px' } },
+      lineHeights: { base: 1.5, tight: '20px' },
     },
     rules: { 'design-token/line-height': 'error' },
   });
@@ -25,7 +25,7 @@ test('design-token/line-height accepts valid values', async () => {
 
 test('design-token/line-height reports numeric literals', async () => {
   const linter = new Linter({
-    tokens: { typography: { lineHeights: { base: 1.5 } } },
+    tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
   });
   const res = await linter.lintText('const lh = 2;', 'file.ts');
@@ -34,7 +34,7 @@ test('design-token/line-height reports numeric literals', async () => {
 
 test('design-token/line-height reports template literal', async () => {
   const linter = new Linter({
-    tokens: { typography: { lineHeights: { base: 1.5 } } },
+    tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
   });
   const res = await linter.lintText('const lh = `2`;', 'file.ts');
@@ -43,7 +43,7 @@ test('design-token/line-height reports template literal', async () => {
 
 test('design-token/line-height reports template expression', async () => {
   const linter = new Linter({
-    tokens: { typography: { lineHeights: { base: 1.5 } } },
+    tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
   });
   const res = await linter.lintText('const lh = `2${"px"}`;', 'file.ts');
@@ -52,7 +52,7 @@ test('design-token/line-height reports template expression', async () => {
 
 test('design-token/line-height reports prefix unary', async () => {
   const linter = new Linter({
-    tokens: { typography: { lineHeights: { base: 1.5 } } },
+    tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
   });
   const res = await linter.lintText('const lh = -2;', 'file.ts');
@@ -65,5 +65,5 @@ test('design-token/line-height warns when tokens missing', async () => {
   });
   const res = await linter.lintText('', 'file.ts');
   assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].message.includes('lineHeights'));
+  assert.ok(res.messages[0].message.includes('tokens.lineHeights'));
 });

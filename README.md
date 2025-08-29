@@ -173,10 +173,8 @@ module.exports = {
     spacing: { sm: 4 },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
-    typography: {
-      fontSizes: { base: 16 },
-      fonts: { sans: 'Inter, sans-serif' },
-    },
+    fontSizes: { base: 16 },
+    fonts: { sans: 'Inter, sans-serif' },
   },
   rules: {
     'design-token/colors': 'error',
@@ -198,10 +196,8 @@ export default defineConfig({
     spacing: { sm: 4 },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
-    typography: {
-      fontSizes: { base: 16 },
-      fonts: { sans: 'Inter, sans-serif' },
-    },
+    fontSizes: { base: 16 },
+    fonts: { sans: 'Inter, sans-serif' },
   },
   rules: {
     'design-token/colors': 'error',
@@ -230,7 +226,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 ## Features
 
-- Enforce color, spacing, border radius, box shadow, z-index, and typography tokens
+- Enforce color, spacing, border radius, box shadow, z-index, font size, font family, font weight, line height, and letter spacing tokens
 - Prevent deprecated or raw HTML component usage
 - Pluggable rule and formatter architecture
 - JSON and SARIF output for CI

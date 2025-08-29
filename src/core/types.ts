@@ -24,19 +24,16 @@ export interface DesignTokens {
     /** Motion duration tokens. */
     durations?: Record<string, number | string>;
   };
-  /** Typography-related tokens. */
-  typography?: {
-    /** Font size tokens. */
-    fontSizes?: Record<string, number | string>;
-    /** Font family tokens. */
-    fonts?: Record<string, string>;
-    /** Line height tokens. */
-    lineHeights?: Record<string, number | string>;
-    /** Font weight tokens. */
-    fontWeights?: Record<string, number | string>;
-    /** Letter spacing tokens. */
-    letterSpacings?: Record<string, number | string>;
-  };
+  /** Font size tokens. */
+  fontSizes?: Record<string, number | string>;
+  /** Font family tokens. */
+  fonts?: Record<string, string>;
+  /** Line height tokens. */
+  lineHeights?: Record<string, number | string>;
+  /** Font weight tokens. */
+  fontWeights?: Record<string, number | string>;
+  /** Letter spacing tokens. */
+  letterSpacings?: Record<string, number | string>;
   /** Deprecated tokens and their replacements. */
   deprecations?: Record<string, { replacement?: string }>;
   /** Allow additional custom token groups. */

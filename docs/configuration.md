@@ -12,10 +12,8 @@ module.exports = {
     spacing: { sm: 4, md: 8 },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
-    typography: {
-      fontSizes: { base: 16 },
-      fonts: { sans: 'Inter, sans-serif' },
-    },
+    fontSizes: { base: 16 },
+    fonts: { sans: 'Inter, sans-serif' },
   },
   rules: {
     'design-token/colors': 'error',
@@ -37,10 +35,8 @@ export default defineConfig({
     spacing: { sm: 4, md: 8 },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
-    typography: {
-      fontSizes: { base: 16 },
-      fonts: { sans: 'Inter, sans-serif' },
-    },
+    fontSizes: { base: 16 },
+    fonts: { sans: 'Inter, sans-serif' },
   },
   rules: {
     'design-token/colors': 'error',
@@ -89,7 +85,7 @@ syntax message.
 
 ## Fields
 
-- `tokens`: Design token definitions such as colors, spacing and typography.
+- `tokens`: Design token definitions such as colors, spacing, typography, and more.
 - `rules`: Map of rule name to severity or `[severity, options]`.
 - `ignoreFiles`: Glob patterns to exclude from linting.
 - `plugins`: Additional plugin packages to load.
@@ -107,12 +103,12 @@ without providing the corresponding tokens results in a configuration warning:
 - `design-token/border-width` requires `tokens.borderWidths` or `tokens.borderWidth`
 - `design-token/box-shadow` requires `tokens.shadows`
 - `design-token/duration` requires `tokens.durations` or `tokens.motion.durations`
-- `design-token/line-height` requires `tokens.typography.lineHeights`
-- `design-token/font-weight` requires `tokens.typography.fontWeights`
-- `design-token/letter-spacing` requires `tokens.typography.letterSpacings`
+- `design-token/line-height` requires `tokens.lineHeights`
+- `design-token/font-weight` requires `tokens.fontWeights`
+- `design-token/letter-spacing` requires `tokens.letterSpacings`
 - `design-token/z-index` requires `tokens.zIndex`
-- `design-token/font-size` requires `tokens.typography.fontSizes`
-- `design-token/font-family` requires `tokens.typography.fonts`
+- `design-token/font-size` requires `tokens.fontSizes`
+- `design-token/font-family` requires `tokens.fonts`
 - `design-system/deprecation` requires `tokens.deprecations`
 
 To resolve the warning, supply the necessary tokens or disable the rule.

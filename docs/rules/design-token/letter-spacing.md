@@ -7,7 +7,7 @@ Enforces `letter-spacing` values to match the letter-spacing tokens defined in y
 ```json
 {
   "tokens": {
-    "typography": { "letterSpacings": { "tight": "-0.05em", "loose": "0.1em" } }
+    "letterSpacings": { "tight": "-0.05em", "loose": "0.1em" }
   },
   "rules": { "design-token/letter-spacing": "error" }
 }

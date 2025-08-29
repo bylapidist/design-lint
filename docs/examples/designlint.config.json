@@ -9,14 +9,12 @@
       "md": 8,
       "lg": 16
     },
-    "typography": {
-      "fontSizes": {
-        "base": 16,
-        "lg": 24
-      },
-      "fonts": {
-        "sans": "Inter, sans-serif"
-      }
+    "fontSizes": {
+      "base": 16,
+      "lg": 24
+    },
+    "fonts": {
+      "sans": "Inter, sans-serif"
     },
     "deprecations": {
       "oldPrimary": { "replacement": "primary" }

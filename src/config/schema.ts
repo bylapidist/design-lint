@@ -33,12 +33,11 @@ const tokensSchema = z
         durations: z.record(z.string(), numberOrString).optional(),
       })
       .optional(),
-    typography: z
-      .object({
-        fontSizes: z.record(z.string(), numberOrString).optional(),
-        fonts: z.record(z.string(), z.string()).optional(),
-      })
-      .optional(),
+    fontSizes: z.record(z.string(), numberOrString).optional(),
+    fonts: z.record(z.string(), z.string()).optional(),
+    lineHeights: z.record(z.string(), numberOrString).optional(),
+    fontWeights: z.record(z.string(), numberOrString).optional(),
+    letterSpacings: z.record(z.string(), numberOrString).optional(),
     deprecations: z
       .record(z.string(), z.object({ replacement: z.string().optional() }))
       .optional(),

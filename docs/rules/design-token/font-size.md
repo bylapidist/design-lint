@@ -1,16 +1,14 @@
 # design-token/font-size
 
-Ensures `font-size` declarations use values from your typography `fontSizes` tokens.
+Ensures `font-size` declarations use values from your `fontSizes` tokens.
 
 ## Configuration
 
 ```json
 {
   "tokens": {
-    "typography": {
-      "fontSizes": { "base": "1rem", "lg": 20 },
-      "fonts": { "sans": "Inter, sans-serif" }
-    }
+    "fontSizes": { "base": "1rem", "lg": 20 },
+    "fonts": { "sans": "Inter, sans-serif" }
   },
   "rules": { "design-token/font-size": "error" }
 }
