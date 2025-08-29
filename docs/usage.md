@@ -63,6 +63,17 @@ Re-run lint on file changes:
 npx design-lint src --watch
 ```
 
+### Vue single-file components
+
+Vue `.vue` files are parsed so both template and script code are linted alongside
+`<style>` blocks. Only standard CSS syntax is supported inside `<style>`
+sections; preprocessors like Sass or Less must be compiled ahead of time. No
+additional configuration is required.
+
+```bash
+npx design-lint src/components/App.vue
+```
+
 ### Svelte style bindings
 
 When linting Svelte components, the linter understands both `style` attributes
