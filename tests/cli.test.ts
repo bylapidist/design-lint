@@ -756,6 +756,59 @@ test('CLI re-runs on file change in watch mode', async () => {
   assert.equal(runs, 2);
 });
 
+test('CLI ignores --output/--report files in watch mode', async () => {
+  for (const [flag, name] of [
+    ['--output', 'out.json'],
+    ['--report', 'report.json'],
+  ] as const) {
+    const dir = makeTmpDir();
+    fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+    fs.writeFileSync(
+      path.join(dir, 'designlint.config.json'),
+      JSON.stringify({ tokens: {}, rules: {} }),
+    );
+    const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+    let writes = 0;
+    const watcher = fs.watch(dir, (event, filename) => {
+      if (event === 'rename' && filename === name) writes++;
+    });
+    const proc = spawn(
+      process.execPath,
+      [
+        '--require',
+        tsNodeRegister,
+        cli,
+        'file.ts',
+        '--config',
+        'designlint.config.json',
+        '--watch',
+        flag,
+        name,
+        '--format',
+        'json',
+      ],
+      { cwd: dir },
+    );
+    await readWhenReady(path.join(dir, name));
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        proc.kill();
+      }, 1000);
+      proc.on('exit', () => {
+        clearTimeout(timer);
+        watcher.close();
+        resolve();
+      });
+      proc.on('error', (err) => {
+        clearTimeout(timer);
+        watcher.close();
+        reject(err);
+      });
+    });
+    assert.equal(writes, 1);
+  }
+});
+
 test('CLI cache updates after --fix run', async () => {
   const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');

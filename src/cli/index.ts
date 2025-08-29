@@ -269,6 +269,12 @@ export async function run(argv = process.argv.slice(2)) {
         ...pluginPaths,
         ...ignoreFilePaths,
       );
+      const outputPath = values.output
+        ? realpathIfExists(path.resolve(values.output as string))
+        : undefined;
+      const reportPath = values.report
+        ? realpathIfExists(path.resolve(values.report as string))
+        : undefined;
       watcher = chokidar.watch(watchPaths, {
         ignored: (p: string) => {
           const rel = relFromCwd(realpathIfExists(p));
@@ -277,6 +283,8 @@ export async function run(argv = process.argv.slice(2)) {
           if (resolved === designIgnore || resolved === gitIgnore) return false;
           if (pluginPaths.includes(resolved)) return false;
           if (ignoreFilePaths.includes(resolved)) return false;
+          if (outputPath && resolved === outputPath) return true;
+          if (reportPath && resolved === reportPath) return true;
           return ig.ignores(rel);
         },
         ignoreInitial: true,
@@ -330,6 +338,8 @@ export async function run(argv = process.argv.slice(2)) {
 
       const handle = async (filePath: string) => {
         const resolved = realpathIfExists(path.resolve(filePath));
+        if (outputPath && resolved === outputPath) return;
+        if (reportPath && resolved === reportPath) return;
         if (
           (config.configPath && resolved === config.configPath) ||
           resolved === designIgnore ||
@@ -346,6 +356,8 @@ export async function run(argv = process.argv.slice(2)) {
       const handleUnlink = async (filePath: string) => {
         const resolved = realpathIfExists(path.resolve(filePath));
         cache.delete(resolved);
+        if (outputPath && resolved === outputPath) return;
+        if (reportPath && resolved === reportPath) return;
         if (
           (config.configPath && resolved === config.configPath) ||
           resolved === designIgnore ||
