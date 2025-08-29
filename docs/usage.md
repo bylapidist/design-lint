@@ -116,3 +116,12 @@ npx design-lint button.css --fix
 ```
 
 The [`design-system/deprecation`](rules/design-system/deprecation.md) rule replaces `old` with `new` when run with `--fix`.
+
+## Environment variables
+
+Set `DESIGNLINT_PROFILE=1` to print how long the initial file scan takes. This can help profile large projects.
+
+```bash
+DESIGNLINT_PROFILE=1 npx design-lint src
+# Scanned 42 files in 120.34ms
+```

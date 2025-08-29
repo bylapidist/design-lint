@@ -43,6 +43,8 @@ Lint a project by passing files or directories. By default, results are printed
 in a human-friendly format, and the process exits with a non-zero code when
 errors are found.
 
+For scan timing, set `DESIGNLINT_PROFILE=1`—see the [Environment variables](docs/usage.md#environment-variables) section for details.
+
 ```bash
 npx design-lint src
 ```
