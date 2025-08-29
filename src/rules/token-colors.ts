@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types';
+import colorNames from '../color-names';
 
 type ColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'named';
 
@@ -11,19 +12,16 @@ const hslRegex = /hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)/gi;
 const hslaRegex =
   /hsla\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*,\s*(?:0|1|0?\.\d+)\s*\)/gi;
 
+const namedRegex = new RegExp(`\\b(?:${colorNames.join('|')})\\b`, 'gi');
+
 const patterns: { format: ColorFormat; regex: RegExp }[] = [
   { format: 'hex', regex: hexRegex },
   { format: 'rgb', regex: rgbRegex },
   { format: 'rgba', regex: rgbaRegex },
   { format: 'hsl', regex: hslRegex },
   { format: 'hsla', regex: hslaRegex },
+  { format: 'named', regex: namedRegex },
 ];
-
-import('color-name').then(({ default: colorName }) => {
-  const namedColors = Object.keys(colorName);
-  const namedRegex = new RegExp(`\\b(?:${namedColors.join('|')})\\b`, 'gi');
-  patterns.push({ format: 'named', regex: namedRegex });
-});
 
 interface ColorRuleOptions {
   allow?: ColorFormat[];
