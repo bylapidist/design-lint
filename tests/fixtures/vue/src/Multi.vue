@@ -1,16 +1,6 @@
-<script lang="ts">
-const color = '#ffffff';
-</script>
-<script setup lang="ts">
-const padding = 5;
-const token = 'old-token';
-</script>
-
 <template>
-  <div class="container" :style="{ padding: padding + 'px' }">
+  <div class="container" :style="{ padding: 5, color: '#ffffff' }">
     Hello
-    <button>Click</button>
-    <OldComponent />
   </div>
 </template>
 
@@ -22,8 +12,5 @@ const token = 'old-token';
 <style scoped>
 .container {
   margin: 5px;
-  font-size: 13px;
-  font-family: Courier;
-  background: old-token;
 }
 </style>
