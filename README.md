@@ -1,7 +1,7 @@
 # @lapidist/design-lint
 
 `@lapidist/design-lint` is a pluggable linter for enforcing design system rules in
-JavaScript, TypeScript and CSS codebases. It validates design tokens and
+JavaScript, TypeScript, and CSS codebases. It validates design tokens and
 component usage to help teams stay consistent with their design system.
 
 ## Installation
@@ -18,7 +18,7 @@ npx @lapidist/design-lint@latest --help
 
 ### Local installation
 
-Install the package in your project and use the generated binary:
+Install the package and use the generated binary:
 
 ```bash
 npm install --save-dev @lapidist/design-lint
@@ -31,15 +31,15 @@ yarn design-lint --help
 
 ## CLI Usage
 
-Lint a project by passing files or directories. By default results are printed
-in a human friendly format and the process exits with a non-zero code when
+Lint a project by passing files or directories. By default, results are printed
+in a human-friendly format, and the process exits with a non-zero code when
 errors are found.
 
 ```bash
 npx design-lint src
 ```
 
-Generate a starter configuration file with:
+Generate a starter configuration file:
 
 ```bash
 npx design-lint init
@@ -47,7 +47,7 @@ npx design-lint init
 
 This creates a `designlint.config.json` in the current directory.
 
-Check the CLI version with:
+Check the CLI version:
 
 ```bash
 npx design-lint --version
@@ -115,10 +115,10 @@ const formatter = getFormatter('stylish');
 console.log(formatter(results));
 ```
 
-Additional exports such as `applyFixes` and `builtInRules` are also available.
-See the [Configuration guide](docs/configuration.md) for `loadConfig`
-details and the [Usage guide](docs/usage.md#options) for available
-formatters. A full list of exports is in the [API guide](docs/api.md).
+Additional exports, such as `applyFixes` and `builtInRules`, are also available.
+See the [Configuration guide](docs/configuration.md) for `loadConfig` details and
+the [Usage guide](docs/usage.md#options) for available formatters. A full list of
+exports is in the [API guide](docs/api.md).
 
 ## Configuration
 
@@ -147,8 +147,7 @@ for a detailed breakdown of available options.
 ## Plugins
 
 Plugins can supply additional rules. Each plugin should export an object like
-`{ rules: RuleModule[] }` and be listed in the `plugins` field of your
-configuration:
+`{ rules: RuleModule[] }` and be listed in the `plugins` field of your configuration:
 
 ```js
 module.exports = {
@@ -159,8 +158,8 @@ module.exports = {
 };
 ```
 
-If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint` will
-throw an error during initialization.
+If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
+throws an error during initialization.
 
 See the [Plugin guide](docs/plugins.md) for a step-by-step tutorial on writing and publishing custom rules.
 
