@@ -60,9 +60,8 @@ export async function loadConfig(
       let loaded: Config = {};
       if (abs.endsWith('.ts') || abs.endsWith('.mts')) {
         try {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          await import('ts-node/esm');
+          const tsNodeEsm = 'ts-node/esm';
+          await import(tsNodeEsm);
         } catch {
           throw new Error(
             'To load TypeScript config files, please install ts-node.',
