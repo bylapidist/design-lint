@@ -23,6 +23,7 @@ export interface LintMessage {
 export interface LintResult {
   filePath: string;
   messages: LintMessage[];
+  ruleDescriptions?: Record<string, string>;
 }
 
 export interface RuleContext {

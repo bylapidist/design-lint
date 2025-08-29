@@ -54,19 +54,20 @@ test('sarif formatter outputs rules and links results', () => {
       messages: [
         {
           ruleId: 'rule',
-          message: 'desc',
+          message: 'first',
           severity: 'error',
           line: 1,
           column: 1,
         },
         {
           ruleId: 'rule',
-          message: 'desc',
+          message: 'second',
           severity: 'error',
           line: 2,
           column: 2,
         },
       ],
+      ruleDescriptions: { rule: 'rule description' },
     },
   ];
   const out = sarifFormatter(results);
@@ -74,7 +75,10 @@ test('sarif formatter outputs rules and links results', () => {
   const run = parsed.runs[0];
   assert.equal(run.tool.driver.rules.length, 1);
   assert.equal(run.tool.driver.rules[0].id, 'rule');
-  assert.equal(run.tool.driver.rules[0].shortDescription.text, 'desc');
+  assert.equal(
+    run.tool.driver.rules[0].shortDescription.text,
+    'rule description',
+  );
   assert.equal(run.results[0].ruleId, 'rule');
   assert.equal(run.results[0].ruleIndex, 0);
 });

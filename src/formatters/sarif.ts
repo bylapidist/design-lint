@@ -35,7 +35,13 @@ export function sarifFormatter(
     ],
   };
   const ruleMap = new Map<string, number>();
+  const descMap = new Map<string, string>();
   for (const res of results) {
+    if (res.ruleDescriptions) {
+      for (const [id, desc] of Object.entries(res.ruleDescriptions)) {
+        if (!descMap.has(id)) descMap.set(id, desc);
+      }
+    }
     for (const msg of res.messages) {
       let ruleIndex: number;
       if (ruleMap.has(msg.ruleId)) {
@@ -45,7 +51,9 @@ export function sarifFormatter(
         ruleMap.set(msg.ruleId, ruleIndex);
         sarif.runs[0].tool.driver.rules.push({
           id: msg.ruleId,
-          shortDescription: { text: msg.message },
+          shortDescription: {
+            text: descMap.get(msg.ruleId) ?? msg.message,
+          },
         });
       }
       sarif.runs[0].results.push({

@@ -172,12 +172,14 @@ export class Linter {
     await this.pluginLoad;
     const enabled = this.getEnabledRules();
     const messages: LintResult['messages'] = [];
+    const ruleDescriptions: Record<string, string> = {};
     const contextBase: Omit<RuleContext, 'options'> = {
       report: () => {},
       tokens: (this.config.tokens || {}) as DesignTokens,
       filePath,
     };
     const listeners = enabled.map(({ rule, options, severity }) => {
+      ruleDescriptions[rule.name] = rule.meta.description;
       const ctx: RuleContext = {
         ...contextBase,
         options,
@@ -409,7 +411,7 @@ export class Linter {
       }
     }
 
-    return { filePath, messages };
+    return { filePath, messages, ruleDescriptions };
   }
 
   private getEnabledRules(): {
