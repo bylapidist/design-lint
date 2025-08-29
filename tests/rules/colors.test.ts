@@ -57,6 +57,18 @@ test('design-token/colors reports disallowed hsl', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/colors reports disallowed hsla', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText(
+    'const c = "hsla(0, 0%, 0%, 0.5)";',
+    'file.ts',
+  );
+  assert.equal(res.messages.length, 1);
+});
+
 test('design-token/colors reports disallowed named color', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
