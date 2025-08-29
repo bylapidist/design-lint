@@ -13,13 +13,15 @@ async function lint(file: string) {
 }
 
 test('style bindings report spacing and color violations', async () => {
-  const res = await lint('App.svelte');
-  const spacing = res.messages.find(
-    (m) => m.ruleId === 'design-token/spacing' && m.line === 16,
-  );
-  assert(spacing, 'expected spacing violation from style binding');
-  const color = res.messages.find(
-    (m) => m.ruleId === 'design-token/colors' && m.line === 16,
-  );
-  assert(color, 'expected color violation from style binding');
+  for (const file of ['App.svelte', 'Directive.svelte']) {
+    const res = await lint(file);
+    assert(
+      res.messages.some((m) => m.ruleId === 'design-token/spacing'),
+      `expected spacing violation from style binding in ${file}`,
+    );
+    assert(
+      res.messages.some((m) => m.ruleId === 'design-token/colors'),
+      `expected color violation from style binding in ${file}`,
+    );
+  }
 });

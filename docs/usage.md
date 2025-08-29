@@ -50,6 +50,18 @@ Re-run lint on file changes:
 npx design-lint src --watch
 ```
 
+### Svelte style bindings
+
+When linting Svelte components, the linter understands both `style` attributes
+and `style:` directives. Declarations like
+
+```svelte
+<div style="margin: {5}px; color: {'#fff'}" />
+<div style:margin-left={5}px style:color={'#fff'} />
+```
+
+are parsed so each individual style is checked against the configured rules.
+
 Flag deprecated tokens or components and automatically replace them with [`design-system/deprecation`](rules/design-system/deprecation.md):
 
 ```json

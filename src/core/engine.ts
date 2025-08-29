@@ -390,7 +390,9 @@ export class Linter {
           const attrText = text.slice(attr.start, attr.end);
           const eqIdx = attrText.indexOf('=');
           const valueStart = attr.start + eqIdx + 2; // after opening quote
-          const regex = /([\w-]+)\s*:\s*([^;]+)(?:;|$)/g;
+          // match arbitrary "prop: value" pairs within the style attribute
+          // and allow multiple declarations separated by semicolons
+          const regex = /([^:;]+?)\s*:\s*([^;]+?)(?:;|$)/g;
           const decls: CSSDeclaration[] = [];
           let m: RegExpExecArray | null;
           while ((m = regex.exec(content))) {
