@@ -55,6 +55,7 @@ Options:
   --max-warnings <n>    Number of warnings to trigger nonzero exit code
   --quiet               Suppress stdout output
   --no-color            Disable colored output
+  --cache               Enable persistent caching
   --watch               Watch files and re-lint on changes
   --fix                 Automatically fix problems
   --version             Show version number
@@ -79,6 +80,7 @@ export async function run(argv = process.argv.slice(2)) {
         concurrency: { type: 'string' },
         'max-warnings': { type: 'string' },
         quiet: { type: 'boolean', default: false },
+        cache: { type: 'boolean', default: false },
         fix: { type: 'boolean', default: false },
         watch: { type: 'boolean', default: false },
         version: { type: 'boolean', default: false },
@@ -130,6 +132,9 @@ export async function run(argv = process.argv.slice(2)) {
       config.configPath = realpathIfExists(config.configPath);
     let linter = new Linter(config);
     const cache = new Map<string, { mtime: number; result: LintResult }>();
+    const cacheLocation = values.cache
+      ? path.resolve(process.cwd(), '.designlintcache')
+      : undefined;
 
     const ignorePath = values['ignore-path']
       ? realpathIfExists(path.resolve(values['ignore-path'] as string))
@@ -171,6 +176,7 @@ export async function run(argv = process.argv.slice(2)) {
         values.fix,
         cache,
         ignorePath ? [ignorePath] : [],
+        cacheLocation,
       );
       const newIgnore = results.ignoreFiles ?? [];
       if (values.watch && watcher) {
@@ -266,6 +272,11 @@ export async function run(argv = process.argv.slice(2)) {
           linter = new Linter(config);
           await refreshIgnore();
           cache.clear();
+          if (cacheLocation) {
+            try {
+              fs.unlinkSync(cacheLocation);
+            } catch {}
+          }
           const newPluginPaths = resolvePluginPaths(config);
           const toRemove = pluginPaths.filter(
             (p) => !newPluginPaths.includes(p),

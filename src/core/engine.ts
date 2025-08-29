@@ -48,6 +48,7 @@ export class Linter {
   private config: Config;
   private ruleMap: Map<string, RuleModule> = new Map();
   private pluginLoad: Promise<void>;
+  private cacheLoaded = false;
 
   constructor(config: Config) {
     this.config = config;
@@ -135,8 +136,22 @@ export class Linter {
     fix = false,
     cache?: Map<string, { mtime: number; result: LintResult }>,
     additionalIgnorePaths: string[] = [],
+    cacheLocation?: string,
   ): Promise<LintResult[] & { ignoreFiles: string[] }> {
     await this.pluginLoad;
+    if (cacheLocation && cache && !this.cacheLoaded) {
+      try {
+        const raw = await fs.readFile(cacheLocation, 'utf8');
+        const data = JSON.parse(raw) as [
+          string,
+          { mtime: number; result: LintResult },
+        ][];
+        for (const [k, v] of data) cache.set(k, v);
+      } catch {
+        // ignore
+      }
+      this.cacheLoaded = true;
+    }
     const { ig, patterns } = await loadIgnore(
       this.config,
       additionalIgnorePaths,
@@ -271,6 +286,18 @@ export class Linter {
     );
 
     const results = await Promise.all(tasks);
+    if (cacheLocation && cache) {
+      try {
+        await fs.mkdir(path.dirname(cacheLocation), { recursive: true });
+        await fs.writeFile(
+          cacheLocation,
+          JSON.stringify([...cache.entries()]),
+          'utf8',
+        );
+      } catch {
+        // ignore
+      }
+    }
     return Object.assign(results, { ignoreFiles: Array.from(seenIgnore) });
   }
 

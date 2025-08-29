@@ -669,6 +669,79 @@ test('CLI cache updates after --fix run', async () => {
   assert.strictEqual(res1[0], res2[0]);
 });
 
+test('CLI --cache reuses results from disk', () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = 1;');
+  const plugin = path.join(dir, 'plugin.cjs');
+  fs.writeFileSync(
+    plugin,
+    `const fs = require('fs');\nconst path = require('path');\nconst counter = path.join(__dirname, 'count.txt');\nmodule.exports = {\n  rules: [{\n    name: 'test/count',\n    meta: { description: 'count' },\n    create() {\n      const c = fs.existsSync(counter) ? Number(fs.readFileSync(counter, 'utf8')) : 0;\n      fs.writeFileSync(counter, String(c + 1));\n      return {};\n    },\n  }],\n};\n`,
+  );
+  fs.writeFileSync(path.join(dir, 'count.txt'), '0');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {},
+      rules: { 'test/count': 'error' },
+      plugins: ['./plugin.cjs'],
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const args = [
+    '--require',
+    tsNodeRegister,
+    cli,
+    'file.ts',
+    '--config',
+    'designlint.config.json',
+    '--cache',
+  ];
+  let res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
+  assert.equal(res.status, 0);
+  assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '1');
+  res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
+  assert.equal(res.status, 0);
+  assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '1');
+});
+
+test('CLI --cache invalidates when files change', () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = 1;');
+  const plugin = path.join(dir, 'plugin.cjs');
+  fs.writeFileSync(
+    plugin,
+    `const fs = require('fs');\nconst path = require('path');\nconst counter = path.join(__dirname, 'count.txt');\nmodule.exports = {\n  rules: [{\n    name: 'test/count',\n    meta: { description: 'count' },\n    create() {\n      const c = fs.existsSync(counter) ? Number(fs.readFileSync(counter, 'utf8')) : 0;\n      fs.writeFileSync(counter, String(c + 1));\n      return {};\n    },\n  }],\n};\n`,
+  );
+  fs.writeFileSync(path.join(dir, 'count.txt'), '0');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {},
+      rules: { 'test/count': 'error' },
+      plugins: ['./plugin.cjs'],
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const args = [
+    '--require',
+    tsNodeRegister,
+    cli,
+    'file.ts',
+    '--config',
+    'designlint.config.json',
+    '--cache',
+  ];
+  let res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
+  assert.equal(res.status, 0);
+  assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '1');
+  fs.appendFileSync(file, '\nconst b = 2;');
+  res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
+  assert.equal(res.status, 0);
+  assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '2');
+});
+
 test('CLI re-runs with updated config in watch mode', async () => {
   const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
