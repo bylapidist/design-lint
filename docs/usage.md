@@ -21,6 +21,14 @@ pnpm design-lint [files...]
 yarn design-lint [files...]
 ```
 
+### Initialize configuration
+
+Create a starter `designlint.config.json` with:
+
+```bash
+npx design-lint init
+```
+
 ## Options
 
 - `--config <path>`: Path to a `designlint.config.js` or `.json` file.
