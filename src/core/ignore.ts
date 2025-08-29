@@ -5,21 +5,13 @@ import type { Config } from './linter.js';
 
 export const defaultIgnore = [
   '**/node_modules/**',
-  'node_modules/**',
   '**/dist/**',
-  'dist/**',
   '**/build/**',
-  'build/**',
   '**/coverage/**',
-  'coverage/**',
   '**/.next/**',
-  '.next/**',
   '**/.nuxt/**',
-  '.nuxt/**',
   '**/out/**',
-  'out/**',
   '**/.cache/**',
-  '.cache/**',
 ];
 
 export async function loadIgnore(
