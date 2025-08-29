@@ -107,7 +107,7 @@ npx design-lint src --watch
 Automatically replace deprecated tokens or components:
 
 ```json
-// designlint.config.json
+// docs/examples/designlint.config.json
 {
   "tokens": { "deprecations": { "old": { "replacement": "new" } } },
   "rules": { "design-system/deprecation": "error" }

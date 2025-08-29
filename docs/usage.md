@@ -132,7 +132,7 @@ are parsed so each individual style is checked against the configured rules.
 Flag deprecated tokens or components and automatically replace them with [`design-system/deprecation`](rules/design-system/deprecation.md):
 
 ```json
-// designlint.config.json
+// docs/examples/designlint.config.json
 {
   "tokens": {
     "deprecations": { "old": { "replacement": "new" } }
