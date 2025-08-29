@@ -1,5 +1,17 @@
 # @lapidist/design-lint
 
+## 0.6.0
+
+### Minor Changes
+
+- c89b48a: Add SARIF rules metadata
+
+### Patch Changes
+
+- 9696958: Ensure temporary files are removed when atomic writes fail
+- 08496e0: Validate numeric CLI options
+- a9d211c: Handle watcher errors in CLI
+
 ## 0.5.0
 
 ### Minor Changes
