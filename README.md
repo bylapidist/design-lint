@@ -85,20 +85,23 @@ npx design-lint --version
 
 ### Options
 
-- `--config <path>` – path to a `designlint.config.*` file. An error is thrown if it cannot be found.
-- `--init-format <format>` – format for `design-lint init` (`js`, `cjs`, `mjs`, `ts`, `mts`, `json`).
-- `--format <formatter>` – output format (default `stylish`). Accepts built-in names (`stylish`, `json`, `sarif`) or a path to a custom formatter module. See the [Formatters guide](docs/formatters.md).
-- `--output <file>` – write report to a file instead of stdout.
-- `--report <file>` – write JSON results to a file.
-- `--ignore-path <file>` – load additional ignore patterns from a file. Example: `npx design-lint src --ignore-path .lintignore`
-- `--concurrency <n>` – limit the number of files processed in parallel.
-- `--max-warnings <n>` – maximum number of warnings allowed before exiting with a non-zero code. Use `0` to fail on any warning.
-- `--quiet` – suppress output and rely on the exit code.
-- `--no-color` – disable colored output.
-- `--cache` – enable persistent caching. Example: `npx design-lint src --cache`
-- `--watch` – watch files and re-lint on changes.
-- `--fix` – automatically fix problems when possible.
-- `--version` – print the CLI version and exit.
+| Flag | Description |
+| --- | --- |
+| `--config <path>` | Path to a `designlint.config.*` file. An error is thrown if it cannot be found. |
+| `--init-format <format>` | Format for `design-lint init` (`js`, `cjs`, `mjs`, `ts`, `mts`, `json`). |
+| `--format <formatter>` | Output format (default `stylish`). Accepts built-in names (`stylish`, `json`, `sarif`) or a path to a custom formatter module. See the [Formatters guide](docs/formatters.md). |
+| `--output <file>` | Write report to a file instead of stdout. |
+| `--report <file>` | Write JSON results to a file. |
+| `--ignore-path <file>` | Load additional ignore patterns from a file. Example: `npx design-lint src --ignore-path .lintignore`. |
+| `--concurrency <n>` | Limit the number of files processed in parallel. |
+| `--max-warnings <n>` | Maximum number of warnings allowed before exiting with a non-zero code. Use `0` to fail on any warning. |
+| `--quiet` | Suppress output and rely on the exit code. |
+| `--no-color` | Disable colored output. |
+| `--cache` | Enable persistent caching. Example: `npx design-lint src --cache`. |
+| `--watch` | Watch files and re-lint on changes. |
+| `--fix` | Automatically fix problems when possible. |
+| `--version` | Print the CLI version and exit. |
+
 
 ### Examples
 
