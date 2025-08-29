@@ -45,6 +45,13 @@ jobs:
           npx design-lint --help
           npx design-lint --version
           npx design-lint init
+          test -f designlint.config.json
+          for fmt in json js cjs mjs ts mts; do
+            rm -f designlint.config.*
+            npx design-lint init --init-format "$fmt"
+            test -f "designlint.config.$fmt"
+          done
+          rm -f designlint.config.*
           cat > designlint.config.json <<'EOF'
           {
             "tokens": {
@@ -53,22 +60,114 @@ jobs:
             },
             "rules": {
               "design-system/deprecation": "error",
-              "design-token/colors": "error"
+              "design-token/colors": "warn"
             }
           }
           EOF
           echo "const a = 'old'; const b = '#000';" > file.ts
-          npx design-lint file.ts --config designlint.config.json --format json || true
+          echo "const a = 'old';" > ignored.ts
+          echo "ignored.ts" > .extraignore
+          echo "ignored.ts" > .designlintignore
+          npx design-lint file.ts --config designlint.config.json || true
+          npx design-lint file.ts --config designlint.config.json --format stylish || true
+          ABS=$(realpath designlint.config.json)
+          npx design-lint file.ts --config "$ABS" --format json || true
+          npx design-lint file.ts ignored.ts --config designlint.config.json --format json || true
           npx design-lint file.ts --config designlint.config.json --format json --output report.txt || true
           test -f report.txt
           cat report.txt
           npx design-lint file.ts --config designlint.config.json --format json --report results.json || true
           test -f results.json
           cat results.json
+          npx design-lint file.ts ignored.ts --config designlint.config.json --format json --ignore-path .extraignore || true
           npx design-lint file.ts --config designlint.config.json --quiet --format json || true
           npx design-lint file.ts --config designlint.config.json --no-color --format json || true
+          npx design-lint file.ts --config designlint.config.json --format sarif || true
+          npx design-lint file.ts --config designlint.config.json --format json --concurrency 1 || true
+          npx design-lint file.ts --config designlint.config.json --format json --max-warnings 0 || true
+          npx design-lint file.ts --config designlint.config.json --format json --cache || true
+          test -f .designlintcache
           npx design-lint file.ts --config designlint.config.json --fix || true
           npx design-lint file.ts --config designlint.config.json --watch >/dev/null 2>&1 & PID=$!
           sleep 2
           kill $PID || true
           wait $PID || true
+          cat > formatter.mjs <<'EOF'
+          export default (results) => JSON.stringify(results)
+          EOF
+          npx design-lint file.ts --config designlint.config.json --format ./formatter.mjs || true
+          cat > designlint.config.js <<'EOF'
+          module.exports = {
+            tokens: {
+              deprecations: { old: { replacement: 'new' } },
+              colors: { primary: '#fff' }
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          };
+          EOF
+          npx design-lint file.ts --config designlint.config.js --format json || true
+          rm designlint.config.js
+          cat > designlint.config.cjs <<'EOF'
+          module.exports = {
+            tokens: {
+              deprecations: { old: { replacement: 'new' } },
+              colors: { primary: '#fff' }
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          };
+          EOF
+          npx design-lint file.ts --config designlint.config.cjs --format json || true
+          rm designlint.config.cjs
+          cat > designlint.config.mjs <<'EOF'
+          export default {
+            tokens: {
+              deprecations: { old: { replacement: 'new' } },
+              colors: { primary: '#fff' }
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          };
+          EOF
+          npx design-lint file.ts --config designlint.config.mjs --format json || true
+          rm designlint.config.mjs
+          cat > designlint.config.mts <<'EOF'
+          import type { Config } from '@lapidist/design-lint';
+
+          export default {
+            tokens: {
+              deprecations: { old: { replacement: 'new' } },
+              colors: { primary: '#fff' }
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          } satisfies Config;
+          EOF
+          npx design-lint file.ts --config designlint.config.mts --format json || true
+          rm designlint.config.mts
+          cat > designlint.config.ts <<'EOF'
+          import type { Config } from '@lapidist/design-lint';
+
+          export default {
+            tokens: {
+              deprecations: { old: { replacement: 'new' } },
+              colors: { primary: '#fff' }
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          } satisfies Config;
+          EOF
+          npx design-lint file.ts --config designlint.config.ts --format json || true
+          rm designlint.config.json
+          npx design-lint file.ts --format json || true
