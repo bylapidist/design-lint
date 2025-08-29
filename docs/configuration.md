@@ -40,6 +40,19 @@ syntax message.
 - `plugins`: Additional plugin packages to load.
 - `concurrency`: Maximum number of files processed concurrently. Defaults to the number of CPU cores.
 
+### Token dependencies
+
+Several rules rely on specific token categories. Enabling one of these rules
+without providing the corresponding tokens results in a configuration warning:
+
+- `design-token/colors` requires `tokens.colors`
+- `design-token/spacing` requires `tokens.spacing`
+- `design-token/typography` requires `tokens.typography.fontSizes` and
+  `tokens.typography.fonts`
+- `design-system/deprecation` requires `tokens.deprecations`
+
+To resolve the warning, supply the necessary tokens or disable the rule.
+
 ### Token deprecations
 
 The optional `tokens.deprecations` map marks tokens or component names as deprecated.

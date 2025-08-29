@@ -25,3 +25,12 @@ test('design-token/typography handles multi-line font-family', async () => {
   const res = await linter.lintText(css, 'file.css');
   assert.equal(res.messages.length, 1);
 });
+
+test('design-token/typography warns when tokens missing', async () => {
+  const linter = new Linter({
+    rules: { 'design-token/typography': 'warn' },
+  });
+  const res = await linter.lintText('', 'file.css');
+  assert.equal(res.messages.length, 1);
+  assert.ok(res.messages[0].message.includes('typography'));
+});

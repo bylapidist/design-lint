@@ -38,3 +38,12 @@ test('design-token/spacing supports custom units', async () => {
   const res = await linter.lintText('.a{margin:5vw;}', 'file.css');
   assert.equal(res.messages.length, 1);
 });
+
+test('design-token/spacing warns when tokens missing', async () => {
+  const linter = new Linter({
+    rules: { 'design-token/spacing': 'warn' },
+  });
+  const res = await linter.lintText('', 'file.ts');
+  assert.equal(res.messages.length, 1);
+  assert.ok(res.messages[0].message.includes('tokens.spacing'));
+});

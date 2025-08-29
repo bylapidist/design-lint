@@ -27,7 +27,17 @@ export const colorsRule: RuleModule = {
   name: 'design-token/colors',
   meta: { description: 'disallow raw colors' },
   create(context) {
-    const allowed = new Set(Object.values(context.tokens?.colors || {}));
+    const colorTokens = context.tokens?.colors;
+    if (!colorTokens || Object.keys(colorTokens).length === 0) {
+      context.report({
+        message:
+          'design-token/colors requires color tokens; configure tokens.colors to enable this rule.',
+        line: 1,
+        column: 1,
+      });
+      return {};
+    }
+    const allowed = new Set(Object.values(colorTokens));
     const opts = (context.options as ColorRuleOptions) || {};
     const allowFormats = new Set(opts.allow || []);
 

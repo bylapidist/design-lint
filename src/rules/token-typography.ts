@@ -4,12 +4,29 @@ export const typographyRule: RuleModule = {
   name: 'design-token/typography',
   meta: { description: 'enforce typography tokens' },
   create(context) {
-    const sizes = new Set(
-      Object.values(context.tokens?.typography?.fontSizes || {}),
-    );
-    const fonts = new Set(
-      Object.values(context.tokens?.typography?.fonts || {}),
-    );
+    const typo = context.tokens?.typography;
+    const fontSizes = typo?.fontSizes;
+    const fontFamilies = typo?.fonts;
+    if (
+      !fontSizes ||
+      !fontFamilies ||
+      Object.keys(fontSizes).length === 0 ||
+      Object.keys(fontFamilies).length === 0
+    ) {
+      const missing: string[] = [];
+      if (!fontSizes || Object.keys(fontSizes).length === 0)
+        missing.push('typography.fontSizes');
+      if (!fontFamilies || Object.keys(fontFamilies).length === 0)
+        missing.push('typography.fonts');
+      context.report({
+        message: `design-token/typography requires ${missing.join(' and ')}; configure these tokens to enable this rule.`,
+        line: 1,
+        column: 1,
+      });
+      return {};
+    }
+    const sizes = new Set(Object.values(fontSizes));
+    const fonts = new Set(Object.values(fontFamilies));
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'font-size') {

@@ -15,3 +15,12 @@ test('design-system/deprecation flags deprecated token', async () => {
     text: `'new'`,
   });
 });
+
+test('design-system/deprecation warns when tokens missing', async () => {
+  const linter = new Linter({
+    rules: { 'design-system/deprecation': 'warn' },
+  });
+  const res = await linter.lintText('', 'file.ts');
+  assert.equal(res.messages.length, 1);
+  assert.ok(res.messages[0].message.includes('tokens.deprecations'));
+});

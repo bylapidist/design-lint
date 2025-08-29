@@ -5,8 +5,16 @@ export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',
   meta: { description: 'flag deprecated tokens or components' },
   create(context) {
-    const deprecations: Record<string, { replacement?: string }> =
-      context.tokens?.deprecations || {};
+    const deprecations = context.tokens?.deprecations;
+    if (!deprecations || Object.keys(deprecations).length === 0) {
+      context.report({
+        message:
+          'design-system/deprecation requires deprecation tokens; configure tokens.deprecations to enable this rule.',
+        line: 1,
+        column: 1,
+      });
+      return {};
+    }
     const names = new Set(Object.keys(deprecations));
     return {
       onNode(node) {

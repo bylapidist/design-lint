@@ -5,7 +5,17 @@ export const spacingRule: RuleModule = {
   name: 'design-token/spacing',
   meta: { description: 'enforce spacing scale' },
   create(context) {
-    const allowed = new Set(Object.values(context.tokens?.spacing || {}));
+    const spacingTokens = context.tokens?.spacing;
+    if (!spacingTokens || Object.keys(spacingTokens).length === 0) {
+      context.report({
+        message:
+          'design-token/spacing requires spacing tokens; configure tokens.spacing to enable this rule.',
+        line: 1,
+        column: 1,
+      });
+      return {};
+    }
+    const allowed = new Set(Object.values(spacingTokens));
     const opts =
       (context.options as { base?: number; units?: string[] } | undefined) ??
       {};
