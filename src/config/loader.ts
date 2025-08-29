@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
+import { createRequire } from 'module';
 import type { Config } from '../core/engine.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../utils/paths.js';
@@ -57,7 +58,8 @@ export async function loadConfig(
       } else if (isESM(abs)) {
         loaded = (await loadEsmConfig(abs)) as Config;
       } else {
-        const mod = require(abs) as { default?: unknown };
+        const req = createRequire(import.meta.url);
+        const mod = req(abs) as { default?: unknown };
         loaded = (mod?.default as Config) || (mod as Config) || {};
       }
       const merged = { ...base, ...loaded, configPath: abs };
