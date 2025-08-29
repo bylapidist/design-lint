@@ -170,6 +170,7 @@ export async function run(argv = process.argv.slice(2)) {
     }
     if (config.configPath)
       config.configPath = realpathIfExists(config.configPath);
+    let pluginPaths = resolvePluginPaths(config);
     let linter = new Linter(config);
     const cache = new Map<string, { mtime: number; result: LintResult }>();
     const cacheLocation = values.cache
@@ -202,7 +203,7 @@ export async function run(argv = process.argv.slice(2)) {
       ig = newIg;
     };
 
-    const resolvePluginPaths = (cfg: Config, cacheBust = false): string[] => {
+    function resolvePluginPaths(cfg: Config, cacheBust = false): string[] {
       const req = cfg.configPath
         ? createRequire(cfg.configPath)
         : createRequire(import.meta.url);
@@ -210,6 +211,9 @@ export async function run(argv = process.argv.slice(2)) {
       for (const p of cfg.plugins || []) {
         try {
           const resolved = realpathIfExists(req.resolve(p));
+          if (!fs.existsSync(resolved)) {
+            throw new Error(`Plugin not found: "${relFromCwd(resolved)}"`);
+          }
           paths.push(
             cacheBust && resolved.endsWith('.mjs')
               ? `${pathToFileURL(resolved).href}?t=${Date.now()}`
@@ -217,6 +221,9 @@ export async function run(argv = process.argv.slice(2)) {
           );
         } catch {
           const resolved = realpathIfExists(path.resolve(p));
+          if (!fs.existsSync(resolved)) {
+            throw new Error(`Plugin not found: "${relFromCwd(resolved)}"`);
+          }
           paths.push(
             cacheBust && resolved.endsWith('.mjs')
               ? `${pathToFileURL(resolved).href}?t=${Date.now()}`
@@ -225,7 +232,7 @@ export async function run(argv = process.argv.slice(2)) {
         }
       }
       return paths;
-    };
+    }
 
     let watcher: FSWatcher | null = null;
     let ignoreFilePaths: string[] = [];
@@ -286,7 +293,6 @@ export async function run(argv = process.argv.slice(2)) {
     if (values.watch) {
       console.log('Watching for changes...');
       await refreshIgnore();
-      let pluginPaths = resolvePluginPaths(config);
       const watchPaths = [...targets];
       if (config.configPath) watchPaths.push(config.configPath);
       watchPaths.push(

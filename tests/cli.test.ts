@@ -202,6 +202,30 @@ test('CLI reports missing ignore file', () => {
   assert.ok(res.stderr.includes('Ignore file not found'));
 });
 
+test('CLI reports missing plugin', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'file.ts'), '');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: {}, rules: {}, plugins: ['./missing-plugin.js'] }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--loader',
+      tsNodeLoader,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  assert.ok(res.stderr.includes('Plugin not found'));
+});
+
 test('CLI --fix applies fixes', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
