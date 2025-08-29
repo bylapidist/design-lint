@@ -1,5 +1,12 @@
 # @lapidist/design-lint
 
+## 0.7.1
+
+### Patch Changes
+
+- fc87bc6: Replace eval-based imports with dynamic import.
+- e069935: fix lintFile to handle lintFiles return format
+
 ## 0.7.0
 
 ### Minor Changes
