@@ -272,3 +272,24 @@ See [SECURITY.md](SECURITY.md) for information on reporting vulnerabilities.
 
 [MIT](LICENSE)
 
+## Created by
+
+<!-- markdownlint-disable MD033 -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="11%">
+        <a href="https://lapidist.net/about">
+          <img src="https://github.com/brettdorrans.png?size=64" width="64" height="64" style="border-radius:100%;" alt="Brett Dorrans's avatar" /><br />
+          Brett Dorrans
+        </a>
+      </td>
+      <td align="left" valign="middle">
+        Lead frontend engineer and design systems specialist.<br /><br />
+        Website: <a href="https://lapidist.net">lapidist.net</a><br />
+        GitHub: <a href="https://github.com/bylapidist">@bylapidist</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<!-- markdownlint-enable MD033 -->
