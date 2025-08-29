@@ -12,5 +12,6 @@ Design-lint includes several built-in rules categorized by domain.
 - [colors](./design-token/colors)
 - [line-height](./design-token/line-height)
 - [font-weight](./design-token/font-weight)
+- [border-radius](./design-token/border-radius)
 - [spacing](./design-token/spacing)
 - [typography](./design-token/typography)

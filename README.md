@@ -155,6 +155,7 @@ Create a `designlint.config.js` (or `.json`) file to define design tokens and ru
 module.exports = {
   tokens: {
     colors: { primary: '#ff0000' },
+    radii: { sm: 2 },
     spacing: { sm: 4 },
     typography: {
       fontSizes: { base: 16 },
@@ -163,6 +164,7 @@ module.exports = {
   },
   rules: {
     'design-token/colors': 'error',
+    'design-token/border-radius': 'error',
   },
 };
 ```
@@ -186,7 +188,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 ## Features
 
-- Enforce color, spacing, and typography tokens
+- Enforce color, spacing, border radius, and typography tokens
 - Prevent deprecated or raw HTML component usage
 - Pluggable rule and formatter architecture
 - JSON and SARIF output for CI
@@ -197,6 +199,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 - [design-token/colors](docs/rules/design-token/colors.md)
 - [design-token/line-height](docs/rules/design-token/line-height.md)
 - [design-token/font-weight](docs/rules/design-token/font-weight.md)
+- [design-token/border-radius](docs/rules/design-token/border-radius.md)
 - [design-token/spacing](docs/rules/design-token/spacing.md)
 - [design-token/typography](docs/rules/design-token/typography.md)
 - [design-system/deprecation](docs/rules/design-system/deprecation.md)

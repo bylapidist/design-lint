@@ -6,6 +6,7 @@ Create a `designlint.config.js` (or `.ts`, `.mjs`, `.mts`, `.json`) file in your
 module.exports = {
   tokens: {
     colors: { primary: '#ff0000' },
+    radii: { sm: 2, md: 4 },
     spacing: { sm: 4, md: 8 },
     typography: {
       fontSizes: { base: 16 },
@@ -14,11 +15,12 @@ module.exports = {
   },
   rules: {
     'design-token/colors': 'error',
+    'design-token/border-radius': 'error',
   },
 };
 ```
 
-See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/spacing](rules/design-token/spacing.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
+See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/border-radius](rules/design-token/border-radius.md), [design-token/spacing](rules/design-token/spacing.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
 
 @lapidist/design-lint searches for configuration starting from the current working
 directory and walking up parent directories. In each directory it looks for
@@ -50,6 +52,7 @@ without providing the corresponding tokens results in a configuration warning:
 
 - `design-token/colors` requires `tokens.colors`
 - `design-token/spacing` requires `tokens.spacing`
+- `design-token/border-radius` requires `tokens.radii` or `tokens.borderRadius`
 - `design-token/line-height` requires `tokens.typography.lineHeights`
 - `design-token/font-weight` requires `tokens.typography.fontWeights`
 - `design-token/typography` requires `tokens.typography.fontSizes` and
