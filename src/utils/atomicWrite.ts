@@ -14,8 +14,17 @@ export async function writeFileAtomic(target: string, data: string | Buffer) {
   await fs.promises.mkdir(dir, { recursive: true });
   const tmp = path.join(dir, `.${path.basename(target)}.${randomUUID()}.tmp`);
   let fh: FileHandle | undefined;
+  let mode: number | undefined;
+
+  if (fs.existsSync(target)) {
+    mode = fs.statSync(target).mode;
+  }
+
   try {
     await fs.promises.writeFile(tmp, data);
+    if (mode !== undefined) {
+      await fs.promises.chmod(tmp, mode);
+    }
     fh = await fs.promises.open(tmp, 'r');
     await fh.sync();
     await fh.close();
@@ -43,8 +52,17 @@ export function writeFileAtomicSync(target: string, data: string | Buffer) {
   fs.mkdirSync(dir, { recursive: true });
   const tmp = path.join(dir, `.${path.basename(target)}.${randomUUID()}.tmp`);
   let fd: number | undefined;
+  let mode: number | undefined;
+
+  if (fs.existsSync(target)) {
+    mode = fs.statSync(target).mode;
+  }
+
   try {
     fs.writeFileSync(tmp, data);
+    if (mode !== undefined) {
+      fs.chmodSync(tmp, mode);
+    }
     fd = fs.openSync(tmp, 'r');
     fs.fsyncSync(fd);
     fs.closeSync(fd);
