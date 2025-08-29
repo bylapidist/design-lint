@@ -36,6 +36,10 @@ to [Configuration](configuration.md) for setting up design tokens and rules, and
 to [Formatters](formatters.md) for output formats and custom formatter
 examples.
 
+## CI
+
+See the [CI guide](ci.md) for sample configurations in GitHub Actions and other CI services.
+
 ## Rules
 
 - [design-token/colors](rules/design-token/colors.md)

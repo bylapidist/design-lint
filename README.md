@@ -204,6 +204,11 @@ See the [Plugin guide](docs/plugins.md) for a step-by-step tutorial on writing a
 - JSON and SARIF output for CI
 - Auto-fix deprecated tokens and components
 
+## CI
+
+See the [CI guide](docs/ci.md) for examples of running the linter in GitHub Actions and other CI systems.
+
+
 ## Rules
 
 - [design-token/colors](docs/rules/design-token/colors.md)
