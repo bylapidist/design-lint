@@ -1,4 +1,4 @@
-import type { PluginModule } from '../../src/core/types';
+import type { PluginModule } from '../../src/core/types.ts';
 
 const plugin: PluginModule = {
   rules: [

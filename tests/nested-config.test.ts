@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-const tsNodeRegister = require.resolve('ts-node/register');
+const tsNodeLoader = require.resolve('ts-node/esm');
 
 test('CLI loads nearest config in nested project', () => {
   const appDir = path.join(
@@ -15,7 +15,7 @@ test('CLI loads nearest config in nested project', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
-    ['--require', tsNodeRegister, cli, '.', '--format', 'json'],
+    ['--loader', tsNodeLoader, cli, '.', '--format', 'json'],
     { cwd: appDir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);

@@ -1,4 +1,4 @@
-import type { LintResult } from '../core/types';
+import type { LintResult } from '../core/types.js';
 
 interface SarifLog {
   version: string;

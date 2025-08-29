@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { writeFileAtomic } from '../src/utils/atomicWrite';
-import { makeTmpDir } from '../src/utils/tmp';
+import { writeFileAtomic } from '../src/utils/atomicWrite.ts';
+import { makeTmpDir } from '../src/utils/tmp.ts';
 
 test('writeFileAtomic handles concurrent writes', async () => {
   const dir = makeTmpDir();

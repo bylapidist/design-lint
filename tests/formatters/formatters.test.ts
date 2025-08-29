@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stylish } from '../../src/formatters/stylish';
-import { jsonFormatter } from '../../src/formatters/json';
-import { sarifFormatter } from '../../src/formatters/sarif';
-import { getFormatter } from '../../src/formatters';
-import type { LintResult } from '../../src/core/types';
+import { stylish } from '../../src/formatters/stylish.ts';
+import { jsonFormatter } from '../../src/formatters/json.ts';
+import { sarifFormatter } from '../../src/formatters/sarif.ts';
+import { getFormatter } from '../../src.ts';
+import type { LintResult } from '../../src/core/types.ts';
 
 test('stylish formatter outputs text', () => {
   const results: LintResult[] = [

@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeTmpDir } from '../src/utils/tmp';
-import { Linter } from '../src/core/engine';
+import { makeTmpDir } from '../src/utils/tmp.ts';
+import { Linter } from '../src/core/engine.ts';
 
 test('lintFiles uses patterns option to include custom extensions', async () => {
   const tmp = makeTmpDir();

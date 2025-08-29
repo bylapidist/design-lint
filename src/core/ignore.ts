@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import ignore from 'ignore';
-import type { Config } from './engine';
+import type { Config } from './engine.js';
 
 export const defaultIgnore = [
   '**/node_modules/**',

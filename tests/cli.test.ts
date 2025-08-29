@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/utils/tmp';
-import { readWhenReady } from './helpers/fs';
-import { Linter } from '../src';
-import type { LintResult } from '../src/core/types';
+import { makeTmpDir } from '../src/utils/tmp.ts';
+import { readWhenReady } from './helpers/fs.ts';
+import { Linter } from '../src.ts';
+import type { LintResult } from '../src/core/types.ts';
 
-const tsNodeRegister = require.resolve('ts-node/register');
+const tsNodeLoader = require.resolve('ts-node/esm');
 
 test('CLI aborts on unsupported Node versions', async () => {
-  const { run } = await import('../src/cli/index');
+  const { run } = await import('../src/cli/index.ts');
   const original = process.versions.node;
   Object.defineProperty(process.versions, 'node', { value: '21.0.0' });
   const originalError = console.error;
@@ -28,14 +28,28 @@ test('CLI aborts on unsupported Node versions', async () => {
   assert.match(out, /Node\.js v21\.0\.0 is not supported/);
 });
 
+test('CLI runs when executed via a symlink', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const dir = makeTmpDir();
+  const link = path.join(dir, 'cli-link.ts');
+  fs.symlinkSync(cli, link);
+  const res = spawnSync(
+    process.execPath,
+    ['--loader', tsNodeLoader, link, '--help'],
+    { encoding: 'utf8' },
+  );
+  assert.equal(res.status, 0);
+  assert.match(res.stdout, /Usage: design-lint/);
+});
+
 test('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const result = spawnSync(
     process.execPath,
     [
-      '--require',
-      'ts-node/register',
+      '--loader',
+      tsNodeLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -60,8 +74,8 @@ test('CLI exits 0 when warnings are within --max-warnings', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -90,8 +104,8 @@ test('CLI exits 0 when warnings equal --max-warnings', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -120,8 +134,8 @@ test('CLI exits 1 when warnings exceed --max-warnings', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -147,8 +161,8 @@ test('CLI errors on invalid --max-warnings', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -176,8 +190,8 @@ test('CLI --fix applies fixes', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -199,8 +213,8 @@ test('CLI surfaces config load errors', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -219,8 +233,8 @@ test('CLI surfaces output write errors', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--output',
@@ -246,8 +260,8 @@ test('CLI writes report to file with --output', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -271,8 +285,8 @@ test('CLI --quiet suppresses stdout output', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -293,8 +307,8 @@ test('CLI disables colors when stdout is not a TTY', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -316,8 +330,8 @@ test('CLI reports unknown formatter', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -346,8 +360,8 @@ test('CLI outputs SARIF reports', () => {
     const res = spawnSync(
       process.execPath,
       [
-        '--require',
-        tsNodeRegister,
+        '--loader',
+        tsNodeLoader,
         cli,
         'file.ts',
         '--config',
@@ -378,8 +392,8 @@ test('CLI loads external plugin rules', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -405,8 +419,8 @@ test('CLI reports plugin load errors', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -441,8 +455,8 @@ test('CLI ignores common directories by default', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       path.basename(dir),
       '--config',
@@ -481,8 +495,8 @@ test('.designlintignore can unignore paths via CLI', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'src',
       'node_modules',
@@ -529,8 +543,8 @@ test('CLI skips directories listed in .designlintignore', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'src',
       'ignored',
@@ -566,8 +580,8 @@ test('CLI --ignore-path excludes files', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'src',
       '--config',
@@ -600,9 +614,9 @@ test('CLI --concurrency limits parallel lint tasks', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
-      '--require',
+      '--loader',
+      tsNodeLoader,
+      '--loader',
       path.join(__dirname, 'helpers', 'trackConcurrency.ts'),
       cli,
       '--concurrency',
@@ -627,8 +641,8 @@ test('CLI errors on invalid --concurrency', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -653,8 +667,8 @@ test('CLI plugin load errors include context and remediation', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -682,8 +696,8 @@ test('CLI --report outputs JSON log', () => {
   spawnSync(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -716,8 +730,8 @@ test('CLI re-runs on file change in watch mode', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -775,8 +789,8 @@ test('CLI ignores --output/--report files in watch mode', async () => {
     const proc = spawn(
       process.execPath,
       [
-        '--require',
-        tsNodeRegister,
+        '--loader',
+        tsNodeLoader,
         cli,
         'file.ts',
         '--config',
@@ -845,8 +859,8 @@ test('CLI --cache reuses results from disk', () => {
   );
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const args = [
-    '--require',
-    tsNodeRegister,
+    '--loader',
+    tsNodeLoader,
     cli,
     'file.ts',
     '--config',
@@ -881,8 +895,8 @@ test('CLI --cache invalidates when files change', () => {
   );
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const args = [
-    '--require',
-    tsNodeRegister,
+    '--loader',
+    tsNodeLoader,
     cli,
     'file.ts',
     '--config',
@@ -914,8 +928,8 @@ test('CLI re-runs with updated config in watch mode', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -976,8 +990,8 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -1048,8 +1062,8 @@ export default plugin;`;
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -1106,8 +1120,8 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -1174,8 +1188,8 @@ test('CLI reloads when nested ignore file changes in watch mode', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'nested',
       '--config',
@@ -1228,8 +1242,8 @@ test('CLI updates ignore list when .gitignore changes in watch mode', async () =
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -1283,8 +1297,8 @@ test('CLI clears cache when a watched file is deleted', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -1340,8 +1354,8 @@ test('CLI continues linting after deleting a watched file', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'a.ts',
       'b.ts',
@@ -1397,8 +1411,8 @@ test('CLI closes watcher on SIGINT', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',
@@ -1454,8 +1468,8 @@ test('CLI handles errors from watch callbacks', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--require',
-      tsNodeRegister,
+      '--loader',
+      tsNodeLoader,
       cli,
       'file.ts',
       '--config',

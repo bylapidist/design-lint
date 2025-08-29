@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'path';
-import { Linter } from '../src/core/engine';
-import { loadConfig } from '../src/config/loader';
+import { Linter } from '../src/core/engine.ts';
+import { loadConfig } from '../src/config/loader.ts';
 
 test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');

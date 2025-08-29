@@ -1,4 +1,4 @@
-import type { LintResult } from '../core/types';
+import type { LintResult } from '../core/types.js';
 
 const codes = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,

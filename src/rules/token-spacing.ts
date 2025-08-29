@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types';
+import type { RuleModule } from '../core/types.js';
 
 export const spacingRule: RuleModule = {
   name: 'design-token/spacing',

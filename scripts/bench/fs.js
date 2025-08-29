@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-const { performance } = require('node:perf_hooks');
-const { Linter } = require('../../dist/core/engine.js');
-const { loadConfig } = require('../../dist/config/loader.js');
+import { performance } from 'node:perf_hooks';
+import { Linter } from '../../dist/core/engine.js';
+import { loadConfig } from '../../dist/config/loader.js';
 
 const targets = process.argv.slice(2);
 

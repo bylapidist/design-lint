@@ -1,4 +1,4 @@
-import type { RuleModule } from '../core/types';
+import type { RuleModule } from '../core/types.js';
 
 export const typographyRule: RuleModule = {
   name: 'design-token/typography',

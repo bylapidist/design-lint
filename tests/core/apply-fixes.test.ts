@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyFixes } from '../../src';
-import type { LintMessage } from '../../src/core/types';
+import { applyFixes } from '../../src.ts';
+import type { LintMessage } from '../../src/core/types.ts';
 
 test('applyFixes handles adjacent fix ranges', () => {
   const messages: LintMessage[] = [

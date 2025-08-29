@@ -17,11 +17,11 @@ import type {
   CSSDeclaration,
   Fix,
   PluginModule,
-} from './types';
-import { builtInRules } from '../rules';
-import { loadIgnore } from './ignore';
-import { relFromCwd, realpathIfExists } from '../utils/paths';
-export { defaultIgnore } from './ignore';
+} from './types.js';
+import { builtInRules } from '../rules/index.js';
+import { loadIgnore } from './ignore.js';
+import { relFromCwd, realpathIfExists } from '../utils/paths.js';
+export { defaultIgnore } from './ignore.js';
 
 export interface Config {
   tokens?: DesignTokens;
@@ -62,7 +62,7 @@ export class Linter {
   private async loadPlugins(): Promise<void> {
     const req = this.config.configPath
       ? createRequire(this.config.configPath)
-      : require;
+      : createRequire(import.meta.url);
     for (const p of this.config.plugins || []) {
       let mod: unknown;
       let resolved: string | undefined;

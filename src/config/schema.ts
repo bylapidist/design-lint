@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Config } from '../core/engine';
+import type { Config } from '../core/engine.js';
 
 const severitySchema = z.union([
   z.literal('error'),

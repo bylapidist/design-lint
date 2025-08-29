@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/utils/tmp';
+import { makeTmpDir } from '../src/utils/tmp.ts';
 import path from 'node:path';
-import { loadConfig } from '../src/config/loader';
-import { Linter } from '../src/core/engine';
+import { loadConfig } from '../src/config/loader.ts';
+import { Linter } from '../src/core/engine.ts';
 
 test('finds config in parent directories', async () => {
   const tmp = makeTmpDir();

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/engine';
+import { Linter } from '../../src/core/engine.ts';
 
 test('design-token/colors reports disallowed hex', async () => {
   const linter = new Linter({

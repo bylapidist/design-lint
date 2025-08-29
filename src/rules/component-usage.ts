@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types';
+import type { RuleModule } from '../core/types.js';
 
 export const componentUsageRule: RuleModule = {
   name: 'design-system/component-usage',

@@ -1,7 +1,7 @@
-export { Linter, type Config, applyFixes } from './core/engine';
-export { loadConfig } from './config/loader';
-export { getFormatter } from './formatters';
-export { builtInRules } from './rules';
+export { Linter, type Config, applyFixes } from './core/engine.js';
+export { loadConfig } from './config/loader.js';
+export { getFormatter } from './formatters/index.js';
+export { builtInRules } from './rules/index.js';
 export type {
   LintResult,
   LintMessage,
@@ -12,4 +12,4 @@ export type {
   PluginModule,
   CSSDeclaration,
   Fix,
-} from './core/types';
+} from './core/types.js';

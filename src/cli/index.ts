@@ -4,18 +4,18 @@ import { parseArgs } from 'node:util';
 import path from 'path';
 import { createRequire } from 'module';
 import { once } from 'node:events';
-import { pathToFileURL } from 'url';
-import type { LintResult } from '../core/types';
-import type { Config } from '../core/engine';
+import { pathToFileURL, fileURLToPath } from 'url';
+import type { LintResult } from '../core/types.js';
+import type { Config } from '../core/engine.js';
 import { getFormatter } from '../formatters/index.js';
 // chalk is ESM-only, so we use a dynamic import inside run()
 import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
-import { relFromCwd, realpathIfExists } from '../utils/paths';
-import { writeFileAtomic } from '../utils/atomicWrite';
+import { relFromCwd, realpathIfExists } from '../utils/paths.js';
+import { writeFileAtomic } from '../utils/atomicWrite.js';
 
 function showVersion() {
-  const pkgPath = path.resolve(__dirname, '../../package.json');
+  const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
     version: string;
   };
@@ -179,7 +179,9 @@ export async function run(argv = process.argv.slice(2)) {
     };
 
     const resolvePluginPaths = (cfg: Config, cacheBust = false): string[] => {
-      const req = cfg.configPath ? createRequire(cfg.configPath) : require;
+      const req = cfg.configPath
+        ? createRequire(cfg.configPath)
+        : createRequire(import.meta.url);
       const paths: string[] = [];
       for (const p of cfg.plugins || []) {
         try {
@@ -306,7 +308,7 @@ export async function run(argv = process.argv.slice(2)) {
         try {
           const req = config.configPath
             ? createRequire(config.configPath)
-            : require;
+            : createRequire(import.meta.url);
           for (const p of resolvePluginPaths(config, true))
             delete req.cache?.[p];
           config = await loadConfig(process.cwd(), values.config);
@@ -382,6 +384,14 @@ export async function run(argv = process.argv.slice(2)) {
   }
 }
 
-if (require.main === module) {
-  run();
+try {
+  if (
+    process.argv[1] &&
+    fs.realpathSync(process.argv[1]) ===
+      fs.realpathSync(fileURLToPath(import.meta.url))
+  ) {
+    run();
+  }
+} catch {
+  // ignore resolution errors
 }

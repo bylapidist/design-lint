@@ -1,6 +1,6 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types';
-import colorNames from '../color-names';
+import type { RuleModule } from '../core/types.js';
+import colorNames from '../color-names.js';
 
 type ColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'named';
 

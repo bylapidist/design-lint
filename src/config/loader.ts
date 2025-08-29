@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import type { Config } from '../core/engine';
-import { configSchema } from './schema';
-import { realpathIfExists } from '../utils/paths';
+import type { Config } from '../core/engine.js';
+import { configSchema } from './schema.js';
+import { realpathIfExists } from '../utils/paths.js';
 
 async function loadEsmConfig(absPath: string) {
   const url = pathToFileURL(absPath);
@@ -25,22 +25,13 @@ export async function loadConfig(
     configPath: abs,
   };
   if (abs && fs.existsSync(abs)) {
-    let originalMtsHandler:
-      | ((m: NodeModule, filename: string) => unknown)
-      | undefined;
-    let replacedMtsHandler = false;
     try {
       let loaded: Config = {};
       if (abs.endsWith('.ts') || abs.endsWith('.mts')) {
         try {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          await import('ts-node/register');
-          if (abs.endsWith('.mts')) {
-            originalMtsHandler = require.extensions['.mts'];
-            require.extensions['.mts'] = require.extensions['.ts'];
-            replacedMtsHandler = true;
-          }
+          await import('ts-node/esm');
         } catch {
           throw new Error(
             'To load TypeScript config files, please install ts-node.',
@@ -65,14 +56,6 @@ export async function loadConfig(
       throw new Error(
         `Failed to load config at ${abs}: ${(err as Error).message}`,
       );
-    } finally {
-      if (replacedMtsHandler) {
-        if (originalMtsHandler) {
-          require.extensions['.mts'] = originalMtsHandler;
-        } else {
-          delete require.extensions['.mts'];
-        }
-      }
     }
   }
   const result = configSchema.safeParse(base);
@@ -106,8 +89,8 @@ function findConfig(cwd: string): string | undefined {
 
 function isESM(filePath: string): boolean {
   const ext = path.extname(filePath);
-  if (ext === '.mjs') return true;
-  if (ext === '.cjs' || ext === '.cts' || ext === '.mts') return false;
+  if (ext === '.mjs' || ext === '.mts') return true;
+  if (ext === '.cjs' || ext === '.cts') return false;
   if (ext !== '.js' && ext !== '.ts') return false;
   let dir = path.dirname(filePath);
   while (true) {

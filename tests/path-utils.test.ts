@@ -7,8 +7,8 @@ import {
   relFrom,
   relFromCwd,
   realpathIfExists,
-} from '../src/utils/paths';
-import { makeTmpDir } from '../src/utils/tmp';
+} from '../src/utils/paths.ts';
+import { makeTmpDir } from '../src/utils/tmp.ts';
 
 test('toPosix converts separators', () => {
   assert.equal(toPosix('a\\b\\c'), 'a/b/c');

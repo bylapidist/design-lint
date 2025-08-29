@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-const fs = require('node:fs');
-const path = require('node:path');
-const distDir = path.join(__dirname, '..', 'dist');
-const cjsCli = path.join(distDir, 'cli', 'index.js');
-if (fs.existsSync(cjsCli)) fs.chmodSync(cjsCli, 0o755);
+import { chmodSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
-const esmCli = path.join(distDir, 'esm', 'cli', 'index.js');
-if (fs.existsSync(esmCli)) fs.chmodSync(esmCli, 0o755);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const esmPkg = path.join(distDir, 'esm', 'package.json');
-fs.writeFileSync(esmPkg, JSON.stringify({ type: 'module' }, null, 2));
+const cli = join(__dirname, '..', 'dist', 'cli', 'index.js');
+
+if (existsSync(cli)) chmodSync(cli, 0o755);
