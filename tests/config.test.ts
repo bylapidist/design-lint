@@ -127,7 +127,9 @@ test('loads async config from .mjs', async () => {
 test('loads config from .ts using defineConfig', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
-  const rel = path.relative(tmp, path.resolve('src.ts')).replace(/\\/g, '/');
+  const rel = path
+    .relative(tmp, path.resolve('src/index.ts'))
+    .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
     `const { defineConfig } = require('${rel}');\nmodule.exports = defineConfig({ tokens: { colors: { primary: '#000' } } });`,

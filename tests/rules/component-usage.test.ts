@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
-import { applyFixes } from '../../src.ts';
+import { applyFixes } from '../../src/index.ts';
 
 test('design-system/component-usage suggests substitutions', async () => {
   const linter = new Linter({

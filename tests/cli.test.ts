@@ -5,7 +5,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import { readWhenReady } from './helpers/fs.ts';
-import { Linter } from '../src.ts';
+import { Linter } from '../src/index.ts';
 import type { LintResult } from '../src/core/types.ts';
 
 const tsNodeLoader = require.resolve('ts-node/esm');

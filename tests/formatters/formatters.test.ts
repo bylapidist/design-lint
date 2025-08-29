@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { stylish } from '../../src/formatters/stylish.ts';
 import { jsonFormatter } from '../../src/formatters/json.ts';
 import { sarifFormatter } from '../../src/formatters/sarif.ts';
-import { getFormatter } from '../../src.ts';
+import { getFormatter } from '../../src/index.ts';
 import type { LintResult } from '../../src/core/types.ts';
 
 test('stylish formatter outputs text', () => {
