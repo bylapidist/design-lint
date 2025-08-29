@@ -1,5 +1,18 @@
 # @lapidist/design-lint
 
+## 0.5.0
+
+### Minor Changes
+
+- 05c39d1: Enable persistent caching
+- 9bf2f1c: Add max-warnings option to CLI.
+
+### Patch Changes
+
+- 0ce8ca8: feat: handle nested functions in spacing rule
+- e0e5523: fix chalk import for esm
+- 417d7bf: add HSLA color detection
+
 ## 0.4.0
 
 ### Minor Changes
