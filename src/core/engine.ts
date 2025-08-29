@@ -29,6 +29,7 @@ export interface Config {
   plugins?: string[];
   configPath?: string;
   concurrency?: number;
+  patterns?: string[];
 }
 
 interface EngineErrorOptions {
@@ -168,11 +169,14 @@ export class Linter {
       }
       this.cacheLoaded = true;
     }
-    const { ig, patterns } = await loadIgnore(
+    const { ig, patterns: ignorePatterns } = await loadIgnore(
       this.config,
       additionalIgnorePaths,
     );
-    const normalizedPatterns = [...patterns];
+    const normalizedPatterns = [...ignorePatterns];
+    const scanPatterns = this.config.patterns ?? [
+      '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}',
+    ];
     const seenIgnore = new Set<string>();
 
     // track root ignore files if they exist
@@ -243,15 +247,12 @@ export class Linter {
         const stat = await fs.stat(full);
         if (stat.isDirectory()) {
           await readNestedIgnore(full);
-          const entries = await fg(
-            '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}',
-            {
-              cwd: full,
-              absolute: true,
-              dot: true,
-              ignore: normalizedPatterns,
-            },
-          );
+          const entries = await fg(scanPatterns, {
+            cwd: full,
+            absolute: true,
+            dot: true,
+            ignore: normalizedPatterns,
+          });
           for (const e of entries) files.push(realpathIfExists(e));
         } else {
           files.push(full);

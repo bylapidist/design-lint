@@ -41,6 +41,7 @@ export const configSchema: z.ZodSchema<Config> = z
     plugins: z.array(z.string()).optional(),
     configPath: z.string().optional(),
     concurrency: z.number().int().positive().optional(),
+    patterns: z.array(z.string()).optional(),
   })
   .strict();
 

@@ -39,6 +39,7 @@ syntax message.
 - `ignoreFiles`: Glob patterns to exclude from linting.
 - `plugins`: Additional plugin packages to load.
 - `concurrency`: Maximum number of files processed concurrently. Defaults to the number of CPU cores.
+- `patterns`: Glob patterns used to search for files. Defaults to `['**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}']`.
 
 ### Token dependencies
 
