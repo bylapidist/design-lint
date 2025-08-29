@@ -302,6 +302,11 @@ export class Linter {
       console.log(`Scanned ${files.length} files in ${scanTime.toFixed(2)}ms`);
     }
 
+    if (files.length === 0) {
+      console.warn('No files matched the provided patterns.');
+      return { results: [], ignoreFiles: Array.from(seenIgnore) };
+    }
+
     if (cache) {
       for (const key of Array.from(cache.keys())) {
         if (!files.includes(key)) cache.delete(key);

@@ -116,6 +116,29 @@ test('CLI exits non-zero on lint errors', () => {
   assert.ok(result.stdout.includes('design-token/colors'));
 });
 
+test('CLI warns when no files match', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: {}, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--loader',
+      tsNodeLoader,
+      cli,
+      'nomatch',
+      '--config',
+      'designlint.config.json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 0);
+  assert.match(res.stderr, /No files matched/);
+});
+
 test('CLI exits 0 when warnings are within --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
