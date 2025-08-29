@@ -59,6 +59,7 @@ npx design-lint --version
 - `--format <stylish|json|sarif>` – output format (default `stylish`).
 - `--output <file>` – write report to a file instead of stdout.
 - `--report <file>` – write JSON results to a file.
+- `--concurrency <n>` – limit the number of files processed in parallel.
 - `--quiet` – suppress output and rely on the exit code.
 - `--no-color` – disable colored output.
 - `--watch` – watch files and re-lint on changes.

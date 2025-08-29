@@ -418,6 +418,37 @@ test('CLI skips directories listed in .designlintignore', () => {
   assert.deepEqual(files, ['src/file.ts']);
 });
 
+test('CLI --concurrency limits parallel lint tasks', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
+  const count = 10;
+  for (let i = 0; i < count; i++) {
+    fs.writeFileSync(path.join(dir, `file${i}.ts`), 'export const x = 1;\n');
+  }
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const out = path.join(dir, 'conc.txt');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      '--require',
+      path.join(__dirname, 'helpers', 'trackConcurrency.ts'),
+      cli,
+      '--concurrency',
+      '2',
+    ],
+    {
+      encoding: 'utf8',
+      cwd: dir,
+      env: { ...process.env, CONCURRENCY_OUTPUT: out },
+    },
+  );
+  assert.equal(res.status, 0);
+  const max = parseInt(fs.readFileSync(out, 'utf8'), 10);
+  assert.ok(max <= 2);
+});
+
 test('CLI plugin load errors include context and remediation', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(

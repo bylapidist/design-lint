@@ -50,6 +50,7 @@ Options:
   --format <name>     Output format (stylish, json, sarif)
   --output <file>     Write report to file
   --report <file>     Write JSON results to file
+  --concurrency <n>   Maximum number of files processed concurrently
   --quiet             Suppress stdout output
   --no-color          Disable colored output
   --watch             Watch files and re-lint on changes
@@ -69,6 +70,7 @@ export async function run(argv = process.argv.slice(2)) {
         format: { type: 'string', default: 'stylish' },
         output: { type: 'string' },
         report: { type: 'string' },
+        concurrency: { type: 'string' },
         quiet: { type: 'boolean', default: false },
         fix: { type: 'boolean', default: false },
         watch: { type: 'boolean', default: false },
@@ -113,6 +115,10 @@ export async function run(argv = process.argv.slice(2)) {
       import('../core/ignore.js'),
     ]);
     let config = await loadConfig(process.cwd(), values.config);
+    if (values.concurrency) {
+      const n = Number(values.concurrency);
+      if (!Number.isNaN(n) && n > 0) config.concurrency = n;
+    }
     if (config.configPath)
       config.configPath = realpathIfExists(config.configPath);
     let linter = new Linter(config);
