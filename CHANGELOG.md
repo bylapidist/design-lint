@@ -1,5 +1,19 @@
 # @lapidist/design-lint
 
+## 1.0.0
+
+### Major Changes
+
+- cb8fa3f: remove deprecated lintFilesLegacy method
+
+### Patch Changes
+
+- a02e270: allow --max-warnings 0 in CLI and document usage
+- f079704: fix: abort CLI on unsupported Node.js versions
+- d6b431e: fix: dynamically import color-name in token-colors rule and add smoke test
+- 0aeca97: replace color-name dependency with inline file
+- fd608fd: ensure ESM plugins reload in watch mode via cache-busting imports
+
 ## 0.7.2
 
 ### Patch Changes
