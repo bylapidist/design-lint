@@ -1,5 +1,57 @@
 # @lapidist/design-lint
 
+## 0.4.0
+
+### Minor Changes
+
+- 0b98dad: Add `--concurrency` option to limit parallel lint tasks.
+- 48a442d: support disabling rules with 'off'
+- ecb9a63: support svelte style parsing
+- d71367f: feat: add ESM build alongside CommonJS output
+- 74b7776: Support loading ESM configuration files.
+- 32b77a4: support TypeScript config files
+- 225d4eb: support gitignore
+- 4c85afc: Add --ignore-path option to load additional ignore patterns.
+- 39be30e: add configurable concurrency limit
+- 160721f: Add configurable units option to spacing rule.
+
+### Patch Changes
+
+- 3ece827: include mjs, cjs, mts, and cts extensions in linting
+- 49a0ca2: support nested ignore files
+- abcaef8: Skip numeric checks inside CSS functions for spacing rule.
+- d942f97: support unit-based font-size tokens
+- 8130c18: Catch errors from watch callbacks to prevent unhandled rejections.
+- 1268a21: clear cache when watched file is deleted
+- b75ad76: validate plugin rule fields and reload when ignore files are removed
+- 8299c65: use chokidar for watch mode
+- 15be1e6: use color-name package for named colors
+- eea7507: Use direct dynamic import for ESM config loading.
+- 7b3667b: fix case-insensitive tag matching in component-usage rule
+- cc6c829: Reload config and ignore patterns in watch mode
+- aff6c4d: Update cache mtime after fixing files to avoid unnecessary re-lints.
+- 4090636: limit concurrent file linting to avoid EMFILE
+- ee11a7c: Handle plugin reload errors in watch mode.
+- 6de9687: Handle overlapping fix ranges deterministically and watch ignore files on unlink.
+- 7302239: normalize hex color comparison and restrict lengths
+- 823cceb: ensure watcher closes on process termination
+- d63b3a6: report unknown rule names in configuration
+- 488eec9: Warn when enabling token rules without required tokens.
+- 59d107d: watch: reload on nested ignore file changes
+- c9f31b3: Prevent plugin rule name collisions.
+- 647458f: reload plugin watch paths
+- 568285a: restore original .mts require handler after loading config
+- f227309: Fix npx usage and CLI entry
+- 71019b9: refactor ignore handling into shared utility
+- 91e2f72: export applyFixes and cover overlapping fix ranges
+- fe86b05: Default line and column numbers now start at 1
+- 3a7aebf: Extract Svelte bound style declarations via AST traversal.
+- cb697ee: support additional color formats
+- 67c01f0: Initialize CLI color output to respect TTY and chalk color support.
+- 890e80e: add svelte compiler type declarations
+- 4ebaa40: Fix Windows path, ESM, and watcher issues
+- 418b81f: fix watcher unlink handler to reload ignores correctly when files are deleted
+
 ## 0.3.1
 
 ### Patch Changes
