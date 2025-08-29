@@ -9,6 +9,7 @@ export interface DesignTokens {
     fonts?: Record<string, string>;
     lineHeights?: Record<string, number | string>;
     fontWeights?: Record<string, number | string>;
+    letterSpacings?: Record<string, number | string>;
   };
   deprecations?: Record<string, { replacement?: string }>;
   [key: string]: unknown;

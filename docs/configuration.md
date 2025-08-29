@@ -23,7 +23,7 @@ module.exports = {
 };
 ```
 
-See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/border-radius](rules/design-token/border-radius.md), [design-token/border-width](rules/design-token/border-width.md), [design-token/spacing](rules/design-token/spacing.md), [design-token/box-shadow](rules/design-token/box-shadow.md), [design-token/z-index](rules/design-token/z-index.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
+See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/letter-spacing](rules/design-token/letter-spacing.md), [design-token/border-radius](rules/design-token/border-radius.md), [design-token/border-width](rules/design-token/border-width.md), [design-token/spacing](rules/design-token/spacing.md), [design-token/box-shadow](rules/design-token/box-shadow.md), [design-token/z-index](rules/design-token/z-index.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
 
 @lapidist/design-lint searches for configuration starting from the current working
 directory and walking up parent directories. In each directory it looks for
@@ -60,6 +60,7 @@ without providing the corresponding tokens results in a configuration warning:
 - `design-token/box-shadow` requires `tokens.shadows`
 - `design-token/line-height` requires `tokens.typography.lineHeights`
 - `design-token/font-weight` requires `tokens.typography.fontWeights`
+- `design-token/letter-spacing` requires `tokens.typography.letterSpacings`
 - `design-token/z-index` requires `tokens.zIndex`
 - `design-token/typography` requires `tokens.typography.fontSizes` and
   `tokens.typography.fonts`

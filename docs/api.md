@@ -171,6 +171,7 @@ Includes:
 
  - [`colors`](./rules/design-token/colors.md)
  - [`line-height`](./rules/design-token/line-height.md)
+ - [`letter-spacing`](./rules/design-token/letter-spacing.md)
  - [`spacing`](./rules/design-token/spacing.md)
  - [`typography`](./rules/design-token/typography.md)
  - [`component-usage`](./rules/design-system/component-usage.md)
