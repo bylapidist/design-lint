@@ -40,3 +40,22 @@ Loaded settings are merged with defaults, validated against a schema, and
 returned with absolute paths. The resulting object supplies tokens, rule
 settings, plugins, and ignore patterns consumed by the engine.
 
+## Caching Subsystem
+
+To avoid reprocessing unchanged files, the engine accepts an optional cache map
+and location. When `lintFiles` runs it populates the map with each file’s
+modification time and `LintResult`, reading and writing to disk when
+`cacheLocation` is provided. Stale entries are pruned and results are persisted
+after every run. This behavior lives in
+[`src/core/engine.ts`](../src/core/engine.ts).
+
+## Watch Workflow
+
+The CLI supports `--watch` mode to re-lint files on the fly. Using
+[`chokidar`](https://github.com/paulmillr/chokidar), it monitors target files,
+the configuration file, ignore files, and plugin modules. When any of these
+change, the CLI reloads configuration and plugins, clears caches, and invokes
+the engine again. Dynamic imports with cache-busting query strings ensure ESM
+plugins reload correctly. Implementation details can be found in
+[`src/cli/index.ts`](../src/cli/index.ts).
+
