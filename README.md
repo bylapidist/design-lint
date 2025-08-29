@@ -127,13 +127,9 @@ npx design-lint button.css --fix
 
 The [`design-system/deprecation`](docs/rules/design-system/deprecation.md) rule rewrites `old` to `new` when run with `--fix`.
 
-### Vue single-file components
+### React, Vue, Svelte, and Web Components
 
-`.vue` files are parsed so both `<script>`/`<template>` code and `<style>` blocks are linted. Only standard CSS is supported in `<style>` sections; preprocessors such as Sass or Less must be compiled beforehand.
-
-```bash
-npx design-lint src/components/App.vue
-```
+Support for React components, Vue single-file components, Svelte components, and Web Components is documented in the [frameworks guide](docs/frameworks.md).
 
 ## Programmatic Usage
 
