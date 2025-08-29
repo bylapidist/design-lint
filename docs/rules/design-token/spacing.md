@@ -18,6 +18,8 @@ Enforces a spacing scale so that only configured token values or multiples of a 
 - `base` (`number`): values must be multiples of this number. Defaults to `4`.
 - `units` (`string[]`): CSS units to validate. Defaults to `['px', 'rem', 'em']`.
 
+Numbers that appear inside CSS functions (e.g., `calc()`, `var()`) are ignored.
+
 ## Examples
 
 **Invalid**
@@ -31,4 +33,6 @@ Enforces a spacing scale so that only configured token values or multiples of a 
 ```css
 .box { margin: 8px; }
 .box { margin: md; }
+.box { margin: calc(100% - 5px); }
+.box { margin: var(--space, 5px); }
 ```

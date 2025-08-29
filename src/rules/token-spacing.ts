@@ -24,6 +24,28 @@ export const spacingRule: RuleModule = {
     const allowedUnits = new Set(
       (opts.units ?? ['px', 'rem', 'em']).map((u) => u.toLowerCase()),
     );
+    const stripFunctions = (value: string) => {
+      let result = '';
+      for (let i = 0; i < value.length; i++) {
+        const ch = value[i];
+        if (/[a-zA-Z_-]/.test(ch)) {
+          let j = i + 1;
+          while (j < value.length && /[\w-]/.test(value[j])) j++;
+          if (value[j] === '(') {
+            let depth = 1;
+            i = j;
+            while (++i < value.length && depth > 0) {
+              const c = value[i];
+              if (c === '(') depth++;
+              else if (c === ')') depth--;
+            }
+            continue;
+          }
+        }
+        result += ch;
+      }
+      return result;
+    };
     return {
       onNode(node) {
         if (ts.isNumericLiteral(node)) {
@@ -41,7 +63,8 @@ export const spacingRule: RuleModule = {
         }
       },
       onCSSDeclaration(decl) {
-        const matches = decl.value.matchAll(/(-?\d*\.?\d+)([a-z%]*)/gi);
+        const stripped = stripFunctions(decl.value);
+        const matches = stripped.matchAll(/(-?\d*\.?\d+)([a-z%]*)/gi);
         for (const m of matches) {
           const num = parseFloat(m[1]);
           const unit = m[2].toLowerCase();
