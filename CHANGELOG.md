@@ -1,5 +1,55 @@
 # @lapidist/design-lint
 
+## 3.0.0
+
+### Major Changes
+
+- 2fd8613: feat: load custom formatter modules by path and make getFormatter async
+
+### Minor Changes
+
+- 8b39086: add border-radius design token rule
+- a152636: add border-width design token rule
+- 8e9317c: add box-shadow design token rule
+- fcf6955: add duration design token rule
+- adb42da: add font-weight design token rule
+- 3781974: add line-height design token rule
+- c2bb6af: add optional token groups for radii, border widths, shadows and durations
+- 2c8ba7e: add defineConfig helper for typed TypeScript configs
+- 07712f0: detect TypeScript during init and allow choosing any config format
+- 46a1561: feat: split typography rule into font-size and font-family
+
+### Patch Changes
+
+- 1cb7727: add letter-spacing design token rule
+- d85c233: support additional color functions in token-colors rule
+- 5fdb590: add z-index token rule
+- 70f0ceb: refactor config loading to use async fs APIs and test all config formats
+- 86b2c72: add CLI option to configure cache file location
+- 2c3e91e: test cache load/save with fs mocks
+- d8576c1: ensure CLI reports missing plugin files before linting
+- 90127e3: use dynamic import for ts-node when loading TypeScript config
+- 0f9a1f1: avoid watching non-existent plugin and ignore files in watch mode
+- 76df676: fix docs-only change detection in CI workflow
+- 2fd8613: add formatter documentation and links
+- f304edd: inspect template literals and prefix unary expressions in token rules
+- 33c4967: add jsdoc comments to utility functions
+- 9d39913: throw error when specified config file is missing
+- 8a93835: warn when no files match provided patterns
+- 37dbb6f: preserve file permissions in atomic write
+- a55404f: suppress "No files matched" warning when --quiet is used
+- 8a492d5: remove duplicate ignore patterns
+- b7206d1: report coverage in CI and PR comments with a detailed summary
+- 747e12a: return warning flag when no files match provided patterns
+- 1053c82: use rule descriptions in SARIF output
+- 9fd5125: refactor engine into modular components
+- d5eb3e1: fix token-colors rule column reporting for mid-string and css values
+- 70bb8b9: enforce unique plugin rule names and improve duplicate detection
+- 696da0b: use createRequire to load CommonJS config files
+- 9bbe55f: use static p-limit import
+- 35d06c5: validate cache entries and surface parsing errors
+- aa7d2a0: validate missing ignore file path in CLI
+
 ## 2.0.0
 
 ### Major Changes
