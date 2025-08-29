@@ -1072,6 +1072,62 @@ test('CLI reloads when nested ignore file changes in watch mode', async () => {
   assert.equal(saw, true);
 });
 
+test('CLI updates ignore list when .gitignore changes in watch mode', async () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = "old";');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'error' },
+    }),
+  );
+  fs.writeFileSync(path.join(dir, '.gitignore'), '');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const proc = spawn(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--watch',
+      '--format',
+      'json',
+    ],
+    { cwd: dir },
+  );
+  proc.stdout.setEncoding('utf8');
+  let ignored = false;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      proc.kill();
+    }, 5000);
+    let buffer = '';
+    proc.stdout.on('data', (data) => {
+      buffer += data;
+      if (buffer.includes('design-system/deprecation')) {
+        fs.writeFileSync(path.join(dir, '.gitignore'), 'file.ts\n');
+        buffer = '';
+      } else if (buffer.includes('Watching for changes...')) {
+        buffer = '';
+      } else if (buffer.includes('[]')) {
+        ignored = true;
+        proc.kill();
+      }
+    });
+    proc.on('exit', () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    proc.on('error', reject);
+  });
+  assert.equal(ignored, true);
+});
+
 test('CLI clears cache when a watched file is deleted', async () => {
   const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
