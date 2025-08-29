@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="a" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <polygon fill="oklch(67.72% 0.1203 183.48deg)" points="0,0 0,32 32,32" />
+  <polygon fill="oklch(77.86% 0.1387 133.71deg)" points="0,32 0,64 32,64" />
+  <polygon fill="oklch(81.13% 0.1356 85.29deg)" points="32,0 32,64 64,32" />
+  <g fill="url(#a)">
+    <path d="M12 12h8a12 20 0 0 1 0 40h-8z" />
+    <path d="M40 12h8v32h4v8H40z" />
+  </g>
+</svg>

@@ -1,5 +1,8 @@
 # @lapidist/design-lint
 
+<!-- markdownlint-disable-next-line MD033 -->
+<img src="logo.svg" alt="Design Lint tri-color logo with gradient DL monogram" width="44" height="44" />
+
 Linter for design systems in JavaScript, TypeScript, and CSS projects.
 
 CSS is parsed using [PostCSS](https://postcss.org/) and supports standard syntax, including multi-line declarations. Preprocessor-specific syntax (such as Sass or Less) must be transformed before linting.
