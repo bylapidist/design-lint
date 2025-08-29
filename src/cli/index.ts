@@ -292,7 +292,7 @@ export async function run(argv = process.argv.slice(2)) {
         ignorePath ? [ignorePath] : [],
         cacheLocation,
       );
-      if (warning) console.warn(warning);
+      if (warning && !values.quiet) console.warn(warning);
       if (values.watch && watcher) {
         const toAdd = newIgnore.filter((p) => !ignoreFilePaths.includes(p));
         if (toAdd.length) watcher.add(toAdd);

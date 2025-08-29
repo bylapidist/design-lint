@@ -142,6 +142,30 @@ test('CLI warns when no files match', () => {
   assert.match(res.stderr, /No files matched/);
 });
 
+test('--quiet suppresses "No files matched" warning', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: {}, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--loader',
+      tsNodeLoader,
+      cli,
+      'nomatch',
+      '--config',
+      'designlint.config.json',
+      '--quiet',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 0);
+  assert.ok(!res.stderr.includes('No files matched'));
+});
+
 test('CLI exits 0 when warnings are within --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
