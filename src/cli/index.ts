@@ -6,7 +6,7 @@ import { createRequire } from 'module';
 import { once } from 'node:events';
 import { pathToFileURL, fileURLToPath } from 'url';
 import type { LintResult } from '../core/types.js';
-import type { Config } from '../core/engine.js';
+import type { Config } from '../core/linter.js';
 import { getFormatter } from '../formatters/index.js';
 // chalk is ESM-only, so we use a dynamic import inside run()
 import ignore from 'ignore';
@@ -186,7 +186,7 @@ export async function run(argv = process.argv.slice(2)) {
     const targets = positionals.length ? positionals : ['.'];
     const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
       import('../config/loader.js'),
-      import('../core/engine.js'),
+      import('../core/linter.js'),
       import('../core/ignore.js'),
     ]);
     let config = await loadConfig(process.cwd(), values.config);

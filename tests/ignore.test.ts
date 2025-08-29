@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../src/utils/tmp.ts';
-import { Linter } from '../src/core/engine.ts';
+import { Linter } from '../src/core/linter.ts';
 
 test('lintFiles ignores common directories by default', async () => {
   const dir = makeTmpDir();

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { createRequire } from 'module';
-import type { Config } from '../core/engine.js';
+import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../utils/paths.js';
 

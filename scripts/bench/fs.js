@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { performance } from 'node:perf_hooks';
-import { Linter } from '../../dist/core/engine.js';
+import { Linter } from '../../dist/core/linter.js';
 import { loadConfig } from '../../dist/config/loader.js';
 
 const targets = process.argv.slice(2);

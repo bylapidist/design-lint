@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/engine.ts';
+import { Linter } from '../../src/core/linter.ts';
 
 test('design-token/typography reports invalid font-size', async () => {
   const linter = new Linter({

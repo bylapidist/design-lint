@@ -1,12 +1,7 @@
 import { promises as fs } from 'fs';
-import path from 'path';
 import ts from 'typescript';
 import postcss from 'postcss';
-import { createRequire } from 'module';
-import { pathToFileURL } from 'url';
-import fg from 'fast-glob';
 import os from 'node:os';
-import { performance } from 'node:perf_hooks';
 import type { parse as svelteParse } from 'svelte/compiler';
 import type {
   LintResult,
@@ -16,12 +11,12 @@ import type {
   DesignTokens,
   CSSDeclaration,
   Fix,
-  PluginModule,
 } from './types.js';
 import { builtInRules } from '../rules/index.js';
-import { loadIgnore } from './ignore.js';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 export { defaultIgnore } from './ignore.js';
+import { loadPlugins } from './plugin-loader.js';
+import { scanFiles } from './file-scanner.js';
+import { loadCache, saveCache, type CacheMap } from './cache.js';
 
 export interface Config {
   tokens?: DesignTokens;
@@ -64,88 +59,7 @@ export class Linter {
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
-    this.pluginLoad = this.loadPlugins();
-  }
-
-  /**
-   * Load configured plugins and register their rules.
-   * @throws Error if a plugin fails to load or is invalid.
-   * @returns Resolves when all plugins are processed.
-   */
-  private async loadPlugins(): Promise<void> {
-    const req = this.config.configPath
-      ? createRequire(this.config.configPath)
-      : createRequire(import.meta.url);
-    for (const p of this.config.plugins || []) {
-      let mod: unknown;
-      let resolved: string | undefined;
-      try {
-        resolved = req.resolve(p);
-        if (resolved.endsWith('.mjs')) {
-          mod = await import(`${pathToFileURL(resolved).href}?t=${Date.now()}`);
-        } else {
-          mod = req(resolved);
-        }
-      } catch (e: unknown) {
-        if ((e as { code?: string }).code === 'ERR_REQUIRE_ESM') {
-          const esmPath = resolved ?? p;
-          mod = await import(`${pathToFileURL(esmPath).href}?t=${Date.now()}`);
-        } else {
-          throw createEngineError({
-            message: `Failed to load plugin "${p}": ${
-              e instanceof Error ? e.message : String(e)
-            }`,
-            context: `Plugin "${p}"`,
-            remediation: 'Ensure the plugin is installed and resolvable.',
-          });
-        }
-      }
-      const pluginSource = resolved ?? p;
-      const plugin =
-        (mod as { default?: PluginModule; plugin?: PluginModule }).default ??
-        (mod as { plugin?: PluginModule }).plugin ??
-        (mod as PluginModule);
-      if (
-        !plugin ||
-        typeof plugin !== 'object' ||
-        !Array.isArray((plugin as PluginModule).rules)
-      ) {
-        throw createEngineError({
-          message: `Invalid plugin "${pluginSource}": expected { rules: RuleModule[] }`,
-          context: `Plugin "${pluginSource}"`,
-          remediation: 'Export an object with a "rules" array.',
-        });
-      }
-      for (const rule of plugin.rules) {
-        if (
-          !rule ||
-          typeof rule.name !== 'string' ||
-          rule.name.trim() === '' ||
-          !rule.meta ||
-          typeof rule.meta.description !== 'string' ||
-          rule.meta.description.trim() === '' ||
-          typeof rule.create !== 'function'
-        ) {
-          throw createEngineError({
-            message:
-              `Invalid rule "${(rule as { name?: string }).name ?? '<unknown>'}" in plugin "${pluginSource}": ` +
-              'expected { name: string; meta: { description: string }; create: Function }',
-            context: `Plugin "${pluginSource}"`,
-            remediation:
-              'Ensure each rule has a non-empty name, meta.description, and a create function.',
-          });
-        }
-        const existing = this.ruleMap.get(rule.name);
-        if (existing) {
-          throw createEngineError({
-            message: `Rule "${rule.name}" from plugin "${pluginSource}" conflicts with rule from "${existing.source}"`,
-            context: `Plugin "${pluginSource}"`,
-            remediation: 'Use a unique rule name to avoid collisions.',
-          });
-        }
-        this.ruleMap.set(rule.name, { rule, source: pluginSource });
-      }
-    }
+    this.pluginLoad = loadPlugins(this.config, this.ruleMap, createEngineError);
   }
 
   /**
@@ -160,7 +74,7 @@ export class Linter {
   async lintFile(
     filePath: string,
     fix = false,
-    cache?: Map<string, { mtime: number; result: LintResult }>,
+    cache?: CacheMap,
     ignorePaths?: string[],
     cacheLocation?: string,
   ): Promise<LintResult> {
@@ -187,132 +101,29 @@ export class Linter {
   async lintFiles(
     targets: string[],
     fix = false,
-    cache?: Map<string, { mtime: number; result: LintResult }>,
+    cache?: CacheMap,
     additionalIgnorePaths: string[] = [],
     cacheLocation?: string,
   ): Promise<{ results: LintResult[]; ignoreFiles: string[] }> {
     await this.pluginLoad;
     if (cacheLocation && cache && !this.cacheLoaded) {
-      try {
-        const raw = await fs.readFile(cacheLocation, 'utf8');
-        const data = JSON.parse(raw) as [
-          string,
-          { mtime: number; result: LintResult },
-        ][];
-        for (const [k, v] of data) cache.set(k, v);
-      } catch {
-        // ignore
-      }
+      await loadCache(cache, cacheLocation);
       this.cacheLoaded = true;
     }
-    const { ig, patterns: ignorePatterns } = await loadIgnore(
+    const { files, ignoreFiles } = await scanFiles(
+      targets,
       this.config,
       additionalIgnorePaths,
     );
-    const normalizedPatterns = [...ignorePatterns];
-    const scanPatterns = this.config.patterns ?? [
-      '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}',
-    ];
-    const seenIgnore = new Set<string>();
-
-    // track root ignore files if they exist
-    for (const root of [
-      '.gitignore',
-      '.designlintignore',
-      ...additionalIgnorePaths,
-    ]) {
-      const full = path.resolve(process.cwd(), root);
-      try {
-        await fs.access(full);
-        seenIgnore.add(full);
-      } catch {
-        // ignore missing
-      }
-    }
-
-    const readNestedIgnore = async (dir: string) => {
-      const ignoreFiles = (
-        await fg(['**/.gitignore', '**/.designlintignore'], {
-          cwd: dir,
-          absolute: true,
-          dot: true,
-          ignore: normalizedPatterns,
-        })
-      ).map(realpathIfExists);
-      ignoreFiles.sort(
-        (a, b) => a.split(path.sep).length - b.split(path.sep).length,
-      );
-      for (const file of ignoreFiles) {
-        if (seenIgnore.has(file)) continue;
-        seenIgnore.add(file);
-        const dirOfFile = path.dirname(file);
-        const relDir = relFromCwd(dirOfFile);
-        if (relDir === '') continue;
-        try {
-          const content = await fs.readFile(file, 'utf8');
-          const lines = content
-            .split(/\r?\n/)
-            .map((l) => l.trim())
-            .filter((l) => l && !l.startsWith('#'))
-            .map((l) => {
-              const neg = l.startsWith('!');
-              const pattern = neg ? l.slice(1) : l;
-              const cleaned = pattern
-                .replace(/^[\\/]+/, '')
-                .replace(/\\/g, '/');
-              const combined = relDir
-                ? path.posix.join(relDir, cleaned)
-                : cleaned;
-              return neg ? `!${combined}` : combined;
-            });
-          ig.add(lines);
-          normalizedPatterns.push(...lines);
-        } catch {
-          // ignore
-        }
-      }
-    };
-
-    const files: string[] = [];
-    const scanStart = performance.now();
-    for (const t of targets) {
-      const full = realpathIfExists(path.resolve(t));
-      const rel = relFromCwd(full);
-      if (ig.ignores(rel)) continue;
-      try {
-        const stat = await fs.stat(full);
-        if (stat.isDirectory()) {
-          await readNestedIgnore(full);
-          const entries = await fg(scanPatterns, {
-            cwd: full,
-            absolute: true,
-            dot: true,
-            ignore: normalizedPatterns,
-          });
-          for (const e of entries) files.push(realpathIfExists(e));
-        } else {
-          files.push(full);
-        }
-      } catch {
-        // skip missing files
-      }
-    }
-    const scanTime = performance.now() - scanStart;
-    if (process.env.DESIGNLINT_PROFILE) {
-      console.log(`Scanned ${files.length} files in ${scanTime.toFixed(2)}ms`);
-    }
-
     if (files.length === 0) {
       console.warn('No files matched the provided patterns.');
-      return { results: [], ignoreFiles: Array.from(seenIgnore) };
+      return { results: [], ignoreFiles };
     }
-
     if (cache) {
       for (const key of Array.from(cache.keys())) {
         if (!files.includes(key)) cache.delete(key);
       }
     }
-
     const { default: pLimit } = await import('p-limit');
     const limit = pLimit(this.config.concurrency ?? os.cpus().length);
     const tasks = files.map((filePath) =>
@@ -346,18 +157,9 @@ export class Linter {
 
     const results = await Promise.all(tasks);
     if (cacheLocation && cache) {
-      try {
-        await fs.mkdir(path.dirname(cacheLocation), { recursive: true });
-        await fs.writeFile(
-          cacheLocation,
-          JSON.stringify([...cache.entries()]),
-          'utf8',
-        );
-      } catch {
-        // ignore
-      }
+      await saveCache(cache, cacheLocation);
     }
-    return { results, ignoreFiles: Array.from(seenIgnore) };
+    return { results, ignoreFiles };
   }
 
   /**

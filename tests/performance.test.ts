@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
-import { Linter } from '../src/core/engine.ts';
+import { Linter } from '../src/core/linter.ts';
 
 test('lints large projects without crashing', async () => {
   const dir = path.join(__dirname, 'fixtures', 'large-project');

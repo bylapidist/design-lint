@@ -1,4 +1,4 @@
-export { Linter, type Config, applyFixes } from './core/engine.js';
+export { Linter, type Config, applyFixes } from './core/linter.js';
 export { loadConfig } from './config/loader.js';
 export { getFormatter } from './formatters/index.js';
 export { builtInRules } from './rules/index.js';

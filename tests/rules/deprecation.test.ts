@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/engine.ts';
+import { Linter } from '../../src/core/linter.ts';
 
 test('design-system/deprecation flags deprecated token', async () => {
   const linter = new Linter({
