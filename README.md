@@ -1,24 +1,36 @@
 # @lapidist/design-lint
 
-`@lapidist/design-lint` is a pluggable linter for enforcing design system rules in
-JavaScript, TypeScript, and CSS codebases. It validates design tokens and
-component usage to help teams stay consistent with their design system.
+Linter for design systems in JavaScript, TypeScript, and CSS projects.
 
-## Why?
+[Documentation](docs/usage.md) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
-General-purpose linters like ESLint or Biome focus on code correctness and style,
-but they are unaware of your design system. `@lapidist/design-lint` fills that
-gap by validating design tokens and component usage so interfaces stay aligned
-with shared design guidelines. It works alongside existing tools, adding
-design-system-specific rules rather than replacing your current lint setup.
+## Table of Contents
+
+- [Why design-lint?](#why-design-lint)
+- [Installation](#installation)
+- [CLI Usage](#cli-usage)
+- [Programmatic Usage](#programmatic-usage)
+- [Configuration](#configuration)
+- [Plugins](#plugins)
+- [Features](#features)
+- [Rules](#rules)
+- [CI](#ci)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
+
+## Why design-lint?
+
+General purpose linters enforce code style and correctness but know nothing about your design system. `@lapidist/design-lint` keeps interfaces consistent by validating design tokens and component usage alongside your existing tooling.
 
 ## Installation
 
-Requires Node.js 22 or later.
+Node.js 22 or later is required.
 
 ### One-off usage
 
-Run the CLI without installing it locally:
+Run without adding a dependency:
 
 ```bash
 npx @lapidist/design-lint@latest --help
@@ -26,7 +38,7 @@ npx @lapidist/design-lint@latest --help
 
 ### Local installation
 
-Install the package and use the generated binary:
+Install locally and use the generated binary:
 
 ```bash
 npm install --save-dev @lapidist/design-lint
@@ -39,26 +51,21 @@ yarn design-lint --help
 
 ## CLI Usage
 
-Lint a project by passing files or directories. By default, results are printed
-in a human-friendly format, and the process exits with a non-zero code when
-errors are found.
-
-For scan timing, set `DESIGNLINT_PROFILE=1`—see the [Environment variables](docs/usage.md#environment-variables) section for details.
+Lint files or directories:
 
 ```bash
 npx design-lint src
 ```
 
-Generate a starter configuration file:
+To measure run time, set `DESIGNLINT_PROFILE=1` (see [Environment variables](docs/usage.md#environment-variables)).
+
+Generate a starter configuration:
 
 ```bash
 npx design-lint init
 ```
 
-By default this creates a `designlint.config.json` in the current directory. If
-TypeScript is detected (via `tsconfig.json` or a `typescript` dependency), a
-`designlint.config.ts` is generated instead. Use `--init-format` to explicitly
-set the format (`js`, `cjs`, `mjs`, `ts`, `mts`, or `json`).
+By default this writes `designlint.config.json` to the current directory. If TypeScript is detected, a `designlint.config.ts` file is produced instead. Use `--init-format` to choose `js`, `cjs`, `mjs`, `ts`, `mts`, or `json`.
 
 Check the CLI version:
 
@@ -68,37 +75,30 @@ npx design-lint --version
 
 ### Options
 
-- `--config <path>` – path to a `designlint.config.*` file. The CLI throws an
-  error if the file cannot be found.
-- `--init-format <format>` – format for `design-lint init` (`js`, `cjs`, `mjs`,
-  `ts`, `mts`, `json`).
-- `--format <formatter>` – output format (default `stylish`). Accepts built-in
-  names (`stylish`, `json`, `sarif`) or a path to a custom formatter module.
-  See the [Formatters guide](docs/formatters.md) for details.
+- `--config <path>` – path to a `designlint.config.*` file. An error is thrown if it cannot be found.
+- `--init-format <format>` – format for `design-lint init` (`js`, `cjs`, `mjs`, `ts`, `mts`, `json`).
+- `--format <formatter>` – output format (default `stylish`). Accepts built-in names (`stylish`, `json`, `sarif`) or a path to a custom formatter module. See the [Formatters guide](docs/formatters.md).
 - `--output <file>` – write report to a file instead of stdout.
 - `--report <file>` – write JSON results to a file.
-- `--ignore-path <file>` – load additional ignore patterns from a file.  
-  Example: `npx design-lint src --ignore-path .lintignore`
+- `--ignore-path <file>` – load additional ignore patterns from a file. Example: `npx design-lint src --ignore-path .lintignore`
 - `--concurrency <n>` – limit the number of files processed in parallel.
 - `--max-warnings <n>` – maximum number of warnings allowed before exiting with a non-zero code. Use `0` to fail on any warning.
-  Example: `npx design-lint src --max-warnings 0`
 - `--quiet` – suppress output and rely on the exit code.
 - `--no-color` – disable colored output.
-- `--cache` – enable persistent caching.  
-  Example: `npx design-lint src --cache`
+- `--cache` – enable persistent caching. Example: `npx design-lint src --cache`
 - `--watch` – watch files and re-lint on changes.
 - `--fix` – automatically fix problems when possible.
 - `--version` – print the CLI version and exit.
 
-#### Examples
+### Examples
 
-Write a JSON report to a file:
+Write a JSON report:
 
 ```bash
 npx design-lint src --report report.json --format json
 ```
 
-Re-run lint on file changes:
+Watch files:
 
 ```bash
 npx design-lint src --watch
@@ -129,10 +129,7 @@ The [`design-system/deprecation`](docs/rules/design-system/deprecation.md) rule 
 
 ### Vue single-file components
 
-`.vue` files are parsed so both `<script>`/`<template>` code and `<style>` blocks
-are linted. Only standard CSS is supported in `<style>` sections; preprocessors
-such as Sass or Less must be compiled beforehand. No additional configuration is
-required.
+`.vue` files are parsed so both `<script>`/`<template>` code and `<style>` blocks are linted. Only standard CSS is supported in `<style>` sections; preprocessors such as Sass or Less must be compiled beforehand.
 
 ```bash
 npx design-lint src/components/App.vue
@@ -140,7 +137,7 @@ npx design-lint src/components/App.vue
 
 ## Programmatic Usage
 
-`@lapidist/design-lint` can also run directly in Node.js:
+Use the Node API directly:
 
 ```js
 import { Linter, loadConfig, getFormatter } from '@lapidist/design-lint';
@@ -152,16 +149,11 @@ const formatter = await getFormatter('stylish');
 console.log(formatter(results));
 ```
 
-Additional exports, such as `applyFixes` and `builtInRules`, are also available.
-See the [Configuration guide](docs/configuration.md) for `loadConfig` details,
-the [Formatters guide](docs/formatters.md) for formatter usage, and the
-[Usage guide](docs/usage.md#options) for CLI options. A full list of exports is
-in the [API guide](docs/api.md).
+Additional exports such as `applyFixes` and `builtInRules` are documented in the [API guide](docs/api.md).
 
 ## Configuration
 
-Create a `designlint.config.js` (or `.json`) file in your project root to define
-the design tokens and active rules:
+Create a `designlint.config.js` (or `.json`) file to define design tokens and rules:
 
 ```js
 module.exports = {
@@ -179,13 +171,11 @@ module.exports = {
 };
 ```
 
-See the [Usage guide](docs/usage.md) and [Configuration guide](docs/configuration.md)
-for a detailed breakdown of available options.
+See the [Usage guide](docs/usage.md) and [Configuration guide](docs/configuration.md) for full details.
 
 ## Plugins
 
-Plugins can supply additional rules. Each plugin should export an object like
-`{ rules: RuleModule[] }` and be listed in the `plugins` field of your configuration:
+Plugins can supply additional rules. Each plugin should export an object like `{ rules: RuleModule[] }` and be listed in the `plugins` field:
 
 ```js
 module.exports = {
@@ -196,10 +186,7 @@ module.exports = {
 };
 ```
 
-If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
-throws an error during initialization.
-
-See the [Plugin guide](docs/plugins.md) for a step-by-step tutorial on writing and publishing custom rules.
+If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint` throws an initialization error. Learn more in the [Plugin guide](docs/plugins.md).
 
 ## Features
 
@@ -209,11 +196,6 @@ See the [Plugin guide](docs/plugins.md) for a step-by-step tutorial on writing a
 - JSON and SARIF output for CI
 - Auto-fix deprecated tokens and components
 
-## CI
-
-See the [CI guide](docs/ci.md) for examples of running the linter in GitHub Actions and other CI systems.
-
-
 ## Rules
 
 - [design-token/colors](docs/rules/design-token/colors.md)
@@ -222,33 +204,35 @@ See the [CI guide](docs/ci.md) for examples of running the linter in GitHub Acti
 - [design-system/deprecation](docs/rules/design-system/deprecation.md)
 - [design-system/component-usage](docs/rules/design-system/component-usage.md)
 
-CSS is parsed using [PostCSS](https://postcss.org/). The default parser handles
-standard CSS syntax including multi-line declarations. Preprocessor-specific
-syntax (such as Sass or Less) is not supported unless transformed before
-linting.
+CSS is parsed using [PostCSS](https://postcss.org/) and supports standard syntax, including multi-line declarations. Preprocessor-specific syntax (such as Sass or Less) must be transformed before linting.
+
+## CI
+
+See the [CI guide](docs/ci.md) for examples of running the linter in GitHub Actions and other CI systems.
 
 ## Documentation
 
-This repository contains Markdown guides under the [`docs/`](docs) directory.
-For an overview of the core engine, rule lifecycle, plugin system and
-configuration resolution, see the [Architecture guide](docs/architecture.md).
-Common runtime issues are covered in the
-[Troubleshooting guide](docs/troubleshooting.md). A full documentation site can
-be built with:
+Markdown guides live under the [`docs/`](docs) directory. For an overview of the core engine, rule lifecycle, plugin system, and configuration resolution, see the [Architecture guide](docs/architecture.md). Common runtime issues are covered in the [Troubleshooting guide](docs/troubleshooting.md).
+
+A static documentation site can be built with:
 
 ```bash
 npm run docs:build
 ```
 
-The generated site will be output to `docs/.vitepress/dist`.
-
-## Security
-
-See [SECURITY.md](SECURITY.md) for information on reporting vulnerabilities.
+The generated site is output to `docs/.vitepress/dist`.
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
-This project is released with a [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
-By participating in this project, you agree to abide by its terms.
+This project is released with a [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project, you agree to abide by its terms.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for information on reporting vulnerabilities.
+
+## License
+
+[MIT](LICENSE)
+
