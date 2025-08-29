@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import ts from 'typescript';
 import postcss from 'postcss';
+import pLimit from 'p-limit';
 import os from 'node:os';
 import type { parse as svelteParse } from 'svelte/compiler';
 import type {
@@ -131,7 +132,6 @@ export class Linter {
         if (!files.includes(key)) cache.delete(key);
       }
     }
-    const { default: pLimit } = await import('p-limit');
     const limit = pLimit(this.config.concurrency ?? os.cpus().length);
     const tasks = files.map((filePath) =>
       limit(async () => {
