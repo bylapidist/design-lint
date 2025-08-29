@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.0.0
+
+### Major Changes
+
+- acb979f: flatten typography tokens into top-level configuration
+
 ## 3.0.0
 
 ### Major Changes
