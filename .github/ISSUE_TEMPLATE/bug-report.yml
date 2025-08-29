@@ -1,0 +1,51 @@
+name: Bug Report
+description: Report a problem with @lapidist/design-lint
+title: '[Bug]: '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report!
+        Please fill out the fields below to help us reproduce and fix the issue.
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of the problem.
+      placeholder: Unexpected error when running `design-lint`.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Provide a minimal reproduction or code snippet.
+      placeholder: |
+        1. Run `...`
+        2. See error
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include Node.js version, @lapidist/design-lint version, OS, etc.
+      value: |
+        - Node.js: 
+        - @lapidist/design-lint: 
+        - OS:
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste any relevant terminal output or stack traces.
+      render: shell
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Links, references, or any additional information.
