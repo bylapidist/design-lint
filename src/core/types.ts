@@ -1,17 +1,45 @@
 import type ts from 'typescript';
 
 export interface DesignTokens {
+  /** Color tokens. */
   colors?: Record<string, string>;
+  /** Spacing scale tokens. */
   spacing?: Record<string, number>;
+  /** z-index tokens. */
   zIndex?: Record<string, number>;
+  /** Border radius tokens. */
+  radii?: Record<string, number | string>;
+  /** Border radius tokens (alias). */
+  borderRadius?: Record<string, number | string>;
+  /** Border width tokens. */
+  borderWidths?: Record<string, number | string>;
+  /** Border width tokens (alias). */
+  borderWidth?: Record<string, number | string>;
+  /** Box shadow tokens. */
+  shadows?: Record<string, string>;
+  /** Motion duration tokens. */
+  durations?: Record<string, number | string>;
+  /** Motion tokens grouped under motion. */
+  motion?: {
+    /** Motion duration tokens. */
+    durations?: Record<string, number | string>;
+  };
+  /** Typography-related tokens. */
   typography?: {
+    /** Font size tokens. */
     fontSizes?: Record<string, number | string>;
+    /** Font family tokens. */
     fonts?: Record<string, string>;
+    /** Line height tokens. */
     lineHeights?: Record<string, number | string>;
+    /** Font weight tokens. */
     fontWeights?: Record<string, number | string>;
+    /** Letter spacing tokens. */
     letterSpacings?: Record<string, number | string>;
   };
+  /** Deprecated tokens and their replacements. */
   deprecations?: Record<string, { replacement?: string }>;
+  /** Allow additional custom token groups. */
   [key: string]: unknown;
 }
 

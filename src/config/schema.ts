@@ -15,16 +15,27 @@ const ruleSettingSchema = z.union([
   z.tuple([severitySchema, z.unknown()]),
 ]);
 
+const numberOrString = z.union([z.number(), z.string()]);
+
 const tokensSchema = z
   .object({
     colors: z.record(z.string(), z.string()).optional(),
     spacing: z.record(z.string(), z.number()).optional(),
     zIndex: z.record(z.string(), z.number()).optional(),
+    radii: z.record(z.string(), numberOrString).optional(),
+    borderRadius: z.record(z.string(), numberOrString).optional(),
+    borderWidths: z.record(z.string(), numberOrString).optional(),
+    borderWidth: z.record(z.string(), numberOrString).optional(),
+    shadows: z.record(z.string(), z.string()).optional(),
+    durations: z.record(z.string(), numberOrString).optional(),
+    motion: z
+      .object({
+        durations: z.record(z.string(), numberOrString).optional(),
+      })
+      .optional(),
     typography: z
       .object({
-        fontSizes: z
-          .record(z.string(), z.union([z.number(), z.string()]))
-          .optional(),
+        fontSizes: z.record(z.string(), numberOrString).optional(),
         fonts: z.record(z.string(), z.string()).optional(),
       })
       .optional(),

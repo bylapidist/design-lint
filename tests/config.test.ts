@@ -63,6 +63,39 @@ test('throws on invalid tokens', async () => {
   await assert.rejects(loadConfig(tmp), /Invalid config/);
 });
 
+test('validates additional token groups', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: {
+        radii: { sm: 2 },
+        borderWidths: { sm: 1 },
+        shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
+        durations: { fast: '200ms' },
+        motion: { durations: { fast: '200ms' } },
+      },
+    }),
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.radii?.sm, 2);
+  assert.equal(loaded.tokens?.borderWidths?.sm, 1);
+  assert.equal(loaded.tokens?.shadows?.sm, '0 1px 2px rgba(0,0,0,0.1)');
+  assert.equal(loaded.tokens?.durations?.fast, '200ms');
+  assert.equal(loaded.tokens?.motion?.durations?.fast, '200ms');
+});
+
+test('throws on invalid additional tokens', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ tokens: { borderWidths: { sm: true } } }),
+  );
+  await assert.rejects(loadConfig(tmp), /Invalid config/);
+});
+
 test('throws on invalid rule setting', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
