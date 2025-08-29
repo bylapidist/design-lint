@@ -12,13 +12,20 @@ This repository requires Node.js >= 22 and follows strict [Semantic Versioning](
 
 ## Changesets and releases
 
-- For any new feature or bug fix, create a changeset to generate the changelog and version bump:
+- For any new feature or bug fix, manually create a changeset file under `.changeset` to generate the changelog and version bump.
+  - Use a descriptive kebab-case filename related to the change.
+  - Do **not** run the Changesets CLI.
+- Each changeset file must follow this format:
 
   ```
-  npm run changeset
+  ---
+  '@lapidist/design-lint': patch
+  ---
+
+  fix lintFile to handle lintFiles return format
   ```
 
-  Select the correct semver bump (major, minor, patch).
+  Replace `patch` and the description with the appropriate semver bump and summary of your change.
 
 ## Commit guidelines
 
