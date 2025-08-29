@@ -36,7 +36,6 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci --prefer-offline
       - name: Audit dependencies
-        if: github.event_name == 'push'
         run: npm audit --production --audit-level=high
       - run: npm run build
         if: steps.changes.outputs['non-docs'] == 'true'
