@@ -1092,6 +1092,36 @@ test('CLI --cache invalidates when files change', () => {
   assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '2');
 });
 
+test('CLI writes cache to specified --cache-location', () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const a = 1;');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: {}, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cacheFile = 'custom.cache';
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--loader',
+      tsNodeLoader,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--cache',
+      '--cache-location',
+      cacheFile,
+    ],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  assert.equal(res.status, 0);
+  assert.ok(fs.existsSync(path.join(dir, cacheFile)));
+  assert.ok(!fs.existsSync(path.join(dir, '.designlintcache')));
+});
+
 test('CLI re-runs with updated config in watch mode', async () => {
   const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');

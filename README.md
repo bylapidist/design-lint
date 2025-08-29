@@ -98,6 +98,7 @@ npx design-lint --version
 | `--quiet` | Suppress output and rely on the exit code. |
 | `--no-color` | Disable colored output. |
 | `--cache` | Enable persistent caching. Example: `npx design-lint src --cache`. |
+| `--cache-location <path>` | Path to cache file. Example: `npx design-lint src --cache --cache-location .cache/designlint`. |
 | `--watch` | Watch files and re-lint on changes. |
 | `--fix` | Automatically fix problems when possible. |
 | `--version` | Print the CLI version and exit. |
