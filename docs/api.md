@@ -12,6 +12,35 @@ const formatter = getFormatter('stylish');
 console.log(formatter(results));
 ```
 
+## Linter methods
+
+### `lintText(text, filePath?)`
+
+Lints a string of code. Optionally provide a `filePath` for accurate
+reporting and to enable file-type-specific parsing.
+
+```ts
+const res = await linter.lintText('const c = "#fff";', 'file.ts');
+```
+
+### `lintFile(filePath, fix?, cache?)`
+
+Lints a single file on disk. Pass `fix` to apply autofixes and an optional
+`cache` map to reuse results between runs.
+
+```ts
+const res = await linter.lintFile('src/file.ts', true);
+```
+
+### `lintFiles(files, fix?, cache?, ignorePaths?)`
+
+Lints multiple files or directories. Returns an array of results along with
+any ignore files that were honored.
+
+```ts
+const results = await linter.lintFiles(['src', 'tests']);
+```
+
 ## Exports
 
 - `Linter` – core engine for linting files.
