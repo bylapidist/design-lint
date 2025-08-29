@@ -10,6 +10,24 @@ import type { LintResult } from '../src/core/types';
 
 const tsNodeRegister = require.resolve('ts-node/register');
 
+test('CLI aborts on unsupported Node versions', async () => {
+  const { run } = await import('../src/cli/index');
+  const original = process.versions.node;
+  Object.defineProperty(process.versions, 'node', { value: '21.0.0' });
+  const originalError = console.error;
+  let out = '';
+  console.error = (msg?: unknown) => {
+    out += String(msg);
+  };
+  const originalExit = process.exitCode;
+  await run([]);
+  Object.defineProperty(process.versions, 'node', { value: original });
+  console.error = originalError;
+  assert.equal(process.exitCode, 1);
+  process.exitCode = originalExit ?? 0;
+  assert.match(out, /Node\.js v21\.0\.0 is not supported/);
+});
+
 test('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');

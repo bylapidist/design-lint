@@ -64,6 +64,14 @@ Options:
 }
 
 export async function run(argv = process.argv.slice(2)) {
+  const current = process.versions.node;
+  const [major] = current.split('.').map(Number);
+  if (major < 22) {
+    const message = `Node.js v${current} is not supported. Please upgrade to v22.0.0 or higher.`;
+    console.error(message);
+    process.exitCode = 1;
+    return;
+  }
   const { default: chalk, supportsColor } = await import('chalk');
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
   try {
