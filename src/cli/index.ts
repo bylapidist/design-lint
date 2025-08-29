@@ -11,7 +11,7 @@ import { getFormatter } from '../formatters/index.js';
 import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths';
-import { writeFileAtomicSync } from '../utils/atomicWrite';
+import { writeFileAtomic } from '../utils/atomicWrite';
 
 function showVersion() {
   const pkgPath = path.resolve(__dirname, '../../package.json');
@@ -209,13 +209,13 @@ export async function run(argv = process.argv.slice(2)) {
       const output = formatter(results, useColor);
 
       if (values.output) {
-        writeFileAtomicSync(values.output as string, output);
+        await writeFileAtomic(values.output as string, output);
       } else if (!values.quiet) {
         console.log(output);
       }
 
       if (values.report) {
-        writeFileAtomicSync(
+        await writeFileAtomic(
           values.report as string,
           JSON.stringify(results, null, 2),
         );
