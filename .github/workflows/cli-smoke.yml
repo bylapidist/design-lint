@@ -55,8 +55,10 @@ jobs:
           npx design-lint file.ts --config designlint.config.json --format json || true
           npx design-lint file.ts --config designlint.config.json --format json --output report.txt || true
           test -f report.txt
+          cat report.txt
           npx design-lint file.ts --config designlint.config.json --format json --report results.json || true
           test -f results.json
+          cat results.json
           npx design-lint file.ts --config designlint.config.json --quiet --format json || true
           npx design-lint file.ts --config designlint.config.json --no-color --format json || true
           npx design-lint file.ts --config designlint.config.json --fix || true
