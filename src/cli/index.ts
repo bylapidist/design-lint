@@ -52,6 +52,7 @@ Options:
   --report <file>       Write JSON results to file
   --ignore-path <file>  Load additional ignore patterns from file
   --concurrency <n>     Maximum number of files processed concurrently
+  --max-warnings <n>    Number of warnings to trigger nonzero exit code
   --quiet               Suppress stdout output
   --no-color            Disable colored output
   --watch               Watch files and re-lint on changes
@@ -76,6 +77,7 @@ export async function run(argv = process.argv.slice(2)) {
         report: { type: 'string' },
         'ignore-path': { type: 'string' },
         concurrency: { type: 'string' },
+        'max-warnings': { type: 'string' },
         quiet: { type: 'boolean', default: false },
         fix: { type: 'boolean', default: false },
         watch: { type: 'boolean', default: false },
@@ -197,7 +199,17 @@ export async function run(argv = process.argv.slice(2)) {
       const hasErrors = results.some((r) =>
         r.messages.some((m) => m.severity === 'error'),
       );
-      process.exitCode = hasErrors ? 1 : 0;
+      const warningCount = results.reduce(
+        (count, r) =>
+          count + r.messages.filter((m) => m.severity === 'warn').length,
+        0,
+      );
+      let exit = hasErrors ? 1 : 0;
+      if (values['max-warnings'] !== undefined) {
+        const max = Number(values['max-warnings']);
+        if (!Number.isNaN(max) && warningCount > max) exit = 1;
+      }
+      process.exitCode = exit;
     };
 
     const reportError = (err: unknown) => {

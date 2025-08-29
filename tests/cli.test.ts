@@ -31,6 +31,96 @@ test('CLI exits non-zero on lint errors', () => {
   assert.ok(result.stdout.includes('design-token/colors'));
 });
 
+test('CLI exits 0 when warnings are within --max-warnings', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: {}, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--max-warnings',
+      '0',
+      '--format',
+      'json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 0);
+});
+
+test('CLI exits 0 when warnings equal --max-warnings', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'warn' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--max-warnings',
+      '1',
+      '--format',
+      'json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 0);
+});
+
+test('CLI exits 1 when warnings exceed --max-warnings', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(
+    path.join(dir, 'file.ts'),
+    'const a = "old";\nconst b = "old";',
+  );
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { deprecations: { old: { replacement: 'new' } } },
+      rules: { 'design-system/deprecation': 'warn' },
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--require',
+      tsNodeRegister,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+      '--max-warnings',
+      '1',
+      '--format',
+      'json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 1);
+});
+
 test('CLI --fix applies fixes', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
