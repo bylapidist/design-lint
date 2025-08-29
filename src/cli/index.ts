@@ -143,8 +143,8 @@ export async function run(argv = process.argv.slice(2)) {
     let maxWarnings: number | undefined;
     if (values['max-warnings'] !== undefined) {
       const max = Number(values['max-warnings']);
-      if (!Number.isInteger(max) || max <= 0) {
-        const message = `Invalid value for --max-warnings: "${values['max-warnings']}". Expected a positive integer.`;
+      if (!Number.isInteger(max) || max < 0) {
+        const message = `Invalid value for --max-warnings: "${values['max-warnings']}". Expected a non-negative integer.`;
         console.error(useColor ? chalk.red(message) : message);
         process.exitCode = 1;
         return;

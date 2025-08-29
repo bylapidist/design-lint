@@ -67,7 +67,7 @@ test('CLI exits 0 when warnings are within --max-warnings', () => {
       '--config',
       'designlint.config.json',
       '--max-warnings',
-      '1',
+      '0',
       '--format',
       'json',
     ],
@@ -108,10 +108,7 @@ test('CLI exits 0 when warnings equal --max-warnings', () => {
 
 test('CLI exits 1 when warnings exceed --max-warnings', () => {
   const dir = makeTmpDir();
-  fs.writeFileSync(
-    path.join(dir, 'file.ts'),
-    'const a = "old";\nconst b = "old";',
-  );
+  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
@@ -130,7 +127,7 @@ test('CLI exits 1 when warnings exceed --max-warnings', () => {
       '--config',
       'designlint.config.json',
       '--max-warnings',
-      '1',
+      '0',
       '--format',
       'json',
     ],
@@ -157,12 +154,12 @@ test('CLI errors on invalid --max-warnings', () => {
       '--config',
       'designlint.config.json',
       '--max-warnings',
-      '0',
+      '-1',
     ],
     { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
-  assert.ok(res.stderr.includes('positive integer'));
+  assert.ok(res.stderr.includes('non-negative integer'));
 });
 
 test('CLI --fix applies fixes', () => {

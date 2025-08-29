@@ -62,7 +62,7 @@ npx design-lint --version
 - `--ignore-path <file>` – load additional ignore patterns from a file.  
   Example: `npx design-lint src --ignore-path .lintignore`
 - `--concurrency <n>` – limit the number of files processed in parallel.
-- `--max-warnings <n>` – number of warnings to trigger a non-zero exit code.  
+ - `--max-warnings <n>` – maximum number of warnings allowed before exiting with a non-zero code. Use `0` to fail on any warning.
   Example: `npx design-lint src --max-warnings 0`
 - `--quiet` – suppress output and rely on the exit code.
 - `--no-color` – disable colored output.
