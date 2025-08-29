@@ -78,6 +78,16 @@ test('design-token/colors reports disallowed named color', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/colors reports correct column for mid-string color', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('const c = "abc #000";', 'file.ts');
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0].column, 15);
+});
+
 test('design-token/colors reports various named colors', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
@@ -88,6 +98,16 @@ test('design-token/colors reports various named colors', async () => {
     'file.ts',
   );
   assert.equal(res.messages.length, 2);
+});
+
+test('design-token/colors reports correct column for css declarations', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText('background:url(foo) #000;', 'file.css');
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0].column, 10);
 });
 
 test('design-token/colors allows configured formats', async () => {

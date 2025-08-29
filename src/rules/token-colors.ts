@@ -69,17 +69,16 @@ export const colorsRule: RuleModule = {
       for (const { format, regex } of patterns) {
         if (allowFormats.has(format)) continue;
         regex.lastIndex = 0;
-        const matches = text.match(regex);
-        if (matches) {
-          for (const value of matches) {
-            if (!allowed.has(value.toLowerCase())) {
-              context.report({
-                message: `Unexpected color ${value}`,
-                line,
-                column,
-              });
-              return;
-            }
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(text)) !== null) {
+          const value = match[0];
+          if (!allowed.has(value.toLowerCase())) {
+            context.report({
+              message: `Unexpected color ${value}`,
+              line,
+              column: column + match.index,
+            });
+            return;
           }
         }
       }
