@@ -1,7 +1,12 @@
-# @lapidist/design-lint
-
-<!-- markdownlint-disable-next-line MD033 -->
-<img src="logo.svg" alt="Design Lint tri-color logo with gradient DL monogram" width="44" height="44" />
+<!-- markdownlint-disable MD041 -->
+<!-- markdownlint-disable MD033 -->
+<p align="center">
+  <a href="https://design-lint.lapidist.net/" target="_blank" rel="noopener">
+    <img src="logo.svg" alt="Design Lint block grid logo" width="120" height="120" />
+  </a>
+</p>
+<h1 align="center">@lapidist/design-lint</h1>
+<!-- markdownlint-enable MD033 -->
 
 Linter for design systems in JavaScript, TypeScript, and CSS projects.
 
