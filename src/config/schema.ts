@@ -19,6 +19,7 @@ const tokensSchema = z
   .object({
     colors: z.record(z.string(), z.string()).optional(),
     spacing: z.record(z.string(), z.number()).optional(),
+    zIndex: z.record(z.string(), z.number()).optional(),
     typography: z
       .object({
         fontSizes: z

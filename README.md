@@ -157,6 +157,7 @@ module.exports = {
     colors: { primary: '#ff0000' },
     radii: { sm: 2 },
     spacing: { sm: 4 },
+    zIndex: { modal: 1000 },
     typography: {
       fontSizes: { base: 16 },
       fonts: { sans: 'Inter, sans-serif' },
@@ -188,7 +189,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 ## Features
 
-- Enforce color, spacing, border radius, and typography tokens
+- Enforce color, spacing, border radius, z-index, and typography tokens
 - Prevent deprecated or raw HTML component usage
 - Pluggable rule and formatter architecture
 - JSON and SARIF output for CI
@@ -202,6 +203,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 - [design-token/border-radius](docs/rules/design-token/border-radius.md)
 - [design-token/spacing](docs/rules/design-token/spacing.md)
 - [design-token/typography](docs/rules/design-token/typography.md)
+- [design-token/z-index](docs/rules/design-token/z-index.md)
 - [design-system/deprecation](docs/rules/design-system/deprecation.md)
 - [design-system/component-usage](docs/rules/design-system/component-usage.md)
 

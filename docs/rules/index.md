@@ -15,3 +15,4 @@ Design-lint includes several built-in rules categorized by domain.
 - [border-radius](./design-token/border-radius)
 - [spacing](./design-token/spacing)
 - [typography](./design-token/typography)
+- [z-index](./design-token/z-index)

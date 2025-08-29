@@ -3,6 +3,7 @@ import type ts from 'typescript';
 export interface DesignTokens {
   colors?: Record<string, string>;
   spacing?: Record<string, number>;
+  zIndex?: Record<string, number>;
   typography?: {
     fontSizes?: Record<string, number | string>;
     fonts?: Record<string, string>;
