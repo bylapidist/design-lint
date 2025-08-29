@@ -98,7 +98,7 @@ Automatically replace deprecated tokens or components:
 npx design-lint button.css --fix
 ```
 
-The `design-system/deprecation` rule rewrites `old` to `new` when run with `--fix`.
+The [`design-system/deprecation`](docs/rules/design-system/deprecation.md) rule rewrites `old` to `new` when run with `--fix`.
 
 ## Programmatic Usage
 
@@ -170,6 +170,13 @@ See the [Plugin guide](docs/plugins.md) for a step-by-step tutorial on writing a
 - Pluggable rule and formatter architecture
 - JSON and SARIF output for CI
 - Auto-fix deprecated tokens and components
+## Rules
+
+- [design-token/colors](docs/rules/design-token/colors.md)
+- [design-token/spacing](docs/rules/design-token/spacing.md)
+- [design-token/typography](docs/rules/design-token/typography.md)
+- [design-system/deprecation](docs/rules/design-system/deprecation.md)
+- [design-system/component-usage](docs/rules/design-system/component-usage.md)
 
 CSS is parsed using [PostCSS](https://postcss.org/). The default parser handles
 standard CSS syntax including multi-line declarations. Preprocessor-specific

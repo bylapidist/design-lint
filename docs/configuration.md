@@ -18,6 +18,8 @@ module.exports = {
 };
 ```
 
+See [design-token/colors](rules/design-token/colors.md), [design-token/spacing](rules/design-token/spacing.md), and [design-token/typography](rules/design-token/typography.md) for rule details.
+
 @lapidist/design-lint searches for configuration starting from the current working
 directory and walking up parent directories. In each directory it looks for
 `designlint.config.js`, `designlint.config.cjs`, `designlint.config.mjs`,
@@ -53,13 +55,13 @@ tokens: {
 }
 ```
 
-When the `design-system/deprecation` rule is enabled, references to these names
+When the [`design-system/deprecation`](rules/design-system/deprecation.md) rule is enabled, references to these names
 will trigger warnings. Running the linter with `--fix` will automatically replace
 deprecated names when a `replacement` is provided.
 
 ## Rule Options
 
-Rules can also accept configuration objects. For example, the `design-token/spacing`
+Rules can also accept configuration objects. For example, the [`design-token/spacing`](rules/design-token/spacing.md)
 rule supports a `units` array to control which CSS units are validated (default
 is `['px', 'rem', 'em']`):
 

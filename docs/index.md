@@ -31,3 +31,11 @@ yarn design-lint src
 
 Refer to the [Usage](usage.md) guide for all available command line options and
 to [Configuration](configuration.md) for setting up design tokens and rules.
+
+## Rules
+
+- [design-token/colors](rules/design-token/colors.md)
+- [design-token/spacing](rules/design-token/spacing.md)
+- [design-token/typography](rules/design-token/typography.md)
+- [design-system/deprecation](rules/design-system/deprecation.md)
+- [design-system/component-usage](rules/design-system/component-usage.md)
