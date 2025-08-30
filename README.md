@@ -10,8 +10,6 @@
 
 Linter for design systems in JavaScript, TypeScript, and CSS projects.
 
-CSS is parsed using [PostCSS](https://postcss.org/) and supports standard syntax, including multi-line declarations. Preprocessor-specific syntax (such as Sass or Less) must be transformed before linting.
-
 [Documentation](docs/usage.md) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## Table of Contents
