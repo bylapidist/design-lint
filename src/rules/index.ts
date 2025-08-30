@@ -17,6 +17,7 @@ import { opacityRule } from './token-opacity.js';
 import { outlineRule } from './token-outline.js';
 import { componentUsageRule } from './component-usage.js';
 import { deprecationRule } from './deprecation.js';
+import { variantPropRule } from './variant-prop.js';
 
 export const builtInRules = [
   animationRule,
@@ -38,4 +39,5 @@ export const builtInRules = [
   zIndexRule,
   componentUsageRule,
   deprecationRule,
+  variantPropRule,
 ];

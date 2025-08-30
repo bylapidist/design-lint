@@ -6,6 +6,7 @@ Design-lint includes several built-in rules categorized by domain.
 
 - [component-usage](./design-system/component-usage)
 - [deprecation](./design-system/deprecation)
+- [variant-prop](./design-system/variant-prop)
 
 ## Design Token
 
