@@ -19,6 +19,7 @@ import { componentUsageRule } from './component-usage.js';
 import { deprecationRule } from './deprecation.js';
 import { variantPropRule } from './variant-prop.js';
 import { componentPrefixRule } from './component-prefix.js';
+import { noInlineStylesRule } from './no-inline-styles.js';
 
 export const builtInRules = [
   animationRule,
@@ -42,4 +43,5 @@ export const builtInRules = [
   deprecationRule,
   variantPropRule,
   componentPrefixRule,
+  noInlineStylesRule,
 ];
