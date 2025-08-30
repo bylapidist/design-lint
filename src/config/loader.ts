@@ -61,11 +61,11 @@ export async function loadConfig(
       let loaded: Config = {};
       if (abs.endsWith('.ts') || abs.endsWith('.mts')) {
         try {
-          const tsNodeEsm = 'ts-node/esm';
-          await import(tsNodeEsm);
+          const tsxEsm = 'tsx/esm';
+          await import(tsxEsm);
         } catch {
           throw new Error(
-            'To load TypeScript config files, please install ts-node.',
+            'To load TypeScript config files, please install tsx.',
           );
         }
       }

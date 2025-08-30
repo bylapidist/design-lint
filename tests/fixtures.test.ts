@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-const tsNodeLoader = require.resolve('ts-node/esm');
+const tsxLoader = require.resolve('tsx/esm');
 
 const builtInRules = [
   'design-system/component-usage',
@@ -55,7 +55,7 @@ for (const { name, files } of fixtures) {
       process.execPath,
       [
         '--loader',
-        tsNodeLoader,
+        tsxLoader,
         cli,
         fixture,
         '--config',

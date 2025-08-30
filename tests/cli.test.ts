@@ -8,7 +8,7 @@ import { readWhenReady } from './helpers/fs.ts';
 import { Linter } from '../src/index.ts';
 import type { LintResult } from '../src/core/types.ts';
 
-const tsNodeLoader = require.resolve('ts-node/esm');
+const tsxLoader = require.resolve('tsx/esm');
 
 test('CLI aborts on unsupported Node versions', async () => {
   const { run } = await import('../src/cli/index.ts');
@@ -35,7 +35,7 @@ test('CLI runs when executed via a symlink', () => {
   fs.symlinkSync(cli, link);
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsNodeLoader, link, '--help'],
+    ['--loader', tsxLoader, link, '--help'],
     { encoding: 'utf8' },
   );
   assert.equal(res.status, 0);
@@ -47,7 +47,7 @@ test('init creates json config by default', () => {
   const dir = makeTmpDir();
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsNodeLoader, cli, 'init'],
+    ['--loader', tsxLoader, cli, 'init'],
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
@@ -60,7 +60,7 @@ test('init detects TypeScript and creates ts config', () => {
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsNodeLoader, cli, 'init'],
+    ['--loader', tsxLoader, cli, 'init'],
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
@@ -76,7 +76,7 @@ test('--init-format overrides detection', () => {
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsNodeLoader, cli, 'init', '--init-format', 'json'],
+    ['--loader', tsxLoader, cli, 'init', '--init-format', 'json'],
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
@@ -90,7 +90,7 @@ test('--init-format supports all formats', () => {
     const dir = makeTmpDir();
     const res = spawnSync(
       process.execPath,
-      ['--loader', tsNodeLoader, cli, 'init', '--init-format', fmt],
+      ['--loader', tsxLoader, cli, 'init', '--init-format', fmt],
       { encoding: 'utf8', cwd: dir },
     );
     assert.equal(res.status, 0);
@@ -105,7 +105,7 @@ test('CLI exits non-zero on lint errors', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -130,7 +130,7 @@ test('CLI warns when no files match', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'nomatch',
       '--config',
@@ -153,7 +153,7 @@ test('--quiet suppresses "No files matched" warning', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'nomatch',
       '--config',
@@ -178,7 +178,7 @@ test('CLI exits 0 when warnings are within --max-warnings', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -208,7 +208,7 @@ test('CLI exits 0 when warnings equal --max-warnings', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -238,7 +238,7 @@ test('CLI exits 1 when warnings exceed --max-warnings', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -265,7 +265,7 @@ test('CLI errors on invalid --max-warnings', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -291,7 +291,7 @@ test('CLI reports missing ignore file', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -317,7 +317,7 @@ test('CLI reports missing plugin', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -344,7 +344,7 @@ test('CLI --fix applies fixes', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -367,7 +367,7 @@ test('CLI surfaces config load errors', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -387,7 +387,7 @@ test('CLI surfaces output write errors', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--output',
@@ -414,7 +414,7 @@ test('CLI writes report to file with --output', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -439,7 +439,7 @@ test('CLI --quiet suppresses stdout output', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -461,7 +461,7 @@ test('CLI disables colors when stdout is not a TTY', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -484,7 +484,7 @@ test('CLI reports unknown formatter', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -511,7 +511,7 @@ test('CLI loads formatter from module path', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
       '--config',
@@ -541,7 +541,7 @@ test('CLI outputs SARIF reports', () => {
       process.execPath,
       [
         '--loader',
-        tsNodeLoader,
+        tsxLoader,
         cli,
         'file.ts',
         '--config',
@@ -573,7 +573,7 @@ test('CLI loads external plugin rules', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -600,7 +600,7 @@ test('CLI reports plugin load errors', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -636,7 +636,7 @@ test('CLI ignores common directories by default', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       path.basename(dir),
       '--config',
@@ -676,7 +676,7 @@ test('.designlintignore can unignore paths via CLI', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'src',
       'node_modules',
@@ -724,7 +724,7 @@ test('CLI skips directories listed in .designlintignore', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'src',
       'ignored',
@@ -761,7 +761,7 @@ test('CLI --ignore-path excludes files', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'src',
       '--config',
@@ -795,7 +795,7 @@ test('CLI --concurrency limits parallel lint tasks', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       '--loader',
       path.join(__dirname, 'helpers', 'trackConcurrency.ts'),
       cli,
@@ -822,7 +822,7 @@ test('CLI errors on invalid --concurrency', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -848,7 +848,7 @@ test('CLI plugin load errors include context and remediation', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -877,7 +877,7 @@ test('CLI --report outputs JSON log', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -911,7 +911,7 @@ test('CLI re-runs on file change in watch mode', async () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -970,7 +970,7 @@ test('CLI ignores --output/--report files in watch mode', async () => {
       process.execPath,
       [
         '--loader',
-        tsNodeLoader,
+        tsxLoader,
         cli,
         'file.ts',
         '--config',
@@ -1040,7 +1040,7 @@ test('CLI --cache reuses results from disk', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const args = [
     '--loader',
-    tsNodeLoader,
+    tsxLoader,
     cli,
     'file.ts',
     '--config',
@@ -1076,7 +1076,7 @@ test('CLI --cache invalidates when files change', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const args = [
     '--loader',
-    tsNodeLoader,
+    tsxLoader,
     cli,
     'file.ts',
     '--config',
@@ -1106,7 +1106,7 @@ test('CLI writes cache to specified --cache-location', () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1139,7 +1139,7 @@ test('CLI re-runs with updated config in watch mode', async () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1201,7 +1201,7 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1273,7 +1273,7 @@ export default plugin;`;
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1331,7 +1331,7 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1399,7 +1399,7 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1463,7 +1463,7 @@ test('CLI reloads when nested ignore file changes in watch mode', async () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'nested',
       '--config',
@@ -1517,7 +1517,7 @@ test('CLI updates ignore list when .gitignore changes in watch mode', async () =
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1576,7 +1576,7 @@ test('CLI continues watching after deleting ignore files in watch mode', async (
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1633,7 +1633,7 @@ test('CLI clears cache when a watched file is deleted', async () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1690,7 +1690,7 @@ test('CLI continues linting after deleting a watched file', async () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'a.ts',
       'b.ts',
@@ -1747,7 +1747,7 @@ test('CLI closes watcher on SIGINT', async () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',
@@ -1804,7 +1804,7 @@ test('CLI handles errors from watch callbacks', async () => {
     process.execPath,
     [
       '--loader',
-      tsNodeLoader,
+      tsxLoader,
       cli,
       'file.ts',
       '--config',

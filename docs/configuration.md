@@ -74,7 +74,7 @@ directory and walking up parent directories. In each directory it looks for
 `designlint.config.js`, `designlint.config.cjs`, `designlint.config.mjs`,
 `designlint.config.ts`, `designlint.config.mts`, then
 `designlint.config.json`. The first file found is used. Loading TypeScript
-config files requires [`ts-node`](https://typestrong.org/ts-node/) to be
+config files requires [`tsx`](https://tsx.is/) to be
 installed. When a configuration path is explicitly provided (for example via
 `loadConfig(cwd, 'path')` or the CLI `--config` flag) and the file does not
 exist, the linter throws an error.
