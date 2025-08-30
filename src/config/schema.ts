@@ -22,17 +22,15 @@ const tokensSchema = z
     colors: z.record(z.string(), z.string()).optional(),
     spacing: z.record(z.string(), z.number()).optional(),
     zIndex: z.record(z.string(), z.number()).optional(),
-    radii: z.record(z.string(), numberOrString).optional(),
     borderRadius: z.record(z.string(), numberOrString).optional(),
     borderWidths: z.record(z.string(), numberOrString).optional(),
-    borderWidth: z.record(z.string(), numberOrString).optional(),
     shadows: z.record(z.string(), z.string()).optional(),
     durations: z.record(z.string(), numberOrString).optional(),
-    motion: z
-      .object({
-        durations: z.record(z.string(), numberOrString).optional(),
-      })
-      .optional(),
+    animations: z.record(z.string(), z.string()).optional(),
+    blurs: z.record(z.string(), numberOrString).optional(),
+    borderColors: z.record(z.string(), z.string()).optional(),
+    opacity: z.record(z.string(), numberOrString).optional(),
+    outlines: z.record(z.string(), z.string()).optional(),
     fontSizes: z.record(z.string(), numberOrString).optional(),
     fonts: z.record(z.string(), z.string()).optional(),
     lineHeights: z.record(z.string(), numberOrString).optional(),

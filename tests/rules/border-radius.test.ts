@@ -4,7 +4,7 @@ import { Linter } from '../../src/core/linter.ts';
 
 test('design-token/border-radius reports invalid value', async () => {
   const linter = new Linter({
-    tokens: { radii: { sm: 2, md: 4 } },
+    tokens: { borderRadius: { sm: 2, md: 4 } },
     rules: { 'design-token/border-radius': 'error' },
   });
   const res = await linter.lintText('.a{border-radius:3px;}', 'file.css');
@@ -13,7 +13,7 @@ test('design-token/border-radius reports invalid value', async () => {
 
 test('design-token/border-radius accepts valid values', async () => {
   const linter = new Linter({
-    tokens: { radii: { sm: 2, md: 4 } },
+    tokens: { borderRadius: { sm: 2, md: 4 } },
     rules: { 'design-token/border-radius': 'error' },
   });
   const css = '.a{border-radius:4px;} .b{border-radius:2px;}';
@@ -23,7 +23,7 @@ test('design-token/border-radius accepts valid values', async () => {
 
 test('design-token/border-radius reports numeric literals', async () => {
   const linter = new Linter({
-    tokens: { radii: { sm: 2, md: 4 } },
+    tokens: { borderRadius: { sm: 2, md: 4 } },
     rules: { 'design-token/border-radius': 'error' },
   });
   const res = await linter.lintText('const r = 3;', 'file.ts');
@@ -36,5 +36,5 @@ test('design-token/border-radius warns when tokens missing', async () => {
   });
   const res = await linter.lintText('', 'file.ts');
   assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].message.includes('radii'));
+  assert.ok(res.messages[0].message.includes('borderRadius'));
 });

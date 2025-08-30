@@ -63,8 +63,5 @@ test('design-token/border-width warns when tokens missing', async () => {
   });
   const res = await linter.lintText('', 'file.ts');
   assert.equal(res.messages.length, 1);
-  assert.ok(
-    res.messages[0].message.includes('borderWidths') ||
-      res.messages[0].message.includes('borderWidth'),
-  );
+  assert.ok(res.messages[0].message.includes('borderWidths'));
 });

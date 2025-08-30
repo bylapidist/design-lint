@@ -8,22 +8,23 @@ export interface DesignTokens {
   /** z-index tokens. */
   zIndex?: Record<string, number>;
   /** Border radius tokens. */
-  radii?: Record<string, number | string>;
-  /** Border radius tokens (alias). */
   borderRadius?: Record<string, number | string>;
   /** Border width tokens. */
   borderWidths?: Record<string, number | string>;
-  /** Border width tokens (alias). */
-  borderWidth?: Record<string, number | string>;
   /** Box shadow tokens. */
   shadows?: Record<string, string>;
   /** Motion duration tokens. */
   durations?: Record<string, number | string>;
-  /** Motion tokens grouped under motion. */
-  motion?: {
-    /** Motion duration tokens. */
-    durations?: Record<string, number | string>;
-  };
+  /** Animation tokens. */
+  animations?: Record<string, string>;
+  /** Blur tokens. */
+  blurs?: Record<string, number | string>;
+  /** Border color tokens. */
+  borderColors?: Record<string, string>;
+  /** Opacity tokens. */
+  opacity?: Record<string, number | string>;
+  /** Outline tokens. */
+  outlines?: Record<string, string>;
   /** Font size tokens. */
   fontSizes?: Record<string, number | string>;
   /** Font family tokens. */

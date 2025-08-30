@@ -37,12 +37,11 @@ export default defineConfig({
           {
             text: 'Design Token',
             items: [
-              { text: 'colors', link: '/rules/design-token/colors' },
-              { text: 'line-height', link: '/rules/design-token/line-height' },
-              { text: 'font-weight', link: '/rules/design-token/font-weight' },
+              { text: 'animation', link: '/rules/design-token/animation' },
+              { text: 'blur', link: '/rules/design-token/blur' },
               {
-                text: 'letter-spacing',
-                link: '/rules/design-token/letter-spacing',
+                text: 'border-color',
+                link: '/rules/design-token/border-color',
               },
               {
                 text: 'border-radius',
@@ -53,10 +52,19 @@ export default defineConfig({
                 link: '/rules/design-token/border-width',
               },
               { text: 'box-shadow', link: '/rules/design-token/box-shadow' },
+              { text: 'colors', link: '/rules/design-token/colors' },
               { text: 'duration', link: '/rules/design-token/duration' },
-              { text: 'spacing', link: '/rules/design-token/spacing' },
-              { text: 'font-size', link: '/rules/design-token/font-size' },
               { text: 'font-family', link: '/rules/design-token/font-family' },
+              { text: 'font-size', link: '/rules/design-token/font-size' },
+              { text: 'font-weight', link: '/rules/design-token/font-weight' },
+              {
+                text: 'letter-spacing',
+                link: '/rules/design-token/letter-spacing',
+              },
+              { text: 'line-height', link: '/rules/design-token/line-height' },
+              { text: 'opacity', link: '/rules/design-token/opacity' },
+              { text: 'outline', link: '/rules/design-token/outline' },
+              { text: 'spacing', link: '/rules/design-token/spacing' },
               { text: 'z-index', link: '/rules/design-token/z-index' },
             ],
           },

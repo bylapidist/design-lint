@@ -25,10 +25,6 @@ Add the package to your project and use the generated binary:
 ```bash
 npm install --save-dev @lapidist/design-lint
 npx design-lint src
-# or
-pnpm design-lint src
-# or
-yarn design-lint src
 ```
 
 Refer to the [Usage](usage.md) guide for all available command line options,

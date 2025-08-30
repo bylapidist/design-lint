@@ -1,16 +1,15 @@
-import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
 
-export const borderRadiusRule: RuleModule = {
-  name: 'design-token/border-radius',
-  meta: { description: 'enforce border-radius tokens' },
+export const blurRule: RuleModule = {
+  name: 'design-token/blur',
+  meta: { description: 'enforce blur tokens' },
   create(context) {
-    const radiiTokens = context.tokens?.borderRadius;
-    if (!radiiTokens || Object.keys(radiiTokens).length === 0) {
+    const blurTokens = context.tokens?.blurs;
+    if (!blurTokens || Object.keys(blurTokens).length === 0) {
       context.report({
         message:
-          'design-token/border-radius requires radius tokens; configure tokens.borderRadius to enable this rule.',
+          'design-token/blur requires blur tokens; configure tokens.blurs to enable this rule.',
         line: 1,
         column: 1,
       });
@@ -27,7 +26,7 @@ export const borderRadiusRule: RuleModule = {
       return null;
     };
     const allowed = new Set(
-      Object.values(radiiTokens)
+      Object.values(blurTokens)
         .map((v) => parse(v))
         .filter((n): n is number => n !== null),
     );
@@ -41,35 +40,22 @@ export const borderRadiusRule: RuleModule = {
       ).map((u) => u.toLowerCase()),
     );
     return {
-      onNode(node) {
-        if (ts.isNumericLiteral(node)) {
-          const value = Number(node.text);
-          if (!allowed.has(value)) {
-            const pos = node
-              .getSourceFile()
-              .getLineAndCharacterOfPosition(node.getStart());
-            context.report({
-              message: `Unexpected border radius ${value}`,
-              line: pos.line + 1,
-              column: pos.character + 1,
-            });
-          }
-        }
-      },
       onCSSDeclaration(decl) {
-        if (decl.prop === 'border-radius') {
+        if (decl.prop === 'filter' || decl.prop === 'backdrop-filter') {
           let reported = false;
           valueParser(decl.value).walk((node) => {
             if (reported) return false;
-            if (node.type === 'function') return false;
-            if (node.type !== 'word') return;
-            const parsed = valueParser.unit(node.value);
+            if (node.type !== 'function' || node.value !== 'blur') return;
+            if (node.nodes.length === 0) return;
+            const arg = node.nodes[0];
+            if (arg.type !== 'word') return;
+            const parsed = valueParser.unit(arg.value);
             if (!parsed || !parsed.unit) return;
             const num = parseFloat(parsed.number);
             const unit = parsed.unit.toLowerCase();
             if (!isNaN(num) && allowedUnits.has(unit) && !allowed.has(num)) {
               context.report({
-                message: `Unexpected border radius ${node.value}`,
+                message: `Unexpected blur ${arg.value}`,
                 line: decl.line,
                 column: decl.column,
               });

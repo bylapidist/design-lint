@@ -15,10 +15,7 @@ Install the package and run it from your project:
 ```bash
 npm install --save-dev @lapidist/design-lint
 npx design-lint [files...]
-# or
-pnpm design-lint [files...]
-# or
-yarn design-lint [files...]
+
 ```
 
 ## Initialize configuration

@@ -6,12 +6,11 @@ export const borderWidthRule: RuleModule = {
   name: 'design-token/border-width',
   meta: { description: 'enforce border-width tokens' },
   create(context) {
-    const widthTokens =
-      context.tokens?.borderWidths ?? context.tokens?.borderWidth;
+    const widthTokens = context.tokens?.borderWidths;
     if (!widthTokens || Object.keys(widthTokens).length === 0) {
       context.report({
         message:
-          'design-token/border-width requires border width tokens; configure tokens.borderWidths or tokens.borderWidth to enable this rule.',
+          'design-token/border-width requires border width tokens; configure tokens.borderWidths to enable this rule.',
         line: 1,
         column: 1,
       });

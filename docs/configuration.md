@@ -8,7 +8,7 @@ For JavaScript:
 module.exports = {
   tokens: {
     colors: { primary: '#ff0000' },
-    radii: { sm: 2, md: 4 },
+    borderRadius: { sm: 2, md: 4 },
     spacing: { sm: 4, md: 8 },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
@@ -31,7 +31,7 @@ import { defineConfig } from '@lapidist/design-lint';
 export default defineConfig({
   tokens: {
     colors: { primary: '#ff0000' },
-    radii: { sm: 2, md: 4 },
+    borderRadius: { sm: 2, md: 4 },
     spacing: { sm: 4, md: 8 },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
@@ -50,19 +50,28 @@ export default defineConfig({
 
 `@lapidist/design-lint` expects tokens to use specific formats:
 
-- **radii** / **borderRadius**: numbers or strings with `px`, `rem`, or `em` units. Numbers are treated as `px`.
-- **borderWidths** / **borderWidth**: numbers or strings with `px`, `rem`, or `em` units. Numbers are treated as `px`.
+- **borderRadius**: numbers or strings with `px`, `rem`, or `em` units. Numbers are treated as `px`.
+- **borderWidths**: numbers or strings with `px`, `rem`, or `em` units. Numbers are treated as `px`.
 - **shadows**: strings representing complete `box-shadow` declarations.
-- **durations** or **motion.durations**: numbers (milliseconds) or strings with `ms` or `s` units.
+- **durations**: numbers (milliseconds) or strings with `ms` or `s` units.
+- **animations**: strings representing complete `animation` declarations.
+- **blurs**: numbers or strings with `px`, `rem`, or `em` units used in `blur()`.
+- **borderColors**: color strings.
+- **opacity**: numbers between 0 and 1.
+- **outlines**: strings representing complete `outline` declarations.
 
 ```js
 module.exports = {
   tokens: {
-    radii: { sm: 2, lg: '8px' },
+    borderRadius: { sm: 2, lg: '8px' },
     borderWidths: { thin: 1, thick: '2px' },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     durations: { short: 100 },
-    motion: { durations: { long: '250ms' } },
+    animations: { spin: 'spin 1s linear infinite' },
+    blurs: { sm: '4px' },
+    borderColors: { primary: '#fff' },
+    opacity: { low: 0.2 },
+    outlines: { focus: '2px solid #000' },
   },
 };
 ```
@@ -99,16 +108,21 @@ without providing the corresponding tokens results in a configuration warning:
 
 - `design-token/colors` requires `tokens.colors`
 - `design-token/spacing` requires `tokens.spacing`
-- `design-token/border-radius` requires `tokens.radii` or `tokens.borderRadius`
-- `design-token/border-width` requires `tokens.borderWidths` or `tokens.borderWidth`
+- `design-token/border-radius` requires `tokens.borderRadius`
+- `design-token/border-width` requires `tokens.borderWidths`
 - `design-token/box-shadow` requires `tokens.shadows`
-- `design-token/duration` requires `tokens.durations` or `tokens.motion.durations`
+- `design-token/duration` requires `tokens.durations`
 - `design-token/line-height` requires `tokens.lineHeights`
 - `design-token/font-weight` requires `tokens.fontWeights`
 - `design-token/letter-spacing` requires `tokens.letterSpacings`
 - `design-token/z-index` requires `tokens.zIndex`
 - `design-token/font-size` requires `tokens.fontSizes`
 - `design-token/font-family` requires `tokens.fonts`
+- `design-token/animation` requires `tokens.animations`
+- `design-token/blur` requires `tokens.blurs`
+- `design-token/border-color` requires `tokens.borderColors`
+- `design-token/opacity` requires `tokens.opacity`
+- `design-token/outline` requires `tokens.outlines`
 - `design-system/deprecation` requires `tokens.deprecations`
 
 To resolve the warning, supply the necessary tokens or disable the rule.
