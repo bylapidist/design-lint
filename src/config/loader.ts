@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { createRequire } from 'module';
+import { findUp } from 'find-up';
 import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../utils/paths.js';
@@ -103,43 +104,17 @@ export async function loadConfig(
  * @returns Absolute path to config if found.
  */
 async function findConfig(cwd: string): Promise<string | undefined> {
-  let dir = cwd;
-  // Walk up parent directories looking for a config file
-  while (true) {
-    const js = path.join(dir, 'designlint.config.js');
-    try {
-      const stats = await fs.promises.stat(js);
-      if (stats.isFile()) return js;
-    } catch {}
-    const cjs = path.join(dir, 'designlint.config.cjs');
-    try {
-      const stats = await fs.promises.stat(cjs);
-      if (stats.isFile()) return cjs;
-    } catch {}
-    const mjs = path.join(dir, 'designlint.config.mjs');
-    try {
-      const stats = await fs.promises.stat(mjs);
-      if (stats.isFile()) return mjs;
-    } catch {}
-    const ts = path.join(dir, 'designlint.config.ts');
-    try {
-      const stats = await fs.promises.stat(ts);
-      if (stats.isFile()) return ts;
-    } catch {}
-    const mts = path.join(dir, 'designlint.config.mts');
-    try {
-      const stats = await fs.promises.stat(mts);
-      if (stats.isFile()) return mts;
-    } catch {}
-    const json = path.join(dir, 'designlint.config.json');
-    try {
-      const stats = await fs.promises.stat(json);
-      if (stats.isFile()) return json;
-    } catch {}
-    const parent = path.dirname(dir);
-    if (parent === dir) return undefined;
-    dir = parent;
-  }
+  return findUp(
+    [
+      'designlint.config.js',
+      'designlint.config.cjs',
+      'designlint.config.mjs',
+      'designlint.config.ts',
+      'designlint.config.mts',
+      'designlint.config.json',
+    ],
+    { cwd },
+  );
 }
 
 /**
