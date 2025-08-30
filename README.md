@@ -1,16 +1,14 @@
 <!-- markdownlint-disable MD041 -->
 <!-- markdownlint-disable MD033 -->
-<p align="center">
+<div>
   <a href="https://design-lint.lapidist.net/" target="_blank" rel="noopener">
-    <img src="logo.svg" alt="Design Lint block grid logo" width="120" height="120" />
+    <img src="logo.svg" alt="Design Lint block grid logo" width="64" height="64" />
   </a>
-</p>
-<h1 align="center">@lapidist/design-lint</h1>
+</div>
+<h1>@lapidist/design-lint</h1>
 <!-- markdownlint-enable MD033 -->
 
 Linter for design systems in JavaScript, TypeScript, and CSS projects.
-
-CSS is parsed using [PostCSS](https://postcss.org/) and supports standard syntax, including multi-line declarations. Preprocessor-specific syntax (such as Sass or Less) must be transformed before linting.
 
 [Documentation](docs/usage.md) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
