@@ -1,5 +1,15 @@
 # @lapidist/design-lint
 
+## 4.3.0
+
+### Minor Changes
+
+- 9b0d34c: add component-prefix rule to enforce design system component prefixes
+- 6a15725: add variant-prop rule to enforce allowed component variants
+- 8230686: add icon-usage rule to discourage raw svg elements and non-design system icon components
+- 45ac558: add import-path rule to ensure design system components are imported from allowed packages
+- 5332dcb: add no-inline-styles rule to report style and className usage on design system components
+
 ## 4.2.0
 
 ### Minor Changes
