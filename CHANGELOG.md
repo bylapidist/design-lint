@@ -1,5 +1,13 @@
 # @lapidist/design-lint
 
+## 4.1.1
+
+### Patch Changes
+
+- 7756088: refactor token-colors rule to use color-string for color parsing
+- 7838fd2: use find-up to simplify config file discovery
+- d606120: replace custom atomic write implementation with write-file-atomic
+
 ## 4.1.0
 
 ### Minor Changes
