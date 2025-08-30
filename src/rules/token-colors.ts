@@ -1,6 +1,8 @@
 import ts from 'typescript';
+import valueParser from 'postcss-value-parser';
+import colorString from 'color-string';
+import colorName from 'color-name';
 import type { RuleModule } from '../core/types.js';
-import colorNames from '../color-names.js';
 
 type ColorFormat =
   | 'hex'
@@ -14,32 +16,22 @@ type ColorFormat =
   | 'color'
   | 'named';
 
-const hexRegex =
-  /#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g;
-const rgbRegex = /rgb\(\s*(?:\d{1,3}\s*,\s*){2}\d{1,3}\s*\)/gi;
-const rgbaRegex = /rgba\(\s*(?:\d{1,3}\s*,\s*){3}(?:0|1|0?\.\d+)\s*\)/gi;
-const hslRegex = /hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)/gi;
-const hslaRegex =
-  /hsla\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*,\s*(?:0|1|0?\.\d+)\s*\)/gi;
-const hwbRegex = /\bhwb\([^)]*\)/gi;
-const labRegex = /\blab\([^)]*\)/gi;
-const lchRegex = /\blch\([^)]*\)/gi;
-const colorFnRegex = /\bcolor\([^)]*\)/gi;
+const namedColors = new Set(Object.keys(colorName));
 
-const namedRegex = new RegExp(`\\b(?:${colorNames.join('|')})\\b`, 'gi');
-
-const patterns: { format: ColorFormat; regex: RegExp }[] = [
-  { format: 'hex', regex: hexRegex },
-  { format: 'rgb', regex: rgbRegex },
-  { format: 'rgba', regex: rgbaRegex },
-  { format: 'hsl', regex: hslRegex },
-  { format: 'hsla', regex: hslaRegex },
-  { format: 'hwb', regex: hwbRegex },
-  { format: 'lab', regex: labRegex },
-  { format: 'lch', regex: lchRegex },
-  { format: 'color', regex: colorFnRegex },
-  { format: 'named', regex: namedRegex },
-];
+function detectFormat(value: string): ColorFormat | null {
+  const v = value.toLowerCase();
+  if (v.startsWith('#')) return 'hex';
+  if (v.startsWith('rgba(')) return 'rgba';
+  if (v.startsWith('rgb(')) return 'rgb';
+  if (v.startsWith('hsla(')) return 'hsla';
+  if (v.startsWith('hsl(')) return 'hsl';
+  if (v.startsWith('hwb(')) return 'hwb';
+  if (v.startsWith('lab(')) return 'lab';
+  if (v.startsWith('lch(')) return 'lch';
+  if (v.startsWith('color(')) return 'color';
+  if (namedColors.has(v)) return 'named';
+  return null;
+}
 
 interface ColorRuleOptions {
   allow?: ColorFormat[];
@@ -64,24 +56,32 @@ export const colorsRule: RuleModule = {
     );
     const opts = (context.options as ColorRuleOptions) || {};
     const allowFormats = new Set(opts.allow || []);
+    const parserFormats = new Set<ColorFormat>([
+      'hex',
+      'rgb',
+      'rgba',
+      'hsl',
+      'hsla',
+      'hwb',
+      'named',
+    ]);
 
     const check = (text: string, line: number, column: number) => {
-      for (const { format, regex } of patterns) {
-        if (allowFormats.has(format)) continue;
-        regex.lastIndex = 0;
-        let match: RegExpExecArray | null;
-        while ((match = regex.exec(text)) !== null) {
-          const value = match[0];
-          if (!allowed.has(value.toLowerCase())) {
-            context.report({
-              message: `Unexpected color ${value}`,
-              line,
-              column: column + match.index,
-            });
-            return;
-          }
+      const parsed = valueParser(text);
+      parsed.walk((node) => {
+        const value = valueParser.stringify(node);
+        const format = detectFormat(value);
+        if (!format || allowFormats.has(format)) return;
+        if (parserFormats.has(format) && !colorString.get(value)) return;
+        if (!allowed.has(value.toLowerCase())) {
+          context.report({
+            message: `Unexpected color ${value}`,
+            line,
+            column: column + node.sourceIndex,
+          });
+          return false;
         }
-      }
+      });
     };
 
     return {
