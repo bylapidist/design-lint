@@ -250,6 +250,21 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 ## Rules
 
+### Design System
+
+- [design-system/component-prefix](docs/rules/design-system/component-prefix.md)
+- [design-system/component-usage](docs/rules/design-system/component-usage.md)
+- [design-system/deprecation](docs/rules/design-system/deprecation.md)
+- [design-system/icon-usage](docs/rules/design-system/icon-usage.md)
+- [design-system/import-path](docs/rules/design-system/import-path.md)
+- [design-system/no-inline-styles](docs/rules/design-system/no-inline-styles.md)
+- [design-system/variant-prop](docs/rules/design-system/variant-prop.md)
+
+### Design Token
+
+- [design-token/animation](docs/rules/design-token/animation.md)
+- [design-token/blur](docs/rules/design-token/blur.md)
+- [design-token/border-color](docs/rules/design-token/border-color.md)
 - [design-token/border-radius](docs/rules/design-token/border-radius.md)
 - [design-token/border-width](docs/rules/design-token/border-width.md)
 - [design-token/box-shadow](docs/rules/design-token/box-shadow.md)
@@ -260,10 +275,10 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 - [design-token/font-weight](docs/rules/design-token/font-weight.md)
 - [design-token/letter-spacing](docs/rules/design-token/letter-spacing.md)
 - [design-token/line-height](docs/rules/design-token/line-height.md)
+- [design-token/opacity](docs/rules/design-token/opacity.md)
+- [design-token/outline](docs/rules/design-token/outline.md)
 - [design-token/spacing](docs/rules/design-token/spacing.md)
 - [design-token/z-index](docs/rules/design-token/z-index.md)
-- [design-system/component-usage](docs/rules/design-system/component-usage.md)
-- [design-system/deprecation](docs/rules/design-system/deprecation.md)
 
 ## CI
 
