@@ -12,7 +12,7 @@ import { getFormatter } from '../formatters/index.js';
 import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
-import { writeFileAtomic, writeFileAtomicSync } from '../utils/atomicWrite.js';
+import writeFileAtomic from 'write-file-atomic';
 
 /**
  * Print the package version to stdout.
@@ -84,7 +84,7 @@ function initConfig(initFormat?: string) {
       break;
   }
 
-  writeFileAtomicSync(configPath, contents);
+  writeFileAtomic.sync(configPath, contents);
   console.log(`Created designlint.config.${format}`);
 }
 
