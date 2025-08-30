@@ -192,15 +192,25 @@ Array of rule modules bundled with the linter.
 
 Includes:
 
+ - [`animation`](./rules/design-token/animation.md)
+ - [`blur`](./rules/design-token/blur.md)
+ - [`border-color`](./rules/design-token/border-color.md)
+ - [`border-radius`](./rules/design-token/border-radius.md)
+ - [`border-width`](./rules/design-token/border-width.md)
+ - [`box-shadow`](./rules/design-token/box-shadow.md)
  - [`colors`](./rules/design-token/colors.md)
-- [`line-height`](./rules/design-token/line-height.md)
-- [`letter-spacing`](./rules/design-token/letter-spacing.md)
-- [`spacing`](./rules/design-token/spacing.md)
-- [`duration`](./rules/design-token/duration.md)
- - [`font-size`](./rules/design-token/font-size.md)
+ - [`duration`](./rules/design-token/duration.md)
  - [`font-family`](./rules/design-token/font-family.md)
-- [`component-usage`](./rules/design-system/component-usage.md)
-- [`deprecation`](./rules/design-system/deprecation.md)
+ - [`font-size`](./rules/design-token/font-size.md)
+ - [`font-weight`](./rules/design-token/font-weight.md)
+ - [`letter-spacing`](./rules/design-token/letter-spacing.md)
+ - [`line-height`](./rules/design-token/line-height.md)
+ - [`opacity`](./rules/design-token/opacity.md)
+ - [`outline`](./rules/design-token/outline.md)
+ - [`spacing`](./rules/design-token/spacing.md)
+ - [`z-index`](./rules/design-token/z-index.md)
+ - [`component-usage`](./rules/design-system/component-usage.md)
+ - [`deprecation`](./rules/design-system/deprecation.md)
 
 ### Returns
 

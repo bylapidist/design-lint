@@ -5,7 +5,7 @@ export default {
       md: 8,
       lg: 16
     },
-    radii: {
+    borderRadius: {
       sm: '2px',
       md: '4px'
     }

@@ -4,20 +4,15 @@ import type { RuleModule } from '../core/types.js';
 
 export const durationRule: RuleModule = {
   name: 'design-token/duration',
-  meta: { description: 'enforce motion duration tokens' },
+  meta: { description: 'enforce duration tokens' },
   create(context) {
-    const durationTokens =
-      (context.tokens as { durations?: Record<string, unknown> } | undefined)
-        ?.durations ??
-      (
-        context.tokens as
-          | { motion?: { durations?: Record<string, unknown> } }
-          | undefined
-      )?.motion?.durations;
+    const durationTokens = (
+      context.tokens as { durations?: Record<string, unknown> } | undefined
+    )?.durations;
     if (!durationTokens || Object.keys(durationTokens).length === 0) {
       context.report({
         message:
-          'design-token/duration requires duration tokens; configure tokens.durations or tokens.motion.durations to enable this rule.',
+          'design-token/duration requires duration tokens; configure tokens.durations to enable this rule.',
         line: 1,
         column: 1,
       });

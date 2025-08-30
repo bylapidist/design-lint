@@ -51,10 +51,6 @@ Install locally and use the generated binary:
 ```bash
 npm install --save-dev @lapidist/design-lint
 npx design-lint --help
-# or
-pnpm design-lint --help
-# or
-yarn design-lint --help
 ```
 
 ## CLI Usage
@@ -187,7 +183,7 @@ Create a `designlint.config.js` (or `.json`) file to define design tokens and ru
 module.exports = {
   tokens: {
     colors: { primary: '#ff0000' },
-    radii: { sm: 2 },
+    borderRadius: { sm: 2 },
     spacing: { sm: 4 },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
@@ -210,7 +206,7 @@ import { defineConfig } from '@lapidist/design-lint';
 export default defineConfig({
   tokens: {
     colors: { primary: '#ff0000' },
-    radii: { sm: 2 },
+    borderRadius: { sm: 2 },
     spacing: { sm: 4 },
     shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' },
     zIndex: { modal: 1000 },
