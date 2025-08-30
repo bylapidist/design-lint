@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.1.0
+
+### Minor Changes
+
+- 4bdc354: add inline disable directives to ignore linting for lines or blocks
+
 ## 4.0.0
 
 ### Major Changes
