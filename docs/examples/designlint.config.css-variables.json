@@ -1,0 +1,21 @@
+{
+  "tokens": {
+    "colors": {
+      "primary": "var(--color-primary)",
+      "secondary": "var(--color-secondary)"
+    },
+    "spacing": {
+      "sm": "var(--spacing-sm)",
+      "lg": "var(--spacing-lg)"
+    },
+    "fontSizes": {
+      "base": "var(--font-size-base)",
+      "xl": "var(--font-size-xl)"
+    }
+  },
+  "rules": {
+    "design-token/colors": "error",
+    "design-token/spacing": "error",
+    "design-token/font-size": "error"
+  }
+}
