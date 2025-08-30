@@ -28,10 +28,24 @@ export default defineConfig({
             text: 'Design System',
             items: [
               {
+                text: 'component-prefix',
+                link: '/rules/design-system/component-prefix',
+              },
+              {
                 text: 'component-usage',
                 link: '/rules/design-system/component-usage',
               },
               { text: 'deprecation', link: '/rules/design-system/deprecation' },
+              { text: 'icon-usage', link: '/rules/design-system/icon-usage' },
+              { text: 'import-path', link: '/rules/design-system/import-path' },
+              {
+                text: 'no-inline-styles',
+                link: '/rules/design-system/no-inline-styles',
+              },
+              {
+                text: 'variant-prop',
+                link: '/rules/design-system/variant-prop',
+              },
             ],
           },
           {
