@@ -18,6 +18,7 @@ import { outlineRule } from './token-outline.js';
 import { componentUsageRule } from './component-usage.js';
 import { deprecationRule } from './deprecation.js';
 import { variantPropRule } from './variant-prop.js';
+import { componentPrefixRule } from './component-prefix.js';
 
 export const builtInRules = [
   animationRule,
@@ -40,4 +41,5 @@ export const builtInRules = [
   componentUsageRule,
   deprecationRule,
   variantPropRule,
+  componentPrefixRule,
 ];
