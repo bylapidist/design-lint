@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.1.3
+
+### Patch Changes
+
+- e80eb86: replace ts-node with tsx for loading TypeScript config files to avoid fs.Stats deprecation warning
+
 ## 4.1.2
 
 ### Patch Changes
