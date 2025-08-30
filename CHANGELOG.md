@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.2.0
+
+### Minor Changes
+
+- c931042: add animation, blur, border-color, opacity, and outline design token rules and remove deprecated token groups
+
 ## 4.1.4
 
 ### Patch Changes
