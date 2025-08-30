@@ -4,6 +4,7 @@ Design-lint includes several built-in rules categorized by domain.
 
 ## Design System
 
+- [component-prefix](./design-system/component-prefix)
 - [component-usage](./design-system/component-usage)
 - [deprecation](./design-system/deprecation)
 - [variant-prop](./design-system/variant-prop)
