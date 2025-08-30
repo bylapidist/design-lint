@@ -371,6 +371,7 @@ export async function run(argv = process.argv.slice(2)) {
           if (ignoreFilePaths.includes(resolved)) return false;
           if (outputPath && resolved === outputPath) return true;
           if (reportPath && resolved === reportPath) return true;
+          if (rel === '') return false;
           return ig.ignores(rel);
         },
         ignoreInitial: true,

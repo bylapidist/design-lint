@@ -16,8 +16,7 @@ export const toPosix = (p: string) => p.split(path.sep).join('/');
  */
 export const relFrom = (root: string, p: string) => {
   const rel = path.relative(root, p || '');
-  const safe = rel === '' ? '.' : rel;
-  return toPosix(safe);
+  return toPosix(rel);
 };
 
 /**

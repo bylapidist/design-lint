@@ -20,7 +20,7 @@ test('relFromCwd produces posix paths', () => {
 });
 
 test('relFrom handles empty path', () => {
-  assert.equal(relFrom(process.cwd(), ''), '.');
+  assert.equal(relFrom(process.cwd(), ''), '');
 });
 
 test('realpathIfExists resolves paths', () => {

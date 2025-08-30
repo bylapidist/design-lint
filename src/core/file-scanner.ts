@@ -81,7 +81,7 @@ export async function scanFiles(
   for (const t of targets) {
     const full = realpathIfExists(path.resolve(t));
     const rel = relFromCwd(full);
-    if (ig.ignores(rel)) continue;
+    if (rel !== '' && ig.ignores(rel)) continue;
     try {
       const stat = await fs.stat(full);
       if (stat.isDirectory()) {
