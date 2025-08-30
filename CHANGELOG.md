@@ -1,5 +1,12 @@
 # @lapidist/design-lint
 
+## 4.1.2
+
+### Patch Changes
+
+- e5da749: avoid invalid '.' paths when scanning the current directory
+- 7945e53: remove redundant atomic write wrapper and use library directly
+
 ## 4.1.1
 
 ### Patch Changes
