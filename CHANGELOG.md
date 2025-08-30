@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.1.4
+
+### Patch Changes
+
+- 17c4fe0: publish docs to github pages
+
 ## 4.1.3
 
 ### Patch Changes
