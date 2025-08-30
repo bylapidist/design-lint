@@ -32,6 +32,8 @@ Linter for design systems in JavaScript, TypeScript, and CSS projects.
 
 General purpose linters enforce code style and correctness but know nothing about your design system. `@lapidist/design-lint` keeps interfaces consistent by validating design tokens and component usage alongside your existing tooling.
 
+For more background information, read the [introductory blog post](https://lapidist.net/articles/2025/introducing-lapidist-design-lint/).
+
 ## Installation
 
 Node.js 22 or later is required.
