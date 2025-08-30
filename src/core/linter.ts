@@ -180,6 +180,7 @@ export class Linter {
     const enabled = this.getEnabledRules();
     const messages: LintResult['messages'] = [];
     const ruleDescriptions: Record<string, string> = {};
+    const disabledLines = getDisabledLines(text);
     const contextBase: Omit<RuleContext, 'options'> = {
       report: () => {},
       tokens: (this.config.tokens || {}) as DesignTokens,
@@ -417,8 +418,8 @@ export class Linter {
         for (const l of listeners) l.onCSSDeclaration?.(decl);
       }
     }
-
-    return { filePath, messages, ruleDescriptions };
+    const filtered = messages.filter((m) => !disabledLines.has(m.line));
+    return { filePath, messages: filtered, ruleDescriptions };
   }
 
   private getEnabledRules(): {
@@ -496,6 +497,29 @@ function parseCSS(
     });
   }
   return decls;
+}
+
+function getDisabledLines(text: string): Set<number> {
+  const disabled = new Set<number>();
+  const lines = text.split(/\r?\n/);
+  let block = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/\/\*\s*design-lint-disable\s*\*\//.test(line)) {
+      block = true;
+      continue;
+    }
+    if (/\/\*\s*design-lint-enable\s*\*\//.test(line)) {
+      block = false;
+      continue;
+    }
+    if (/design-lint-disable-next-line/.test(line)) {
+      disabled.add(i + 2);
+      continue;
+    }
+    if (block) disabled.add(i + 1);
+  }
+  return disabled;
 }
 
 /**

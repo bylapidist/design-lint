@@ -103,6 +103,26 @@ npx design-lint --version
 | `--fix` | Automatically fix problems when possible. |
 | `--version` | Print the CLI version and exit. |
 
+### Inline disabling
+
+Skip linting for specific lines with comment directives.
+
+Ignore the next line:
+
+```js
+// design-lint-disable-next-line
+const color = 'red';
+```
+
+Disable and re-enable a block:
+
+```css
+/* design-lint-disable */
+.button { color: red; }
+/* design-lint-enable */
+```
+
+All rules are disabled within the suppressed region.
 
 ### Examples
 

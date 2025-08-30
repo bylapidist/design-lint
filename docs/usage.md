@@ -61,6 +61,27 @@ Override the format with `--init-format <format>` where `<format>` is one of
 - `--watch`: Watch files and re-lint on changes.
 - `--fix`: Automatically fix problems when possible.
 
+## Inline disabling
+
+Skip linting for specific lines with special comments.
+
+Ignore the next line:
+
+```js
+// design-lint-disable-next-line
+const color = 'red';
+```
+
+Disable and re-enable a block:
+
+```css
+/* design-lint-disable */
+.button { color: red; }
+/* design-lint-enable */
+```
+
+All rules are disabled within the suppressed region.
+
 ## Cache management
 
 When run with `--cache`, results are written to `.designlintcache` by default or
