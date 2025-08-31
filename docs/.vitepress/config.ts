@@ -4,12 +4,15 @@ export default defineConfig({
   title: 'design-lint',
   description: 'Design system linter',
   themeConfig: {
+    logo: '/logo.svg',
     nav: [
       { text: 'Usage', link: '/usage' },
       { text: 'Configuration', link: '/configuration' },
       { text: 'API', link: '/api' },
       { text: 'Plugins', link: '/plugins' },
       { text: 'Rules', link: '/rules/' },
+      { text: 'GitHub', link: 'https://github.com/bylapidist/design-lint' },
+      { text: 'Author', link: 'https://lapidist.net' },
     ],
     sidebar: [
       {
