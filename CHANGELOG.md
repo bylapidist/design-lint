@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.3.1
+
+### Patch Changes
+
+- eda5925: add config init hint when config file is missing
+
 ## 4.3.0
 
 ### Minor Changes
