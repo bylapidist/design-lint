@@ -242,11 +242,15 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 ## Features
 
-- Enforce color, spacing, border radius, box shadow, z-index, font size, font family, font weight, line height, and letter spacing tokens
-- Prevent deprecated or raw HTML component usage
-- Pluggable rule and formatter architecture
-- JSON and SARIF output for CI
-- Auto-fix deprecated tokens and components
+- Lints JavaScript, TypeScript, and CSS projects
+- Enforces design tokens for color, spacing, typography, borders, animation, and more
+- Validates design system usage and flags deprecated or raw HTML components
+- Generates starter configuration in multiple formats
+- Pluggable rule and formatter architecture with custom plugin support
+- CLI and programmatic APIs with watch mode and persistent caching
+- Auto-fixes deprecated tokens and components
+- Multiple output formats including stylish, JSON, and SARIF for CI
+- Inline comment directives to disable rules when necessary
 
 ## Rules
 
