@@ -155,9 +155,21 @@ export class Linter {
           }
           cache?.set(filePath, { mtime, result });
           return result;
-        } catch {
+        } catch (e: unknown) {
           cache?.delete(filePath);
-          return { filePath, messages: [] } as LintResult;
+          const err = e as { message?: string };
+          return {
+            filePath,
+            messages: [
+              {
+                ruleId: 'parse-error',
+                message: err.message || 'Failed to read file',
+                severity: 'error',
+                line: 1,
+                column: 1,
+              },
+            ],
+          } as LintResult;
         }
       }),
     );
