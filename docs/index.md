@@ -38,12 +38,32 @@ See the [CI guide](ci.md) for sample configurations in GitHub Actions and other 
 
 ## Rules
 
- - [design-token/colors](rules/design-token/colors.md)
- - [design-token/line-height](rules/design-token/line-height.md)
- - [design-token/letter-spacing](rules/design-token/letter-spacing.md)
- - [design-token/spacing](rules/design-token/spacing.md)
- - [design-token/duration](rules/design-token/duration.md)
- - [design-token/font-size](rules/design-token/font-size.md)
- - [design-token/font-family](rules/design-token/font-family.md)
-  - [design-system/deprecation](rules/design-system/deprecation.md)
-  - [design-system/component-usage](rules/design-system/component-usage.md)
+### Design System
+
+- [component-prefix](rules/design-system/component-prefix.md)
+- [component-usage](rules/design-system/component-usage.md)
+- [deprecation](rules/design-system/deprecation.md)
+- [icon-usage](rules/design-system/icon-usage.md)
+- [import-path](rules/design-system/import-path.md)
+- [no-inline-styles](rules/design-system/no-inline-styles.md)
+- [variant-prop](rules/design-system/variant-prop.md)
+
+### Design Token
+
+- [animation](rules/design-token/animation.md)
+- [blur](rules/design-token/blur.md)
+- [border-color](rules/design-token/border-color.md)
+- [border-radius](rules/design-token/border-radius.md)
+- [border-width](rules/design-token/border-width.md)
+- [box-shadow](rules/design-token/box-shadow.md)
+- [colors](rules/design-token/colors.md)
+- [duration](rules/design-token/duration.md)
+- [font-family](rules/design-token/font-family.md)
+- [font-size](rules/design-token/font-size.md)
+- [font-weight](rules/design-token/font-weight.md)
+- [letter-spacing](rules/design-token/letter-spacing.md)
+- [line-height](rules/design-token/line-height.md)
+- [opacity](rules/design-token/opacity.md)
+- [outline](rules/design-token/outline.md)
+- [spacing](rules/design-token/spacing.md)
+- [z-index](rules/design-token/z-index.md)
