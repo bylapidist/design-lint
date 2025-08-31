@@ -49,7 +49,7 @@ test('throws when specified config file is missing', async () => {
   const tmp = makeTmpDir();
   await assert.rejects(
     loadConfig(tmp, 'designlint.config.json'),
-    /Config file not found/,
+    /Config file not found.*npx design-lint init/,
   );
 });
 
