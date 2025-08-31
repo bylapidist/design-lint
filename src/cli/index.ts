@@ -8,7 +8,7 @@ import { pathToFileURL, fileURLToPath } from 'url';
 import type { LintResult } from '../core/types.js';
 import type { Config } from '../core/linter.js';
 import { getFormatter } from '../formatters/index.js';
-// chalk is ESM-only, so we use a dynamic import inside run()
+import chalk, { supportsColor } from 'chalk';
 import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
@@ -132,7 +132,6 @@ export async function run(argv = process.argv.slice(2)) {
     process.exitCode = 1;
     return;
   }
-  const { default: chalk, supportsColor } = await import('chalk');
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
   try {
     const { values, positionals } = parseArgs({
