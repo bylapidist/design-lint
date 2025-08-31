@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import writeFileAtomic from 'write-file-atomic';
 import { z } from 'zod';
 import type { LintResult } from './types.js';
 
@@ -73,11 +74,9 @@ export async function saveCache(
 ): Promise<void> {
   try {
     await fs.mkdir(path.dirname(cacheLocation), { recursive: true });
-    await fs.writeFile(
-      cacheLocation,
-      JSON.stringify([...cache.entries()]),
-      'utf8',
-    );
+    await writeFileAtomic(cacheLocation, JSON.stringify([...cache.entries()]), {
+      encoding: 'utf8',
+    });
   } catch {
     // ignore
   }
