@@ -44,7 +44,9 @@ export async function loadConfig(
     try {
       if (target) await fs.promises.access(target);
     } catch {
-      throw new Error(`Config file not found at ${target}`);
+      throw new Error(
+        `Config file not found at ${target}. Run \`npx design-lint init\` to create a config.`,
+      );
     }
   }
   let exists = false;

@@ -183,3 +183,9 @@ Set `DESIGNLINT_PROFILE=1` to print how long the initial file scan takes. This c
 DESIGNLINT_PROFILE=1 npx design-lint src
 # Scanned 42 files in 120.34ms
 ```
+
+## Troubleshooting
+
+### Config file not found
+
+If the CLI reports `Config file not found`, run `npx design-lint init` to create a configuration file.
