@@ -1,5 +1,13 @@
 # @lapidist/design-lint
 
+## 4.3.2
+
+### Patch Changes
+
+- 31d5649: report parse-error when file cannot be read
+- ffbe957: replace dynamic chalk import with static import
+- f8603f7: use atomic writes for cache to prevent corruption
+
 ## 4.3.1
 
 ### Patch Changes
