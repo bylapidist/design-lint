@@ -18,10 +18,10 @@ export { defaultIgnore } from './ignore.js';
 import { loadPlugins } from './plugin-loader.js';
 import { scanFiles } from './file-scanner.js';
 import { loadCache, saveCache, type CacheMap } from './cache.js';
-import { normalizeTokens } from './token-loader.js';
+import { normalizeTokens, mergeTokens } from './token-loader.js';
 
 export interface Config {
-  tokens?: DesignTokens;
+  tokens?: DesignTokens | Record<string, DesignTokens>;
   rules?: Record<string, unknown>;
   ignoreFiles?: string[];
   plugins?: string[];
@@ -48,6 +48,7 @@ function createEngineError(opts: EngineErrorOptions): Error {
  */
 export class Linter {
   private config: Config;
+  private tokensByTheme: Record<string, DesignTokens> = {};
   private ruleMap: Map<string, { rule: RuleModule; source: string }> =
     new Map();
   private pluginLoad: Promise<void>;
@@ -58,10 +59,12 @@ export class Linter {
    * @param config Linter configuration.
    */
   constructor(config: Config) {
-    this.config = {
-      ...config,
-      tokens: normalizeTokens(config.tokens, config.wrapTokensWithVar ?? false),
-    };
+    const normalized = normalizeTokens(
+      config.tokens as DesignTokens | Record<string, DesignTokens>,
+      config.wrapTokensWithVar ?? false,
+    );
+    this.tokensByTheme = normalized.themes;
+    this.config = { ...config, tokens: normalized.merged };
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
@@ -198,15 +201,19 @@ export class Linter {
     const messages: LintResult['messages'] = [];
     const ruleDescriptions: Record<string, string> = {};
     const disabledLines = getDisabledLines(text);
-    const contextBase: Omit<RuleContext, 'options'> = {
-      report: () => {},
-      tokens: (this.config.tokens || {}) as DesignTokens,
-      filePath,
-    };
     const listeners = enabled.map(({ rule, options, severity }) => {
       ruleDescriptions[rule.name] = rule.meta.description;
+      const themes =
+        options &&
+        typeof options === 'object' &&
+        options !== null &&
+        Array.isArray((options as { themes?: unknown }).themes)
+          ? ((options as { themes?: string[] }).themes as string[])
+          : undefined;
+      const tokens = mergeTokens(this.tokensByTheme, themes);
       const ctx: RuleContext = {
-        ...contextBase,
+        filePath,
+        tokens: tokens as DesignTokens,
         options,
         report: (m) =>
           messages.push({ ...m, severity, ruleId: rule.name } as LintMessage),

@@ -1,20 +1,39 @@
 import type { DesignTokens } from './types.js';
 
-/**
- * Normalize design tokens.
- * When wrapVar is true, string tokens are wrapped in `var()` unless they
- * already use it.
- *
- * @param tokens Raw design tokens.
- * @param wrapVar Wrap string tokens in `var()`.
- * @returns Normalized tokens.
- */
-export function normalizeTokens(
-  tokens: DesignTokens | undefined,
-  wrapVar = false,
-): DesignTokens {
+export interface NormalizedTokens {
+  themes: Record<string, DesignTokens>;
+  merged: DesignTokens;
+}
+
+const TOKEN_GROUPS = [
+  'colors',
+  'spacing',
+  'zIndex',
+  'borderRadius',
+  'borderWidths',
+  'shadows',
+  'durations',
+  'animations',
+  'blurs',
+  'borderColors',
+  'opacity',
+  'outlines',
+  'fontSizes',
+  'fonts',
+  'lineHeights',
+  'fontWeights',
+  'letterSpacings',
+  'deprecations',
+];
+
+function isMultiTheme(
+  tokens: DesignTokens | Record<string, DesignTokens>,
+): tokens is Record<string, DesignTokens> {
+  return Object.keys(tokens).some((k) => !TOKEN_GROUPS.includes(k));
+}
+
+function normalizeSingle(tokens: DesignTokens, wrapVar: boolean): DesignTokens {
   const normalized: DesignTokens = {};
-  if (!tokens) return normalized;
   for (const [group, defs] of Object.entries(tokens)) {
     if (!defs || typeof defs !== 'object') {
       (normalized as Record<string, unknown>)[group] = defs as unknown;
@@ -39,4 +58,49 @@ export function normalizeTokens(
     (normalized as Record<string, unknown>)[group] = map;
   }
   return normalized;
+}
+
+export function mergeTokens(
+  tokensByTheme: Record<string, DesignTokens>,
+  themes?: string[],
+): DesignTokens {
+  const merged: DesignTokens = {};
+  const selected = themes ?? Object.keys(tokensByTheme);
+  for (const theme of selected) {
+    const source = tokensByTheme[theme];
+    if (!source) continue;
+    for (const [group, defs] of Object.entries(source)) {
+      if (!defs || typeof defs !== 'object') {
+        if ((merged as Record<string, unknown>)[group] === undefined) {
+          (merged as Record<string, unknown>)[group] = defs as unknown;
+        }
+        continue;
+      }
+      const targetMap = ((merged as Record<string, unknown>)[group] ||
+        {}) as Record<string, unknown>;
+      for (const [name, value] of Object.entries(
+        defs as Record<string, unknown>,
+      )) {
+        if (!(name in targetMap)) targetMap[name] = value;
+      }
+      (merged as Record<string, unknown>)[group] = targetMap;
+    }
+  }
+  return merged;
+}
+
+export function normalizeTokens(
+  tokens: DesignTokens | Record<string, DesignTokens> | undefined,
+  wrapVar = false,
+): NormalizedTokens {
+  const themes: Record<string, DesignTokens> = {};
+  if (!tokens) return { themes, merged: {} };
+  if (isMultiTheme(tokens)) {
+    for (const [theme, defs] of Object.entries(tokens)) {
+      themes[theme] = normalizeSingle(defs, wrapVar);
+    }
+  } else {
+    themes.default = normalizeSingle(tokens as DesignTokens, wrapVar);
+  }
+  return { themes, merged: mergeTokens(themes) };
 }
