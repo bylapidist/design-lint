@@ -17,7 +17,7 @@ const ruleSettingSchema = z.union([
 
 const numberOrString = z.union([z.number(), z.string()]);
 
-const tokensSchema = z
+const baseTokensSchema = z
   .object({
     colors: z.record(z.string(), z.string()).optional(),
     spacing: z.record(z.string(), z.number()).optional(),
@@ -41,6 +41,11 @@ const tokensSchema = z
       .optional(),
   })
   .catchall(z.unknown());
+
+const tokensSchema = z.union([
+  baseTokensSchema,
+  z.record(z.string(), baseTokensSchema),
+]);
 
 export const configSchema: z.ZodSchema<Config> = z
   .object({

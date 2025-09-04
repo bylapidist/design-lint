@@ -87,6 +87,30 @@ module.exports = {
 };
 ```
 
+### Multiple theme roots
+
+Provide tokens for several themes without custom code by nesting theme names at
+the top level. Token names are merged across themes internally:
+
+```ts
+import { defineConfig } from '@lapidist/design-lint';
+
+export default defineConfig({
+  tokens: {
+    base: { colors: { primary: '#000000' } },
+    light: { colors: { primary: '#ffffff' } },
+    dark: { colors: { primary: '#000000' } }
+  },
+  rules: {
+    // Validate only the light and dark themes
+    'design-token/colors': ['error', { themes: ['light', 'dark'] }],
+  },
+});
+```
+
+If no `themes` array is supplied, rules validate tokens from all themes by
+default.
+
 See [design-token/colors](rules/design-token/colors.md), [design-token/line-height](rules/design-token/line-height.md), [design-token/font-weight](rules/design-token/font-weight.md), [design-token/letter-spacing](rules/design-token/letter-spacing.md), [design-token/border-radius](rules/design-token/border-radius.md), [design-token/border-width](rules/design-token/border-width.md), [design-token/spacing](rules/design-token/spacing.md), [design-token/box-shadow](rules/design-token/box-shadow.md), [design-token/duration](rules/design-token/duration.md), [design-token/z-index](rules/design-token/z-index.md), [design-token/font-size](rules/design-token/font-size.md), and [design-token/font-family](rules/design-token/font-family.md) for rule details.
 
 @lapidist/design-lint searches for configuration starting from the current working

@@ -245,3 +245,19 @@ test('throws on unknown rule name', async () => {
     /Unknown rule\(s\): unknown\/rule/,
   );
 });
+
+test('loads config with multi-theme tokens', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: {
+        light: { colors: { primary: '#fff' } },
+        dark: { colors: { primary: '#000' } },
+      },
+    }),
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.colors?.primary, '#fff');
+});
