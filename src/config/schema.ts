@@ -51,6 +51,7 @@ export const configSchema: z.ZodSchema<Config> = z
     configPath: z.string().optional(),
     concurrency: z.number().int().positive().optional(),
     patterns: z.array(z.string()).optional(),
+    wrapTokensWithVar: z.boolean().optional(),
   })
   .strict();
 

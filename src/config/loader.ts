@@ -38,6 +38,7 @@ export async function loadConfig(
     ignoreFiles: [],
     plugins: [],
     configPath: abs,
+    wrapTokensWithVar: false,
   };
   if (configPath) {
     const target = abs ?? resolved;

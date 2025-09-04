@@ -18,6 +18,7 @@ export { defaultIgnore } from './ignore.js';
 import { loadPlugins } from './plugin-loader.js';
 import { scanFiles } from './file-scanner.js';
 import { loadCache, saveCache, type CacheMap } from './cache.js';
+import { normalizeTokens } from './token-loader.js';
 
 export interface Config {
   tokens?: DesignTokens;
@@ -27,6 +28,7 @@ export interface Config {
   configPath?: string;
   concurrency?: number;
   patterns?: string[];
+  wrapTokensWithVar?: boolean;
 }
 
 interface EngineErrorOptions {
@@ -56,7 +58,10 @@ export class Linter {
    * @param config Linter configuration.
    */
   constructor(config: Config) {
-    this.config = config;
+    this.config = {
+      ...config,
+      tokens: normalizeTokens(config.tokens, config.wrapTokensWithVar ?? false),
+    };
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
