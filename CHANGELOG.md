@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.4.0
+
+### Minor Changes
+
+- d4f9a1d: add optional wrapTokensWithVar to normalize tokens as CSS variables
+
 ## 4.3.2
 
 ### Patch Changes
