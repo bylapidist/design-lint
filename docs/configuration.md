@@ -60,6 +60,17 @@ export default defineConfig({
 - **opacity**: numbers between 0 and 1.
 - **outlines**: strings representing complete `outline` declarations.
 
+If your design tokens map directly to CSS custom properties, set
+`wrapTokensWithVar` to `true`. During normalization each string token will be
+wrapped in `var()` so rules compare against the corresponding CSS variable:
+
+```json
+{
+  "wrapTokensWithVar": true,
+  "tokens": { "colors": { "primary": "--color-primary" } }
+}
+```
+
 ```js
 module.exports = {
   tokens: {
@@ -100,6 +111,7 @@ syntax message.
 - `plugins`: Additional plugin packages to load.
 - `concurrency`: Maximum number of files processed concurrently. Defaults to the number of CPU cores.
 - `patterns`: Glob patterns used to search for files. Defaults to `['**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}']`.
+- `wrapTokensWithVar`: When `true`, wrap string token values in `var()` during normalization.
 
 ### Token dependencies
 

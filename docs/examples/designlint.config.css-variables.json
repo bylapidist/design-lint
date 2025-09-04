@@ -1,16 +1,17 @@
 {
+  "wrapTokensWithVar": true,
   "tokens": {
     "colors": {
-      "primary": "var(--color-primary)",
-      "secondary": "var(--color-secondary)"
+      "primary": "--color-primary",
+      "secondary": "--color-secondary"
     },
     "spacing": {
-      "sm": "var(--spacing-sm)",
-      "lg": "var(--spacing-lg)"
+      "sm": "--spacing-sm",
+      "lg": "--spacing-lg"
     },
     "fontSizes": {
-      "base": "var(--font-size-base)",
-      "xl": "var(--font-size-xl)"
+      "base": "--font-size-base",
+      "xl": "--font-size-xl"
     }
   },
   "rules": {
