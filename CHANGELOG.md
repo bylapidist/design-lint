@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.5.0
+
+### Minor Changes
+
+- a286195: support multiple theme roots with merged tokens and theme-aware validation
+
 ## 4.4.0
 
 ### Minor Changes
