@@ -1,6 +1,10 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',
@@ -27,10 +31,12 @@ export const lineHeightRule: RuleModule = {
           if (decl.prop === 'line-height') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, lineHeights)) {
+              const suggest = name ? closestToken(name, lineHeights) : null;
               context.report({
                 message: `Unexpected line height ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

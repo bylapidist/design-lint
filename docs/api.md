@@ -96,6 +96,23 @@ Lints multiple files or directories.
 const { results, ignoreFiles } = await linter.lintFiles(['src', 'tests']);
 ```
 
+#### `getTokenCompletions()`
+
+Retrieve token names grouped by token type. Useful for editor plugins to
+provide autocomplete suggestions.
+
+##### Returns
+
+- `Record<string, string[]>` – map of token groups to token variable names.
+
+##### Example
+
+```ts
+const linter = new Linter(config);
+const completions = linter.getTokenCompletions();
+console.log(completions.spacing[0]);
+```
+
 ## `loadConfig(cwd, configPath?)` ([source](../src/config/loader.ts))
 
 Loads a `designlint.config.*` file and validates its contents.

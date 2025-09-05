@@ -1,5 +1,9 @@
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const fontFamilyRule: RuleModule = {
   name: 'design-token/font-family',
@@ -26,10 +30,12 @@ export const fontFamilyRule: RuleModule = {
           if (decl.prop === 'font-family') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, fontFamilies)) {
+              const suggest = name ? closestToken(name, fontFamilies) : null;
               context.report({
                 message: `Unexpected font family ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

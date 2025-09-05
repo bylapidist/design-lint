@@ -1,6 +1,10 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const blurRule: RuleModule = {
   name: 'design-token/blur',
@@ -27,10 +31,12 @@ export const blurRule: RuleModule = {
           if (decl.prop === 'filter' || decl.prop === 'backdrop-filter') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, blurTokens)) {
+              const suggest = name ? closestToken(name, blurTokens) : null;
               context.report({
                 message: `Unexpected blur ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

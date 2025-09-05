@@ -1,6 +1,10 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const fontWeightRule: RuleModule = {
   name: 'design-token/font-weight',
@@ -27,10 +31,12 @@ export const fontWeightRule: RuleModule = {
           if (decl.prop === 'font-weight') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, fontWeights)) {
+              const suggest = name ? closestToken(name, fontWeights) : null;
               context.report({
                 message: `Unexpected font weight ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

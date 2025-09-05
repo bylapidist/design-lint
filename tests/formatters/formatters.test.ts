@@ -27,6 +27,26 @@ test('stylish formatter outputs text', () => {
   assert.ok(out.includes('file.ts'));
 });
 
+test('stylish formatter outputs suggestions', () => {
+  const results: LintResult[] = [
+    {
+      filePath: 'file.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'msg',
+          severity: 'error',
+          line: 1,
+          column: 1,
+          suggest: '--foo',
+        },
+      ],
+    },
+  ];
+  const out = stylish(results, false);
+  assert.ok(out.includes('Did you mean `--foo`?'));
+});
+
 test('json formatter outputs json', () => {
   const results: LintResult[] = [
     {

@@ -1,7 +1,11 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const borderWidthRule: RuleModule = {
   name: 'design-token/border-width',
@@ -28,10 +32,12 @@ export const borderWidthRule: RuleModule = {
           if (decl.prop === 'border-width') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, widthTokens)) {
+              const suggest = name ? closestToken(name, widthTokens) : null;
               context.report({
                 message: `Unexpected border width ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

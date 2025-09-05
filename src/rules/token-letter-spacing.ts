@@ -1,6 +1,10 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',
@@ -27,10 +31,12 @@ export const letterSpacingRule: RuleModule = {
           if (decl.prop === 'letter-spacing') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, letterSpacings)) {
+              const suggest = name ? closestToken(name, letterSpacings) : null;
               context.report({
                 message: `Unexpected letter spacing ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

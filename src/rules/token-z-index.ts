@@ -1,6 +1,10 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const zIndexRule: RuleModule = {
   name: 'design-token/z-index',
@@ -27,10 +31,12 @@ export const zIndexRule: RuleModule = {
           if (decl.prop === 'z-index') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, zTokens)) {
+              const suggest = name ? closestToken(name, zTokens) : null;
               context.report({
                 message: `Unexpected z-index ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

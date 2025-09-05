@@ -1,7 +1,11 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const borderRadiusRule: RuleModule = {
   name: 'design-token/border-radius',
@@ -28,10 +32,12 @@ export const borderRadiusRule: RuleModule = {
           if (decl.prop === 'border-radius') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, radiiTokens)) {
+              const suggest = name ? closestToken(name, radiiTokens) : null;
               context.report({
                 message: `Unexpected border radius ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

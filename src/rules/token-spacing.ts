@@ -1,7 +1,11 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const spacingRule: RuleModule = {
   name: 'design-token/spacing',
@@ -27,10 +31,12 @@ export const spacingRule: RuleModule = {
         onCSSDeclaration(decl) {
           const name = extractVarName(decl.value);
           if (!name || !matchToken(name, spacingTokens)) {
+            const suggest = name ? closestToken(name, spacingTokens) : null;
             context.report({
               message: `Unexpected spacing ${decl.value}`,
               line: decl.line,
               column: decl.column,
+              suggest: suggest ?? undefined,
             });
           }
         },

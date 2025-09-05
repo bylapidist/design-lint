@@ -1,6 +1,10 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const outlineRule: RuleModule = {
   name: 'design-token/outline',
@@ -27,10 +31,12 @@ export const outlineRule: RuleModule = {
           if (decl.prop === 'outline') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, outlineTokens)) {
+              const suggest = name ? closestToken(name, outlineTokens) : null;
               context.report({
                 message: `Unexpected outline ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }
