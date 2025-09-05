@@ -3,6 +3,7 @@ import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 type ColorFormat =
   | 'hex'
@@ -42,7 +43,12 @@ export const colorsRule: RuleModule = {
   meta: { description: 'disallow raw colors' },
   create(context) {
     const colorTokens = context.tokens?.colors;
-    if (!colorTokens || Object.keys(colorTokens).length === 0) {
+    if (
+      !colorTokens ||
+      (Array.isArray(colorTokens)
+        ? colorTokens.length === 0
+        : Object.keys(colorTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/colors requires color tokens; configure tokens.colors to enable this rule.',
@@ -50,6 +56,41 @@ export const colorsRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(colorTokens)) {
+      const checkVar = (value: string, line: number, column: number) => {
+        const name = extractVarName(value);
+        if (!name || !matchToken(name, colorTokens)) {
+          context.report({
+            message: `Unexpected color ${value}`,
+            line,
+            column,
+          });
+        }
+      };
+      return {
+        onNode(node) {
+          const sourceFile = node.getSourceFile();
+          const handle = (text: string, n: ts.Node) => {
+            const pos = sourceFile.getLineAndCharacterOfPosition(n.getStart());
+            checkVar(text, pos.line + 1, pos.character + 1);
+          };
+          if (
+            ts.isStringLiteral(node) ||
+            ts.isNoSubstitutionTemplateLiteral(node)
+          ) {
+            handle(node.text, node);
+          } else if (ts.isTemplateExpression(node)) {
+            handle(node.head.text, node.head);
+            for (const span of node.templateSpans) {
+              handle(span.literal.text, span.literal);
+            }
+          }
+        },
+        onCSSDeclaration(decl) {
+          checkVar(decl.value, decl.line, decl.column);
+        },
+      };
     }
     const allowed = new Set(
       Object.values(colorTokens).map((value) => value.toLowerCase()),

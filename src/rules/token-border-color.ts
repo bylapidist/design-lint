@@ -2,6 +2,7 @@ import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 type ColorFormat =
   | 'hex'
@@ -37,7 +38,12 @@ export const borderColorRule: RuleModule = {
   meta: { description: 'enforce border-color tokens' },
   create(context) {
     const borderColorTokens = context.tokens?.borderColors;
-    if (!borderColorTokens || Object.keys(borderColorTokens).length === 0) {
+    if (
+      !borderColorTokens ||
+      (Array.isArray(borderColorTokens)
+        ? borderColorTokens.length === 0
+        : Object.keys(borderColorTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/border-color requires border color tokens; configure tokens.borderColors to enable this rule.',
@@ -45,6 +51,22 @@ export const borderColorRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(borderColorTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (/^border(-(top|right|bottom|left))?-color$/.test(decl.prop)) {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, borderColorTokens)) {
+              context.report({
+                message: `Unexpected border color ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const allowed = new Set(
       Object.values(borderColorTokens).map((v) => String(v).toLowerCase()),

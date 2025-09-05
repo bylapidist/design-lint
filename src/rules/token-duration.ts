@@ -1,15 +1,21 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const durationRule: RuleModule = {
   name: 'design-token/duration',
   meta: { description: 'enforce duration tokens' },
   create(context) {
     const durationTokens = (
-      context.tokens as { durations?: Record<string, unknown> } | undefined
-    )?.durations;
-    if (!durationTokens || Object.keys(durationTokens).length === 0) {
+      context.tokens as { durations?: unknown } | undefined
+    )?.durations as Record<string, unknown> | (string | RegExp)[] | undefined;
+    if (
+      !durationTokens ||
+      (Array.isArray(durationTokens)
+        ? durationTokens.length === 0
+        : Object.keys(durationTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/duration requires duration tokens; configure tokens.durations to enable this rule.',
@@ -17,6 +23,31 @@ export const durationRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(durationTokens)) {
+      const checkVar = (value: string, line: number, column: number) => {
+        const name = extractVarName(value);
+        if (!name || !matchToken(name, durationTokens)) {
+          context.report({
+            message: `Unexpected duration ${value}`,
+            line,
+            column,
+          });
+        }
+      };
+      return {
+        onCSSDeclaration(decl) {
+          const prop = decl.prop.toLowerCase();
+          if (
+            prop === 'transition' ||
+            prop === 'transition-duration' ||
+            prop === 'animation' ||
+            prop === 'animation-duration'
+          ) {
+            checkVar(decl.value, decl.line, decl.column);
+          }
+        },
+      };
     }
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;

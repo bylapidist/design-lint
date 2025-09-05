@@ -1,12 +1,18 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const boxShadowRule: RuleModule = {
   name: 'design-token/box-shadow',
   meta: { description: 'enforce box-shadow tokens' },
   create(context) {
     const shadowTokens = context.tokens?.shadows;
-    if (!shadowTokens || Object.keys(shadowTokens).length === 0) {
+    if (
+      !shadowTokens ||
+      (Array.isArray(shadowTokens)
+        ? shadowTokens.length === 0
+        : Object.keys(shadowTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/box-shadow requires shadow tokens; configure tokens.shadows to enable this rule.',
@@ -14,6 +20,22 @@ export const boxShadowRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(shadowTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'box-shadow') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, shadowTokens)) {
+              context.report({
+                message: `Unexpected box shadow ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const normalize = (val: string): string =>
       valueParser.stringify(valueParser(val).nodes).trim();

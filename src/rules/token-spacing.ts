@@ -1,13 +1,19 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const spacingRule: RuleModule = {
   name: 'design-token/spacing',
   meta: { description: 'enforce spacing scale' },
   create(context) {
     const spacingTokens = context.tokens?.spacing;
-    if (!spacingTokens || Object.keys(spacingTokens).length === 0) {
+    if (
+      !spacingTokens ||
+      (Array.isArray(spacingTokens)
+        ? spacingTokens.length === 0
+        : Object.keys(spacingTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/spacing requires spacing tokens; configure tokens.spacing to enable this rule.',
@@ -15,6 +21,20 @@ export const spacingRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(spacingTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          const name = extractVarName(decl.value);
+          if (!name || !matchToken(name, spacingTokens)) {
+            context.report({
+              message: `Unexpected spacing ${decl.value}`,
+              line: decl.line,
+              column: decl.column,
+            });
+          }
+        },
+      };
     }
     const allowed = new Set(Object.values(spacingTokens));
     const opts =

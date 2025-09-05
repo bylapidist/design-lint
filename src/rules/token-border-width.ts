@@ -1,13 +1,19 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const borderWidthRule: RuleModule = {
   name: 'design-token/border-width',
   meta: { description: 'enforce border-width tokens' },
   create(context) {
     const widthTokens = context.tokens?.borderWidths;
-    if (!widthTokens || Object.keys(widthTokens).length === 0) {
+    if (
+      !widthTokens ||
+      (Array.isArray(widthTokens)
+        ? widthTokens.length === 0
+        : Object.keys(widthTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/border-width requires border width tokens; configure tokens.borderWidths to enable this rule.',
@@ -15,6 +21,22 @@ export const borderWidthRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(widthTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'border-width') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, widthTokens)) {
+              context.report({
+                message: `Unexpected border width ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;

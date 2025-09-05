@@ -1,12 +1,18 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const animationRule: RuleModule = {
   name: 'design-token/animation',
   meta: { description: 'enforce animation tokens' },
   create(context) {
     const animationTokens = context.tokens?.animations;
-    if (!animationTokens || Object.keys(animationTokens).length === 0) {
+    if (
+      !animationTokens ||
+      (Array.isArray(animationTokens)
+        ? animationTokens.length === 0
+        : Object.keys(animationTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/animation requires animation tokens; configure tokens.animations to enable this rule.',
@@ -14,6 +20,22 @@ export const animationRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(animationTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'animation') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, animationTokens)) {
+              context.report({
+                message: `Unexpected animation ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const normalize = (val: string): string =>
       valueParser.stringify(valueParser(val).nodes).trim();

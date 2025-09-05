@@ -1,12 +1,18 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const blurRule: RuleModule = {
   name: 'design-token/blur',
   meta: { description: 'enforce blur tokens' },
   create(context) {
     const blurTokens = context.tokens?.blurs;
-    if (!blurTokens || Object.keys(blurTokens).length === 0) {
+    if (
+      !blurTokens ||
+      (Array.isArray(blurTokens)
+        ? blurTokens.length === 0
+        : Object.keys(blurTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/blur requires blur tokens; configure tokens.blurs to enable this rule.',
@@ -14,6 +20,22 @@ export const blurRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(blurTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'filter' || decl.prop === 'backdrop-filter') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, blurTokens)) {
+              context.report({
+                message: `Unexpected blur ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;

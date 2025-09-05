@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Config } from '../core/linter.js';
+import type { DesignTokens } from '../core/types.js';
 
 const severitySchema = z.union([
   z.literal('error'),
@@ -17,25 +18,30 @@ const ruleSettingSchema = z.union([
 
 const numberOrString = z.union([z.number(), z.string()]);
 
+const tokenPatternArray = z.array(z.union([z.string(), z.instanceof(RegExp)]));
+
+const tokenGroup = (schema: z.ZodTypeAny) =>
+  z.union([z.record(z.string(), schema), tokenPatternArray]);
+
 const baseTokensSchema = z
   .object({
-    colors: z.record(z.string(), z.string()).optional(),
-    spacing: z.record(z.string(), z.number()).optional(),
-    zIndex: z.record(z.string(), z.number()).optional(),
-    borderRadius: z.record(z.string(), numberOrString).optional(),
-    borderWidths: z.record(z.string(), numberOrString).optional(),
-    shadows: z.record(z.string(), z.string()).optional(),
-    durations: z.record(z.string(), numberOrString).optional(),
-    animations: z.record(z.string(), z.string()).optional(),
-    blurs: z.record(z.string(), numberOrString).optional(),
-    borderColors: z.record(z.string(), z.string()).optional(),
-    opacity: z.record(z.string(), numberOrString).optional(),
-    outlines: z.record(z.string(), z.string()).optional(),
-    fontSizes: z.record(z.string(), numberOrString).optional(),
-    fonts: z.record(z.string(), z.string()).optional(),
-    lineHeights: z.record(z.string(), numberOrString).optional(),
-    fontWeights: z.record(z.string(), numberOrString).optional(),
-    letterSpacings: z.record(z.string(), numberOrString).optional(),
+    colors: tokenGroup(z.string()).optional(),
+    spacing: tokenGroup(z.number()).optional(),
+    zIndex: tokenGroup(z.number()).optional(),
+    borderRadius: tokenGroup(numberOrString).optional(),
+    borderWidths: tokenGroup(numberOrString).optional(),
+    shadows: tokenGroup(z.string()).optional(),
+    durations: tokenGroup(numberOrString).optional(),
+    animations: tokenGroup(z.string()).optional(),
+    blurs: tokenGroup(numberOrString).optional(),
+    borderColors: tokenGroup(z.string()).optional(),
+    opacity: tokenGroup(numberOrString).optional(),
+    outlines: tokenGroup(z.string()).optional(),
+    fontSizes: tokenGroup(numberOrString).optional(),
+    fonts: tokenGroup(z.string()).optional(),
+    lineHeights: tokenGroup(numberOrString).optional(),
+    fontWeights: tokenGroup(numberOrString).optional(),
+    letterSpacings: tokenGroup(numberOrString).optional(),
     deprecations: z
       .record(z.string(), z.object({ replacement: z.string().optional() }))
       .optional(),
@@ -45,7 +51,7 @@ const baseTokensSchema = z
 const tokensSchema = z.union([
   baseTokensSchema,
   z.record(z.string(), baseTokensSchema),
-]);
+]) as unknown as z.ZodType<DesignTokens | Record<string, DesignTokens>>;
 
 export const configSchema: z.ZodSchema<Config> = z
   .object({

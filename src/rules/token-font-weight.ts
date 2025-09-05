@@ -1,12 +1,18 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const fontWeightRule: RuleModule = {
   name: 'design-token/font-weight',
   meta: { description: 'enforce font-weight tokens' },
   create(context) {
     const fontWeights = context.tokens?.fontWeights;
-    if (!fontWeights || Object.keys(fontWeights).length === 0) {
+    if (
+      !fontWeights ||
+      (Array.isArray(fontWeights)
+        ? fontWeights.length === 0
+        : Object.keys(fontWeights).length === 0)
+    ) {
       context.report({
         message:
           'design-token/font-weight requires fontWeights tokens; configure tokens.fontWeights to enable this rule.',
@@ -14,6 +20,22 @@ export const fontWeightRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(fontWeights)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'font-weight') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, fontWeights)) {
+              context.report({
+                message: `Unexpected font weight ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const numeric = new Set<number>();
     const values = new Set<string>();
