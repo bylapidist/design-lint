@@ -1,5 +1,9 @@
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const fontSizeRule: RuleModule = {
   name: 'design-token/font-size',
@@ -26,10 +30,12 @@ export const fontSizeRule: RuleModule = {
           if (decl.prop === 'font-size') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, fontSizes)) {
+              const suggest = name ? closestToken(name, fontSizes) : null;
               context.report({
                 message: `Unexpected font size ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

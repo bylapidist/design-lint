@@ -1,7 +1,11 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const opacityRule: RuleModule = {
   name: 'design-token/opacity',
@@ -28,10 +32,12 @@ export const opacityRule: RuleModule = {
           if (decl.prop === 'opacity') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, opacityTokens)) {
+              const suggest = name ? closestToken(name, opacityTokens) : null;
               context.report({
                 message: `Unexpected opacity ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

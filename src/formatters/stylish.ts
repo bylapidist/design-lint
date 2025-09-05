@@ -21,8 +21,9 @@ export function stylish(results: LintResult[], useColor = true): string {
           ? codes.red(sevText)
           : codes.yellow(sevText)
         : sevText;
+      const suggestion = msg.suggest ? ` Did you mean \`${msg.suggest}\`?` : '';
       lines.push(
-        `  ${msg.line}:${msg.column}  ${sev}  ${msg.message}  ${msg.ruleId}`,
+        `  ${msg.line}:${msg.column}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}`,
       );
     }
     lines.push('');

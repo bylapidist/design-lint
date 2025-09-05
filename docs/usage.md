@@ -182,6 +182,15 @@ npx design-lint button.css --fix
 
 The [`design-system/deprecation`](rules/design-system/deprecation.md) rule replaces `old` with `new` when run with `--fix`.
 
+## Suggestions
+
+Design Lint will suggest the closest token when it encounters a typo:
+
+```text
+a.css
+  1:1  error  Unexpected spacing var(--space-scale-10o) Did you mean `--space-scale-100`?  design-token/spacing
+```
+
 ## Environment variables
 
 Set `DESIGNLINT_PROFILE=1` to print how long the initial file scan takes. This can help profile large projects.

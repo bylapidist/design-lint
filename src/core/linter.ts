@@ -190,6 +190,34 @@ export class Linter {
   }
 
   /**
+   * Retrieve token names for editor completions.
+   * @returns Map of token groups to token variable names.
+   */
+  getTokenCompletions(): Record<string, string[]> {
+    const tokens = (this.config.tokens || {}) as DesignTokens;
+    const completions: Record<string, string[]> = {};
+    const extract = (val: unknown): string | null => {
+      if (typeof val !== 'string') return null;
+      const m = val.trim().match(/^var\((--[A-Za-z0-9-_]+)\)$/);
+      return m ? m[1] : null;
+    };
+    for (const [group, defs] of Object.entries(tokens)) {
+      if (Array.isArray(defs)) {
+        const names = defs.filter((t): t is string => typeof t === 'string');
+        if (names.length) completions[group] = names;
+      } else if (defs && typeof defs === 'object') {
+        const names: string[] = [];
+        for (const val of Object.values(defs)) {
+          const v = extract(val);
+          if (v) names.push(v);
+        }
+        if (names.length) completions[group] = names;
+      }
+    }
+    return completions;
+  }
+
+  /**
    * Lint raw text.
    * @param text Source content to lint.
    * @param filePath Pseudo path used in messages.

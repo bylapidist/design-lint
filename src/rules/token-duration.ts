@@ -1,7 +1,11 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const durationRule: RuleModule = {
   name: 'design-token/duration',
@@ -28,10 +32,12 @@ export const durationRule: RuleModule = {
       const checkVar = (value: string, line: number, column: number) => {
         const name = extractVarName(value);
         if (!name || !matchToken(name, durationTokens)) {
+          const suggest = name ? closestToken(name, durationTokens) : null;
           context.report({
             message: `Unexpected duration ${value}`,
             line,
             column,
+            suggest: suggest ?? undefined,
           });
         }
       };

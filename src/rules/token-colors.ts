@@ -3,7 +3,11 @@ import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 type ColorFormat =
   | 'hex'
@@ -61,10 +65,12 @@ export const colorsRule: RuleModule = {
       const checkVar = (value: string, line: number, column: number) => {
         const name = extractVarName(value);
         if (!name || !matchToken(name, colorTokens)) {
+          const suggest = name ? closestToken(name, colorTokens) : null;
           context.report({
             message: `Unexpected color ${value}`,
             line,
             column,
+            suggest: suggest ?? undefined,
           });
         }
       };

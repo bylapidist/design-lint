@@ -1,6 +1,10 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 export const animationRule: RuleModule = {
   name: 'design-token/animation',
@@ -27,10 +31,12 @@ export const animationRule: RuleModule = {
           if (decl.prop === 'animation') {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, animationTokens)) {
+              const suggest = name ? closestToken(name, animationTokens) : null;
               context.report({
                 message: `Unexpected animation ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

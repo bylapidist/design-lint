@@ -2,7 +2,11 @@ import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
 import type { RuleModule } from '../core/types.js';
-import { matchToken, extractVarName } from '../utils/token-match.js';
+import {
+  matchToken,
+  extractVarName,
+  closestToken,
+} from '../utils/token-match.js';
 
 type ColorFormat =
   | 'hex'
@@ -58,10 +62,14 @@ export const borderColorRule: RuleModule = {
           if (/^border(-(top|right|bottom|left))?-color$/.test(decl.prop)) {
             const name = extractVarName(decl.value);
             if (!name || !matchToken(name, borderColorTokens)) {
+              const suggest = name
+                ? closestToken(name, borderColorTokens)
+                : null;
               context.report({
                 message: `Unexpected border color ${decl.value}`,
                 line: decl.line,
                 column: decl.column,
+                suggest: suggest ?? undefined,
               });
             }
           }

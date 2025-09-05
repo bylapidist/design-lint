@@ -48,6 +48,7 @@ export interface LintMessage {
   line: number;
   column: number;
   fix?: Fix;
+  suggest?: string;
 }
 
 export interface LintResult {
