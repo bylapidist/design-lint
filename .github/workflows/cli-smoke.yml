@@ -181,6 +181,6 @@ jobs:
           }
           EOF
           echo ".a{padding:var(--space-scale-10o);}" > suggestion.css
-          npx design-lint suggestion.css --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt
+          npx design-lint suggestion.css --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt || true
           grep -Fq "Did you mean \`--space-scale-100\`?" suggestion.txt
           npx design-lint file.ts --format json || true
