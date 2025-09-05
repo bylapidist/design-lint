@@ -180,7 +180,7 @@ jobs:
             }
           }
           EOF
-          echo "const s = 'var(--space-scale-10o)';" > suggestion.ts
-          npx design-lint suggestion.ts --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt
+          echo ".a{padding:var(--space-scale-10o);}" > suggestion.css
+          npx design-lint suggestion.css --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt
           grep -Fq "Did you mean \`--space-scale-100\`?" suggestion.txt
           npx design-lint file.ts --format json || true
