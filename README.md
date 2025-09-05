@@ -57,10 +57,12 @@ npx design-lint --help
 
 ## CLI Usage
 
-Lint files or directories:
+Lint files, directories, or glob patterns:
 
 ```bash
 npx design-lint src
+npx design-lint .
+npx design-lint "src/**/*.scss"
 ```
 
 To measure run time, set `DESIGNLINT_PROFILE=1` (see [Environment variables](docs/usage.md#environment-variables)).

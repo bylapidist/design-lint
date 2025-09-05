@@ -13,6 +13,7 @@ import ignore from 'ignore';
 import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import writeFileAtomic from 'write-file-atomic';
+import fg from 'fast-glob';
 
 /**
  * Print the package version to stdout.
@@ -242,14 +243,18 @@ export async function run(argv = process.argv.slice(2)) {
       path.join(process.cwd(), '.designlintignore'),
     );
     let ig = ignore();
+    let ignorePatterns: string[] = [];
 
     const refreshIgnore = async () => {
-      const { ig: newIg } = await loadIgnore(
+      const { ig: newIg, patterns } = await loadIgnore(
         config,
         ignorePath ? [ignorePath] : [],
       );
       ig = newIg;
+      ignorePatterns = patterns;
     };
+
+    await refreshIgnore();
 
     function resolvePluginPaths(cfg: Config, cacheBust = false): string[] {
       const req = cfg.configPath
@@ -285,13 +290,47 @@ export async function run(argv = process.argv.slice(2)) {
     let watcher: FSWatcher | null = null;
     let ignoreFilePaths: string[] = [];
 
+    const expandTargets = async (paths: string[]): Promise<string[]> => {
+      const files: string[] = [];
+      const scanPatterns = config.patterns ?? [
+        '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}',
+      ];
+      for (const p of paths) {
+        const full = realpathIfExists(path.resolve(p));
+        try {
+          const stat = await fs.promises.stat(full);
+          if (stat.isDirectory()) {
+            const entries = await fg(scanPatterns, {
+              cwd: full,
+              absolute: true,
+              dot: true,
+              ignore: ignorePatterns,
+            });
+            for (const e of entries) files.push(realpathIfExists(e));
+          } else {
+            files.push(full);
+          }
+        } catch {
+          const entries = await fg(p, {
+            cwd: process.cwd(),
+            absolute: true,
+            dot: true,
+            ignore: ignorePatterns,
+          });
+          for (const e of entries) files.push(realpathIfExists(e));
+        }
+      }
+      return [...new Set(files)];
+    };
+
     const runLint = async (paths: string[]) => {
+      const expanded = await expandTargets(paths);
       const {
         results,
         ignoreFiles: newIgnore = [],
         warning,
       } = await linter.lintFiles(
-        paths,
+        expanded,
         values.fix,
         cache,
         ignorePath ? [ignorePath] : [],
