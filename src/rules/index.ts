@@ -22,6 +22,8 @@ import { componentPrefixRule } from './component-prefix.js';
 import { noInlineStylesRule } from './no-inline-styles.js';
 import { iconUsageRule } from './icon-usage.js';
 import { importPathRule } from './import-path.js';
+import { tokenNoUnusedTokensRule } from './token-no-unused-tokens.js';
+import { noUnusedTokensRule } from './no-unused-tokens.js';
 
 export const builtInRules = [
   animationRule,
@@ -41,6 +43,7 @@ export const builtInRules = [
   opacityRule,
   outlineRule,
   zIndexRule,
+  tokenNoUnusedTokensRule,
   componentUsageRule,
   deprecationRule,
   variantPropRule,
@@ -48,4 +51,5 @@ export const builtInRules = [
   noInlineStylesRule,
   iconUsageRule,
   importPathRule,
+  noUnusedTokensRule,
 ];

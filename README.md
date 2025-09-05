@@ -264,6 +264,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 - [design-system/icon-usage](docs/rules/design-system/icon-usage.md)
 - [design-system/import-path](docs/rules/design-system/import-path.md)
 - [design-system/no-inline-styles](docs/rules/design-system/no-inline-styles.md)
+- [design-system/no-unused-tokens](docs/rules/design-system/no-unused-tokens.md)
 - [design-system/variant-prop](docs/rules/design-system/variant-prop.md)
 
 ### Design Token

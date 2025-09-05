@@ -223,11 +223,12 @@ Includes:
  - [`letter-spacing`](./rules/design-token/letter-spacing.md)
  - [`line-height`](./rules/design-token/line-height.md)
  - [`opacity`](./rules/design-token/opacity.md)
- - [`outline`](./rules/design-token/outline.md)
- - [`spacing`](./rules/design-token/spacing.md)
- - [`z-index`](./rules/design-token/z-index.md)
- - [`component-usage`](./rules/design-system/component-usage.md)
- - [`deprecation`](./rules/design-system/deprecation.md)
+- [`outline`](./rules/design-token/outline.md)
+- [`spacing`](./rules/design-token/spacing.md)
+- [`z-index`](./rules/design-token/z-index.md)
+- [`component-usage`](./rules/design-system/component-usage.md)
+- [`deprecation`](./rules/design-system/deprecation.md)
+ - [`no-unused-tokens`](./rules/design-system/no-unused-tokens.md)
 
 ### Returns
 

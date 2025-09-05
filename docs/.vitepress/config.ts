@@ -46,6 +46,10 @@ export default defineConfig({
                 link: '/rules/design-system/no-inline-styles',
               },
               {
+                text: 'no-unused-tokens',
+                link: '/rules/design-system/no-unused-tokens',
+              },
+              {
                 text: 'variant-prop',
                 link: '/rules/design-system/variant-prop',
               },
