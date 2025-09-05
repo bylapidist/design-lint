@@ -10,7 +10,9 @@ import os from 'node:os';
 export function makeTmpDir(prefix = 'designlint-') {
   const base = os.tmpdir();
   const p = fs.mkdtempSync(path.join(base, prefix));
-  return fs.realpathSync.native
-    ? fs.realpathSync.native(p)
-    : fs.realpathSync(p);
+  if (fs.realpathSync.native) {
+    return fs.realpathSync.native(p);
+  }
+  /* c8 ignore next */
+  return fs.realpathSync(p);
 }
