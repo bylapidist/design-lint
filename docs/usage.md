@@ -157,6 +157,13 @@ and `style:` directives. Declarations like
 
 are parsed so each individual style is checked against the configured rules.
 
+### Tagged template literals
+
+CSS inside JavaScript/TypeScript tagged template literals such as
+`styled.div\`color: red;\`` and `css\`...\`` or `tw\`...\`` is linted. Only
+static template strings without `${}` interpolations are analyzed. Configure the
+`patterns` field to include or exclude JS/TS sources when needed.
+
 Flag deprecated tokens or components and automatically replace them with [`design-system/deprecation`](rules/design-system/deprecation.md):
 
 ```json

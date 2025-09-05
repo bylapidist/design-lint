@@ -44,7 +44,9 @@ export async function loadCache(
   try {
     raw = await fs.readFile(cacheLocation, 'utf8');
   } catch (err) {
-    console.warn(`Failed to read cache at ${cacheLocation}:`, err);
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+      console.warn(`Failed to read cache at ${cacheLocation}:`, err);
+    }
     return;
   }
 
