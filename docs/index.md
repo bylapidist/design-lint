@@ -46,6 +46,7 @@ See the [CI guide](ci.md) for sample configurations in GitHub Actions and other 
 - [icon-usage](rules/design-system/icon-usage.md)
 - [import-path](rules/design-system/import-path.md)
 - [no-inline-styles](rules/design-system/no-inline-styles.md)
+- [no-unused-tokens](rules/design-system/no-unused-tokens.md)
 - [variant-prop](rules/design-system/variant-prop.md)
 
 ### Design Token

@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'module';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 const tsxLoader = require.resolve('tsx/esm');
 
 const builtInRules = [
@@ -11,6 +16,8 @@ const builtInRules = [
   'design-token/spacing',
   'design-token/font-size',
   'design-token/font-family',
+  'design-token/no-unused-tokens',
+  'design-system/no-unused-tokens',
 ];
 
 interface Fixture {
@@ -21,7 +28,7 @@ interface Fixture {
 const fixtures: Fixture[] = [
   {
     name: 'react-vite-css-modules',
-    files: ['src/App.module.css', 'src/App.tsx'],
+    files: ['src/App.module.css', 'src/App.tsx', 'designlint.config.json'],
   },
   {
     name: 'svelte',
@@ -54,7 +61,7 @@ for (const { name, files } of fixtures) {
     const result = spawnSync(
       process.execPath,
       [
-        '--loader',
+        '--import',
         tsxLoader,
         cli,
         fixture,

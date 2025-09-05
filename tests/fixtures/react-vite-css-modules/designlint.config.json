@@ -1,6 +1,6 @@
 {
   "tokens": {
-    "colors": { "primary": "#000000" },
+    "colors": { "primary": "#000000", "unused": "#ffffff" },
     "spacing": { "sm": 4 },
     "fontSizes": { "sm": 12 },
     "fonts": { "sans": "Arial" },
@@ -14,6 +14,8 @@
     "design-token/spacing": "error",
     "design-token/font-size": "error",
     "design-token/font-family": "error",
+    "design-token/no-unused-tokens": "warn",
+    "design-system/no-unused-tokens": "warn",
     "design-system/component-usage": [
       "error",
       { "substitutions": { "button": "DSButton" } }

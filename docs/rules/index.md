@@ -10,6 +10,7 @@ Design-lint includes several built-in rules categorized by domain.
 - [icon-usage](./design-system/icon-usage)
 - [import-path](./design-system/import-path)
 - [no-inline-styles](./design-system/no-inline-styles)
+- [no-unused-tokens](./design-system/no-unused-tokens)
 - [variant-prop](./design-system/variant-prop)
 
 ## Design Token
