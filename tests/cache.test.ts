@@ -48,9 +48,7 @@ test('loadCache handles missing cache file', async (t) => {
   await loadCache(cache, '/cache.json');
 
   assert.equal(cache.size, 0);
-  assert.ok(
-    warn.mock.calls[0]?.arguments[0].startsWith('Failed to read cache'),
-  );
+  assert.equal(warn.mock.callCount(), 0);
 });
 
 test('saveCache writes valid JSON', async () => {
