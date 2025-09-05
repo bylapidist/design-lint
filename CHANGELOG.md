@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.7.0
+
+### Minor Changes
+
+- 7628035: rename rule to design-system/no-unused-tokens and support ignoring tokens
+
 ## 4.6.0
 
 ### Minor Changes
