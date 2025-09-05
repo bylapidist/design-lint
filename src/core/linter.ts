@@ -459,8 +459,52 @@ export class Linter {
         ts.ScriptTarget.Latest,
         true,
       );
+      const getRootTag = (expr: ts.LeftHandSideExpression): string | null => {
+        if (ts.isIdentifier(expr)) return expr.text;
+        if (
+          ts.isPropertyAccessExpression(expr) ||
+          ts.isElementAccessExpression(expr)
+        ) {
+          return getRootTag(expr.expression as ts.LeftHandSideExpression);
+        }
+        if (ts.isCallExpression(expr)) {
+          return getRootTag(expr.expression as ts.LeftHandSideExpression);
+        }
+        return null;
+      };
+
       const visit = (node: ts.Node) => {
         for (const l of listeners) l.onNode?.(node);
+        if (ts.isTaggedTemplateExpression(node)) {
+          const root = getRootTag(node.tag as ts.LeftHandSideExpression);
+          if (
+            root &&
+            ['styled', 'css', 'tw'].includes(root) &&
+            ts.isNoSubstitutionTemplateLiteral(node.template)
+          ) {
+            const tpl = node.template;
+            const start = source.getLineAndCharacterOfPosition(
+              tpl.getStart(source) + 1,
+            );
+            const tempMessages: LintMessage[] = [];
+            const decls = parseCSS(tpl.text, tempMessages);
+            for (const decl of decls) {
+              const line = start.line + decl.line - 1;
+              const column =
+                decl.line === 1
+                  ? start.character + decl.column - 1
+                  : decl.column;
+              for (const l of listeners)
+                l.onCSSDeclaration?.({ ...decl, line, column });
+            }
+            for (const m of tempMessages) {
+              const line = start.line + m.line - 1;
+              const column =
+                m.line === 1 ? start.character + m.column - 1 : m.column;
+              messages.push({ ...m, line, column });
+            }
+          }
+        }
         ts.forEachChild(node, visit);
       };
       visit(source);

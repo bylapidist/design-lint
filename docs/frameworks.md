@@ -26,6 +26,14 @@ When linting Svelte files, the linter understands both `style` attributes and `s
 npx design-lint src/App.svelte
 ```
 
+## Tagged template literals
+
+JavaScript and TypeScript files using tagged template literals are parsed so CSS
+inside constructs like `styled.div\`color: red;\`` and `css\`...\`` or
+`tw\`...\`` can be linted. Only static template strings without interpolated
+expressions are analyzed. Use the `patterns` configuration field to include or
+exclude JS/TS sources as needed.
+
 ## Web Components
 
 Custom elements can be linted in `.html`, `.js`, or `.ts` files. Both inline `style` attributes and `<style>` tags are parsed using standard CSS; preprocessors must be compiled ahead of time.
