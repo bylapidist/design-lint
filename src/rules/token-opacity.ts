@@ -1,13 +1,19 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const opacityRule: RuleModule = {
   name: 'design-token/opacity',
   meta: { description: 'enforce opacity tokens' },
   create(context) {
     const opacityTokens = context.tokens?.opacity;
-    if (!opacityTokens || Object.keys(opacityTokens).length === 0) {
+    if (
+      !opacityTokens ||
+      (Array.isArray(opacityTokens)
+        ? opacityTokens.length === 0
+        : Object.keys(opacityTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/opacity requires opacity tokens; configure tokens.opacity to enable this rule.',
@@ -15,6 +21,22 @@ export const opacityRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(opacityTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'opacity') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, opacityTokens)) {
+              context.report({
+                message: `Unexpected opacity ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;

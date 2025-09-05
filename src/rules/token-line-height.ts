@@ -1,12 +1,18 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',
   meta: { description: 'enforce line-height tokens' },
   create(context) {
     const lineHeights = context.tokens?.lineHeights;
-    if (!lineHeights || Object.keys(lineHeights).length === 0) {
+    if (
+      !lineHeights ||
+      (Array.isArray(lineHeights)
+        ? lineHeights.length === 0
+        : Object.keys(lineHeights).length === 0)
+    ) {
       context.report({
         message:
           'design-token/line-height requires lineHeights tokens; configure tokens.lineHeights to enable this rule.',
@@ -14,6 +20,22 @@ export const lineHeightRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(lineHeights)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'line-height') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, lineHeights)) {
+              context.report({
+                message: `Unexpected line height ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;

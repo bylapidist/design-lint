@@ -1,12 +1,18 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',
   meta: { description: 'enforce letter-spacing tokens' },
   create(context) {
     const letterSpacings = context.tokens?.letterSpacings;
-    if (!letterSpacings || Object.keys(letterSpacings).length === 0) {
+    if (
+      !letterSpacings ||
+      (Array.isArray(letterSpacings)
+        ? letterSpacings.length === 0
+        : Object.keys(letterSpacings).length === 0)
+    ) {
       context.report({
         message:
           'design-token/letter-spacing requires letterSpacings tokens; configure tokens.letterSpacings to enable this rule.',
@@ -14,6 +20,22 @@ export const letterSpacingRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(letterSpacings)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'letter-spacing') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, letterSpacings)) {
+              context.report({
+                message: `Unexpected letter spacing ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;

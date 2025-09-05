@@ -35,6 +35,10 @@ function isMultiTheme(
 function normalizeSingle(tokens: DesignTokens, wrapVar: boolean): DesignTokens {
   const normalized: DesignTokens = {};
   for (const [group, defs] of Object.entries(tokens)) {
+    if (Array.isArray(defs)) {
+      (normalized as Record<string, unknown>)[group] = defs;
+      continue;
+    }
     if (!defs || typeof defs !== 'object') {
       (normalized as Record<string, unknown>)[group] = defs as unknown;
       continue;
@@ -70,6 +74,14 @@ export function mergeTokens(
     const source = tokensByTheme[theme];
     if (!source) continue;
     for (const [group, defs] of Object.entries(source)) {
+      if (Array.isArray(defs)) {
+        const target = ((merged as Record<string, unknown>)[group] ||
+          []) as unknown[];
+        (merged as Record<string, unknown>)[group] = Array.from(
+          new Set([...target, ...defs]),
+        );
+        continue;
+      }
       if (!defs || typeof defs !== 'object') {
         if ((merged as Record<string, unknown>)[group] === undefined) {
           (merged as Record<string, unknown>)[group] = defs as unknown;

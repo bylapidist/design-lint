@@ -1,13 +1,19 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const borderRadiusRule: RuleModule = {
   name: 'design-token/border-radius',
   meta: { description: 'enforce border-radius tokens' },
   create(context) {
     const radiiTokens = context.tokens?.borderRadius;
-    if (!radiiTokens || Object.keys(radiiTokens).length === 0) {
+    if (
+      !radiiTokens ||
+      (Array.isArray(radiiTokens)
+        ? radiiTokens.length === 0
+        : Object.keys(radiiTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/border-radius requires radius tokens; configure tokens.borderRadius to enable this rule.',
@@ -15,6 +21,22 @@ export const borderRadiusRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(radiiTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'border-radius') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, radiiTokens)) {
+              context.report({
+                message: `Unexpected border radius ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;

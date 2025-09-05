@@ -2,39 +2,39 @@ import type ts from 'typescript';
 
 export interface DesignTokens {
   /** Color tokens. */
-  colors?: Record<string, string>;
+  colors?: Record<string, string> | (string | RegExp)[];
   /** Spacing scale tokens. */
-  spacing?: Record<string, number>;
+  spacing?: Record<string, number> | (string | RegExp)[];
   /** z-index tokens. */
-  zIndex?: Record<string, number>;
+  zIndex?: Record<string, number> | (string | RegExp)[];
   /** Border radius tokens. */
-  borderRadius?: Record<string, number | string>;
+  borderRadius?: Record<string, number | string> | (string | RegExp)[];
   /** Border width tokens. */
-  borderWidths?: Record<string, number | string>;
+  borderWidths?: Record<string, number | string> | (string | RegExp)[];
   /** Box shadow tokens. */
-  shadows?: Record<string, string>;
+  shadows?: Record<string, string> | (string | RegExp)[];
   /** Motion duration tokens. */
-  durations?: Record<string, number | string>;
+  durations?: Record<string, number | string> | (string | RegExp)[];
   /** Animation tokens. */
-  animations?: Record<string, string>;
+  animations?: Record<string, string> | (string | RegExp)[];
   /** Blur tokens. */
-  blurs?: Record<string, number | string>;
+  blurs?: Record<string, number | string> | (string | RegExp)[];
   /** Border color tokens. */
-  borderColors?: Record<string, string>;
+  borderColors?: Record<string, string> | (string | RegExp)[];
   /** Opacity tokens. */
-  opacity?: Record<string, number | string>;
+  opacity?: Record<string, number | string> | (string | RegExp)[];
   /** Outline tokens. */
-  outlines?: Record<string, string>;
+  outlines?: Record<string, string> | (string | RegExp)[];
   /** Font size tokens. */
-  fontSizes?: Record<string, number | string>;
+  fontSizes?: Record<string, number | string> | (string | RegExp)[];
   /** Font family tokens. */
-  fonts?: Record<string, string>;
+  fonts?: Record<string, string> | (string | RegExp)[];
   /** Line height tokens. */
-  lineHeights?: Record<string, number | string>;
+  lineHeights?: Record<string, number | string> | (string | RegExp)[];
   /** Font weight tokens. */
-  fontWeights?: Record<string, number | string>;
+  fontWeights?: Record<string, number | string> | (string | RegExp)[];
   /** Letter spacing tokens. */
-  letterSpacings?: Record<string, number | string>;
+  letterSpacings?: Record<string, number | string> | (string | RegExp)[];
   /** Deprecated tokens and their replacements. */
   deprecations?: Record<string, { replacement?: string }>;
   /** Allow additional custom token groups. */

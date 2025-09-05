@@ -1,12 +1,18 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
+import { matchToken, extractVarName } from '../utils/token-match.js';
 
 export const zIndexRule: RuleModule = {
   name: 'design-token/z-index',
   meta: { description: 'enforce z-index tokens' },
   create(context) {
     const zTokens = context.tokens?.zIndex;
-    if (!zTokens || Object.keys(zTokens).length === 0) {
+    if (
+      !zTokens ||
+      (Array.isArray(zTokens)
+        ? zTokens.length === 0
+        : Object.keys(zTokens).length === 0)
+    ) {
       context.report({
         message:
           'design-token/z-index requires zIndex tokens; configure tokens.zIndex to enable this rule.',
@@ -14,6 +20,22 @@ export const zIndexRule: RuleModule = {
         column: 1,
       });
       return {};
+    }
+    if (Array.isArray(zTokens)) {
+      return {
+        onCSSDeclaration(decl) {
+          if (decl.prop === 'z-index') {
+            const name = extractVarName(decl.value);
+            if (!name || !matchToken(name, zTokens)) {
+              context.report({
+                message: `Unexpected z-index ${decl.value}`,
+                line: decl.line,
+                column: decl.column,
+              });
+            }
+          }
+        },
+      };
     }
     const allowed = new Set<number>(
       Object.values(zTokens)

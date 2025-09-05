@@ -71,6 +71,34 @@ wrapped in `var()` so rules compare against the corresponding CSS variable:
 }
 ```
 
+### Token patterns
+
+Token groups may be defined as arrays of patterns rather than explicit maps.
+Each group is either a record of named tokens or an array of pattern strings and
+`RegExp` literals—mixing the two formats is not supported. Strings may include
+`*` wildcards that match any sequence of characters. During linting each
+`var(--token)` reference is tested against the provided patterns, and diagnostics
+report the concrete variable that matched.
+
+```json
+{
+  "tokens": { "colors": ["--colour-*"] }
+}
+```
+
+```ts
+export default {
+  tokens: { colors: ["--brand-*", /^--theme-/] },
+};
+```
+
+See [examples/designlint.config.token-patterns.json](examples/designlint.config.token-patterns.json)
+and [examples/designlint.config.token-patterns.ts](examples/designlint.config.token-patterns.ts)
+for complete configurations.
+
+For completeness, a configuration that enumerates tokens for several categories
+might look like:
+
 ```js
 module.exports = {
   tokens: {
