@@ -18,6 +18,13 @@ npx design-lint [files...]
 
 ```
 
+The CLI accepts files, directories, or glob patterns:
+
+```bash
+npx design-lint .
+npx design-lint "src/**/*.scss"
+```
+
 ## Initialize configuration
 
 Create a starter config with:
