@@ -1,5 +1,18 @@
 # @lapidist/design-lint
 
+## 4.6.0
+
+### Minor Changes
+
+- bfcfda8: expand CLI targets to support directories and glob patterns
+- 3de0170: add support for linting CSS in tagged template literals in JS/TS files
+- 6302875: allow token groups to define CSS variable patterns
+- 828cb63: add token suggestion reporting and completion API
+
+### Patch Changes
+
+- 4bae965: ignore ENOENT when reading cache file in loadCache to avoid spurious warnings
+
 ## 4.5.0
 
 ### Minor Changes
