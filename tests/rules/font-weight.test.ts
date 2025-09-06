@@ -26,7 +26,10 @@ test('design-token/font-weight reports numeric literals', async () => {
     tokens: { fontWeights: { regular: 400 } },
     rules: { 'design-token/font-weight': 'error' },
   });
-  const res = await linter.lintText('const w = 500;', 'file.ts');
+  const res = await linter.lintText(
+    'const w = <div style={{ fontWeight: 500 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 

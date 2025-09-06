@@ -7,7 +7,10 @@ test('design-token/spacing enforces multiples', async () => {
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
   });
-  const res = await linter.lintText('const s = 5;', 'file.ts');
+  const res = await linter.lintText(
+    'const s = <div style={{ margin: 5 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -16,7 +19,10 @@ test('design-token/spacing reports template literal', async () => {
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
   });
-  const res = await linter.lintText('const s = `5`;', 'file.ts');
+  const res = await linter.lintText(
+    'const s = <div style={{ margin: `5` }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -25,7 +31,10 @@ test('design-token/spacing reports template expression', async () => {
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
   });
-  const res = await linter.lintText('const s = `5${"px"}`;', 'file.ts');
+  const res = await linter.lintText(
+    'const s = <div style={{ margin: `5${"px"}` }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -34,7 +43,10 @@ test('design-token/spacing reports prefix unary', async () => {
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
   });
-  const res = await linter.lintText('const s = -5;', 'file.ts');
+  const res = await linter.lintText(
+    'const s = <div style={{ margin: -5 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 

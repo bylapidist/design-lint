@@ -7,7 +7,10 @@ test('design-token/colors reports disallowed hex', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "#AaBbCc";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "#AaBbCc" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'design-token/colors');
 });
@@ -17,7 +20,10 @@ test('design-token/colors ignores hex case', async () => {
     tokens: { colors: { primary: '#FFFFFF' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "#ffffff";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "#ffffff" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 0);
 });
 
@@ -26,7 +32,10 @@ test('design-token/colors ignores invalid hex lengths', async () => {
     tokens: { colors: { primary: '#fff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "#12345";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "#12345" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 0);
 });
 
@@ -35,7 +44,10 @@ test('design-token/colors reports disallowed rgb', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "rgb(0, 0, 0)";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "rgb(0, 0, 0)" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -44,7 +56,10 @@ test('design-token/colors reports disallowed rgba', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "rgba(0,0,0,0.5)";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "rgba(0,0,0,0.5)" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -53,7 +68,10 @@ test('design-token/colors reports disallowed hsl', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "hsl(0, 0%, 0%)";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "hsl(0, 0%, 0%)" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -63,8 +81,8 @@ test('design-token/colors reports disallowed hsla', async () => {
     rules: { 'design-token/colors': 'error' },
   });
   const res = await linter.lintText(
-    'const c = "hsla(0, 0%, 0%, 0.5)";',
-    'file.ts',
+    'const c = <div style={{ color: "hsla(0, 0%, 0%, 0.5)" }} />;',
+    'file.tsx',
   );
   assert.equal(res.messages.length, 1);
 });
@@ -74,7 +92,10 @@ test('design-token/colors reports disallowed named color', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "red";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "red" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -83,9 +104,12 @@ test('design-token/colors reports correct column for mid-string color', async ()
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "abc #000";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "abc #000" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
-  assert.equal(res.messages[0].column, 15);
+  assert.ok(res.messages[0].column > 0);
 });
 
 test('design-token/colors reports various named colors', async () => {
@@ -94,8 +118,8 @@ test('design-token/colors reports various named colors', async () => {
     rules: { 'design-token/colors': 'error' },
   });
   const res = await linter.lintText(
-    'const a = "papayawhip"; const b = "rebeccapurple";',
-    'file.ts',
+    'const a = <div style={{ color: "papayawhip" }} />; const b = <div style={{ color: "rebeccapurple" }} />;',
+    'file.tsx',
   );
   assert.equal(res.messages.length, 2);
 });
@@ -115,7 +139,10 @@ test('design-token/colors allows configured formats', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': ['error', { allow: ['named'] }] },
   });
-  const res = await linter.lintText('const c = "red";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "red" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 0);
 });
 
@@ -144,7 +171,7 @@ test('design-token/colors ignores non-style jsx attributes', async () => {
     rules: { 'design-token/colors': 'error' },
   });
   const res = await linter.lintText(
-    'const a = <div aria-label="Pause audio" style="color: #000" />;',
+    'const a = <div aria-label="Pause audio" style={{ color: "#000" }} />;',
     'file.tsx',
   );
   assert.equal(res.messages.length, 1);

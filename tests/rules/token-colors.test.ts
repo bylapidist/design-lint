@@ -7,7 +7,10 @@ test('design-token/colors reports disallowed hwb', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "hwb(0, 0%, 0%)";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "hwb(0, 0%, 0%)" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -16,7 +19,10 @@ test('design-token/colors reports disallowed lab', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "lab(0% 0 0)";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "lab(0% 0 0)" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -25,7 +31,10 @@ test('design-token/colors reports disallowed lch', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = "lch(0% 0 0)";', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "lch(0% 0 0)" }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -35,8 +44,8 @@ test('design-token/colors reports disallowed color()', async () => {
     rules: { 'design-token/colors': 'error' },
   });
   const res = await linter.lintText(
-    'const c = "color(display-p3 1 0 0)";',
-    'file.ts',
+    'const c = <div style={{ color: "color(display-p3 1 0 0)" }} />;',
+    'file.tsx',
   );
   assert.equal(res.messages.length, 1);
 });
@@ -46,7 +55,10 @@ test('design-token/colors reports template literal', async () => {
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
   });
-  const res = await linter.lintText('const c = `hwb(0, 0%, 0%)`;', 'file.ts');
+  const res = await linter.lintText(
+    'const c = <div style={{ color: `hwb(0, 0%, 0%)` }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -56,8 +68,8 @@ test('design-token/colors reports template expression', async () => {
     rules: { 'design-token/colors': 'error' },
   });
   const res = await linter.lintText(
-    'const c = `hwb(0, 0%, 0%) ${foo}`;',
-    'file.ts',
+    'const c = <div style={{ color: `hwb(0, 0%, 0%) ${foo}` }} />;',
+    'file.tsx',
   );
   assert.equal(res.messages.length, 1);
 });

@@ -25,7 +25,10 @@ test('design-token/z-index reports numeric literals', async () => {
     tokens: { zIndex: { modal: 100 } },
     rules: { 'design-token/z-index': 'error' },
   });
-  const res = await linter.lintText('const z = 5;', 'file.ts');
+  const res = await linter.lintText(
+    'const z = <div style={{ zIndex: 5 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
