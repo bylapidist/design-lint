@@ -19,6 +19,7 @@ import { loadPlugins } from './plugin-loader.js';
 import { scanFiles } from './file-scanner.js';
 import { loadCache, saveCache, type CacheMap } from './cache.js';
 import { normalizeTokens, mergeTokens } from './token-loader.js';
+import { extractVarName } from '../utils/token-match.js';
 
 export interface Config {
   tokens?: DesignTokens | Record<string, DesignTokens>;
@@ -230,11 +231,6 @@ export class Linter {
   getTokenCompletions(): Record<string, string[]> {
     const tokens = (this.config.tokens || {}) as DesignTokens;
     const completions: Record<string, string[]> = {};
-    const extract = (val: unknown): string | null => {
-      if (typeof val !== 'string') return null;
-      const m = val.trim().match(/^var\((--[A-Za-z0-9-_]+)\)$/);
-      return m ? m[1] : null;
-    };
     for (const [group, defs] of Object.entries(tokens)) {
       if (Array.isArray(defs)) {
         const names = defs.filter((t): t is string => typeof t === 'string');
@@ -242,7 +238,7 @@ export class Linter {
       } else if (defs && typeof defs === 'object') {
         const names: string[] = [];
         for (const val of Object.values(defs)) {
-          const v = extract(val);
+          const v = typeof val === 'string' ? extractVarName(val) : null;
           if (v) names.push(v);
         }
         if (names.length) completions[group] = names;
