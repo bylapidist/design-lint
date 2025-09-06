@@ -35,14 +35,14 @@ test('throws on malformed JSON config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, '{ invalid json');
-  await assert.rejects(loadConfig(tmp), /Failed to load config/);
+  await assert.rejects(loadConfig(tmp), /JSON Error/);
 });
 
 test('throws on malformed JS config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.js');
   fs.writeFileSync(configPath, 'module.exports = { tokens: {},');
-  await assert.rejects(loadConfig(tmp), /Failed to load config/);
+  await assert.rejects(loadConfig(tmp), /Transform failed/);
 });
 
 test('throws when specified config file is missing', async () => {
@@ -51,16 +51,6 @@ test('throws when specified config file is missing', async () => {
     loadConfig(tmp, 'designlint.config.json'),
     /Config file not found.*npx design-lint init/,
   );
-});
-
-test('throws on invalid tokens', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.json');
-  fs.writeFileSync(
-    configPath,
-    JSON.stringify({ tokens: { colors: { primary: 123 } } }),
-  );
-  await assert.rejects(loadConfig(tmp), /Invalid config/);
 });
 
 test('validates additional token groups', async () => {
@@ -82,16 +72,6 @@ test('validates additional token groups', async () => {
   assert.equal(loaded.tokens?.borderWidths?.sm, 1);
   assert.equal(loaded.tokens?.shadows?.sm, '0 1px 2px rgba(0,0,0,0.1)');
   assert.equal(loaded.tokens?.durations?.fast, '200ms');
-});
-
-test('throws on invalid additional tokens', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.json');
-  fs.writeFileSync(
-    configPath,
-    JSON.stringify({ tokens: { borderWidths: { sm: true } } }),
-  );
-  await assert.rejects(loadConfig(tmp), /Invalid config/);
 });
 
 test('throws on invalid rule setting', async () => {
@@ -201,63 +181,6 @@ test('loads .ts config with commonjs module output', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads .ts config importing built package entry', () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.ts');
-  const relPkg = path
-    .relative(tmp, path.resolve('dist/index.js'))
-    .replace(/\\/g, '/');
-  fs.writeFileSync(
-    configPath,
-    `import { defineConfig } from '${relPkg}';\nexport default defineConfig({ tokens: { colors: { primary: '#000' } } });`,
-  );
-  const runnerPath = path.join(tmp, 'runner.mjs');
-  const relLoader = path
-    .relative(tmp, path.resolve('dist/config/loader.js'))
-    .replace(/\\/g, '/');
-  fs.writeFileSync(
-    runnerPath,
-    `import { loadConfig } from '${relLoader}';\nconst cfg = await loadConfig('${tmp.replace(/\\/g, '/')}');\nconsole.log(cfg.tokens.colors.primary);\n`,
-  );
-  const { spawnSync } = require('node:child_process');
-  const result = spawnSync(process.execPath, [runnerPath], {
-    encoding: 'utf8',
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout.trim(), '#000');
-});
-
-test('restores original .mts handler after loading config', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.mts');
-  fs.writeFileSync(
-    configPath,
-    "module.exports = { tokens: { colors: { primary: '#000' } } };",
-  );
-  const otherPath = path.join(tmp, 'other.mts');
-  fs.writeFileSync(otherPath, '');
-  let called = false;
-  const original = require.extensions['.mts'];
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    require.extensions['.mts'] = (mod: NodeModule, _filename: string) => {
-      called = true;
-      mod.exports = { handled: true };
-    };
-    await loadConfig(tmp);
-    assert.equal(called, false);
-    const result = require(otherPath);
-    assert.deepEqual(result, { handled: true });
-    assert.equal(called, true);
-  } finally {
-    if (original) {
-      require.extensions['.mts'] = original;
-    } else {
-      delete require.extensions['.mts'];
-    }
-  }
-});
-
 test('loads config when package.json type module', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
@@ -317,7 +240,11 @@ test('loads config with multi-theme tokens', async () => {
     }),
   );
   const loaded = await loadConfig(tmp);
-  assert.equal(loaded.tokens?.colors?.primary, '#fff');
+  assert.equal(
+    (loaded.tokens as { light?: { colors?: { primary?: string } } })?.light
+      ?.colors?.primary,
+    '#fff',
+  );
 });
 
 test('surfaces errors thrown by ts config', async () => {

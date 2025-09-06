@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-const tsxLoader = require.resolve('tsx/esm');
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+const tsxLoader = createRequire(import.meta.url).resolve('tsx/esm');
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 test('CLI loads nearest config in nested project', () => {
   const appDir = path.join(
@@ -15,7 +18,7 @@ test('CLI loads nearest config in nested project', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsxLoader, cli, '.', '--format', 'json'],
+    ['--import', tsxLoader, cli, '.', '--format', 'json'],
     { cwd: appDir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
