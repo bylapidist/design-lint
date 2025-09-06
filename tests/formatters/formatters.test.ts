@@ -47,6 +47,37 @@ test('stylish formatter outputs suggestions', () => {
   assert.ok(out.includes('Did you mean `--foo`?'));
 });
 
+test('stylish formatter outputs OK for files without messages', () => {
+  const results: LintResult[] = [
+    { filePath: 'a.ts', messages: [] },
+    { filePath: 'b.ts', messages: [] },
+  ];
+  const out = stylish(results, false);
+  assert.equal(out, '[OK] a.ts\n[OK] b.ts');
+});
+
+test('stylish formatter does not insert blank line before summary', () => {
+  const results: LintResult[] = [
+    {
+      filePath: 'a.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'msg',
+          severity: 'error',
+          line: 1,
+          column: 1,
+        },
+      ],
+    },
+  ];
+  const out = stylish(results, false);
+  assert.equal(
+    out,
+    'a.ts\n  1:1  error  msg  rule\n1 problems (1 errors, 0 warnings)',
+  );
+});
+
 test('json formatter outputs json', () => {
   const results: LintResult[] = [
     {
