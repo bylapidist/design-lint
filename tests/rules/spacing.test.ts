@@ -75,6 +75,16 @@ test('design-token/spacing ignores var() fallbacks', async () => {
   assert.equal(res.messages.length, 0);
 });
 
+test('design-token/spacing ignores numbers in JSX props', async () => {
+  const linter = new Linter({
+    tokens: { spacing: { sm: 4, md: 8 } },
+    rules: { 'design-token/spacing': ['error', { base: 4 }] },
+  });
+  const code = 'export const C = () => <Component headingLevel={2} />;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-token/spacing ignores nested functions', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },

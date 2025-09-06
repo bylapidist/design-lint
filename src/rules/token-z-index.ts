@@ -5,6 +5,7 @@ import {
   extractVarName,
   closestToken,
 } from '../utils/token-match.js';
+import { isInNonStyleJsx } from '../utils/jsx.js';
 
 export const zIndexRule: RuleModule = {
   name: 'design-token/z-index',
@@ -50,6 +51,7 @@ export const zIndexRule: RuleModule = {
     );
     return {
       onNode(node) {
+        if (isInNonStyleJsx(node)) return;
         if (ts.isNumericLiteral(node)) {
           const value = Number(node.text);
           if (!allowed.has(value)) {
