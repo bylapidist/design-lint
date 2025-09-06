@@ -263,9 +263,7 @@ export class Linter {
     await this.pluginLoad;
     const enabled = this.getEnabledRules();
     const unusedRules = enabled.filter(
-      (e) =>
-        e.rule.name === 'design-system/no-unused-tokens' ||
-        e.rule.name === 'design-token/no-unused-tokens',
+      (e) => e.rule.name === 'design-system/no-unused-tokens',
     );
     if (unusedRules.length) {
       this.unusedTokenRules = unusedRules.map((u) => ({
