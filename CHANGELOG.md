@@ -1,5 +1,16 @@
 # @lapidist/design-lint
 
+## 4.7.10
+
+### Patch Changes
+
+- 15bf5c1: fix extractVarName to reject invalid characters in variable names
+- 45f306c: handle non-positive concurrency values in lintFiles
+- 1020b63: prevent string literals from disabling next line linting directives
+- e5ed76e: fix relFrom to return empty string for empty target path
+- 1b7d616: support design-lint-disable-line directive
+- a2f9dda: fix sarif formatter to update rule descriptions from later results
+
 ## 4.7.9
 
 ### Patch Changes
