@@ -42,7 +42,7 @@ test('scanFiles collects files from directory targets', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const { files } = await scanFiles(['.'], config);
+    const files = await scanFiles(['.'], config);
     const rels = files.map((f) => path.relative(dir, f));
     assert.deepEqual(rels, ['a.ts']);
   } finally {

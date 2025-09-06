@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import ignore from 'ignore';
 import type { Config } from './linter.js';
 
@@ -14,45 +14,35 @@ export const defaultIgnore = [
   '**/.cache/**',
 ];
 
+export function getIgnorePatterns(config?: Config): string[] {
+  const fromConfig =
+    config?.ignoreFiles?.map((p) => p.replace(/\\/g, '/')) ?? [];
+  return [...defaultIgnore, ...fromConfig];
+}
+
 export async function loadIgnore(
   config?: Config,
   additionalPaths: string[] = [],
-): Promise<{
-  ig: ignore.Ignore;
-  patterns: string[];
-}> {
-  const gitIgnore = path.join(process.cwd(), '.gitignore');
-  const designIgnore = path.join(process.cwd(), '.designlintignore');
-  const ignorePatterns = [...defaultIgnore];
+): Promise<{ ig: ignore.Ignore; patterns: string[] }> {
   const ig = ignore();
-  ig.add(defaultIgnore);
-
-  const readIgnore = async (file: string) => {
+  const patterns = getIgnorePatterns(config);
+  ig.add(patterns);
+  const files = ['.gitignore', '.designlintignore', ...additionalPaths];
+  for (const file of files) {
     try {
-      const content = await fs.readFile(file, 'utf8');
+      const content = await fs.readFile(
+        path.resolve(process.cwd(), file),
+        'utf8',
+      );
       ig.add(content);
       const lines = content
         .split(/\r?\n/)
         .map((l) => l.trim())
         .filter((l) => l && !l.startsWith('#'));
-      ignorePatterns.push(...lines);
+      patterns.push(...lines);
     } catch {
-      // no ignore file
+      // ignore missing files
     }
-  };
-
-  await Promise.all([
-    readIgnore(gitIgnore),
-    readIgnore(designIgnore),
-    ...additionalPaths.map(readIgnore),
-  ]);
-
-  if (config?.ignoreFiles) {
-    const normalized = config.ignoreFiles.map((p) => p.replace(/\\/g, '/'));
-    ig.add(normalized);
-    ignorePatterns.push(...normalized);
   }
-
-  const normalizedPatterns = ignorePatterns.map((p) => p.replace(/\\/g, '/'));
-  return { ig, patterns: normalizedPatterns };
+  return { ig, patterns };
 }

@@ -32,7 +32,7 @@ test('lintFiles ignores common directories by default', async () => {
   }
 });
 
-test('lintFiles respects .gitignore', async () => {
+test('lintFiles respects .gitignore via globby', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');

@@ -136,11 +136,8 @@ export class Linter {
       await loadCache(cache, cacheLocation);
       this.cacheLoaded = true;
     }
-    const { files, ignoreFiles } = await scanFiles(
-      targets,
-      this.config,
-      additionalIgnorePaths,
-    );
+    const files = await scanFiles(targets, this.config, additionalIgnorePaths);
+    const ignoreFiles: string[] = [];
     if (files.length === 0) {
       return {
         results: [],
