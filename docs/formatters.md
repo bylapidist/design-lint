@@ -6,7 +6,8 @@ objects and an optional `useColor` flag and returns a string to print.
 
 ## Built-in formatters
 
-- `stylish` – default, colorized summary intended for terminals.
+- `stylish` – default, colorized summary intended for terminals. Files without
+  problems are prefixed with `[OK]`.
 - `json` – raw JSON results, useful for piping to other tools.
 - `sarif` – emits a [SARIF 2.1.0](https://sarifweb.azurewebsites.net/) log for CI systems.
 
