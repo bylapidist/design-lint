@@ -5,6 +5,7 @@ import path from 'path';
 import { createRequire } from 'module';
 import { once } from 'node:events';
 import { pathToFileURL, fileURLToPath } from 'url';
+import { performance } from 'node:perf_hooks';
 import type { LintResult } from '../core/types.js';
 import type { Config } from '../core/linter.js';
 import { getFormatter } from '../formatters/index.js';
@@ -324,6 +325,7 @@ export async function run(argv = process.argv.slice(2)) {
     };
 
     const runLint = async (paths: string[]) => {
+      const start = performance.now();
       const expanded = await expandTargets(paths);
       const {
         results,
@@ -336,6 +338,7 @@ export async function run(argv = process.argv.slice(2)) {
         ignorePath ? [ignorePath] : [],
         cacheLocation,
       );
+      const duration = performance.now() - start;
       if (warning && !values.quiet) console.warn(warning);
       if (values.watch && watcher) {
         const toAdd = newIgnore.filter((p) => !ignoreFilePaths.includes(p));
@@ -351,6 +354,16 @@ export async function run(argv = process.argv.slice(2)) {
         await writeFileAtomic(values.output as string, output);
       } else if (!values.quiet) {
         console.log(output);
+      }
+
+      if (
+        !values.quiet &&
+        (values.format === undefined || values.format === 'stylish')
+      ) {
+        const time = (duration / 1000).toFixed(2);
+        const count = results.length;
+        const stat = `\nLinted ${count} file${count === 1 ? '' : 's'} in ${time}s`;
+        console.log(useColor ? chalk.cyan.bold(stat) : stat);
       }
 
       if (values.report) {
