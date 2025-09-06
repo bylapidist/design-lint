@@ -11,13 +11,14 @@ test('inline directives disable linting', async () => {
   fs.writeFileSync(
     file,
     "const a = 'old';\n" +
+      "const b = 'old'; // design-lint-disable-line\n" +
       '// design-lint-disable-next-line\n' +
-      "const b = 'old';\n" +
-      '/* design-lint-disable */\n' +
       "const c = 'old';\n" +
+      '/* design-lint-disable */\n' +
       "const d = 'old';\n" +
+      "const e = 'old';\n" +
       '/* design-lint-enable */\n' +
-      "const e = 'old';\n",
+      "const f = 'old';\n",
   );
   const linter = new Linter({
     tokens: { deprecations: { old: { replacement: 'new' } } },
@@ -25,5 +26,21 @@ test('inline directives disable linting', async () => {
   });
   const res = await linter.lintFile(file);
   const lines = res.messages.map((m) => m.line).sort();
-  assert.deepEqual(lines, [1, 8]);
+  assert.deepEqual(lines, [1, 9]);
+});
+
+test('strings resembling directives do not disable next line', async () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(
+    file,
+    "const a = 'design-lint-disable-next-line';\n" + "const b = 'old';\n",
+  );
+  const linter = new Linter({
+    tokens: { deprecations: { old: { replacement: 'new' } } },
+    rules: { 'design-system/deprecation': 'error' },
+  });
+  const res = await linter.lintFile(file);
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0].line, 2);
 });

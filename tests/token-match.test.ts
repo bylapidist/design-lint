@@ -6,8 +6,9 @@ import {
   extractVarName,
 } from '../src/utils/token-match.ts';
 
-test('matchToken handles regexp patterns and missing matches', () => {
+test('matchToken handles regexp and wildcard patterns and missing matches', () => {
   assert.equal(matchToken('--brand-primary', [/^--brand-/]), '--brand-primary');
+  assert.equal(matchToken('--brand-primary', ['--brand-*']), '--brand-primary');
   assert.equal(matchToken('--foo', ['--bar']), null);
 });
 
@@ -29,4 +30,5 @@ test('extractVarName parses var() and ignores invalid values', () => {
   assert.equal(extractVarName('var(--x, 10px)'), '--x');
   assert.equal(extractVarName('var(  --x  )'), '--x');
   assert.equal(extractVarName('--x'), null);
+  assert.equal(extractVarName('var(--foo.bar)'), null);
 });

@@ -8,7 +8,10 @@ function escapeRegExp(str: string): string {
 
 function patternToRegExp(pattern: TokenPattern): RegExp {
   if (pattern instanceof RegExp) return pattern;
-  const escaped = escapeRegExp(pattern).replace(/\\\*/g, '.*');
+  const escaped = pattern
+    .split('*')
+    .map((seg) => escapeRegExp(seg))
+    .join('.*');
   return new RegExp(`^${escaped}$`, 'i');
 }
 
@@ -52,6 +55,6 @@ export function closestToken(
 
 /** Extract a CSS variable name from a value like `var(--foo)` */
 export function extractVarName(value: string): string | null {
-  const m = value.trim().match(/^var\(\s*(--[A-Za-z0-9-_]+)\s*(?:,.*)?\)$/);
+  const m = value.trim().match(/^var\(\s*(--[A-Za-z0-9_-]+)\s*(?:,.*)?\)$/);
   return m ? m[1] : null;
 }

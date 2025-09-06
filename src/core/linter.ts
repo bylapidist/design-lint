@@ -153,7 +153,11 @@ export class Linter {
         if (!files.includes(key)) cache.delete(key);
       }
     }
-    const limit = pLimit(this.config.concurrency ?? os.cpus().length);
+    const concurrency = Math.max(
+      1,
+      Math.floor(this.config.concurrency ?? os.cpus().length),
+    );
+    const limit = pLimit(concurrency);
     const tasks = files.map((filePath) =>
       limit(async () => {
         try {
@@ -560,6 +564,7 @@ export class Linter {
               m.line === 1 ? start.character + m.column - 1 : m.column;
             messages.push({ ...m, line, column });
           }
+          return;
         } else if (ts.isTaggedTemplateExpression(node)) {
           const root = getRootTag(node.tag as ts.LeftHandSideExpression);
           if (
@@ -588,6 +593,7 @@ export class Linter {
                 m.line === 1 ? start.character + m.column - 1 : m.column;
               messages.push({ ...m, line, column });
             }
+            return;
           }
         }
         ts.forEachChild(node, visit);
@@ -749,8 +755,12 @@ function getDisabledLines(text: string): Set<number> {
       block = false;
       continue;
     }
-    if (/design-lint-disable-next-line/.test(line)) {
+    if (/(?:\/\/|\/\*)\s*design-lint-disable-next-line/.test(line)) {
       disabled.add(i + 2);
+      continue;
+    }
+    if (/design-lint-disable-line/.test(line)) {
+      disabled.add(i + 1);
       continue;
     }
     if (block) disabled.add(i + 1);
