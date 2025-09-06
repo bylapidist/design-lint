@@ -153,7 +153,11 @@ export class Linter {
         if (!files.includes(key)) cache.delete(key);
       }
     }
-    const limit = pLimit(this.config.concurrency ?? os.cpus().length);
+    const concurrency = Math.max(
+      1,
+      Math.floor(this.config.concurrency ?? os.cpus().length),
+    );
+    const limit = pLimit(concurrency);
     const tasks = files.map((filePath) =>
       limit(async () => {
         try {
