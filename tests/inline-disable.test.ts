@@ -27,3 +27,19 @@ test('inline directives disable linting', async () => {
   const lines = res.messages.map((m) => m.line).sort();
   assert.deepEqual(lines, [1, 8]);
 });
+
+test('strings resembling directives do not disable next line', async () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(
+    file,
+    "const a = 'design-lint-disable-next-line';\n" + "const b = 'old';\n",
+  );
+  const linter = new Linter({
+    tokens: { deprecations: { old: { replacement: 'new' } } },
+    rules: { 'design-system/deprecation': 'error' },
+  });
+  const res = await linter.lintFile(file);
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0].line, 2);
+});
