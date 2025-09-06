@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.7.3
+
+### Patch Changes
+
+- a46c217: fix config loader to handle nested default exports
+
 ## 4.7.2
 
 ### Patch Changes
