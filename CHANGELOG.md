@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.7.9
+
+### Patch Changes
+
+- 0810760: fix TypeScript config loading to surface actual errors
+
 ## 4.7.8
 
 ### Patch Changes
