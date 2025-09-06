@@ -708,13 +708,13 @@ function parseCSS(
 ): CSSDeclaration[] {
   const decls: CSSDeclaration[] = [];
   try {
-    const root =
+    const root: postcss.Root =
       lang === 'scss' || lang === 'sass'
         ? postcssScss.parse(text)
         : lang === 'less'
           ? postcssLess.parse(text)
           : postcss.parse(text);
-    root.walkDecls((d: any) => {
+    root.walkDecls((d) => {
       decls.push({
         prop: d.prop,
         value: d.value,

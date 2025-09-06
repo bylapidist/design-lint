@@ -8,7 +8,7 @@
 <h1>@lapidist/design-lint</h1>
 <!-- markdownlint-enable MD033 -->
 
-Linter for design systems in JavaScript, TypeScript, and CSS projects.
+Linter for design systems in JavaScript, TypeScript, and CSS/SCSS/Sass/Less projects.
 
 [Documentation](docs/usage.md) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
@@ -244,7 +244,7 @@ If a plugin cannot be loaded or exports the wrong shape, `@lapidist/design-lint`
 
 ## Features
 
-- Lints JavaScript, TypeScript, and CSS projects
+- Lints JavaScript, TypeScript, and CSS/SCSS/Sass/Less projects, including inline style attributes
 - Enforces design tokens for color, spacing, typography, borders, animation, and more
 - Validates design system usage and flags deprecated or raw HTML components
 - Generates starter configuration in multiple formats
