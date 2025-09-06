@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.7.4
+
+### Patch Changes
+
+- 93a3f64: ignore non-style JSX attributes in colors and deprecation rules to avoid false positives
+
 ## 4.7.3
 
 ### Patch Changes
