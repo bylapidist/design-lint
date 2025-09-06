@@ -2,6 +2,7 @@ import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
 import type { Config } from './linter.js';
 import type { PluginModule, RuleModule } from './types.js';
+import { resolvePluginPaths } from './plugin-resolver.js';
 
 interface EngineErrorOptions {
   message: string;
@@ -13,35 +14,39 @@ export async function loadPlugins(
   config: Config,
   ruleMap: Map<string, { rule: RuleModule; source: string }>,
   createEngineError: (opts: EngineErrorOptions) => Error,
-): Promise<void> {
+): Promise<string[]> {
   const req = config.configPath
     ? createRequire(config.configPath)
     : createRequire(import.meta.url);
-  for (const p of config.plugins || []) {
+  const pluginPaths = resolvePluginPaths(config);
+  const names = config.plugins || [];
+  for (let i = 0; i < pluginPaths.length; i++) {
+    const pluginSource = pluginPaths[i];
+    const name = names[i] || pluginSource;
     let mod: unknown;
-    let resolved: string | undefined;
     try {
-      resolved = req.resolve(p);
-      if (resolved.endsWith('.mjs')) {
-        mod = await import(`${pathToFileURL(resolved).href}?t=${Date.now()}`);
+      if (pluginSource.endsWith('.mjs')) {
+        mod = await import(
+          `${pathToFileURL(pluginSource).href}?t=${Date.now()}`
+        );
       } else {
-        mod = req(resolved);
+        mod = req(pluginSource);
       }
     } catch (e: unknown) {
       if ((e as { code?: string }).code === 'ERR_REQUIRE_ESM') {
-        const esmPath = resolved ?? p;
-        mod = await import(`${pathToFileURL(esmPath).href}?t=${Date.now()}`);
+        mod = await import(
+          `${pathToFileURL(pluginSource).href}?t=${Date.now()}`
+        );
       } else {
         throw createEngineError({
-          message: `Failed to load plugin "${p}": ${
+          message: `Failed to load plugin "${name}": ${
             e instanceof Error ? e.message : String(e)
           }`,
-          context: `Plugin "${p}"`,
+          context: `Plugin "${name}"`,
           remediation: 'Ensure the plugin is installed and resolvable.',
         });
       }
     }
-    const pluginSource = resolved ?? p;
     const plugin =
       (mod as { default?: PluginModule; plugin?: PluginModule }).default ??
       (mod as { plugin?: PluginModule }).plugin ??
@@ -87,4 +92,5 @@ export async function loadPlugins(
       ruleMap.set(rule.name, { rule, source: pluginSource });
     }
   }
+  return pluginPaths;
 }

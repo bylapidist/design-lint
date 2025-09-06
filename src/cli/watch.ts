@@ -22,7 +22,6 @@ export interface WatchOptions {
   config: Config;
   linterRef: { current: Linter };
   refreshIgnore: () => Promise<void>;
-  resolvePluginPaths: (cfg: Config, cacheBust?: boolean) => string[];
   cache?: Cache;
   cacheLocation?: string;
   state: WatchState;
@@ -41,7 +40,6 @@ export async function startWatch(ctx: WatchOptions) {
     config,
     linterRef,
     refreshIgnore,
-    resolvePluginPaths,
     cache,
     cacheLocation,
     state,
@@ -114,7 +112,7 @@ export async function startWatch(ctx: WatchOptions) {
       const req = config.configPath
         ? createRequire(config.configPath)
         : createRequire(import.meta.url);
-      for (const p of resolvePluginPaths(config, true)) delete req.cache?.[p];
+      for (const p of pluginPaths) delete req.cache?.[p];
       config = await loadConfig(
         process.cwd(),
         options.config as string | undefined,
@@ -127,7 +125,7 @@ export async function startWatch(ctx: WatchOptions) {
           fs.unlinkSync(cacheLocation);
         } catch {}
       }
-      const newPluginPaths = resolvePluginPaths(config);
+      const newPluginPaths = await linterRef.current.getPluginPaths();
       const toRemove = pluginPaths.filter((p) => !newPluginPaths.includes(p));
       if (toRemove.length) watcher.unwatch(toRemove);
       const toAdd = newPluginPaths.filter((p) => !pluginPaths.includes(p));
