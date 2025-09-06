@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.7.5
+
+### Patch Changes
+
+- e9f2c95: restrict token rules to style values to avoid false positives in TSX
+
 ## 4.7.4
 
 ### Patch Changes
