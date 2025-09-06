@@ -16,6 +16,18 @@ test('design-system/deprecation flags deprecated token', async () => {
   });
 });
 
+test('design-system/deprecation ignores tokens in non-style jsx attributes', async () => {
+  const linter = new Linter({
+    tokens: { deprecations: { old: { replacement: 'new' } } },
+    rules: { 'design-system/deprecation': 'error' },
+  });
+  const res = await linter.lintText(
+    'const a = <div aria-label="old" />;',
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-system/deprecation warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-system/deprecation': 'warn' },

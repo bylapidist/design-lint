@@ -137,3 +137,16 @@ test('design-token/colors warns when tokens missing', async () => {
   assert.equal(res.messages.length, 1);
   assert.ok(res.messages[0].message.includes('tokens.colors'));
 });
+
+test('design-token/colors ignores non-style jsx attributes', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#ffffff' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText(
+    'const a = <div aria-label="Pause audio" style="color: #000" />;',
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0].ruleId, 'design-token/colors');
+});
