@@ -62,3 +62,16 @@ test('reports raw tokens in string style attributes', async () => {
   assert.equal(res.messages.length, 3);
   assertIds(res.messages);
 });
+
+test('reports raw tokens once for single style property', async () => {
+  const linter = new Linter({
+    tokens: { colors: { primary: '#000000' } },
+    rules: { 'design-token/colors': 'error' },
+  });
+  const res = await linter.lintText(
+    `const C = () => <div style="color: #fff"></div>;`,
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0]?.ruleId, 'design-token/colors');
+});
