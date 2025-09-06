@@ -9,7 +9,7 @@ function escapeRegExp(str: string): string {
 function patternToRegExp(pattern: TokenPattern): RegExp {
   if (pattern instanceof RegExp) return pattern;
   const escaped = escapeRegExp(pattern).replace(/\\\*/g, '.*');
-  return new RegExp(`^${escaped}$`);
+  return new RegExp(`^${escaped}$`, 'i');
 }
 
 /**

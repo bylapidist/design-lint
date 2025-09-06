@@ -11,6 +11,14 @@ test('matchToken handles regexp patterns and missing matches', () => {
   assert.equal(matchToken('--foo', ['--bar']), null);
 });
 
+test('matchToken supports string patterns with wildcards', () => {
+  assert.equal(matchToken('--brand-primary', ['--brand-*']), '--brand-primary');
+});
+
+test('matchToken is case-insensitive for string patterns', () => {
+  assert.equal(matchToken('--BRAND-primary', ['--brand-*']), '--BRAND-primary');
+});
+
 test('closestToken skips non-string patterns and handles no suggestion', () => {
   assert.equal(closestToken('--baz', ['--bar', /^--foo-/]), '--bar');
   assert.equal(closestToken('--baz', [/^--foo-/]), null);
