@@ -52,6 +52,6 @@ export function closestToken(
 
 /** Extract a CSS variable name from a value like `var(--foo)` */
 export function extractVarName(value: string): string | null {
-  const m = value.trim().match(/^var\(\s*(--[A-Za-z0-9-_]+)\s*(?:,.*)?\)$/);
+  const m = value.trim().match(/^var\(\s*(--[A-Za-z0-9_-]+)\s*(?:,.*)?\)$/);
   return m ? m[1] : null;
 }
