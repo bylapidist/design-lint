@@ -18,5 +18,7 @@ test('closestToken skips non-string patterns and handles no suggestion', () => {
 
 test('extractVarName parses var() and ignores invalid values', () => {
   assert.equal(extractVarName('var(--x)'), '--x');
+  assert.equal(extractVarName('var(--x, 10px)'), '--x');
+  assert.equal(extractVarName('var(  --x  )'), '--x');
   assert.equal(extractVarName('--x'), null);
 });
