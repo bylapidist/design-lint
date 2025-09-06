@@ -53,3 +53,16 @@ test('design-system/no-unused-tokens can ignore tokens', async () => {
   );
   assert.equal(has, false);
 });
+
+test('design-system/no-unused-tokens matches hex case-insensitively', async () => {
+  const file = await tempFile('const color = "#ABCDEF";');
+  const linter = new Linter({
+    tokens: { colors: { primary: '#abcdef' } },
+    rules: { 'design-system/no-unused-tokens': 'warn' },
+  });
+  const { results } = await linter.lintFiles([file]);
+  const has = results.some((r) =>
+    r.messages.some((m) => m.ruleId === 'design-system/no-unused-tokens'),
+  );
+  assert.equal(has, false);
+});

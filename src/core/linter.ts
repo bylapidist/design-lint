@@ -614,8 +614,13 @@ export class Linter {
   private trackTokenUsage(text: string): void {
     for (const token of this.allTokenValues) {
       if (this.usedTokenValues.has(token)) continue;
-      if (/^[-#]/.test(token) || token.includes('--')) {
+      if (token.includes('--') || token.startsWith('-')) {
         if (text.includes(`var(${token})`) || text.includes(token)) {
+          this.usedTokenValues.add(token);
+        }
+      } else if (token.startsWith('#')) {
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes(token.toLowerCase())) {
           this.usedTokenValues.add(token);
         }
       } else if (/^\d/.test(token)) {
