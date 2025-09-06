@@ -753,6 +753,10 @@ function getDisabledLines(text: string): Set<number> {
       disabled.add(i + 2);
       continue;
     }
+    if (/design-lint-disable-line/.test(line)) {
+      disabled.add(i + 1);
+      continue;
+    }
     if (block) disabled.add(i + 1);
   }
   return disabled;
