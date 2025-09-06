@@ -8,7 +8,10 @@ function escapeRegExp(str: string): string {
 
 function patternToRegExp(pattern: TokenPattern): RegExp {
   if (pattern instanceof RegExp) return pattern;
-  const escaped = escapeRegExp(pattern).replace(/\\\*/g, '.*');
+  const escaped = pattern
+    .split('*')
+    .map((seg) => escapeRegExp(seg))
+    .join('.*');
   return new RegExp(`^${escaped}$`);
 }
 
