@@ -24,3 +24,20 @@ test('scanFiles applies nested ignore files for glob targets', async () => {
     process.chdir(cwd);
   }
 });
+
+test('scanFiles respects negated patterns in ignore files', async () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'keep.ts'), '');
+  fs.writeFileSync(path.join(dir, 'skip.ts'), '');
+  fs.writeFileSync(path.join(dir, '.gitignore'), '*.ts\n!keep.ts');
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    const config: Config = { tokens: {}, rules: {} };
+    const { files } = await scanFiles(['**/*.ts'], config);
+    const rels = files.map((f) => path.relative(dir, f)).sort();
+    assert.deepEqual(rels, ['keep.ts']);
+  } finally {
+    process.chdir(cwd);
+  }
+});

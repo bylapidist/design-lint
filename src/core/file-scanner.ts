@@ -69,7 +69,8 @@ export async function scanFiles(
             return neg ? `!${combined}` : combined;
           });
         ig.add(lines);
-        normalizedPatterns.push(...lines);
+        const positives = lines.filter((l) => !l.startsWith('!'));
+        normalizedPatterns.push(...positives);
       } catch {
         // ignore
       }

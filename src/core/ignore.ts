@@ -35,7 +35,8 @@ export async function loadIgnore(
         .split(/\r?\n/)
         .map((l) => l.trim())
         .filter((l) => l && !l.startsWith('#'));
-      ignorePatterns.push(...lines);
+      const positives = lines.filter((l) => !l.startsWith('!'));
+      ignorePatterns.push(...positives);
     } catch {
       // no ignore file
     }
@@ -50,7 +51,7 @@ export async function loadIgnore(
   if (config?.ignoreFiles) {
     const normalized = config.ignoreFiles.map((p) => p.replace(/\\/g, '/'));
     ig.add(normalized);
-    ignorePatterns.push(...normalized);
+    ignorePatterns.push(...normalized.filter((p) => !p.startsWith('!')));
   }
 
   const normalizedPatterns = ignorePatterns.map((p) => p.replace(/\\/g, '/'));
