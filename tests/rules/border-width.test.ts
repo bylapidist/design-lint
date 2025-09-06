@@ -26,7 +26,10 @@ test('design-token/border-width reports numeric literals', async () => {
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
   });
-  const res = await linter.lintText('const w = 3;', 'file.ts');
+  const res = await linter.lintText(
+    'const w = <div style={{ borderWidth: 3 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -35,7 +38,10 @@ test('design-token/border-width reports template literal', async () => {
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
   });
-  const res = await linter.lintText('const w = `3`;', 'file.ts');
+  const res = await linter.lintText(
+    'const w = <div style={{ borderWidth: `3` }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -44,7 +50,10 @@ test('design-token/border-width reports template expression', async () => {
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
   });
-  const res = await linter.lintText('const w = `3${"px"}`;', 'file.ts');
+  const res = await linter.lintText(
+    'const w = <div style={{ borderWidth: `3${"px"}` }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
@@ -53,7 +62,10 @@ test('design-token/border-width reports prefix unary', async () => {
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
   });
-  const res = await linter.lintText('const w = -3;', 'file.ts');
+  const res = await linter.lintText(
+    'const w = <div style={{ borderWidth: -3 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 

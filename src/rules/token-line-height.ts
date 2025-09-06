@@ -5,7 +5,7 @@ import {
   extractVarName,
   closestToken,
 } from '../utils/token-match.js';
-import { isInNonStyleJsx } from '../utils/jsx.js';
+import { isStyleValue } from '../utils/style.js';
 
 export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',
@@ -72,7 +72,7 @@ export const lineHeightRule: RuleModule = {
     );
     return {
       onNode(node) {
-        if (isInNonStyleJsx(node)) return;
+        if (!isStyleValue(node)) return;
         const report = (raw: string, value: number, n: ts.Node) => {
           if (!allowed.has(value)) {
             const pos = n

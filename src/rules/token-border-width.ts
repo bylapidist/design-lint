@@ -6,7 +6,7 @@ import {
   extractVarName,
   closestToken,
 } from '../utils/token-match.js';
-import { isInNonStyleJsx } from '../utils/jsx.js';
+import { isStyleValue } from '../utils/style.js';
 
 export const borderWidthRule: RuleModule = {
   name: 'design-token/border-width',
@@ -82,7 +82,7 @@ export const borderWidthRule: RuleModule = {
     };
     return {
       onNode(node) {
-        if (isInNonStyleJsx(node)) return;
+        if (!isStyleValue(node)) return;
         const report = (raw: string, value: number, n: ts.Node) => {
           if (!allowed.has(value)) {
             const pos = n

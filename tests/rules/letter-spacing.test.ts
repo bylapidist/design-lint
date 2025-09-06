@@ -28,7 +28,10 @@ test('design-token/letter-spacing reports numeric literals', async () => {
     tokens: { letterSpacings: { none: 0 } },
     rules: { 'design-token/letter-spacing': 'error' },
   });
-  const res = await linter.lintText('const ls = 2;', 'file.ts');
+  const res = await linter.lintText(
+    'const ls = <div style={{ letterSpacing: 2 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 

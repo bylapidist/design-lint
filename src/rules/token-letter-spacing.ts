@@ -5,7 +5,7 @@ import {
   extractVarName,
   closestToken,
 } from '../utils/token-match.js';
-import { isInNonStyleJsx } from '../utils/jsx.js';
+import { isStyleValue } from '../utils/style.js';
 
 export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',
@@ -68,7 +68,7 @@ export const letterSpacingRule: RuleModule = {
     }
     return {
       onNode(node) {
-        if (isInNonStyleJsx(node)) return;
+        if (!isStyleValue(node)) return;
         if (ts.isNumericLiteral(node)) {
           const value = Number(node.text);
           if (!numeric.has(value)) {

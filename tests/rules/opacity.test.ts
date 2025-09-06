@@ -34,7 +34,10 @@ test('design-token/opacity reports numeric literals', async () => {
     tokens: { opacity: { low: 0.2 } },
     rules: { 'design-token/opacity': 'error' },
   });
-  const res = await linter.lintText('const o = 0.5;', 'file.ts');
+  const res = await linter.lintText(
+    'const o = <div style={{ opacity: 0.5 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
