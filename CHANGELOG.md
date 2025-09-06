@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.7.7
+
+### Patch Changes
+
+- 6edf9c9: add lint run statistics to stylish output
+
 ## 4.7.6
 
 ### Patch Changes
