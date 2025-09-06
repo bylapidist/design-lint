@@ -169,6 +169,20 @@ test('loads config from .ts using defineConfig', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
+test('loads config from .ts with type annotations', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.ts');
+  const rel = path
+    .relative(tmp, path.resolve('src/index.ts'))
+    .replace(/\\/g, '/');
+  fs.writeFileSync(
+    configPath,
+    `import { defineConfig } from '${rel}';\nconst colours: string[] = [];\nexport default defineConfig({ tokens: { colors: { primary: '#000' } } });`,
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.colors?.primary, '#000');
+});
+
 test('restores original .mts handler after loading config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.mts');

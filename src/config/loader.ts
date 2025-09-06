@@ -62,7 +62,8 @@ export async function loadConfig(
   if (abs && exists) {
     try {
       let loaded: Config = {};
-      if (abs.endsWith('.ts') || abs.endsWith('.mts')) {
+      const ext = path.extname(abs);
+      if (ext === '.ts' || ext === '.mts') {
         try {
           const tsxEsm = 'tsx/esm';
           await import(tsxEsm);
@@ -71,8 +72,8 @@ export async function loadConfig(
             'To load TypeScript config files, please install tsx.',
           );
         }
-      }
-      if (abs.endsWith('.json')) {
+        loaded = (await loadEsmConfig(abs)) as Config;
+      } else if (ext === '.json') {
         const data = await fs.promises.readFile(abs, 'utf8');
         loaded = JSON.parse(data) as Config;
       } else if (isESM(abs)) {
