@@ -61,7 +61,7 @@ export const opacityRule: RuleModule = {
       onNode(node) {
         if (ts.isNumericLiteral(node)) {
           const value = Number(node.text);
-          if (!allowed.has(value)) {
+          if (!Number.isNaN(value) && !allowed.has(value)) {
             const pos = node
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
@@ -76,8 +76,8 @@ export const opacityRule: RuleModule = {
       onCSSDeclaration(decl) {
         if (decl.prop === 'opacity') {
           const parsed = valueParser.unit(decl.value);
-          const num = parsed ? parseFloat(parsed.number) : Number(decl.value);
-          if (!isNaN(num) && !allowed.has(num)) {
+          const num = Number(parsed ? parsed.number : decl.value);
+          if (!Number.isNaN(num) && !allowed.has(num)) {
             context.report({
               message: `Unexpected opacity ${decl.value}`,
               line: decl.line,

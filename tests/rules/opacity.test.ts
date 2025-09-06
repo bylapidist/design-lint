@@ -11,6 +11,15 @@ test('design-token/opacity reports invalid value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/opacity reports zero value', async () => {
+  const linter = new Linter({
+    tokens: { opacity: { low: 0.2 } },
+    rules: { 'design-token/opacity': 'error' },
+  });
+  const res = await linter.lintText('.a{opacity:0;}', 'file.css');
+  assert.equal(res.messages.length, 1);
+});
+
 test('design-token/opacity accepts valid values', async () => {
   const linter = new Linter({
     tokens: { opacity: { low: 0.2 } },
