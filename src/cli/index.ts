@@ -1,37 +1,20 @@
 #!/usr/bin/env node
 import fs from 'fs';
-import { parseArgs } from 'node:util';
 import path from 'path';
 import { createRequire } from 'module';
-import { once } from 'node:events';
 import { pathToFileURL, fileURLToPath } from 'url';
 import { performance } from 'node:perf_hooks';
-import type { LintResult } from '../core/types.js';
-import type { Config } from '../core/linter.js';
-import { getFormatter } from '../formatters/index.js';
+import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
 import ignore from 'ignore';
-import chokidar, { FSWatcher } from 'chokidar';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import writeFileAtomic from 'write-file-atomic';
 import fg from 'fast-glob';
+import type { LintResult } from '../core/types.js';
+import type { Config } from '../core/linter.js';
+import { getFormatter } from '../formatters/index.js';
+import { startWatch } from './watch.js';
 
-/**
- * Print the package version to stdout.
- */
-function showVersion() {
-  const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
-    version: string;
-  };
-  console.log(pkg.version);
-}
-
-/**
- * Create a starter configuration file in the current directory.
- * Side effect: writes "designlint.config.*".
- * @param initFormat Optional format override.
- */
 function initConfig(initFormat?: string) {
   const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
   let format = initFormat;
@@ -90,41 +73,6 @@ function initConfig(initFormat?: string) {
   console.log(`Created designlint.config.${format}`);
 }
 
-/**
- * Display CLI usage information.
- */
-function help() {
-  const msg = `Usage: design-lint [files...]
-
-Commands:
-  init                  Create a starter designlint.config.*
-
-Options:
-  --init-format <fmt>   Config format for 'init' (js, cjs, mjs, ts, mts, json)
-  --config <path>       Path to configuration file
-  --format <name|path>  Output format (stylish, json, sarif, or path to module)
-  --output <file>       Write report to file
-  --report <file>       Write JSON results to file
-  --ignore-path <file>  Load additional ignore patterns from file
-  --concurrency <n>     Maximum number of files processed concurrently
-  --max-warnings <n>    Number of warnings to trigger nonzero exit code
-  --quiet               Suppress stdout output
-  --no-color            Disable colored output
-  --cache               Enable persistent caching
-  --cache-location <path>  Path to cache file
-  --watch               Watch files and re-lint on changes
-  --fix                 Automatically fix problems
-  --version             Show version number
-  --help                Show this message`;
-  console.log(msg);
-}
-
-/**
- * Execute the CLI.
- * @param argv Command line arguments.
- * @returns Resolves when processing completes.
- * Side effects: reads and writes files, prints to console, sets process.exitCode.
- */
 export async function run(argv = process.argv.slice(2)) {
   const current = process.versions.node;
   const [major] = current.split('.').map(Number);
@@ -134,129 +82,94 @@ export async function run(argv = process.argv.slice(2)) {
     process.exitCode = 1;
     return;
   }
+
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
-  try {
-    const { values, positionals } = parseArgs({
-      args: argv,
-      options: {
-        config: { type: 'string' },
-        format: { type: 'string', default: 'stylish' },
-        'init-format': { type: 'string' },
-        output: { type: 'string' },
-        report: { type: 'string' },
-        'ignore-path': { type: 'string' },
-        concurrency: { type: 'string' },
-        'max-warnings': { type: 'string' },
-        quiet: { type: 'boolean', default: false },
-        cache: { type: 'boolean', default: false },
-        'cache-location': { type: 'string' },
-        fix: { type: 'boolean', default: false },
-        watch: { type: 'boolean', default: false },
-        version: { type: 'boolean', default: false },
-        help: { type: 'boolean', default: false },
-        'no-color': { type: 'boolean', default: false },
+  const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
+    version: string;
+  };
+
+  const program = new Command();
+  program
+    .name('design-lint')
+    .usage('[files...]')
+    .version(pkg.version, '--version', 'Show version number')
+    .helpOption('--help', 'Show this message')
+    .argument('[files...]')
+    .option('--config <path>', 'Path to configuration file')
+    .option(
+      '--format <name|path>',
+      'Output format (stylish, json, sarif, or path to module)',
+      'stylish',
+    )
+    .option('--output <file>', 'Write report to file')
+    .option('--report <file>', 'Write JSON results to file')
+    .option('--ignore-path <file>', 'Load additional ignore patterns from file')
+    .option(
+      '--concurrency <n>',
+      'Maximum number of files processed concurrently',
+      (val: string) => {
+        const n = Number(val);
+        if (!Number.isInteger(n) || n <= 0)
+          throw new Error(
+            `Invalid value for --concurrency: "${val}". Expected a positive integer.`,
+          );
+        return n;
       },
-      allowPositionals: true,
+    )
+    .option(
+      '--max-warnings <n>',
+      'Number of warnings to trigger nonzero exit code',
+      (val: string) => {
+        const n = Number(val);
+        if (!Number.isInteger(n) || n < 0)
+          throw new Error(
+            `Invalid value for --max-warnings: "${val}". Expected a non-negative integer.`,
+          );
+        return n;
+      },
+    )
+    .option('--quiet', 'Suppress stdout output')
+    .option('--no-color', 'Disable colored output')
+    .option('--cache', 'Enable persistent caching')
+    .option('--cache-location <path>', 'Path to cache file')
+    .option('--watch', 'Watch files and re-lint on changes')
+    .option('--fix', 'Automatically fix problems');
+
+  program
+    .command('init')
+    .description('Create a starter designlint.config.*')
+    .option(
+      '--init-format <fmt>',
+      "Config format for 'init' (js, cjs, mjs, ts, mts, json)",
+    )
+    .action((opts) => {
+      initConfig(opts.initFormat);
     });
 
-    if (values['no-color']) useColor = false;
-
-    if (values.version) {
-      showVersion();
-      return;
-    }
-
-    if (values.help) {
-      help();
-      return;
-    }
-
-    if (positionals[0] === 'init') {
-      initConfig(values['init-format'] as string | undefined);
-      return;
-    }
-
+  program.action(async (files: string[], options) => {
+    if (options.color === false) useColor = false;
     let formatter: Awaited<ReturnType<typeof getFormatter>>;
     try {
-      formatter = await getFormatter(values.format as string);
+      formatter = await getFormatter(options.format as string);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(useColor ? chalk.red(message) : message);
       process.exitCode = 1;
       return;
     }
-
-    const targets = positionals.length ? positionals : ['.'];
+    const targets = files.length ? files : ['.'];
     const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
       import('../config/loader.js'),
       import('../core/linter.js'),
       import('../core/ignore.js'),
     ]);
-    let config = await loadConfig(process.cwd(), values.config);
-    if (values.concurrency) {
-      const n = Number(values.concurrency);
-      if (!Number.isInteger(n) || n <= 0) {
-        const message = `Invalid value for --concurrency: "${values.concurrency}". Expected a positive integer.`;
-        console.error(useColor ? chalk.red(message) : message);
-        process.exitCode = 1;
-        return;
-      }
-      config.concurrency = n;
-    }
-    let maxWarnings: number | undefined;
-    if (values['max-warnings'] !== undefined) {
-      const max = Number(values['max-warnings']);
-      if (!Number.isInteger(max) || max < 0) {
-        const message = `Invalid value for --max-warnings: "${values['max-warnings']}". Expected a non-negative integer.`;
-        console.error(useColor ? chalk.red(message) : message);
-        process.exitCode = 1;
-        return;
-      }
-      maxWarnings = max;
-    }
+    let config = await loadConfig(process.cwd(), options.config);
+    if (options.concurrency !== undefined)
+      config.concurrency = options.concurrency;
+    const maxWarnings: number | undefined = options.maxWarnings;
     if (config.configPath)
       config.configPath = realpathIfExists(config.configPath);
-    let pluginPaths = resolvePluginPaths(config);
-    let linter = new Linter(config);
-    const cache = new Map<string, { mtime: number; result: LintResult }>();
-    const cacheLocation = values.cache
-      ? path.resolve(
-          process.cwd(),
-          (values['cache-location'] as string | undefined) ??
-            '.designlintcache',
-        )
-      : undefined;
-
-    let ignorePath: string | undefined;
-    if (values['ignore-path']) {
-      const resolved = path.resolve(values['ignore-path'] as string);
-      if (!fs.existsSync(resolved)) {
-        const message = `Ignore file not found: "${relFromCwd(resolved)}"`;
-        console.error(useColor ? chalk.red(message) : message);
-        process.exitCode = 1;
-        return;
-      }
-      ignorePath = realpathIfExists(resolved);
-    }
-
-    const gitIgnore = realpathIfExists(path.join(process.cwd(), '.gitignore'));
-    const designIgnore = realpathIfExists(
-      path.join(process.cwd(), '.designlintignore'),
-    );
-    let ig = ignore();
-    let ignorePatterns: string[] = [];
-
-    const refreshIgnore = async () => {
-      const { ig: newIg, patterns } = await loadIgnore(
-        config,
-        ignorePath ? [ignorePath] : [],
-      );
-      ig = newIg;
-      ignorePatterns = patterns;
-    };
-
-    await refreshIgnore();
-
     function resolvePluginPaths(cfg: Config, cacheBust = false): string[] {
       const req = cfg.configPath
         ? createRequire(cfg.configPath)
@@ -265,9 +178,8 @@ export async function run(argv = process.argv.slice(2)) {
       for (const p of cfg.plugins || []) {
         try {
           const resolved = realpathIfExists(req.resolve(p));
-          if (!fs.existsSync(resolved)) {
+          if (!fs.existsSync(resolved))
             throw new Error(`Plugin not found: "${relFromCwd(resolved)}"`);
-          }
           paths.push(
             cacheBust && resolved.endsWith('.mjs')
               ? `${pathToFileURL(resolved).href}?t=${Date.now()}`
@@ -275,9 +187,8 @@ export async function run(argv = process.argv.slice(2)) {
           );
         } catch {
           const resolved = realpathIfExists(path.resolve(p));
-          if (!fs.existsSync(resolved)) {
+          if (!fs.existsSync(resolved))
             throw new Error(`Plugin not found: "${relFromCwd(resolved)}"`);
-          }
           paths.push(
             cacheBust && resolved.endsWith('.mjs')
               ? `${pathToFileURL(resolved).href}?t=${Date.now()}`
@@ -287,10 +198,39 @@ export async function run(argv = process.argv.slice(2)) {
       }
       return paths;
     }
-
-    let watcher: FSWatcher | null = null;
-    let ignoreFilePaths: string[] = [];
-
+    let pluginPaths = resolvePluginPaths(config);
+    const linterRef = { current: new Linter(config) };
+    const cache = new Map<string, { mtime: number; result: LintResult }>();
+    const cacheLocation = options.cache
+      ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
+      : undefined;
+    let ignorePath: string | undefined;
+    if (options.ignorePath) {
+      const resolved = path.resolve(options.ignorePath as string);
+      if (!fs.existsSync(resolved)) {
+        const message = `Ignore file not found: "${relFromCwd(resolved)}"`;
+        console.error(useColor ? chalk.red(message) : message);
+        process.exitCode = 1;
+        return;
+      }
+      ignorePath = realpathIfExists(resolved);
+    }
+    const gitIgnore = realpathIfExists(path.join(process.cwd(), '.gitignore'));
+    const designIgnore = realpathIfExists(
+      path.join(process.cwd(), '.designlintignore'),
+    );
+    let ig = ignore();
+    let ignorePatterns: string[] = [];
+    const refreshIgnore = async () => {
+      const { ig: newIg, patterns } = await loadIgnore(
+        config,
+        ignorePath ? [ignorePath] : [],
+      );
+      ig = newIg;
+      ignorePatterns = patterns;
+    };
+    await refreshIgnore();
+    const state = { pluginPaths, ignoreFilePaths: [] as string[] };
     const expandTargets = async (paths: string[]): Promise<string[]> => {
       const files: string[] = [];
       const scanPatterns = config.patterns ?? [
@@ -323,56 +263,43 @@ export async function run(argv = process.argv.slice(2)) {
       }
       return [...new Set(files)];
     };
-
-    const runLint = async (paths: string[]) => {
+    const runLint = async (paths: string[]): Promise<string[]> => {
       const start = performance.now();
       const expanded = await expandTargets(paths);
       const {
         results,
         ignoreFiles: newIgnore = [],
         warning,
-      } = await linter.lintFiles(
+      } = await linterRef.current.lintFiles(
         expanded,
-        values.fix,
+        options.fix,
         cache,
         ignorePath ? [ignorePath] : [],
         cacheLocation,
       );
       const duration = performance.now() - start;
-      if (warning && !values.quiet) console.warn(warning);
-      if (values.watch && watcher) {
-        const toAdd = newIgnore.filter((p) => !ignoreFilePaths.includes(p));
-        if (toAdd.length) watcher.add(toAdd);
-        const toRemove = ignoreFilePaths.filter((p) => !newIgnore.includes(p));
-        if (toRemove.length) watcher.unwatch(toRemove);
-      }
-      ignoreFilePaths = newIgnore;
-
+      if (warning && !options.quiet) console.warn(warning);
       const output = formatter(results, useColor);
-
-      if (values.output) {
-        await writeFileAtomic(values.output as string, output);
-      } else if (!values.quiet) {
+      if (options.output) {
+        await writeFileAtomic(options.output as string, output);
+      } else if (!options.quiet) {
         console.log(output);
       }
-
       if (
-        !values.quiet &&
-        (values.format === undefined || values.format === 'stylish')
+        !options.quiet &&
+        (options.format === undefined || options.format === 'stylish')
       ) {
         const time = (duration / 1000).toFixed(2);
         const count = results.length;
         const stat = `\nLinted ${count} file${count === 1 ? '' : 's'} in ${time}s`;
         console.log(useColor ? chalk.cyan.bold(stat) : stat);
       }
-
-      if (values.report) {
+      if (options.report) {
         await writeFileAtomic(
-          values.report as string,
+          options.report as string,
           JSON.stringify({ results, ignoreFiles: newIgnore }, null, 2),
         );
       }
-
       const hasErrors = results.some((r) =>
         r.messages.some((m) => m.severity === 'error'),
       );
@@ -384,140 +311,39 @@ export async function run(argv = process.argv.slice(2)) {
       let exit = hasErrors ? 1 : 0;
       if (maxWarnings !== undefined && warningCount > maxWarnings) exit = 1;
       process.exitCode = exit;
+      state.ignoreFilePaths = newIgnore;
+      return newIgnore;
     };
-
     const reportError = (err: unknown) => {
       const output =
         err instanceof Error && err.stack ? err.stack : String(err);
       console.error(useColor ? chalk.red(output) : output);
       process.exitCode = 1;
     };
-
-    await runLint(targets);
-
-    if (values.watch) {
-      console.log('Watching for changes...');
-      await refreshIgnore();
-      const watchPaths = [...targets];
-      if (config.configPath) watchPaths.push(config.configPath);
-      if (fs.existsSync(designIgnore)) watchPaths.push(designIgnore);
-      if (fs.existsSync(gitIgnore)) watchPaths.push(gitIgnore);
-      watchPaths.push(
-        ...pluginPaths.filter((p) => fs.existsSync(p)),
-        ...ignoreFilePaths.filter((p) => fs.existsSync(p)),
-      );
-      const outputPath = values.output
-        ? realpathIfExists(path.resolve(values.output as string))
-        : undefined;
-      const reportPath = values.report
-        ? realpathIfExists(path.resolve(values.report as string))
-        : undefined;
-      watcher = chokidar.watch(watchPaths, {
-        ignored: (p: string) => {
-          const rel = relFromCwd(realpathIfExists(p));
-          const resolved = realpathIfExists(path.resolve(p));
-          if (config.configPath && resolved === config.configPath) return false;
-          if (resolved === designIgnore || resolved === gitIgnore) return false;
-          if (pluginPaths.includes(resolved)) return false;
-          if (ignoreFilePaths.includes(resolved)) return false;
-          if (outputPath && resolved === outputPath) return true;
-          if (reportPath && resolved === reportPath) return true;
-          if (rel === '') return false;
-          return ig.ignores(rel);
-        },
-        ignoreInitial: true,
-        awaitWriteFinish: { stabilityThreshold: 150, pollInterval: 50 },
-        usePolling: process.platform === 'win32',
-        interval: 100,
+    const firstIgnore = await runLint(targets);
+    state.ignoreFilePaths = firstIgnore;
+    if (options.watch) {
+      await startWatch({
+        targets,
+        options,
+        config,
+        refreshIgnore,
+        resolvePluginPaths,
+        cache,
+        cacheLocation,
+        state,
+        designIgnore,
+        gitIgnore,
+        runLint,
+        linterRef,
+        reportError,
+        getIg: () => ig,
+        useColor,
       });
-      watcher.on('error', (err) => reportError(err));
-      await once(watcher, 'ready');
-
-      const cleanup = async () => {
-        await watcher?.close();
-        process.exit(process.exitCode ?? 0);
-      };
-      process.once('SIGINT', cleanup);
-      process.once('SIGTERM', cleanup);
-
-      const reload = async () => {
-        try {
-          const req = config.configPath
-            ? createRequire(config.configPath)
-            : createRequire(import.meta.url);
-          for (const p of resolvePluginPaths(config, true))
-            delete req.cache?.[p];
-          config = await loadConfig(process.cwd(), values.config);
-          linter = new Linter(config);
-          await refreshIgnore();
-          cache.clear();
-          if (cacheLocation) {
-            try {
-              fs.unlinkSync(cacheLocation);
-            } catch {}
-          }
-          const newPluginPaths = resolvePluginPaths(config);
-          const toRemove = pluginPaths.filter(
-            (p) => !newPluginPaths.includes(p),
-          );
-          if (toRemove.length) watcher?.unwatch(toRemove);
-          const toAdd = newPluginPaths.filter((p) => !pluginPaths.includes(p));
-          if (toAdd.length) watcher?.add(toAdd);
-          pluginPaths = newPluginPaths;
-          await runLint(targets);
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          if (!values.quiet) {
-            console.error(useColor ? chalk.red(message) : message);
-          }
-          process.exitCode = 1;
-        }
-      };
-
-      const handle = async (filePath: string) => {
-        const resolved = realpathIfExists(path.resolve(filePath));
-        if (outputPath && resolved === outputPath) return;
-        if (reportPath && resolved === reportPath) return;
-        if (
-          (config.configPath && resolved === config.configPath) ||
-          resolved === designIgnore ||
-          resolved === gitIgnore ||
-          pluginPaths.includes(resolved) ||
-          ignoreFilePaths.includes(resolved)
-        ) {
-          await reload();
-        } else {
-          await runLint([resolved]);
-        }
-      };
-
-      const handleUnlink = async (filePath: string) => {
-        const resolved = realpathIfExists(path.resolve(filePath));
-        cache.delete(resolved);
-        if (outputPath && resolved === outputPath) return;
-        if (reportPath && resolved === reportPath) return;
-        if (
-          (config.configPath && resolved === config.configPath) ||
-          resolved === designIgnore ||
-          resolved === gitIgnore ||
-          pluginPaths.includes(resolved) ||
-          ignoreFilePaths.includes(resolved)
-        ) {
-          await reload();
-        } else {
-          await runLint(targets);
-        }
-      };
-
-      watcher.on('add', (p: string) => handle(p).catch(reportError));
-      watcher.on('change', (p: string) => handle(p).catch(reportError));
-      watcher.on('unlink', (p: string) => handleUnlink(p).catch(reportError));
     }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error(useColor ? chalk.red(message) : message);
-    process.exitCode = 1;
-  }
+  });
+
+  await program.parseAsync(argv, { from: 'user' });
 }
 
 try {
