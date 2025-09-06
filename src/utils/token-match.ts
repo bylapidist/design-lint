@@ -12,7 +12,7 @@ function patternToRegExp(pattern: TokenPattern): RegExp {
     .split('*')
     .map((seg) => escapeRegExp(seg))
     .join('.*');
-  return new RegExp(`^${escaped}$`);
+  return new RegExp(`^${escaped}$`, 'i');
 }
 
 /**
