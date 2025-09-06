@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
+import { isInNonStyleJsx } from '../utils/jsx.js';
 
 export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',
@@ -18,19 +19,24 @@ export const deprecationRule: RuleModule = {
     const names = new Set(Object.keys(deprecations));
     return {
       onNode(node) {
-        if (ts.isStringLiteral(node) && names.has(node.text)) {
-          const repl = deprecations[node.text].replacement;
-          const pos = node
-            .getSourceFile()
-            .getLineAndCharacterOfPosition(node.getStart());
-          context.report({
-            message: `Token ${node.text} is deprecated${repl ? `, use ${repl}` : ''}`,
-            line: pos.line + 1,
-            column: pos.character + 1,
-            fix: repl
-              ? { range: [node.getStart(), node.getEnd()], text: `'${repl}'` }
-              : undefined,
-          });
+        if (ts.isStringLiteral(node)) {
+          if (isInNonStyleJsx(node)) return;
+          if (names.has(node.text)) {
+            const repl = deprecations[node.text].replacement;
+            const pos = node
+              .getSourceFile()
+              .getLineAndCharacterOfPosition(node.getStart());
+            context.report({
+              message: `Token ${node.text} is deprecated${
+                repl ? `, use ${repl}` : ''
+              }`,
+              line: pos.line + 1,
+              column: pos.character + 1,
+              fix: repl
+                ? { range: [node.getStart(), node.getEnd()], text: `'${repl}'` }
+                : undefined,
+            });
+          }
         }
         if (
           ts.isJsxOpeningElement(node) ||
