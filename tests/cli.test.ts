@@ -98,6 +98,23 @@ test('--init-format supports all formats', () => {
   }
 });
 
+test('CLI expands glob patterns with braces', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const dir = makeTmpDir();
+  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'a.module.css'), '');
+  fs.writeFileSync(path.join(dir, 'src', 'b.module.scss'), '');
+  const res = spawnSync(
+    process.execPath,
+    ['--loader', tsxLoader, cli, '**/*.module.{css,scss}', '--format', 'json'],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.equal(res.status, 0);
+  const out = JSON.parse(res.stdout) as { filePath: string }[];
+  const files = out.map((r) => path.relative(dir, r.filePath)).sort();
+  assert.deepEqual(files, ['src/a.module.css', 'src/b.module.scss']);
+});
+
 test('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
