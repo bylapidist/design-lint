@@ -1,6 +1,8 @@
 import { promises as fs } from 'fs';
 import ts from 'typescript';
 import postcss from 'postcss';
+import postcssScss from 'postcss-scss';
+import postcssLess from 'postcss-less';
 import pLimit from 'p-limit';
 import os from 'node:os';
 import type { parse as svelteParse } from 'svelte/compiler';
@@ -326,7 +328,11 @@ export class Linter {
           visit(source);
         }
         for (const style of descriptor.styles) {
-          const decls = parseCSS(style.content, messages);
+          const decls = parseCSS(
+            style.content,
+            messages,
+            style.lang as string | undefined,
+          );
           for (const decl of decls) {
             for (const l of listeners) l.onCSSDeclaration?.(decl);
           }
@@ -482,7 +488,16 @@ export class Linter {
             ast.css.content.start,
             ast.css.content.end,
           );
-          const decls = parseCSS(styleText, messages);
+          const langAttr = (
+            ast.css as unknown as {
+              attributes?: Array<{
+                name: string;
+                value?: Array<{ data?: string }>;
+              }>;
+            }
+          ).attributes?.find((a) => a.name === 'lang');
+          const lang = langAttr?.value?.[0]?.data;
+          const decls = parseCSS(styleText, messages, lang);
           for (const decl of decls) {
             for (const l of listeners) l.onCSSDeclaration?.(decl);
           }
@@ -520,7 +535,32 @@ export class Linter {
 
       const visit = (node: ts.Node) => {
         for (const l of listeners) l.onNode?.(node);
-        if (ts.isTaggedTemplateExpression(node)) {
+        if (
+          ts.isJsxAttribute(node) &&
+          node.name.getText() === 'style' &&
+          node.initializer &&
+          ts.isStringLiteral(node.initializer)
+        ) {
+          const init = node.initializer;
+          const start = source.getLineAndCharacterOfPosition(
+            init.getStart(source) + 1,
+          );
+          const tempMessages: LintMessage[] = [];
+          const decls = parseCSS(init.text, tempMessages);
+          for (const decl of decls) {
+            const line = start.line + decl.line - 1;
+            const column =
+              decl.line === 1 ? start.character + decl.column - 1 : decl.column;
+            for (const l of listeners)
+              l.onCSSDeclaration?.({ ...decl, line, column });
+          }
+          for (const m of tempMessages) {
+            const line = start.line + m.line - 1;
+            const column =
+              m.line === 1 ? start.character + m.column - 1 : m.column;
+            messages.push({ ...m, line, column });
+          }
+        } else if (ts.isTaggedTemplateExpression(node)) {
           const root = getRootTag(node.tag as ts.LeftHandSideExpression);
           if (
             root &&
@@ -553,8 +593,11 @@ export class Linter {
         ts.forEachChild(node, visit);
       };
       visit(source);
-    } else if (/\.css$/.test(filePath)) {
-      const decls = parseCSS(text, messages);
+    } else if (/\.(?:css|scss|sass|less)$/.test(filePath)) {
+      let syntax: string | undefined;
+      if (/\.s[ac]ss$/i.test(filePath)) syntax = 'scss';
+      else if (/\.less$/i.test(filePath)) syntax = 'less';
+      const decls = parseCSS(text, messages, syntax);
       for (const decl of decls) {
         for (const l of listeners) l.onCSSDeclaration?.(decl);
       }
@@ -661,11 +704,17 @@ function collectTokenValues(tokens?: DesignTokens): Set<string> {
 function parseCSS(
   text: string,
   messages: LintMessage[] = [],
+  lang?: string,
 ): CSSDeclaration[] {
   const decls: CSSDeclaration[] = [];
   try {
-    const root = postcss.parse(text);
-    root.walkDecls((d) => {
+    const root =
+      lang === 'scss' || lang === 'sass'
+        ? postcssScss.parse(text)
+        : lang === 'less'
+          ? postcssLess.parse(text)
+          : postcss.parse(text);
+    root.walkDecls((d: any) => {
       decls.push({
         prop: d.prop,
         value: d.value,

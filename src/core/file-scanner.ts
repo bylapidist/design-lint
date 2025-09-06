@@ -17,7 +17,7 @@ export async function scanFiles(
   );
   const normalizedPatterns = [...ignorePatterns];
   const scanPatterns = config.patterns ?? [
-    '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}',
+    '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,scss,sass,less,svelte,vue}',
   ];
   const seenIgnore = new Set<string>();
 
