@@ -6,6 +6,7 @@ import {
   extractVarName,
   closestToken,
 } from '../utils/token-match.js';
+import { isInNonStyleJsx } from '../utils/jsx.js';
 
 export const spacingRule: RuleModule = {
   name: 'design-token/spacing',
@@ -64,6 +65,7 @@ export const spacingRule: RuleModule = {
     };
     return {
       onNode(node) {
+        if (isInNonStyleJsx(node)) return;
         const report = (raw: string, value: number, n: ts.Node) => {
           if (!isAllowed(value)) {
             const pos = n

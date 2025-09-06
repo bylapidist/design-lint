@@ -5,6 +5,7 @@ import {
   extractVarName,
   closestToken,
 } from '../utils/token-match.js';
+import { isInNonStyleJsx } from '../utils/jsx.js';
 
 export const fontWeightRule: RuleModule = {
   name: 'design-token/font-weight',
@@ -53,6 +54,7 @@ export const fontWeightRule: RuleModule = {
     }
     return {
       onNode(node) {
+        if (isInNonStyleJsx(node)) return;
         if (ts.isNumericLiteral(node)) {
           const value = Number(node.text);
           if (!numeric.has(value)) {
