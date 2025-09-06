@@ -11,7 +11,7 @@
     {
       "matchDepTypes": ["engines"],
       "matchPackageNames": ["node"],
-      "allowedVersions": ">=22"
+      "allowedVersions": "22.x"
     }
   ]
 }
