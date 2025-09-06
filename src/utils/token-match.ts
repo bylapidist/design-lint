@@ -1,19 +1,7 @@
 export type TokenPattern = string | RegExp;
 
-import levenshtein from 'fast-levenshtein';
-
-function escapeRegExp(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function patternToRegExp(pattern: TokenPattern): RegExp {
-  if (pattern instanceof RegExp) return pattern;
-  const escaped = pattern
-    .split('*')
-    .map((seg) => escapeRegExp(seg))
-    .join('.*');
-  return new RegExp(`^${escaped}$`, 'i');
-}
+import picomatch from 'picomatch';
+import { findBestMatch } from 'string-similarity';
 
 /**
  * Match a CSS variable name against provided token patterns.
@@ -26,13 +14,17 @@ export function matchToken(
   patterns: TokenPattern[],
 ): string | null {
   for (const p of patterns) {
-    if (patternToRegExp(p).test(name)) return name;
+    if (p instanceof RegExp) {
+      if (p.test(name)) return name;
+    } else if (picomatch.isMatch(name, p, { nocase: true })) {
+      return name;
+    }
   }
   return null;
 }
 
 /**
- * Find the closest matching token using Levenshtein distance.
+ * Find the closest matching token using string similarity.
  * Only explicit string tokens are considered for suggestions.
  * @param name Raw token name used by the user.
  * @param patterns Available token names or patterns.
@@ -42,15 +34,10 @@ export function closestToken(
   name: string,
   patterns: TokenPattern[],
 ): string | null {
-  let best: { token: string; dist: number } | null = null;
-  for (const p of patterns) {
-    if (typeof p !== 'string') continue;
-    const dist = levenshtein.get(name, p);
-    if (!best || dist < best.dist) {
-      best = { token: p, dist };
-    }
-  }
-  return best?.token ?? null;
+  const tokens = patterns.filter((p): p is string => typeof p === 'string');
+  if (tokens.length === 0) return null;
+  const { bestMatch } = findBestMatch(name, tokens);
+  return bestMatch.target;
 }
 
 /** Extract a CSS variable name from a value like `var(--foo)` */
