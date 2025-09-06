@@ -19,7 +19,7 @@ import { builtInRules } from '../rules/index.js';
 export { defaultIgnore } from './ignore.js';
 import { loadPlugins } from './plugin-loader.js';
 import { scanFiles } from './file-scanner.js';
-import { loadCache, saveCache, type CacheMap } from './cache.js';
+import type { Cache, CacheEntry } from './cache.js';
 import { normalizeTokens, mergeTokens } from './token-loader.js';
 import { extractVarName } from '../utils/token-match.js';
 
@@ -55,7 +55,6 @@ export class Linter {
   private ruleMap: Map<string, { rule: RuleModule; source: string }> =
     new Map();
   private pluginLoad: Promise<void>;
-  private cacheLoaded = false;
   private allTokenValues = new Set<string>();
   private usedTokenValues = new Set<string>();
   private unusedTokenRules: {
@@ -96,7 +95,7 @@ export class Linter {
   async lintFile(
     filePath: string,
     fix = false,
-    cache?: CacheMap,
+    cache?: Cache,
     ignorePaths?: string[],
     cacheLocation?: string,
   ): Promise<LintResult> {
@@ -115,7 +114,7 @@ export class Linter {
    * Lint multiple files or directories.
    * @param targets Paths or globs to lint.
    * @param fix Apply fixes to matching files.
-   * @param cache Optional in-memory cache map.
+   * @param cache Optional in-memory cache.
    * @param additionalIgnorePaths Additional ignore files.
    * @param cacheLocation Persistent cache file location.
    * @returns Lint results and list of ignore files encountered.
@@ -123,7 +122,7 @@ export class Linter {
   async lintFiles(
     targets: string[],
     fix = false,
-    cache?: CacheMap,
+    cache?: Cache,
     additionalIgnorePaths: string[] = [],
     cacheLocation?: string,
   ): Promise<{
@@ -132,10 +131,6 @@ export class Linter {
     warning?: string;
   }> {
     await this.pluginLoad;
-    if (cacheLocation && cache && !this.cacheLoaded) {
-      await loadCache(cache, cacheLocation);
-      this.cacheLoaded = true;
-    }
     const files = await scanFiles(targets, this.config, additionalIgnorePaths);
     const ignoreFiles: string[] = [];
     if (files.length === 0) {
@@ -146,8 +141,8 @@ export class Linter {
       };
     }
     if (cache) {
-      for (const key of Array.from(cache.keys())) {
-        if (!files.includes(key)) cache.delete(key);
+      for (const key of cache.keys()) {
+        if (!files.includes(key)) cache.removeKey(key);
       }
     }
     const concurrency = Math.max(
@@ -159,7 +154,7 @@ export class Linter {
       limit(async () => {
         try {
           const stat = await fs.stat(filePath);
-          const cached = cache?.get(filePath);
+          const cached = cache?.getKey<CacheEntry>(filePath);
           if (
             cached &&
             cached.mtime === stat.mtimeMs &&
@@ -182,10 +177,10 @@ export class Linter {
               size = newStat.size;
             }
           }
-          cache?.set(filePath, { mtime, size, result });
+          cache?.setKey(filePath, { mtime, size, result });
           return result;
         } catch (e: unknown) {
-          cache?.delete(filePath);
+          cache?.removeKey(filePath);
           const err = e as { message?: string };
           return {
             filePath,
@@ -222,7 +217,7 @@ export class Linter {
       }
     }
     if (cacheLocation && cache) {
-      await saveCache(cache, cacheLocation);
+      cache.save(true);
     }
     return { results, ignoreFiles };
   }
