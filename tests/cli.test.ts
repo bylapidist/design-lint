@@ -1012,7 +1012,14 @@ test('CLI cache updates after --fix run', async () => {
     rules: { 'design-system/deprecation': 'error' },
   };
   const linter = new Linter(config);
-  const cache = new Map<string, { mtime: number; result: LintResult }>();
+  const cache = new Map<
+    string,
+    {
+      mtime: number;
+      size: number;
+      result: LintResult;
+    }
+  >();
   const { results: res1 } = await linter.lintFiles([file], true, cache);
   const { results: res2 } = await linter.lintFiles([file], false, cache);
   assert.equal(res1[0].messages.length, 0);
@@ -1090,6 +1097,61 @@ test('CLI --cache invalidates when files change', () => {
   res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
   assert.equal(res.status, 0);
   assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '2');
+});
+
+test('CLI --cache busts when mtime is unchanged but size differs', () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.ts');
+  fs.writeFileSync(file, 'const good = 1;');
+  const plugin = path.join(dir, 'plugin.cjs');
+  const pluginCode = [
+    "const ts = require('typescript');",
+    'module.exports = {',
+    '  rules: [{',
+    "    name: 'test/bad',",
+    "    meta: { description: 'bad' },",
+    '    create(ctx) {',
+    '      return {',
+    '        onNode(node) {',
+    '          if (node.kind === ts.SyntaxKind.SourceFile) {',
+    "            if (node.getText().includes('bad')) {",
+    "              ctx.report({ message: 'bad', line: 1, column: 1 });",
+    '            }',
+    '          }',
+    '        },',
+    '      };',
+    '    },',
+    '  }],',
+    '};',
+    '',
+  ].join('\n');
+  fs.writeFileSync(plugin, pluginCode);
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {},
+      rules: { 'test/bad': 'error' },
+      plugins: ['./plugin.cjs'],
+    }),
+  );
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const args = [
+    '--loader',
+    tsxLoader,
+    cli,
+    'file.ts',
+    '--config',
+    'designlint.config.json',
+    '--cache',
+  ];
+  let res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
+  assert.equal(res.status, 0);
+  const { atime, mtime } = fs.statSync(file);
+  fs.writeFileSync(file, 'const bad = 1;');
+  fs.utimesSync(file, atime, mtime);
+  res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
+  assert.equal(res.status, 1);
+  assert.match(res.stderr, /bad/);
 });
 
 test('CLI writes cache to specified --cache-location', () => {

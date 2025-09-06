@@ -156,12 +156,18 @@ export class Linter {
         try {
           const stat = await fs.stat(filePath);
           const cached = cache?.get(filePath);
-          if (cached && cached.mtime === stat.mtimeMs && !fix) {
+          if (
+            cached &&
+            cached.mtime === stat.mtimeMs &&
+            cached.size === stat.size &&
+            !fix
+          ) {
             return cached.result;
           }
           const text = await fs.readFile(filePath, 'utf8');
           let result = await this.lintText(text, filePath);
           let mtime = stat.mtimeMs;
+          let size = stat.size;
           if (fix) {
             const output = applyFixes(text, result.messages);
             if (output !== text) {
@@ -169,9 +175,10 @@ export class Linter {
               result = await this.lintText(output, filePath);
               const newStat = await fs.stat(filePath);
               mtime = newStat.mtimeMs;
+              size = newStat.size;
             }
           }
-          cache?.set(filePath, { mtime, result });
+          cache?.set(filePath, { mtime, size, result });
           return result;
         } catch (e: unknown) {
           cache?.delete(filePath);

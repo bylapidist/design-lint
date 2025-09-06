@@ -4,7 +4,10 @@ import writeFileAtomic from 'write-file-atomic';
 import { z } from 'zod';
 import type { LintResult } from './types.js';
 
-export type CacheMap = Map<string, { mtime: number; result: LintResult }>;
+export type CacheMap = Map<
+  string,
+  { mtime: number; size?: number; result: LintResult }
+>;
 
 const LintMessageSchema = z.object({
   ruleId: z.string(),
@@ -30,6 +33,7 @@ const CacheEntrySchema = z.tuple([
   z.string(),
   z.object({
     mtime: z.number(),
+    size: z.number().optional(),
     result: LintResultSchema,
   }),
 ]);
