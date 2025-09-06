@@ -61,6 +61,7 @@
     "cosmiconfig-typescript-loader": "^6.1.0",
     "fast-glob": "3.3.3",
     "fast-levenshtein": "3.0.0",
+    "globby": "14.1.0",
     "ignore": "7.0.5",
     "p-limit": "7.1.1",
     "postcss": "8.5.6",
