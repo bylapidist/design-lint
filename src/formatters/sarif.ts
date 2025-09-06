@@ -39,7 +39,12 @@ export function sarifFormatter(
   for (const res of results) {
     if (res.ruleDescriptions) {
       for (const [id, desc] of Object.entries(res.ruleDescriptions)) {
-        if (!descMap.has(id)) descMap.set(id, desc);
+        descMap.set(id, desc);
+        const existingIndex = ruleMap.get(id);
+        if (existingIndex !== undefined) {
+          sarif.runs[0].tool.driver.rules[existingIndex].shortDescription.text =
+            desc;
+        }
       }
     }
     for (const msg of res.messages) {
