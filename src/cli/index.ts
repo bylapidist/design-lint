@@ -9,7 +9,6 @@ import chalk, { supportsColor } from 'chalk';
 import ignore from 'ignore';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import writeFileAtomic from 'write-file-atomic';
-import fg from 'fast-glob';
 import type { Config } from '../core/linter.js';
 import { getFormatter } from '../formatters/index.js';
 import { startWatch } from './watch.js';
@@ -222,58 +221,23 @@ export async function run(argv = process.argv.slice(2)) {
       path.join(process.cwd(), '.designlintignore'),
     );
     let ig = ignore();
-    let ignorePatterns: string[] = [];
     const refreshIgnore = async () => {
-      const { ig: newIg, patterns } = await loadIgnore(
+      const { ig: newIg } = await loadIgnore(
         config,
         ignorePath ? [ignorePath] : [],
       );
       ig = newIg;
-      ignorePatterns = patterns;
     };
     await refreshIgnore();
     const state = { pluginPaths, ignoreFilePaths: [] as string[] };
-    const expandTargets = async (paths: string[]): Promise<string[]> => {
-      const files: string[] = [];
-      const scanPatterns = config.patterns ?? [
-        '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,svelte,vue}',
-      ];
-      for (const p of paths) {
-        const full = realpathIfExists(path.resolve(p));
-        try {
-          const stat = await fs.promises.stat(full);
-          if (stat.isDirectory()) {
-            const entries = await fg(scanPatterns, {
-              cwd: full,
-              absolute: true,
-              dot: true,
-              ignore: ignorePatterns,
-            });
-            for (const e of entries) files.push(realpathIfExists(e));
-          } else {
-            files.push(full);
-          }
-        } catch {
-          const entries = await fg(p, {
-            cwd: process.cwd(),
-            absolute: true,
-            dot: true,
-            ignore: ignorePatterns,
-          });
-          for (const e of entries) files.push(realpathIfExists(e));
-        }
-      }
-      return [...new Set(files)];
-    };
     const runLint = async (paths: string[]): Promise<string[]> => {
       const start = performance.now();
-      const expanded = await expandTargets(paths);
       const {
         results,
         ignoreFiles: newIgnore = [],
         warning,
       } = await linterRef.current.lintFiles(
-        expanded,
+        paths,
         options.fix,
         cache,
         ignorePath ? [ignorePath] : [],
