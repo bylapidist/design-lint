@@ -1,17 +1,18 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
+  "extends": ["config:recommended"],
   "rangeStrategy": "pin",
   "constraints": {
     "node": ">=22"
   },
   "packageRules": [
     {
+      "description": "Keep engines.node as \">=22\" and prevent bumps to 23/24",
+      "matchManagers": ["npm"],
       "matchDepTypes": ["engines"],
       "matchPackageNames": ["node"],
-      "allowedVersions": "22.x"
+      "allowedVersions": ">=22 <23",
+      "rangeStrategy": "replace"
     }
   ]
 }
