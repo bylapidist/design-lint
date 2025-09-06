@@ -59,6 +59,16 @@ test('design-token/line-height reports prefix unary', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/line-height ignores numbers in JSX props', async () => {
+  const linter = new Linter({
+    tokens: { lineHeights: { base: 1.5 } },
+    rules: { 'design-token/line-height': 'error' },
+  });
+  const code = 'export const C = () => <Component headingLevel={2} />;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-token/line-height warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/line-height': 'warn' },

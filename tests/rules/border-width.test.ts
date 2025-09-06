@@ -57,6 +57,16 @@ test('design-token/border-width reports prefix unary', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/border-width ignores numbers in JSX props', async () => {
+  const linter = new Linter({
+    tokens: { borderWidths: { sm: 1, md: 2 } },
+    rules: { 'design-token/border-width': 'error' },
+  });
+  const code = 'export const C = () => <Component headingLevel={2} />;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-token/border-width warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/border-width': 'warn' },

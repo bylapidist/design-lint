@@ -32,6 +32,16 @@ test('design-token/letter-spacing reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/letter-spacing ignores numbers in JSX props', async () => {
+  const linter = new Linter({
+    tokens: { letterSpacings: { none: 0 } },
+    rules: { 'design-token/letter-spacing': 'error' },
+  });
+  const code = 'export const C = () => <Component headingLevel={2} />;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-token/letter-spacing warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/letter-spacing': 'warn' },

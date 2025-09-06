@@ -46,6 +46,16 @@ test('design-token/duration reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/duration ignores numbers in JSX props', async () => {
+  const linter = new Linter({
+    tokens: { durations: { fast: '200ms' } },
+    rules: { 'design-token/duration': 'error' },
+  });
+  const code = 'export const C = () => <Component headingLevel={2} />;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-token/duration warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/duration': 'warn' },

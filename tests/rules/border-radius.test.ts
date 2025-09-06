@@ -30,6 +30,16 @@ test('design-token/border-radius reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
+test('design-token/border-radius ignores numbers in JSX props', async () => {
+  const linter = new Linter({
+    tokens: { borderRadius: { sm: 2, md: 4 } },
+    rules: { 'design-token/border-radius': 'error' },
+  });
+  const code = 'export const C = () => <Component headingLevel={2} />;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
 test('design-token/border-radius warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/border-radius': 'warn' },
