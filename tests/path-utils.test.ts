@@ -24,6 +24,11 @@ test('relFrom handles empty path', () => {
   assert.equal(relFrom(process.cwd(), ''), '');
 });
 
+test('relFrom returns empty path for differing roots', () => {
+  const root = path.join(process.cwd(), 'foo');
+  assert.equal(relFrom(root, ''), '');
+});
+
 test('realpathIfExists resolves paths', () => {
   const tmp = makeTmpDir();
   const rp = realpathIfExists(tmp);

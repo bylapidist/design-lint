@@ -14,8 +14,9 @@ export const toPosix = (p: string) => p.split(path.sep).join('/');
  * @param p Target path.
  * @returns Relative path using POSIX separators.
  */
-export const relFrom = (root: string, p: string) => {
-  const rel = path.relative(root, p || '');
+export const relFrom = (root: string, p?: string) => {
+  if (!p) return '';
+  const rel = path.relative(root, p);
   return toPosix(rel);
 };
 
