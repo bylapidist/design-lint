@@ -183,6 +183,32 @@ test('loads config from .ts with type annotations', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
+test('loads .ts config importing built package entry', () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.ts');
+  const relPkg = path
+    .relative(tmp, path.resolve('dist/index.js'))
+    .replace(/\\/g, '/');
+  fs.writeFileSync(
+    configPath,
+    `import { defineConfig } from '${relPkg}';\nexport default defineConfig({ tokens: { colors: { primary: '#000' } } });`,
+  );
+  const runnerPath = path.join(tmp, 'runner.mjs');
+  const relLoader = path
+    .relative(tmp, path.resolve('dist/config/loader.js'))
+    .replace(/\\/g, '/');
+  fs.writeFileSync(
+    runnerPath,
+    `import { loadConfig } from '${relLoader}';\nconst cfg = await loadConfig('${tmp.replace(/\\/g, '/')}');\nconsole.log(cfg.tokens.colors.primary);\n`,
+  );
+  const { spawnSync } = require('node:child_process');
+  const result = spawnSync(process.execPath, [runnerPath], {
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.trim(), '#000');
+});
+
 test('restores original .mts handler after loading config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.mts');

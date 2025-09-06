@@ -65,14 +65,16 @@ export async function loadConfig(
       const ext = path.extname(abs);
       if (ext === '.ts' || ext === '.mts') {
         try {
-          const tsxEsm = 'tsx/esm';
-          await import(tsxEsm);
+          const { tsImport } = await import('tsx/esm/api');
+          const mod = (await tsImport(abs, import.meta.url)) as {
+            default?: unknown;
+          };
+          loaded = (mod.default as Config) || (mod as unknown as Config);
         } catch {
           throw new Error(
             'To load TypeScript config files, please install tsx.',
           );
         }
-        loaded = (await loadEsmConfig(abs)) as Config;
       } else if (ext === '.json') {
         const data = await fs.promises.readFile(abs, 'utf8');
         loaded = JSON.parse(data) as Config;
