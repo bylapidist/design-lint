@@ -134,6 +134,44 @@ test('sarif formatter outputs rules and links results', () => {
   assert.equal(run.results[0].ruleIndex, 0);
 });
 
+test('sarif formatter updates rule descriptions from later results', () => {
+  const results: LintResult[] = [
+    {
+      filePath: 'a.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'first',
+          severity: 'error',
+          line: 1,
+          column: 1,
+        },
+      ],
+    },
+    {
+      filePath: 'b.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'second',
+          severity: 'error',
+          line: 1,
+          column: 1,
+        },
+      ],
+      ruleDescriptions: { rule: 'rule description' },
+    },
+  ];
+  const out = sarifFormatter(results);
+  const parsed = JSON.parse(out);
+  const run = parsed.runs[0];
+  assert.equal(run.tool.driver.rules.length, 1);
+  assert.equal(
+    run.tool.driver.rules[0].shortDescription.text,
+    'rule description',
+  );
+});
+
 test('getFormatter returns formatter for valid name', async () => {
   assert.equal(await getFormatter('json'), jsonFormatter);
 });
