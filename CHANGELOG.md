@@ -1,5 +1,15 @@
 # @lapidist/design-lint
 
+## 4.7.6
+
+### Patch Changes
+
+- 1720f52: fix no-unused-tokens rule to handle hex colors case-insensitively
+- c7bd1e6: handle React.createElement and h props in isInNonStyleJsx
+- b7e026c: broaden Node.js engine requirement to >=22
+- 69c1ee0: add OK feedback for files without lint messages in stylish formatter and remove extra newlines
+- a564d72: fix getTokenCompletions to handle var() fallbacks and whitespace
+
 ## 4.7.5
 
 ### Patch Changes
