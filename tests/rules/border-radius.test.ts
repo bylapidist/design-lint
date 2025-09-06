@@ -26,7 +26,10 @@ test('design-token/border-radius reports numeric literals', async () => {
     tokens: { borderRadius: { sm: 2, md: 4 } },
     rules: { 'design-token/border-radius': 'error' },
   });
-  const res = await linter.lintText('const r = 3;', 'file.ts');
+  const res = await linter.lintText(
+    'const r = <div style={{ borderRadius: 3 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 

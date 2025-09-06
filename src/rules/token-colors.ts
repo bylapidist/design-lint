@@ -8,7 +8,7 @@ import {
   extractVarName,
   closestToken,
 } from '../utils/token-match.js';
-import { isInNonStyleJsx } from '../utils/jsx.js';
+import { isStyleValue } from '../utils/style.js';
 
 type ColorFormat =
   | 'hex'
@@ -77,7 +77,7 @@ export const colorsRule: RuleModule = {
       };
       return {
         onNode(node) {
-          if (isInNonStyleJsx(node)) return;
+          if (!isStyleValue(node)) return;
           const sourceFile = node.getSourceFile();
           const handle = (text: string, n: ts.Node) => {
             const pos = sourceFile.getLineAndCharacterOfPosition(n.getStart());
@@ -135,7 +135,7 @@ export const colorsRule: RuleModule = {
 
     return {
       onNode(node) {
-        if (isInNonStyleJsx(node)) return;
+        if (!isStyleValue(node)) return;
         const sourceFile = node.getSourceFile();
         const handle = (text: string, n: ts.Node) => {
           const pos = sourceFile.getLineAndCharacterOfPosition(n.getStart());

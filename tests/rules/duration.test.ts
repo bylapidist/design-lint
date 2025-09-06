@@ -42,7 +42,10 @@ test('design-token/duration reports numeric literals', async () => {
     tokens: { durations: { fast: '200ms' } },
     rules: { 'design-token/duration': 'error' },
   });
-  const res = await linter.lintText('const d = 300;', 'file.ts');
+  const res = await linter.lintText(
+    'const d = <div style={{ animationDuration: 300 }} />;',
+    'file.tsx',
+  );
   assert.equal(res.messages.length, 1);
 });
 
