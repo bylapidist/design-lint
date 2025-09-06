@@ -293,7 +293,7 @@ test('CLI errors on invalid --max-warnings', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
-  assert.ok(res.stderr.includes('non-negative integer'));
+  assert.ok(res.stderr.includes('Invalid value for --max-warnings'));
 });
 
 test('CLI reports missing ignore file', () => {
@@ -850,7 +850,7 @@ test('CLI errors on invalid --concurrency', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
-  assert.ok(res.stderr.includes('positive integer'));
+  assert.ok(res.stderr.includes('Invalid value for --concurrency'));
 });
 
 test('CLI plugin load errors include context and remediation', () => {
