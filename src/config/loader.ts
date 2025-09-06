@@ -7,6 +7,18 @@ import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../utils/paths.js';
 
+function unwrapDefault<T>(mod: unknown): T {
+  let result: unknown = mod;
+  while (
+    result &&
+    typeof result === 'object' &&
+    'default' in (result as Record<string, unknown>)
+  ) {
+    result = (result as { default: unknown }).default;
+  }
+  return result as T;
+}
+
 /**
  * Dynamically import an ECMAScript config file.
  * @param absPath Absolute path to the module.
@@ -15,7 +27,7 @@ import { realpathIfExists } from '../utils/paths.js';
 async function loadEsmConfig(absPath: string) {
   const url = pathToFileURL(absPath);
   const mod = await import(url.href);
-  return (mod as { default?: unknown }).default ?? mod;
+  return unwrapDefault(mod);
 }
 
 /**
@@ -66,10 +78,8 @@ export async function loadConfig(
       if (ext === '.ts' || ext === '.mts') {
         try {
           const { tsImport } = await import('tsx/esm/api');
-          const mod = (await tsImport(abs, import.meta.url)) as {
-            default?: unknown;
-          };
-          loaded = (mod.default as Config) || (mod as unknown as Config);
+          const mod = await tsImport(abs, import.meta.url);
+          loaded = unwrapDefault<Config>(mod);
         } catch {
           throw new Error(
             'To load TypeScript config files, please install tsx.',
@@ -82,8 +92,8 @@ export async function loadConfig(
         loaded = (await loadEsmConfig(abs)) as Config;
       } else {
         const req = createRequire(import.meta.url);
-        const mod = req(abs) as { default?: unknown };
-        loaded = (mod?.default as Config) || (mod as Config) || {};
+        const mod = req(abs);
+        loaded = unwrapDefault<Config>(mod);
       }
       const merged = { ...base, ...loaded, configPath: abs };
       const result = configSchema.safeParse(merged);

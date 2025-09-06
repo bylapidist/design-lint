@@ -183,6 +183,24 @@ test('loads config from .ts with type annotations', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
+test('loads .ts config with commonjs module output', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'tsconfig.json'),
+    JSON.stringify({ compilerOptions: { module: 'commonjs' } }),
+  );
+  const configPath = path.join(tmp, 'designlint.config.ts');
+  const rel = path
+    .relative(tmp, path.resolve('src/index.ts'))
+    .replace(/\\/g, '/');
+  fs.writeFileSync(
+    configPath,
+    `import { defineConfig } from '${rel}';\nexport default defineConfig({ tokens: { colors: { primary: '#000' } } });`,
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.tokens?.colors?.primary, '#000');
+});
+
 test('loads .ts config importing built package entry', () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
