@@ -564,6 +564,7 @@ export class Linter {
               m.line === 1 ? start.character + m.column - 1 : m.column;
             messages.push({ ...m, line, column });
           }
+          return;
         } else if (ts.isTaggedTemplateExpression(node)) {
           const root = getRootTag(node.tag as ts.LeftHandSideExpression);
           if (
@@ -592,6 +593,7 @@ export class Linter {
                 m.line === 1 ? start.character + m.column - 1 : m.column;
               messages.push({ ...m, line, column });
             }
+            return;
           }
         }
         ts.forEachChild(node, visit);
