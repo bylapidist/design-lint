@@ -10,10 +10,10 @@ import ignore from 'ignore';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import writeFileAtomic from 'write-file-atomic';
 import fg from 'fast-glob';
-import type { LintResult } from '../core/types.js';
 import type { Config } from '../core/linter.js';
 import { getFormatter } from '../formatters/index.js';
 import { startWatch } from './watch.js';
+import { loadCache, type Cache } from '../core/cache.js';
 
 function initConfig(initFormat?: string) {
   const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
@@ -200,9 +200,11 @@ export async function run(argv = process.argv.slice(2)) {
     }
     let pluginPaths = resolvePluginPaths(config);
     const linterRef = { current: new Linter(config) };
-    const cache = new Map<string, { mtime: number; result: LintResult }>();
     const cacheLocation = options.cache
       ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
+      : undefined;
+    const cache: Cache | undefined = cacheLocation
+      ? loadCache(cacheLocation)
       : undefined;
     let ignorePath: string | undefined;
     if (options.ignorePath) {
