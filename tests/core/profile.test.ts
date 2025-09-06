@@ -1,0 +1,51 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { makeTmpDir } from '../../src/utils/tmp.ts';
+import { Linter } from '../../src/core/linter.ts';
+import { scanFiles } from '../../src/core/file-scanner.ts';
+import type { Config } from '../../src/core/linter.ts';
+
+// Ensure scanFiles logs when profiling is enabled
+// This also covers the catch branch for missing files by passing a non-existent target
+
+// Use separate test for profiling
+
+test('scanFiles logs when DESIGNLINT_PROFILE is set', async () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'file.ts'), '');
+  const linter = new Linter({ tokens: {}, rules: {} });
+  const cwd = process.cwd();
+  process.chdir(dir);
+  process.env.DESIGNLINT_PROFILE = '1';
+  const logs: string[] = [];
+  const origLog = console.log;
+  console.log = (msg?: unknown) => {
+    logs.push(String(msg));
+  };
+  try {
+    // Include a missing file to hit the catch branch
+    await linter.lintFiles(['file.ts', 'missing.ts']);
+  } finally {
+    console.log = origLog;
+    delete process.env.DESIGNLINT_PROFILE;
+    process.chdir(cwd);
+  }
+  assert.ok(logs.some((l) => /Scanned 1 files in/.test(l)));
+});
+
+test('scanFiles collects files from directory targets', async () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'a.ts'), '');
+  const config: Config = { tokens: {}, rules: {} };
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    const { files } = await scanFiles(['.'], config);
+    const rels = files.map((f) => path.relative(dir, f));
+    assert.deepEqual(rels, ['a.ts']);
+  } finally {
+    process.chdir(cwd);
+  }
+});
