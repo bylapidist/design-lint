@@ -277,8 +277,10 @@ linter throws an error such as `Failed to load plugin "my-plugin"` or
 
 ## CSS Parsing
 
-Design-lint uses [PostCSS](https://postcss.org/) to parse CSS. The default
-parser understands standard CSS syntax and supports multi-line declarations.
-Preprocessor-specific features such as Sass or Less syntax are not supported
-unless the source is transformed beforehand. The parser currently exposes no
-additional configuration options.
+Design-lint uses [PostCSS](https://postcss.org/) to parse styles. Standard CSS
+is handled with `postcss.parse` while SCSS/Sass and Less syntax are parsed with
+[`postcss-scss`](https://github.com/postcss/postcss-scss) and
+[`postcss-less`](https://github.com/shellscape/postcss-less) respectively. The
+parser automatically selects the appropriate syntax based on file extension or a
+`<style>` block's `lang` attribute. It supports multi-line declarations and
+currently exposes no additional configuration options.

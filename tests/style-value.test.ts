@@ -57,3 +57,8 @@ test('ignores non-style contexts', () => {
   const attrNode = getStringNode(`<div data-test="red" />`, 'red');
   assert.equal(isStyleValue(attrNode), false);
 });
+
+test('detects string style attribute', () => {
+  const node = getStringNode(`<div style="color: red" />`, 'color: red');
+  assert.equal(isStyleValue(node), true);
+});

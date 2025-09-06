@@ -137,9 +137,9 @@ npx design-lint src --watch
 ### Vue single-file components
 
 Vue `.vue` files are parsed so both template and script code are linted alongside
-`<style>` blocks. Only standard CSS syntax is supported inside `<style>`
-sections; preprocessors like Sass or Less must be compiled ahead of time. No
-additional configuration is required.
+`<style>` blocks. SCSS, Sass, and Less syntax inside `<style>` sections is
+supported via the block's `lang` attribute. No additional configuration is
+required.
 
 ```bash
 npx design-lint src/components/App.vue
@@ -156,6 +156,12 @@ and `style:` directives. Declarations like
 ```
 
 are parsed so each individual style is checked against the configured rules.
+`<style>` blocks may also use `lang="scss"`, `lang="sass"`, or `lang="less"`.
+
+### Inline style attributes
+
+String `style="..."` attributes in HTML and JSX are parsed as CSS declarations
+so token rules apply to raw inline styles.
 
 ### Tagged template literals
 
