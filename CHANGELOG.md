@@ -1,5 +1,12 @@
 # @lapidist/design-lint
 
+## 4.7.2
+
+### Patch Changes
+
+- 699fc16: fix extractVarName to support whitespace and fallback values
+- be70734: fix loading TypeScript configs that import the package entry to avoid require cycles
+
 ## 4.7.1
 
 ### Patch Changes
