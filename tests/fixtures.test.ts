@@ -16,7 +16,6 @@ const builtInRules = [
   'design-token/spacing',
   'design-token/font-size',
   'design-token/font-family',
-  'design-token/no-unused-tokens',
   'design-system/no-unused-tokens',
 ];
 

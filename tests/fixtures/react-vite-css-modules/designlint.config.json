@@ -14,7 +14,6 @@
     "design-token/spacing": "error",
     "design-token/font-size": "error",
     "design-token/font-family": "error",
-    "design-token/no-unused-tokens": "warn",
     "design-system/no-unused-tokens": "warn",
     "design-system/component-usage": [
       "error",

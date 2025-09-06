@@ -12,7 +12,7 @@ const formatter = await getFormatter('stylish');
 console.log(formatter(results));
 ```
 
-## `Linter` ([source](../src/core/engine.ts))
+## `Linter` ([source](../src/core/linter.ts))
 
 Core engine for linting files and applying rules.
 
@@ -22,7 +22,7 @@ Core engine for linting files and applying rules.
 
 #### Parameters
 
-- `config` [`Config`](../src/core/engine.ts) – configuration object controlling tokens, rules and plugins.
+- `config` [`Config`](../src/core/linter.ts) – configuration object controlling tokens, rules and plugins.
 
 #### Example
 
@@ -184,7 +184,7 @@ console.log(formatter(results));
 See [Formatters](./formatters.md) for built-in options and instructions on adding custom ones, and
 [Usage](./usage.md#options) for command‑line equivalents.
 
-## `applyFixes(text, messages)` ([source](../src/core/engine.ts))
+## `applyFixes(text, messages)` ([source](../src/core/linter.ts))
 
 Apply autofixes to file contents using message fix data.
 
@@ -220,15 +220,20 @@ Includes:
  - [`font-family`](./rules/design-token/font-family.md)
  - [`font-size`](./rules/design-token/font-size.md)
  - [`font-weight`](./rules/design-token/font-weight.md)
- - [`letter-spacing`](./rules/design-token/letter-spacing.md)
- - [`line-height`](./rules/design-token/line-height.md)
- - [`opacity`](./rules/design-token/opacity.md)
+- [`letter-spacing`](./rules/design-token/letter-spacing.md)
+- [`line-height`](./rules/design-token/line-height.md)
+- [`opacity`](./rules/design-token/opacity.md)
 - [`outline`](./rules/design-token/outline.md)
 - [`spacing`](./rules/design-token/spacing.md)
 - [`z-index`](./rules/design-token/z-index.md)
-- [`component-usage`](./rules/design-system/component-usage.md)
-- [`deprecation`](./rules/design-system/deprecation.md)
+ - [`component-prefix`](./rules/design-system/component-prefix.md)
+ - [`component-usage`](./rules/design-system/component-usage.md)
+ - [`deprecation`](./rules/design-system/deprecation.md)
+ - [`icon-usage`](./rules/design-system/icon-usage.md)
+ - [`import-path`](./rules/design-system/import-path.md)
+ - [`no-inline-styles`](./rules/design-system/no-inline-styles.md)
  - [`no-unused-tokens`](./rules/design-system/no-unused-tokens.md)
+ - [`variant-prop`](./rules/design-system/variant-prop.md)
 
 ### Returns
 

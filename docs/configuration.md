@@ -187,6 +187,7 @@ without providing the corresponding tokens results in a configuration warning:
 - `design-token/border-color` requires `tokens.borderColors`
 - `design-token/opacity` requires `tokens.opacity`
 - `design-token/outline` requires `tokens.outlines`
+- `design-system/no-unused-tokens` requires `tokens` to be defined
 - `design-system/deprecation` requires `tokens.deprecations`
 
 To resolve the warning, supply the necessary tokens or disable the rule.
