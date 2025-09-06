@@ -47,6 +47,25 @@ test('stylish formatter outputs suggestions', () => {
   assert.ok(out.includes('Did you mean `--foo`?'));
 });
 
+test('stylish formatter uses yellow summary when only warnings', () => {
+  const results: LintResult[] = [
+    {
+      filePath: 'file.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'warn msg',
+          severity: 'warn',
+          line: 1,
+          column: 1,
+        },
+      ],
+    },
+  ];
+  const out = stylish(results);
+  assert.ok(out.includes('\x1b[33m1 problems (0 errors, 1 warnings)\x1b[0m'));
+});
+
 test('json formatter outputs json', () => {
   const results: LintResult[] = [
     {

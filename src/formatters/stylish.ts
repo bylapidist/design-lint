@@ -31,7 +31,12 @@ export function stylish(results: LintResult[], useColor = true): string {
   const total = errorCount + warnCount;
   if (total > 0) {
     const summary = `${total} problems (${errorCount} errors, ${warnCount} warnings)`;
-    lines.push(useColor ? codes.red(summary) : summary);
+    if (useColor) {
+      const color = errorCount > 0 ? codes.red : codes.yellow;
+      lines.push(color(summary));
+    } else {
+      lines.push(summary);
+    }
   }
   return lines.join('\n');
 }
