@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.7.8
+
+### Patch Changes
+
+- 72ed23f: add scss, sass, and less style parsing including Vue/Svelte lang detection and string style attribute handling
+
 ## 4.7.7
 
 ### Patch Changes
