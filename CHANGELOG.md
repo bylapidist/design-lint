@@ -1,5 +1,15 @@
 # @lapidist/design-lint
 
+## 4.7.1
+
+### Patch Changes
+
+- 7a146b2: ensure file changes bust cache even when mtime is unchanged
+- f43aac4: fix CLI glob expansion to handle brace patterns
+- c902951: fix TypeScript config loading by always treating .ts files as ESM
+- 84790db: fix token-opacity to flag zero values in CSS
+- 91eaf52: fix token rules to ignore numbers in non-style JSX props
+
 ## 4.7.0
 
 ### Minor Changes
