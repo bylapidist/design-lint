@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
-import { createRequire } from 'module';
-import { pathToFileURL, fileURLToPath } from 'url';
+import { fileURLToPath } from 'url';
 import { performance } from 'node:perf_hooks';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
 import ignore from 'ignore';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import writeFileAtomic from 'write-file-atomic';
-import type { Config } from '../core/linter.js';
 import { getFormatter } from '../formatters/index.js';
 import { startWatch } from './watch.js';
 import { loadCache, type Cache } from '../core/cache.js';
@@ -169,36 +167,8 @@ export async function run(argv = process.argv.slice(2)) {
     const maxWarnings: number | undefined = options.maxWarnings;
     if (config.configPath)
       config.configPath = realpathIfExists(config.configPath);
-    function resolvePluginPaths(cfg: Config, cacheBust = false): string[] {
-      const req = cfg.configPath
-        ? createRequire(cfg.configPath)
-        : createRequire(import.meta.url);
-      const paths: string[] = [];
-      for (const p of cfg.plugins || []) {
-        try {
-          const resolved = realpathIfExists(req.resolve(p));
-          if (!fs.existsSync(resolved))
-            throw new Error(`Plugin not found: "${relFromCwd(resolved)}"`);
-          paths.push(
-            cacheBust && resolved.endsWith('.mjs')
-              ? `${pathToFileURL(resolved).href}?t=${Date.now()}`
-              : resolved,
-          );
-        } catch {
-          const resolved = realpathIfExists(path.resolve(p));
-          if (!fs.existsSync(resolved))
-            throw new Error(`Plugin not found: "${relFromCwd(resolved)}"`);
-          paths.push(
-            cacheBust && resolved.endsWith('.mjs')
-              ? `${pathToFileURL(resolved).href}?t=${Date.now()}`
-              : resolved,
-          );
-        }
-      }
-      return paths;
-    }
-    let pluginPaths = resolvePluginPaths(config);
     const linterRef = { current: new Linter(config) };
+    let pluginPaths = await linterRef.current.getPluginPaths();
     const cacheLocation = options.cache
       ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
       : undefined;
@@ -294,7 +264,6 @@ export async function run(argv = process.argv.slice(2)) {
         options,
         config,
         refreshIgnore,
-        resolvePluginPaths,
         cache,
         cacheLocation,
         state,

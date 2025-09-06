@@ -55,6 +55,7 @@ export class Linter {
   private ruleMap: Map<string, { rule: RuleModule; source: string }> =
     new Map();
   private pluginLoad: Promise<void>;
+  private pluginPaths: string[] = [];
   private allTokenValues = new Set<string>();
   private usedTokenValues = new Set<string>();
   private unusedTokenRules: {
@@ -77,7 +78,13 @@ export class Linter {
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
-    this.pluginLoad = loadPlugins(this.config, this.ruleMap, createEngineError);
+    this.pluginLoad = loadPlugins(
+      this.config,
+      this.ruleMap,
+      createEngineError,
+    ).then((paths) => {
+      this.pluginPaths = paths;
+    });
     this.allTokenValues = collectTokenValues(
       this.config.tokens as DesignTokens,
     );
@@ -243,6 +250,15 @@ export class Linter {
       }
     }
     return completions;
+  }
+
+  /**
+   * Get resolved plugin paths.
+   * @returns Array of plugin file paths.
+   */
+  async getPluginPaths(): Promise<string[]> {
+    await this.pluginLoad;
+    return this.pluginPaths;
   }
 
   /**
