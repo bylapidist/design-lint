@@ -75,10 +75,27 @@ export async function scanFiles(
       }
     }
   };
-
   const files: string[] = [];
   const scanStart = performance.now();
+  if (targets.some((t) => fg.isDynamicPattern(t))) {
+    await readNestedIgnore(process.cwd());
+  }
   for (const t of targets) {
+    if (fg.isDynamicPattern(t)) {
+      const entries = await fg(t, {
+        cwd: process.cwd(),
+        absolute: true,
+        dot: true,
+        ignore: normalizedPatterns,
+      });
+      for (const e of entries) {
+        const full = realpathIfExists(e);
+        const rel = relFromCwd(full);
+        if (rel !== '' && ig.ignores(rel)) continue;
+        files.push(full);
+      }
+      continue;
+    }
     const full = realpathIfExists(path.resolve(t));
     const rel = relFromCwd(full);
     if (rel !== '' && ig.ignores(rel)) continue;
