@@ -319,3 +319,13 @@ test('loads config with multi-theme tokens', async () => {
   const loaded = await loadConfig(tmp);
   assert.equal(loaded.tokens?.colors?.primary, '#fff');
 });
+
+test('surfaces errors thrown by ts config', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.ts');
+  fs.writeFileSync(
+    configPath,
+    "throw new Error('boom'); export default {} as const;",
+  );
+  await assert.rejects(loadConfig(tmp), /boom/);
+});
