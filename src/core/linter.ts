@@ -749,7 +749,7 @@ function getDisabledLines(text: string): Set<number> {
       block = false;
       continue;
     }
-    if (/design-lint-disable-next-line/.test(line)) {
+    if (/(?:\/\/|\/\*)\s*design-lint-disable-next-line/.test(line)) {
       disabled.add(i + 2);
       continue;
     }
