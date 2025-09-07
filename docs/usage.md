@@ -1,82 +1,49 @@
 # Usage
 
-Requires Node.js 22 or later.
+Design Lint is distributed as a CLI. Node.js 22 or later is required.
 
-## One-off usage
-
-```bash
-npx @lapidist/design-lint@latest --help
-```
-
-## Local usage
-
-Install the package and run it from your project:
+## Running the CLI
 
 ```bash
-npm install --save-dev @lapidist/design-lint
-npx design-lint [files...]
+# lint a directory
+npx @lapidist/design-lint src
 
-```
-
-The CLI accepts files, directories, or glob patterns:
-
-```bash
-npx design-lint .
+# lint specific files or globs
 npx design-lint "src/**/*.scss"
 ```
 
-## Initialize configuration
-
-Create a starter config with:
+Generate a starter configuration:
 
 ```bash
 npx design-lint init
 ```
 
-By default this writes `designlint.config.json`. If TypeScript is detected in
-your project (`tsconfig.json` or a `typescript` dependency), a
-`designlint.config.ts` is created instead using the `defineConfig` helper.
-Override the format with `--init-format <format>` where `<format>` is one of
-`js`, `cjs`, `mjs`, `ts`, `mts`, or `json`.
+By default a `designlint.config.json` file is created. Use `--init-format` to write `js`, `ts` or other formats.
 
-## Options
+## Command line options
 
-- `--config <path>`: Path to a `designlint.config.*` file.
-- `--init-format <format>`: Format for `design-lint init` (`js`, `cjs`, `mjs`,
-  `ts`, `mts`, `json`).
-- `--format <formatter>`: Output format (default `stylish`). Accepts built-in
-  names (`stylish`, `json`, `sarif`) or a path to a custom formatter module.
-- `--output <file>`: Write report to a file instead of stdout.
-- `--report <file>`: Write JSON results to a file.
-- `--ignore-path <file>`: Load additional ignore patterns from a file. The
-  path must exist; otherwise the CLI exits with an error.
-  Example: `npx design-lint src --ignore-path .lintignore`
-- `--concurrency <n>`: Limit the number of files processed in parallel.
-- `--max-warnings <n>`: Number of warnings to trigger a non-zero exit code.
-  Example: `npx design-lint src --max-warnings 0`
-- `--quiet`: Suppress output and rely on exit code.
-- `--no-color`: Disable colored output.
-- `--cache`: Enable persistent caching. Results are stored in the
-  default `.designlintcache` file and reused on later runs to skip unchanged
-  files. Remove the file to reset the cache.
-  Example: `npx design-lint src --cache`
-- `--cache-location <path>`: Path to the cache file. Overrides the default
-  `.designlintcache` location.
-- `--watch`: Watch files and re-lint on changes.
-- `--fix`: Automatically fix problems when possible.
+| Flag | Description |
+| ---- | ----------- |
+| `--config <path>` | Use an explicit configuration file. |
+| `--format <name>` | Select formatter: `stylish` (default), `json`, `sarif` or a module path. |
+| `--report <file>` | Write raw JSON results to a file. |
+| `--output <file>` | Redirect formatted output. |
+| `--ignore-path <file>` | Additional ignore patterns. |
+| `--concurrency <n>` | Limit parallel file processing. |
+| `--max-warnings <n>` | Exit with error when warnings exceed this number. |
+| `--cache` | Enable result caching. |
+| `--cache-location <path>` | Custom cache file location. |
+| `--watch` | Re-run lint on file changes. |
+| `--fix` | Apply safe fixes automatically. |
 
 ## Inline disabling
 
-Skip linting for specific lines with special comments.
-
-Ignore the next line:
+Suppress rules with comments:
 
 ```js
 // design-lint-disable-next-line
 const color = 'red';
 ```
-
-Disable and re-enable a block:
 
 ```css
 /* design-lint-disable */
@@ -84,137 +51,17 @@ Disable and re-enable a block:
 /* design-lint-enable */
 ```
 
-All rules are disabled within the suppressed region.
+## Caching
 
-## Cache management
-
-When run with `--cache`, results are written to `.designlintcache` by default or
-to the path provided by `--cache-location`. Entries are skipped on later runs if
-a file's modification time hasn't changed. In watch mode, edits to
-configuration, plugins, or ignore files automatically clear the cache. Delete
-the cache file to force a full re-lint:
-
-```bash
-rm .designlintcache
-```
+`--cache` stores results in `.designlintcache` and skips unchanged files. Delete the file to reset.
 
 ## Exit codes
 
-- **0**: No errors and warnings ≤ `--max-warnings`.
-- **1**: Any rule errors or warnings exceeding `--max-warnings`.
+- `0` – no errors and warnings within `--max-warnings`
+- `1` – any error or warnings beyond the threshold
 
-These codes allow CI pipelines to fail when issues are found. See [CI usage](#ci-usage) for an example.
+## Further reading
 
-## Examples
-
-### CI usage
-
-```yaml
-# .github/workflows/lint.yml
-steps:
-  - uses: actions/checkout@v4
-  - run: npx design-lint src --max-warnings 0
-```
-
-Write a JSON report to a file:
-
-```bash
-npx design-lint src --report report.json --format json
-```
-
-Use a custom formatter module:
-
-```bash
-npx design-lint src --format ./minimal-formatter.js
-```
-
-Re-run lint on file changes:
-
-```bash
-npx design-lint src --watch
-```
-
-### Vue single-file components
-
-Vue `.vue` files are parsed so both template and script code are linted alongside
-`<style>` blocks. SCSS, Sass, and Less syntax inside `<style>` sections is
-supported via the block's `lang` attribute. No additional configuration is
-required.
-
-```bash
-npx design-lint src/components/App.vue
-```
-
-### Svelte style bindings
-
-When linting Svelte components, the linter understands both `style` attributes
-and `style:` directives. Declarations like
-
-```svelte
-<div style="margin: {5}px; color: {'#fff'}" />
-<div style:margin-left={5}px style:color={'#fff'} />
-```
-
-are parsed so each individual style is checked against the configured rules.
-`<style>` blocks may also use `lang="scss"`, `lang="sass"`, or `lang="less"`.
-
-### Inline style attributes
-
-String `style="..."` attributes in HTML and JSX are parsed as CSS declarations
-so token rules apply to raw inline styles.
-
-### Tagged template literals
-
-CSS inside JavaScript/TypeScript tagged template literals such as
-`styled.div\`color: red;\`` and `css\`...\`` or `tw\`...\`` is linted. Only
-static template strings without `${}` interpolations are analyzed. Configure the
-`patterns` field to include or exclude JS/TS sources when needed.
-
-Flag deprecated tokens or components and automatically replace them with [`design-system/deprecation`](rules/design-system/deprecation.md):
-
-```json
-// docs/examples/designlint.config.json
-{
-  "tokens": {
-    "deprecations": { "old": { "replacement": "new" } }
-  },
-  "rules": { "design-system/deprecation": "error" }
-}
-```
-
-```css
-/* button.css */
-.btn {
-  color: old;
-}
-```
-
-```bash
-npx design-lint button.css --fix
-```
-
-The [`design-system/deprecation`](rules/design-system/deprecation.md) rule replaces `old` with `new` when run with `--fix`.
-
-## Suggestions
-
-Design Lint will suggest the closest token when it encounters a typo:
-
-```text
-a.css
-  1:1  error  Unexpected spacing var(--space-scale-10o) Did you mean `--space-scale-100`?  design-token/spacing
-```
-
-## Environment variables
-
-Set `DESIGNLINT_PROFILE=1` to print how long the initial file scan takes. This can help profile large projects.
-
-```bash
-DESIGNLINT_PROFILE=1 npx design-lint src
-# Scanned 42 files in 120.34ms
-```
-
-## Troubleshooting
-
-### Config file not found
-
-If the CLI reports `Config file not found`, run `npx design-lint init` to create a configuration file.
+- [Configuration](configuration.md)
+- [Formatters](formatters.md)
+- [CI integration](ci.md)

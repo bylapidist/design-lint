@@ -1,49 +1,30 @@
 # Formatters
 
-`@lapidist/design-lint` uses formatter functions to turn lint results into human-
-or machine-readable output. A formatter receives an array of `LintResult`
-objects and an optional `useColor` flag and returns a string to print.
+Formatters control how lint results are displayed. Design Lint ships with:
 
-## Built-in formatters
+| Name | Description |
+| ---- | ----------- |
+| `stylish` | human‑readable terminal output (default) |
+| `json` | structured data for further processing |
+| `sarif` | report for GitHub code scanning |
 
-- `stylish` – default, colorized summary intended for terminals. Files without
-  problems are prefixed with `[OK]`.
-- `json` – raw JSON results, useful for piping to other tools.
-- `sarif` – emits a [SARIF 2.1.0](https://sarifweb.azurewebsites.net/) log for CI systems.
+Select a formatter with `--format`:
 
-Select a formatter with the `--format` CLI option or the `getFormatter(name)` API.
+```bash
+npx design-lint src --format json
+```
 
-## Creating a custom formatter
+Custom formatters export a default function that receives an array of results and returns a string.
 
-You can supply your own formatter module without modifying
-`@lapidist/design-lint`.
+```js
+// minimal-formatter.js
+export default function(results) {
+  return results.map(r => r.filePath).join('\n');
+}
+```
 
-1. **Create the formatter module**:
+Use a custom formatter by path:
 
-   ```ts
-   // minimal-formatter.ts
-   import type { LintResult } from '@lapidist/design-lint';
-
-   export default function minimal(results: LintResult[]): string {
-     return results.map((r) => `${r.filePath}: ${r.messages.length}`).join('\n');
-   }
-   ```
-
-2. **Use the formatter from the CLI**:
-
-   ```bash
-   npx design-lint src --format ./minimal-formatter.ts
-   ```
-
-3. **Or from the API**:
-
-   ```ts
-   import { getFormatter } from '@lapidist/design-lint';
-
-   const formatter = await getFormatter('./minimal-formatter.ts');
-   console.log(formatter(results));
-   ```
-
-Formatters receive a `useColor` boolean as the second argument. Respect this
-flag if your formatter supports colored output. For inspiration, see the
-built-in formatter implementations in [`src/formatters`](https://github.com/lapidist/design-lint/tree/main/src/formatters).
+```bash
+npx design-lint src --format ./minimal-formatter.js
+```

@@ -1,15 +1,13 @@
 # Continuous Integration
 
-Guidance on running `@lapidist/design-lint` in CI environments.
+Use Design Lint in CI to prevent design regressions.
 
 ## GitHub Actions
 
-The following workflow caches dependencies and the linter's persistent cache, then uploads results in the [SARIF](formatters.md#sarif) format for GitHub code scanning.
-
 ```yaml
-name: Design lint
+# .github/workflows/lint.yml
+name: Lint
 on: [push, pull_request]
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -18,16 +16,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - uses: actions/cache@v4
-        with:
-          path: .designlintcache
-          key: design-lint-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci
-      - run: npx design-lint src --format sarif --output design-lint.sarif --cache
-      - uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: design-lint.sarif
+      - run: npx design-lint src --max-warnings 0
 ```
 
-The `--format sarif` option enables integration with GitHub's code scanning alerts. Caching improves performance by avoiding reprocessing unchanged files.
+## GitLab CI
+
+```yaml
+# .gitlab-ci.yml
+lint:
+  image: node:22
+  script:
+    - npm ci
+    - npx design-lint src --format json --output lint.json
+  artifacts:
+    paths:
+      - lint.json
+```
+
+## Tips
+
+- Cache `node_modules` or the `.designlintcache` file to speed up repeated runs.
+- Fail the job on warnings with `--max-warnings 0`.

@@ -1,34 +1,34 @@
 # Rules
 
-Design-lint includes several built-in rules categorized by domain.
+Rules are grouped by category. Enable them individually in the configuration file.
 
-## Design System
+## Design system
 
-- [component-prefix](./design-system/component-prefix)
-- [component-usage](./design-system/component-usage)
-- [deprecation](./design-system/deprecation)
-- [icon-usage](./design-system/icon-usage)
-- [import-path](./design-system/import-path)
-- [no-inline-styles](./design-system/no-inline-styles)
-- [no-unused-tokens](./design-system/no-unused-tokens)
-- [variant-prop](./design-system/variant-prop)
+- [component-prefix](./design-system/component-prefix.md)
+- [component-usage](./design-system/component-usage.md)
+- [deprecation](./design-system/deprecation.md)
+- [icon-usage](./design-system/icon-usage.md)
+- [import-path](./design-system/import-path.md)
+- [no-inline-styles](./design-system/no-inline-styles.md)
+- [no-unused-tokens](./design-system/no-unused-tokens.md)
+- [variant-prop](./design-system/variant-prop.md)
 
-## Design Token
+## Design token
 
-- [animation](./design-token/animation)
-- [blur](./design-token/blur)
-- [border-color](./design-token/border-color)
-- [border-radius](./design-token/border-radius)
-- [border-width](./design-token/border-width)
-- [box-shadow](./design-token/box-shadow)
-- [colors](./design-token/colors)
-- [duration](./design-token/duration)
-- [font-family](./design-token/font-family)
-- [font-size](./design-token/font-size)
-- [font-weight](./design-token/font-weight)
-- [letter-spacing](./design-token/letter-spacing)
-- [line-height](./design-token/line-height)
-- [opacity](./design-token/opacity)
-- [outline](./design-token/outline)
-- [spacing](./design-token/spacing)
-- [z-index](./design-token/z-index)
+- [animation](./design-token/animation.md)
+- [blur](./design-token/blur.md)
+- [border-color](./design-token/border-color.md)
+- [border-radius](./design-token/border-radius.md)
+- [border-width](./design-token/border-width.md)
+- [box-shadow](./design-token/box-shadow.md)
+- [colors](./design-token/colors.md)
+- [duration](./design-token/duration.md)
+- [font-family](./design-token/font-family.md)
+- [font-size](./design-token/font-size.md)
+- [font-weight](./design-token/font-weight.md)
+- [letter-spacing](./design-token/letter-spacing.md)
+- [line-height](./design-token/line-height.md)
+- [opacity](./design-token/opacity.md)
+- [outline](./design-token/outline.md)
+- [spacing](./design-token/spacing.md)
+- [z-index](./design-token/z-index.md)
