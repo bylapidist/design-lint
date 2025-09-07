@@ -1,5 +1,49 @@
 # @lapidist/design-lint
 
+## 4.8.3
+
+### Patch Changes
+
+- 81331ea: use array type shorthand to satisfy eslint array-type rule
+- 909421c: enforce consistent-type-assertions rule to ban type casting
+- a59283c: replace boolean casting with explicit checks in cache manager and no-inline-styles rule
+- 81331ea: refactor cache and file services to modules
+- a59283c: refactor cache manager to import fs/promises directly instead of aliasing
+- 81331ea: ensure watcher callbacks handle async promises
+- 81331ea: fix unsafe JSON parsing and parser outputs to satisfy no-unsafe-assignment
+- 81331ea: fix: type unsafe member accesses flagged by eslint
+- 81331ea: replace regex tests with `String#includes`
+- 81331ea: replace logical OR defaults with nullish coalescing operators
+- 81331ea: replace regex and index checks with `startsWith`/`endsWith` to satisfy lint rule
+- a59283c: refactor config loader to merge results without type assertions
+- a59283c: guard parser-service and sarif formatter to avoid non-null assertions
+- 81331ea: remove unnecessary String/Number conversions in token rules
+- 81331ea: fix remaining lint errors for strict type-checked config
+- 81331ea: refactor template literals to use explicit string conversions
+- a59283c: type blur rule options to remove casts
+- a59283c: type token-border-radius rule options and drop casts
+- a59283c: type border-width rule options so units are read without casts
+- a59283c: remove cache-manager error casts
+- a59283c: type CLI package.json parsing to avoid casts
+- a59283c: type color rule options to remove casts
+- a59283c: refactor component-prefix rule to use typed options instead of casting
+- a59283c: type component-usage rule options to remove cast
+- a59283c: type duration tokens in token-duration rule to remove casts
+- a59283c: type execute options to remove casts
+- a59283c: type guard dynamic formatter imports to remove casts
+- a59283c: type icon-usage rule options to remove cast
+- a59283c: type import-path rule options
+- a59283c: type linter config tokens to avoid casts
+- a59283c: type no-inline-styles rule options and drop casts
+- a59283c: type parser-service AST helpers and option parsing to remove casts
+- a59283c: type plugin loading to remove casts
+- a59283c: type spacing rule options, removing runtime casts
+- a59283c: type token loader to avoid casts
+- a59283c: type token schema to avoid casts
+- a59283c: type token tracker rule options to remove casts
+- a59283c: type variant-prop rule options to remove casts
+- a59283c: type watch mode options so output and report paths don't need casts
+
 ## 4.8.2
 
 ### Patch Changes
