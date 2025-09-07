@@ -56,17 +56,17 @@ For more background, read the [introductory blog post](https://lapidist.net/arti
 
 ## Documentation
 
-The complete documentation is available under the [`docs/`](docs) directory and on [design-lint.lapidist.net](https://design-lint.lapidist.net/).
+The complete documentation is available under the [`docs/`](docs) directory and on [design-lint.lapidist.net](https://design-lint.lapidist.net/). See [docs/index.md](docs/index.md) for the documentation landing page.
 
-Key sections:
-
-- [Usage](docs/usage.md) – CLI flags, watch mode and caching
-- [Configuration](docs/configuration.md) – tokens, rule levels and plugin activation
-- [Rules](docs/rules/index.md) – rule reference grouped by category
-- [Formatters](docs/formatters.md) – built‑in and custom output formats
-- [CI](docs/ci.md) – examples for GitHub Actions and other providers
-- [API](docs/api.md) – programmatic usage with TypeScript types
-- [Architecture](docs/architecture.md) – how the linter works internally
+| Document | Purpose |
+| --- | --- |
+| [Usage](docs/usage.md) | Explains CLI flags, watch mode and caching. |
+| [Configuration](docs/configuration.md) | Details tokens, rule levels and plugin activation. |
+| [Rules](docs/rules/index.md) | Provides a rule reference grouped by category. |
+| [Formatters](docs/formatters.md) | Describes built-in and custom output formats. |
+| [CI](docs/ci.md) | Includes examples for GitHub Actions and other providers. |
+| [API](docs/api.md) | Shows programmatic usage with TypeScript types. |
+| [Architecture](docs/architecture.md) | Explains how the linter works internally. |
 
 ## Contributing
 
