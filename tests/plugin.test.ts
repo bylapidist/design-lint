@@ -85,3 +85,11 @@ test('throws when two plugins define the same rule name', async () => {
     },
   );
 });
+
+test('getPluginPaths returns resolved plugin paths', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
+  const linter = new Linter({ plugins: [pluginPath] });
+  await linter.lintText('const a = 1;', 'file.ts');
+  const paths = await linter.getPluginPaths();
+  assert.deepEqual(paths, [pluginPath]);
+});

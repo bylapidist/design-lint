@@ -10,7 +10,7 @@ flowchart TD
   Linter --> ParserService
   Linter --> TokenTracker
   Linter --> CacheManager
-  RuleRegistry --> PluginLoader
+  RuleRegistry --> PluginManager
   Linter --> FileScanner
   FileScanner --> Files
   Linter --> Rules
@@ -42,10 +42,10 @@ are collected and applied after all listeners finish.
 ## Plugin Loading
 
 Plugins extend the rule set by exporting an object like `{ rules: RuleModule[] }`.
-[`plugin-loader.ts`](../src/core/plugin-loader.ts) resolves each plugin relative
-to the config file and uses dynamic `import` when necessary. Each rule is
-validated for shape and uniqueness before being added to the rule map. Loading
-errors clearly identify the plugin and suggest remediation.
+[`plugin-manager.ts`](../src/core/plugin-manager.ts) resolves each plugin
+relative to the config file and uses dynamic `import` when necessary. Each rule
+is validated for shape and uniqueness before being added to the rule map.
+Loading errors clearly identify the plugin and suggest remediation.
 
 ## File Scanning and Ignoring
 
