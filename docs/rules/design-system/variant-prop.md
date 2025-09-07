@@ -1,10 +1,10 @@
 # design-system/variant-prop
 
-Ensures that specified components use only allowed values for their variant prop.
-
-Works with React, Vue, Svelte, and Web Components.
+## Summary
+Ensures that specified components use only allowed values for their variant prop. Works with React, Vue, Svelte, and Web Components.
 
 ## Configuration
+Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
 
 ```json
 {
@@ -17,10 +17,11 @@ Works with React, Vue, Svelte, and Web Components.
 }
 ```
 
-### Options
-
+## Options
 - `components` (`Record<string, string[]>`): map of component names to their allowed variant values.
 - `prop` (`string`, default: `"variant"`): prop name to validate.
+
+This rule is not auto-fixable.
 
 ## Examples
 
@@ -52,3 +53,10 @@ Works with React, Vue, Svelte, and Web Components.
 ```tsx
 <Alert tone="info" />
 ```
+
+## When Not To Use
+If components freely accept any variant values, disable this rule.
+
+## Related Rules
+- [design-system/component-usage](./component-usage.md)
+- [design-system/component-prefix](./component-prefix.md)

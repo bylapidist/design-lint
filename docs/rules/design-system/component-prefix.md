@@ -1,10 +1,10 @@
 # design-system/component-prefix
 
-Enforces a prefix for design system component names.
-
-Works with React, Vue, Svelte, and Web Components.
+## Summary
+Enforces a prefix for design system component names. Works with React, Vue, Svelte, and Web Components.
 
 ## Configuration
+Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
 
 ```json
 {
@@ -17,9 +17,10 @@ Works with React, Vue, Svelte, and Web Components.
 }
 ```
 
-### Options
-
+## Options
 - `prefix` (`string`, default: `"DS"`): required prefix for component names.
+
+*This rule is auto-fixable.*
 
 ## Examples
 
@@ -34,3 +35,10 @@ Works with React, Vue, Svelte, and Web Components.
 ```tsx
 <DSButton />
 ```
+
+## When Not To Use
+If your project does not enforce a component prefix, disable this rule.
+
+## Related Rules
+- [design-system/component-usage](./component-usage.md)
+- [design-system/import-path](./import-path.md)

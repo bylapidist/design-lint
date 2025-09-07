@@ -1,8 +1,10 @@
 # design-token/outline
 
+## Summary
 Enforces `outline` values to match the outline tokens defined in your configuration.
 
 ## Configuration
+Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
 
 ```json
 {
@@ -12,6 +14,11 @@ Enforces `outline` values to match the outline tokens defined in your configurat
   "rules": { "design-token/outline": "error" }
 }
 ```
+
+## Options
+No additional options.
+
+This rule is not auto-fixable.
 
 ## Examples
 
@@ -26,3 +33,10 @@ Enforces `outline` values to match the outline tokens defined in your configurat
 ```css
 .box { outline: 2px solid #000; }
 ```
+
+## When Not To Use
+If outline styles are not tokenized, disable this rule.
+
+## Related Rules
+- [design-token/border-color](./border-color.md)
+- [design-token/border-width](./border-width.md)

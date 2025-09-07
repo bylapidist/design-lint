@@ -1,8 +1,10 @@
 # design-token/border-color
 
+## Summary
 Enforces `border-color` values to match the border color tokens defined in your configuration.
 
 ## Configuration
+Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
 
 ```json
 {
@@ -12,6 +14,11 @@ Enforces `border-color` values to match the border color tokens defined in your 
   "rules": { "design-token/border-color": "error" }
 }
 ```
+
+## Options
+No additional options.
+
+This rule is not auto-fixable.
 
 ## Examples
 
@@ -26,3 +33,10 @@ Enforces `border-color` values to match the border color tokens defined in your 
 ```css
 .box { border-color: #ffffff; }
 ```
+
+## When Not To Use
+If border colors aren't standardized through tokens, disable this rule.
+
+## Related Rules
+- [design-token/colors](./colors.md)
+- [design-token/border-width](./border-width.md)
