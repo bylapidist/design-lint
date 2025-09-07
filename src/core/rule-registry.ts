@@ -32,7 +32,7 @@ export class RuleRegistry {
       options: unknown;
       severity: 'error' | 'warn';
     }[] = [];
-    const ruleConfig = (this.config.rules || {}) as Record<string, unknown>;
+    const ruleConfig: Record<string, unknown> = this.config.rules ?? {};
     const unknown: string[] = [];
     for (const [name, setting] of Object.entries(ruleConfig)) {
       const entry = this.ruleMap.get(name);

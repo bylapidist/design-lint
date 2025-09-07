@@ -1,12 +1,10 @@
-import type { PluginModule } from '../../src/core/types.ts';
-
-const plugin: PluginModule = {
+const plugin = {
   rules: [
     {
       name: '',
-      meta: {} as any,
-      create: 42 as any,
-    } as any,
+      meta: {},
+      create: 42,
+    },
   ],
 };
 

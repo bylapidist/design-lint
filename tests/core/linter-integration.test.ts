@@ -1,17 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { Linter } from '../../src/core/linter.ts';
-import type { LintResult } from '../../src/core/types.ts';
 
 test('Linter integrates registry, parser and trackers', async () => {
   const linter = new Linter({
     tokens: {},
     rules: { 'design-token/colors': 'error' },
   });
-  type Internal = { lintText: (t: string, f: string) => Promise<LintResult> };
-  const res = await (linter as unknown as Internal).lintText(
-    'a{color:#fff;}',
-    'file.css',
-  );
+  const dir = await fs.mkdtemp(path.join(process.cwd(), 'linter-int-'));
+  const file = path.join(dir, 'file.css');
+  await fs.writeFile(file, 'a{color:#fff;}');
+  const res = await linter.lintFile(file);
   assert.equal(res.messages.length, 1);
 });

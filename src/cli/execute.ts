@@ -5,6 +5,15 @@ import type { LintResult } from '../core/types.js';
 import type { Cache } from '../core/cache.js';
 import type { Linter } from '../core/linter.js';
 
+export interface ExecuteOptions {
+  fix?: boolean;
+  quiet?: boolean;
+  output?: string;
+  format?: string;
+  report?: string;
+  maxWarnings?: number;
+}
+
 export interface ExecuteServices {
   formatter: (results: LintResult[], useColor?: boolean) => string;
   linterRef: { current: Linter };
@@ -17,7 +26,7 @@ export interface ExecuteServices {
 
 export async function executeLint(
   targets: string[],
-  opts: Record<string, unknown>,
+  opts: ExecuteOptions,
   services: ExecuteServices,
 ): Promise<{ results: LintResult[]; exitCode: number; ignoreFiles: string[] }> {
   const start = performance.now();
@@ -27,21 +36,21 @@ export async function executeLint(
     warning,
   } = await services.linterRef.current.lintFiles(
     targets,
-    opts.fix as boolean | undefined,
+    opts.fix,
     services.cache,
     services.ignorePath ? [services.ignorePath] : [],
     services.cacheLocation,
   );
   const duration = performance.now() - start;
-  if (warning && !(opts.quiet as boolean)) console.warn(warning);
+  if (warning && !opts.quiet) console.warn(warning);
   const output = services.formatter(results, services.useColor);
   if (opts.output) {
-    await writeFileAtomic(opts.output as string, output);
-  } else if (!(opts.quiet as boolean)) {
+    await writeFileAtomic(opts.output, output);
+  } else if (!opts.quiet) {
     console.log(output);
   }
-  const fmt = opts.format as string | undefined;
-  if (!(opts.quiet as boolean) && (fmt === undefined || fmt === 'stylish')) {
+  const fmt = opts.format;
+  if (!opts.quiet && (fmt === undefined || fmt === 'stylish')) {
     const time = (duration / 1000).toFixed(2);
     const count = results.length;
     const stat = `\nLinted ${count} file${count === 1 ? '' : 's'} in ${time}s`;
@@ -49,7 +58,7 @@ export async function executeLint(
   }
   if (opts.report) {
     await writeFileAtomic(
-      opts.report as string,
+      opts.report,
       JSON.stringify({ results, ignoreFiles }, null, 2),
     );
   }
@@ -61,7 +70,7 @@ export async function executeLint(
       count + r.messages.filter((m) => m.severity === 'warn').length,
     0,
   );
-  const maxWarnings = opts.maxWarnings as number | undefined;
+  const maxWarnings = opts.maxWarnings;
   let exitCode = hasErrors ? 1 : 0;
   if (maxWarnings !== undefined && warningCount > maxWarnings) exitCode = 1;
   services.state.ignoreFilePaths = ignoreFiles;

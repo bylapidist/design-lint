@@ -48,9 +48,10 @@ export function sarifFormatter(
       }
     }
     for (const msg of res.messages) {
+      const existingIndex = ruleMap.get(msg.ruleId);
       let ruleIndex: number;
-      if (ruleMap.has(msg.ruleId)) {
-        ruleIndex = ruleMap.get(msg.ruleId)!;
+      if (existingIndex !== undefined) {
+        ruleIndex = existingIndex;
       } else {
         ruleIndex = sarif.runs[0].tool.driver.rules.length;
         ruleMap.set(msg.ruleId, ruleIndex);

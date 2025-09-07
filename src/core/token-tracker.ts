@@ -41,19 +41,15 @@ export class TokenTracker {
   configure(
     rules: {
       rule: { name: string };
-      options: unknown;
+      options?: unknown;
       severity: 'error' | 'warn';
     }[],
   ): void {
-    const unusedRules = rules.filter(
-      (e) => e.rule.name === 'design-system/no-unused-tokens',
-    );
+    const unusedRules = rules.filter(isUnusedTokenRule);
     this.unusedTokenRules = unusedRules.map((u) => ({
       ruleId: u.rule.name,
       severity: u.severity,
-      ignored: new Set(
-        ((u.options as { ignore?: string[] }) || {}).ignore || [],
-      ),
+      ignored: new Set(u.options?.ignore ?? []),
     }));
   }
 
@@ -103,8 +99,8 @@ function collectTokenValues(tokens?: DesignTokens): Set<string> {
       for (const t of defs) {
         if (typeof t === 'string' && !t.includes('*')) values.add(t);
       }
-    } else if (defs && typeof defs === 'object') {
-      for (const val of Object.values(defs as Record<string, unknown>)) {
+    } else if (isRecord(defs)) {
+      for (const val of Object.values(defs)) {
         if (typeof val === 'string') {
           const m = val.match(/^var\((--[^)]+)\)$/);
           values.add(m ? m[1] : val);
@@ -115,4 +111,26 @@ function collectTokenValues(tokens?: DesignTokens): Set<string> {
     }
   }
   return values;
+}
+
+function isUnusedTokenRule(e: {
+  rule: { name: string };
+  options?: unknown;
+  severity: 'error' | 'warn';
+}): e is {
+  rule: { name: 'design-system/no-unused-tokens' };
+  options?: { ignore?: string[] };
+  severity: 'error' | 'warn';
+} {
+  if (e.rule.name !== 'design-system/no-unused-tokens') return false;
+  if (!isRecord(e.options)) return true;
+  return (
+    e.options.ignore === undefined ||
+    (Array.isArray(e.options.ignore) &&
+      e.options.ignore.every((t): t is string => typeof t === 'string'))
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }

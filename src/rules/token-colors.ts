@@ -43,7 +43,7 @@ interface ColorRuleOptions {
   allow?: ColorFormat[];
 }
 
-export const colorsRule: RuleModule = {
+export const colorsRule: RuleModule<ColorRuleOptions> = {
   name: 'design-token/colors',
   meta: { description: 'disallow raw colors' },
   create(context) {
@@ -103,8 +103,8 @@ export const colorsRule: RuleModule = {
     const allowed = new Set(
       Object.values(colorTokens).map((value) => value.toLowerCase()),
     );
-    const opts = (context.options as ColorRuleOptions) || {};
-    const allowFormats = new Set(opts.allow || []);
+    const opts = context.options ?? {};
+    const allowFormats = new Set(opts.allow ?? []);
     const parserFormats = new Set<ColorFormat>([
       'hex',
       'rgb',

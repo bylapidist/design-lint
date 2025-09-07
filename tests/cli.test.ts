@@ -85,7 +85,14 @@ test('--init-format overrides detection', () => {
 
 test('--init-format supports all formats', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const formats = ['js', 'cjs', 'mjs', 'ts', 'mts', 'json'] as const;
+  const formats: readonly ['js', 'cjs', 'mjs', 'ts', 'mts', 'json'] = [
+    'js',
+    'cjs',
+    'mjs',
+    'ts',
+    'mts',
+    'json',
+  ];
   for (const fmt of formats) {
     const dir = makeTmpDir();
     const res = spawnSync(
@@ -110,8 +117,12 @@ test('CLI expands glob patterns with braces', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
-  const out = JSON.parse(res.stdout) as { filePath: string }[];
-  const files = out.map((r) => path.relative(dir, r.filePath)).sort();
+  const out = JSON.parse(res.stdout);
+  const files = Array.isArray(out)
+    ? out
+        .map((r: { filePath: string }) => path.relative(dir, r.filePath))
+        .sort()
+    : [];
   assert.deepEqual(files, ['src/a.module.css', 'src/b.module.scss']);
 });
 
@@ -968,10 +979,11 @@ test('CLI re-runs on file change in watch mode', async () => {
 });
 
 test('CLI ignores --output/--report files in watch mode', async () => {
-  for (const [flag, name] of [
+  const pairs: ReadonlyArray<[string, string]> = [
     ['--output', 'out.json'],
     ['--report', 'report.json'],
-  ] as const) {
+  ];
+  for (const [flag, name] of pairs) {
     const dir = makeTmpDir();
     fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
     fs.writeFileSync(

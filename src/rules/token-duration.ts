@@ -12,9 +12,7 @@ export const durationRule: RuleModule = {
   name: 'design-token/duration',
   meta: { description: 'enforce duration tokens' },
   create(context) {
-    const durationTokens = (
-      context.tokens as { durations?: unknown } | undefined
-    )?.durations as Record<string, unknown> | (string | RegExp)[] | undefined;
+    const durationTokens = context.tokens.durations;
     if (
       !durationTokens ||
       (Array.isArray(durationTokens)

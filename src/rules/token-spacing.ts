@@ -8,7 +8,12 @@ import {
 } from '../utils/token-match.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const spacingRule: RuleModule = {
+interface SpacingOptions {
+  base?: number;
+  units?: string[];
+}
+
+export const spacingRule: RuleModule<SpacingOptions> = {
   name: 'design-token/spacing',
   meta: { description: 'enforce spacing scale' },
   create(context) {
@@ -44,9 +49,7 @@ export const spacingRule: RuleModule = {
       };
     }
     const allowed = new Set(Object.values(spacingTokens));
-    const opts =
-      (context.options as { base?: number; units?: string[] } | undefined) ??
-      {};
+    const opts = context.options ?? {};
     const base = opts.base ?? 4;
     const isAllowed = (n: number) => allowed.has(n) || n % base === 0;
     const allowedUnits = new Set(

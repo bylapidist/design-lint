@@ -10,16 +10,24 @@ import { Linter } from '../core/linter.js';
 import type { Config } from '../core/linter.js';
 import type { Cache } from '../core/cache.js';
 import type { Ignore } from 'ignore';
-import { executeLint, type ExecuteServices } from './execute.js';
+import {
+  executeLint,
+  type ExecuteServices,
+  type ExecuteOptions,
+} from './execute.js';
 
 export interface WatchState {
   pluginPaths: string[];
   ignoreFilePaths: string[];
 }
 
+export interface WatchCliOptions extends ExecuteOptions {
+  config?: string;
+}
+
 export interface WatchOptions {
   targets: string[];
-  options: Record<string, unknown>;
+  options: WatchCliOptions;
   config: Config;
   linterRef: { current: Linter };
   refreshIgnore: () => Promise<void>;
@@ -45,7 +53,7 @@ export interface WatchServices extends ExecuteServices {
 
 export async function watchMode(
   targets: string[],
-  options: Record<string, unknown>,
+  options: WatchCliOptions,
   services: WatchServices,
 ) {
   const reportError = (err: unknown) => {
@@ -110,10 +118,10 @@ export async function startWatch(ctx: WatchOptions) {
     ...ignoreFilePaths.filter((p) => fs.existsSync(p)),
   );
   const outputPath = options.output
-    ? realpathIfExists(path.resolve(options.output as string))
+    ? realpathIfExists(path.resolve(options.output))
     : undefined;
   const reportPath = options.report
-    ? realpathIfExists(path.resolve(options.report as string))
+    ? realpathIfExists(path.resolve(options.report))
     : undefined;
   const watcher = chokidar.watch(watchPaths, {
     ignored: (p: string) => {
@@ -160,10 +168,7 @@ export async function startWatch(ctx: WatchOptions) {
         ? createRequire(config.configPath)
         : createRequire(import.meta.url);
       for (const p of pluginPaths) delete req.cache?.[p];
-      config = await loadConfig(
-        process.cwd(),
-        options.config as string | undefined,
-      );
+      config = await loadConfig(process.cwd(), options.config);
       linterRef.current = new Linter(config);
       await refreshIgnore();
       cache?.clear();

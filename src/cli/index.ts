@@ -27,10 +27,11 @@ function initConfig(initFormat?: string) {
       const pkgPath = path.resolve(process.cwd(), 'package.json');
       if (fs.existsSync(pkgPath)) {
         try {
-          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
+          const pkgText = fs.readFileSync(pkgPath, 'utf8');
+          const pkg: {
             dependencies?: Record<string, unknown>;
             devDependencies?: Record<string, unknown>;
-          };
+          } = JSON.parse(pkgText);
           if (pkg.dependencies?.typescript || pkg.devDependencies?.typescript)
             format = 'ts';
         } catch {}
@@ -140,9 +141,8 @@ export async function run(argv = process.argv.slice(2)) {
 
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
   const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
-    version: string;
-  };
+  const pkgData = fs.readFileSync(pkgPath, 'utf8');
+  const pkg: { version: string } = JSON.parse(pkgData);
 
   const program = createProgram(pkg.version);
 

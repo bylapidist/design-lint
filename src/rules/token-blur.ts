@@ -6,7 +6,11 @@ import {
   closestToken,
 } from '../utils/token-match.js';
 
-export const blurRule: RuleModule = {
+interface BlurRuleOptions {
+  units?: string[];
+}
+
+export const blurRule: RuleModule<BlurRuleOptions> = {
   name: 'design-token/blur',
   meta: { description: 'enforce blur tokens' },
   create(context) {
@@ -59,13 +63,9 @@ export const blurRule: RuleModule = {
         .filter((n): n is number => n !== null),
     );
     const allowedUnits = new Set(
-      (
-        (context.options as { units?: string[] } | undefined)?.units ?? [
-          'px',
-          'rem',
-          'em',
-        ]
-      ).map((u) => u.toLowerCase()),
+      (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
+        u.toLowerCase(),
+      ),
     );
     return {
       onCSSDeclaration(decl) {

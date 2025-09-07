@@ -1,18 +1,18 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
 
-export const componentUsageRule: RuleModule = {
+export interface ComponentUsageOptions {
+  substitutions?: Record<string, string>;
+}
+
+export const componentUsageRule: RuleModule<ComponentUsageOptions> = {
   name: 'design-system/component-usage',
   meta: {
     description:
       'disallow raw HTML elements when design system components exist',
   },
   create(context) {
-    const opts =
-      (context.options as {
-        substitutions?: Record<string, string>;
-      }) || {};
-    const subs: Record<string, string> = opts.substitutions || {};
+    const subs = context.options?.substitutions ?? {};
     const lowerSubs: Record<string, string> = {};
     for (const [key, val] of Object.entries(subs)) {
       lowerSubs[key.toLowerCase()] = val;

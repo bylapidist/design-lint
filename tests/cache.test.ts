@@ -11,10 +11,8 @@ test('loadCache loads and saves entries via flat-cache', async () => {
   const file = path.join(dir, 'cache.json');
 
   let cache = loadCache(file);
-  const entry = {
-    mtime: 1,
-    result: { filePath: 'foo', messages: [] } as LintResult,
-  };
+  const result: LintResult = { filePath: 'foo', messages: [] };
+  const entry = { mtime: 1, result };
   cache.setKey('foo', entry);
   cache.save(true);
 

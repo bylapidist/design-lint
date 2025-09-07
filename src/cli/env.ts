@@ -22,8 +22,17 @@ export interface Environment {
   getIg: () => Ignore;
 }
 
+export interface PrepareEnvironmentOptions {
+  format: string;
+  config?: string;
+  concurrency?: number;
+  cache?: boolean;
+  cacheLocation?: string;
+  ignorePath?: string;
+}
+
 export async function prepareEnvironment(
-  options: Record<string, unknown>,
+  options: PrepareEnvironmentOptions,
 ): Promise<Environment> {
   const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
     import('../config/loader.js'),
@@ -31,13 +40,10 @@ export async function prepareEnvironment(
     import('../core/ignore.js'),
   ]);
 
-  const formatter = await getFormatter(options.format as string);
-  let config = await loadConfig(
-    process.cwd(),
-    options.config as string | undefined,
-  );
+  const formatter = await getFormatter(options.format);
+  let config = await loadConfig(process.cwd(), options.config);
   if (options.concurrency !== undefined) {
-    config.concurrency = options.concurrency as number;
+    config.concurrency = options.concurrency;
   }
   if (config.configPath) {
     config.configPath = realpathIfExists(config.configPath);
@@ -46,16 +52,13 @@ export async function prepareEnvironment(
   const pluginPaths = await linterRef.current.getPluginPaths();
 
   const cacheLocation = options.cache
-    ? path.resolve(
-        process.cwd(),
-        (options.cacheLocation as string) ?? '.designlintcache',
-      )
+    ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
   const cache = cacheLocation ? loadCache(cacheLocation) : undefined;
 
   let ignorePath: string | undefined;
   if (options.ignorePath) {
-    const resolved = path.resolve(options.ignorePath as string);
+    const resolved = path.resolve(options.ignorePath);
     if (!fs.existsSync(resolved)) {
       throw new Error(`Ignore file not found: "${relFromCwd(resolved)}"`);
     }
@@ -77,7 +80,7 @@ export async function prepareEnvironment(
   };
   await refreshIgnore();
 
-  const state = { pluginPaths, ignoreFilePaths: [] as string[] };
+  const state: Environment['state'] = { pluginPaths, ignoreFilePaths: [] };
 
   return {
     formatter,

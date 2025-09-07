@@ -31,16 +31,13 @@ export class ParserService {
     const listeners = enabled.map(({ rule, options, severity }) => {
       ruleDescriptions[rule.name] = rule.meta.description;
       const themes =
-        options &&
-        typeof options === 'object' &&
-        options !== null &&
-        Array.isArray((options as { themes?: unknown }).themes)
-          ? ((options as { themes?: string[] }).themes as string[])
+        isRecord(options) && isStringArray(options.themes)
+          ? options.themes
           : undefined;
       const tokens = mergeTokens(this.tokensByTheme, themes);
       const ctx: RuleContext = {
         filePath,
-        tokens: tokens as DesignTokens,
+        tokens,
         options,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
       };
@@ -100,11 +97,8 @@ async function lintVue(
     visit(source);
   }
   for (const style of descriptor.styles) {
-    const decls = parseCSS(
-      style.content,
-      messages,
-      style.lang as string | undefined,
-    );
+    const lang = typeof style.lang === 'string' ? style.lang : undefined;
+    const decls = parseCSS(style.content, messages, lang);
     for (const decl of decls) {
       for (const l of listeners) l.onCSSDeclaration?.(decl);
     }
@@ -117,9 +111,9 @@ async function lintSvelte(
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
 ): Promise<void> {
-  const { parse } = (await import('svelte/compiler')) as {
-    parse: typeof svelteParse;
-  };
+  const { parse }: { parse: typeof svelteParse } = await import(
+    'svelte/compiler'
+  );
   const ast = parse(text);
   const scripts: string[] = [];
   if (ast.instance)
@@ -149,9 +143,9 @@ async function lintSvelte(
     let content = '';
     for (const part of attr.value) {
       if (part.type === 'Text') content += part.data ?? '';
-      else if (part.type === 'MustacheTag') {
+      else if (part.type === 'MustacheTag' && part.expression) {
         const i = exprs.length;
-        exprs.push(text.slice(part.expression!.start, part.expression!.end));
+        exprs.push(text.slice(part.expression.start, part.expression.end));
         content += `__EXPR_${i}__`;
       }
     }
@@ -172,42 +166,34 @@ async function lintSvelte(
     return decls;
   };
   const walk = (node: unknown): void => {
-    const n = node as { attributes?: unknown[]; children?: unknown[] };
-    if (!n) return;
-    for (const attrRaw of n.attributes ?? []) {
-      const attr = attrRaw as {
-        type: string;
-        name: string;
-        start: number;
-        end: number;
-        value: Array<{
-          type: string;
-          data?: string;
-          expression?: { start: number; end: number };
-        }>;
-      };
-      if (attr.type === 'Attribute' && attr.name === 'style') {
-        styleDecls.push(...extractStyleAttribute(attr));
+    if (!isRecord(node)) return;
+    const attrs = Array.isArray(node.attributes) ? node.attributes : [];
+    for (const attrRaw of attrs) {
+      if (!isSvelteAttr(attrRaw)) continue;
+      if (attrRaw.type === 'Attribute' && attrRaw.name === 'style') {
+        styleDecls.push(...extractStyleAttribute(attrRaw));
         replacements.push({
-          start: attr.start,
-          end: attr.end,
+          start: attrRaw.start,
+          end: attrRaw.end,
           text: 'style={{}}',
         });
-      } else if (attr.type === 'StyleDirective') {
-        const value = attr.value
-          .map((v) =>
-            v.type === 'Text'
-              ? v.data
-              : text.slice(v.expression!.start, v.expression!.end),
-          )
+      } else if (attrRaw.type === 'StyleDirective') {
+        const value = attrRaw.value
+          .map((v) => {
+            if (v.type === 'Text') return v.data;
+            return v.expression
+              ? text.slice(v.expression.start, v.expression.end)
+              : '';
+          })
           .join('')
           .trim();
-        const { line, column } = getLineAndColumn(attr.start);
-        styleDecls.push({ prop: attr.name, value, line, column });
-        replacements.push({ start: attr.start, end: attr.end, text: '' });
+        const { line, column } = getLineAndColumn(attrRaw.start);
+        styleDecls.push({ prop: attrRaw.name, value, line, column });
+        replacements.push({ start: attrRaw.start, end: attrRaw.end, text: '' });
       }
     }
-    for (const child of n.children ?? []) walk(child);
+    const children = Array.isArray(node.children) ? node.children : [];
+    for (const child of children) walk(child);
   };
   walk(ast.html);
   const templateStart = ast.html?.start ?? 0;
@@ -241,12 +227,19 @@ async function lintSvelte(
   }
   if (ast.css) {
     const styleText = text.slice(ast.css.content.start, ast.css.content.end);
-    const langAttr = (
-      ast.css as unknown as {
-        attributes?: Array<{ name: string; value?: Array<{ data?: string }> }>;
-      }
-    ).attributes?.find((a) => a.name === 'lang');
-    const lang = langAttr?.value?.[0]?.data;
+    const langAttr =
+      isRecord(ast.css) && Array.isArray(ast.css.attributes)
+        ? ast.css.attributes.find(
+            (a): a is { name: string; value?: Array<{ data?: string }> } =>
+              isRecord(a) && typeof a.name === 'string' && a.name === 'lang',
+          )
+        : undefined;
+    const lang =
+      langAttr &&
+      Array.isArray(langAttr.value) &&
+      typeof langAttr.value[0]?.data === 'string'
+        ? langAttr.value[0].data
+        : undefined;
     const decls = parseCSS(styleText, messages, lang);
     for (const decl of decls) {
       for (const l of listeners) l.onCSSDeclaration?.(decl);
@@ -266,16 +259,16 @@ function lintTS(
     ts.ScriptTarget.Latest,
     true,
   );
-  const getRootTag = (expr: ts.LeftHandSideExpression): string | null => {
+  const getRootTag = (expr: ts.Expression): string | null => {
     if (ts.isIdentifier(expr)) return expr.text;
     if (
       ts.isPropertyAccessExpression(expr) ||
       ts.isElementAccessExpression(expr)
     ) {
-      return getRootTag(expr.expression as ts.LeftHandSideExpression);
+      return getRootTag(expr.expression);
     }
     if (ts.isCallExpression(expr)) {
-      return getRootTag(expr.expression as ts.LeftHandSideExpression);
+      return getRootTag(expr.expression);
     }
     return null;
   };
@@ -307,7 +300,7 @@ function lintTS(
       }
       return;
     } else if (ts.isTaggedTemplateExpression(node)) {
-      const root = getRootTag(node.tag as ts.LeftHandSideExpression);
+      const root = getRootTag(node.tag);
       if (
         root &&
         ['styled', 'css', 'tw'].includes(root) &&
@@ -362,16 +355,46 @@ function parseCSS(
       });
     });
   } catch (e: unknown) {
-    const err = e as { line?: number; column?: number; message?: string };
+    const err = isRecord(e) ? e : {};
     messages.push({
       ruleId: 'parse-error',
-      message: err.message || 'Failed to parse CSS',
+      message:
+        typeof err.message === 'string' ? err.message : 'Failed to parse CSS',
       severity: 'error',
       line: typeof err.line === 'number' ? err.line : 1,
       column: typeof err.column === 'number' ? err.column : 1,
     });
   }
   return decls;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
+
+function isSvelteAttr(value: unknown): value is {
+  type: string;
+  name: string;
+  start: number;
+  end: number;
+  value: Array<{
+    type: string;
+    data?: string;
+    expression?: { start: number; end: number };
+  }>;
+} {
+  return (
+    isRecord(value) &&
+    typeof value.type === 'string' &&
+    typeof value.name === 'string' &&
+    typeof value.start === 'number' &&
+    typeof value.end === 'number' &&
+    Array.isArray(value.value)
+  );
 }
 
 function getDisabledLines(text: string): Set<number> {

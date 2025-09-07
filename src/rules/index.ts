@@ -23,8 +23,9 @@ import { noInlineStylesRule } from './no-inline-styles.js';
 import { iconUsageRule } from './icon-usage.js';
 import { importPathRule } from './import-path.js';
 import { noUnusedTokensRule } from './no-unused-tokens.js';
+import type { RuleModule } from '../core/types.js';
 
-export const builtInRules = [
+export const builtInRules: RuleModule[] = [
   animationRule,
   blurRule,
   borderColorRule,

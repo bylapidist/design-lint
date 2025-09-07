@@ -240,19 +240,17 @@ test('loads config with multi-theme tokens', async () => {
     }),
   );
   const loaded = await loadConfig(tmp);
-  assert.equal(
-    (loaded.tokens as { light?: { colors?: { primary?: string } } })?.light
-      ?.colors?.primary,
-    '#fff',
-  );
+  const hasLight = (
+    tokens: unknown,
+  ): tokens is { light?: { colors?: { primary?: string } } } =>
+    typeof tokens === 'object' && tokens !== null && 'light' in tokens;
+  const light = hasLight(loaded.tokens) ? loaded.tokens.light : undefined;
+  assert.equal(light?.colors?.primary, '#fff');
 });
 
 test('surfaces errors thrown by ts config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
-  fs.writeFileSync(
-    configPath,
-    "throw new Error('boom'); export default {} as const;",
-  );
+  fs.writeFileSync(configPath, "throw new Error('boom'); export default {};");
   await assert.rejects(loadConfig(tmp), /boom/);
 });

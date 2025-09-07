@@ -44,7 +44,7 @@ test('respects configured concurrency limit', async () => {
   let active = 0;
   let max = 0;
   const delay = () => new Promise((r) => setTimeout(r, 10));
-  fsp.readFile = (async (...args: Parameters<typeof origRead>) => {
+  const trackedRead: typeof origRead = async (...args) => {
     active++;
     max = Math.max(max, active);
     await delay();
@@ -53,8 +53,8 @@ test('respects configured concurrency limit', async () => {
     } finally {
       active--;
     }
-  }) as typeof origRead;
-  fsp.stat = (async (...args: Parameters<typeof origStat>) => {
+  };
+  const trackedStat: typeof origStat = async (...args) => {
     active++;
     max = Math.max(max, active);
     await delay();
@@ -63,7 +63,9 @@ test('respects configured concurrency limit', async () => {
     } finally {
       active--;
     }
-  }) as typeof origStat;
+  };
+  fsp.readFile = trackedRead;
+  fsp.stat = trackedStat;
 
   const config = await loadConfig(tmp);
   const linter = new Linter(config);

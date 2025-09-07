@@ -8,7 +8,11 @@ import {
 } from '../utils/token-match.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const borderRadiusRule: RuleModule = {
+interface BorderRadiusOptions {
+  units?: string[];
+}
+
+export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
   name: 'design-token/border-radius',
   meta: { description: 'enforce border-radius tokens' },
   create(context) {
@@ -61,13 +65,9 @@ export const borderRadiusRule: RuleModule = {
         .filter((n): n is number => n !== null),
     );
     const allowedUnits = new Set(
-      (
-        (context.options as { units?: string[] } | undefined)?.units ?? [
-          'px',
-          'rem',
-          'em',
-        ]
-      ).map((u) => u.toLowerCase()),
+      (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
+        u.toLowerCase(),
+      ),
     );
     return {
       onNode(node) {
