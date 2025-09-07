@@ -24,6 +24,9 @@ export default defineConfig({
   sitemap: { hostname: 'https://design-lint.lapidist.net' },
   themeConfig: {
     logo: '/logo.svg',
+    search: {
+      provider: 'local',
+    },
     nav: [
       { text: 'GitHub', link: 'https://github.com/bylapidist/design-lint' },
       { text: 'Author', link: 'https://lapidist.net' },
