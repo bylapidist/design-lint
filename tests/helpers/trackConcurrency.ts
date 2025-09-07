@@ -1,16 +1,17 @@
 import fs from 'node:fs';
 
 const fsp = fs.promises;
-const fspAny = fsp as {
+interface FspLike {
   readFile: typeof fsp.readFile;
   stat: typeof fsp.stat;
-};
+}
+const fspAny: FspLike = fsp;
 const origRead = fspAny.readFile;
 const origStat = fspAny.stat;
 let active = 0;
 let max = 0;
 const delay = () => new Promise((r) => setTimeout(r, 10));
-fspAny.readFile = (async (...args: Parameters<typeof origRead>) => {
+const trackedRead: typeof origRead = async (...args) => {
   active++;
   max = Math.max(max, active);
   await delay();
@@ -19,8 +20,8 @@ fspAny.readFile = (async (...args: Parameters<typeof origRead>) => {
   } finally {
     active--;
   }
-}) as typeof origRead;
-fspAny.stat = (async (...args: Parameters<typeof origStat>) => {
+};
+const trackedStat: typeof origStat = async (...args) => {
   active++;
   max = Math.max(max, active);
   await delay();
@@ -29,7 +30,9 @@ fspAny.stat = (async (...args: Parameters<typeof origStat>) => {
   } finally {
     active--;
   }
-}) as typeof origStat;
+};
+fspAny.readFile = trackedRead;
+fspAny.stat = trackedStat;
 process.on('exit', () => {
   const p = process.env.CONCURRENCY_OUTPUT;
   if (p) fs.writeFileSync(p, String(max), 'utf8');

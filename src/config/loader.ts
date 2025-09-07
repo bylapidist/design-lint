@@ -66,8 +66,12 @@ export async function loadConfig(
       ? realpathIfExists(result.filepath)
       : undefined,
   };
-
-  const merged = { ...base, ...(result?.config as object | undefined) };
+  const isObject = (val: unknown): val is Record<string, unknown> =>
+    typeof val === 'object' && val !== null;
+  const merged = {
+    ...base,
+    ...(isObject(result?.config) ? result.config : {}),
+  };
   const parsed = configSchema.safeParse(merged);
   if (!parsed.success) {
     const location = result?.filepath ? ` at ${result.filepath}` : '';

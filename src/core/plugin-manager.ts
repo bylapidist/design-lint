@@ -3,7 +3,7 @@ import path from 'path';
 import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
 import type { Config } from './linter.js';
-import type { PluginModule, RuleModule } from './types.js';
+import type { RuleModule } from './types.js';
 import { realpathIfExists, relFromCwd } from '../utils/paths.js';
 
 export interface EngineErrorOptions {
@@ -76,7 +76,7 @@ export class PluginManager {
           mod = this.req(pluginSource);
         }
       } catch (e: unknown) {
-        if ((e as { code?: string }).code === 'ERR_REQUIRE_ESM') {
+        if (getErrorCode(e) === 'ERR_REQUIRE_ESM') {
           mod = await import(
             `${pathToFileURL(pluginSource).href}?t=${Date.now()}`
           );
@@ -90,15 +90,8 @@ export class PluginManager {
           });
         }
       }
-      const plugin =
-        (mod as { default?: PluginModule; plugin?: PluginModule }).default ??
-        (mod as { plugin?: PluginModule }).plugin ??
-        (mod as PluginModule);
-      if (
-        !plugin ||
-        typeof plugin !== 'object' ||
-        !Array.isArray((plugin as PluginModule).rules)
-      ) {
+      const plugin = resolvePlugin(mod);
+      if (!isRecord(plugin) || !Array.isArray(plugin.rules)) {
         throw createEngineError({
           message: `Invalid plugin "${pluginSource}": expected { rules: RuleModule[] }`,
           context: `Plugin "${pluginSource}"`,
@@ -106,18 +99,11 @@ export class PluginManager {
         });
       }
       for (const rule of plugin.rules) {
-        if (
-          !rule ||
-          typeof rule.name !== 'string' ||
-          rule.name.trim() === '' ||
-          !rule.meta ||
-          typeof rule.meta.description !== 'string' ||
-          rule.meta.description.trim() === '' ||
-          typeof rule.create !== 'function'
-        ) {
+        if (!isRuleModule(rule)) {
+          const name = getRuleName(rule) ?? '<unknown>';
           throw createEngineError({
             message:
-              `Invalid rule "${(rule as { name?: string }).name ?? '<unknown>'}" in plugin "${pluginSource}": ` +
+              `Invalid rule "${name}" in plugin "${pluginSource}": ` +
               'expected { name: string; meta: { description: string }; create: Function }',
             context: `Plugin "${pluginSource}"`,
             remediation:
@@ -138,4 +124,35 @@ export class PluginManager {
     this.pluginPaths = pluginPaths;
     return pluginPaths;
   }
+}
+
+function resolvePlugin(mod: unknown): unknown {
+  if (isRecord(mod)) return mod.default ?? mod.plugin ?? mod;
+  return mod;
+}
+
+function getErrorCode(e: unknown): string | undefined {
+  return isRecord(e) && typeof e.code === 'string' ? e.code : undefined;
+}
+
+function getRuleName(rule: unknown): string | undefined {
+  return isRecord(rule) && typeof rule.name === 'string'
+    ? rule.name
+    : undefined;
+}
+
+function isRuleModule(value: unknown): value is RuleModule {
+  return (
+    isRecord(value) &&
+    typeof value.name === 'string' &&
+    value.name.trim() !== '' &&
+    isRecord(value.meta) &&
+    typeof value.meta.description === 'string' &&
+    value.meta.description.trim() !== '' &&
+    typeof value.create === 'function'
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }

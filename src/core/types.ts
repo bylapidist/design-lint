@@ -57,19 +57,19 @@ export interface LintResult {
   ruleDescriptions?: Record<string, string>;
 }
 
-export interface RuleContext {
+export interface RuleContext<TOptions = unknown> {
   report: (msg: Omit<LintMessage, 'ruleId' | 'severity'>) => void;
   tokens: DesignTokens;
-  options?: unknown;
+  options?: TOptions;
   filePath: string;
 }
 
-export interface RuleModule {
+export interface RuleModule<TOptions = unknown> {
   name: string;
   meta: {
     description: string;
   };
-  create: (context: RuleContext) => RuleListener;
+  create(context: RuleContext<TOptions>): RuleListener;
 }
 
 export interface RuleListener {

@@ -6,21 +6,22 @@ interface ImportPathOptions {
   components?: string[];
 }
 
-export const importPathRule: RuleModule = {
+export const importPathRule: RuleModule<ImportPathOptions> = {
   name: 'design-system/import-path',
   meta: {
     description:
       'ensure design system components are imported from configured packages',
   },
   create(context) {
-    const opts = (context.options as ImportPathOptions) || {};
-    const packages = new Set(opts.packages || []);
-    const components = new Set(opts.components || []);
+    const opts: ImportPathOptions = context.options ?? {};
+    const packages = new Set(opts.packages ?? []);
+    const components = new Set(opts.components ?? []);
     return {
       onNode(node) {
         if (!ts.isImportDeclaration(node)) return;
         if (!node.importClause) return;
-        const moduleText = (node.moduleSpecifier as ts.StringLiteral).text;
+        if (!ts.isStringLiteral(node.moduleSpecifier)) return;
+        const moduleText = node.moduleSpecifier.text;
         if (packages.has(moduleText)) return;
         const reportSpecifier = (nameNode: ts.Node, name: string) => {
           const pos = nameNode

@@ -6,17 +6,16 @@ interface IconUsageOptions {
   substitutions?: Record<string, string>;
 }
 
-export const iconUsageRule: RuleModule = {
+export const iconUsageRule: RuleModule<IconUsageOptions> = {
   name: 'design-system/icon-usage',
   meta: {
     description:
       'disallow raw svg elements or non design system icon components',
   },
   create(context) {
-    const opts = (context.options as IconUsageOptions) || {};
     const subs: Record<string, string> = {
       svg: 'Icon',
-      ...(opts.substitutions || {}),
+      ...(context.options?.substitutions ?? {}),
     };
     const lowerSubs: Record<string, string> = {};
     for (const [key, val] of Object.entries(subs)) {

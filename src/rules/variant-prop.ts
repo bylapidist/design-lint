@@ -6,16 +6,15 @@ interface VariantPropOptions {
   prop?: string;
 }
 
-export const variantPropRule: RuleModule = {
+export const variantPropRule: RuleModule<VariantPropOptions> = {
   name: 'design-system/variant-prop',
   meta: {
     description:
       'ensure specified components use allowed values for their variant prop',
   },
   create(context) {
-    const opts = (context.options as VariantPropOptions) || {};
-    const components = opts.components || {};
-    const propName = opts.prop || 'variant';
+    const { components = {}, prop: propName = 'variant' } =
+      context.options ?? {};
     return {
       onNode(node) {
         if (!ts.isJsxOpeningLikeElement(node)) return;

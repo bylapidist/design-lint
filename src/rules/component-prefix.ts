@@ -5,14 +5,13 @@ interface ComponentPrefixOptions {
   prefix?: string;
 }
 
-export const componentPrefixRule: RuleModule = {
+export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
   name: 'design-system/component-prefix',
   meta: {
     description: 'enforce a prefix for design system components',
   },
   create(context) {
-    const opts = (context.options as ComponentPrefixOptions) || {};
-    const prefix = opts.prefix || 'DS';
+    const prefix = context.options?.prefix ?? 'DS';
     return {
       onNode(node) {
         if (

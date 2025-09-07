@@ -6,15 +6,14 @@ interface NoInlineStylesOptions {
   ignoreClassName?: boolean;
 }
 
-export const noInlineStylesRule: RuleModule = {
+export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
   name: 'design-system/no-inline-styles',
   meta: {
     description:
       'disallow inline style or className attributes on design system components',
   },
   create(context) {
-    const opts = (context.options as NoInlineStylesOptions) || {};
-    const ignoreClassName = !!opts.ignoreClassName;
+    const ignoreClassName = context.options?.ignoreClassName ?? false;
     return {
       onNode(node) {
         if (!ts.isJsxOpeningLikeElement(node)) return;

@@ -22,11 +22,15 @@ export interface Config {
   wrapTokensWithVar?: boolean;
 }
 
+interface ResolvedConfig extends Omit<Config, 'tokens'> {
+  tokens: DesignTokens;
+}
+
 /**
  * Lints files using built-in and plugin-provided rules.
  */
 export class Linter {
-  private config: Config;
+  private config: ResolvedConfig;
   private tokensByTheme: Record<string, DesignTokens> = {};
   private ruleRegistry: RuleRegistry;
   private parser: ParserService;
@@ -34,13 +38,13 @@ export class Linter {
 
   constructor(config: Config) {
     const normalized = normalizeTokens(
-      config.tokens as DesignTokens | Record<string, DesignTokens>,
+      config.tokens,
       config.wrapTokensWithVar ?? false,
     );
     this.tokensByTheme = normalized.themes;
     this.config = { ...config, tokens: normalized.merged };
     this.ruleRegistry = new RuleRegistry(this.config);
-    this.tokenTracker = new TokenTracker(this.config.tokens as DesignTokens);
+    this.tokenTracker = new TokenTracker(this.config.tokens);
     this.parser = new ParserService(this.tokensByTheme);
   }
 
@@ -108,7 +112,7 @@ export class Linter {
   }
 
   getTokenCompletions(): Record<string, string[]> {
-    const tokens = (this.config.tokens || {}) as DesignTokens;
+    const tokens = this.config.tokens;
     const completions: Record<string, string[]> = {};
     for (const [group, defs] of Object.entries(tokens)) {
       if (Array.isArray(defs)) {

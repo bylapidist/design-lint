@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs';
+import { stat, readFile, writeFile } from 'node:fs/promises';
 import type { Cache, CacheEntry } from './cache.js';
 import type { LintResult, LintMessage, Fix } from './types.js';
 
@@ -13,26 +13,26 @@ export class CacheManager {
     lintFn: (text: string, filePath: string) => Promise<LintResult>,
   ): Promise<LintResult> {
     try {
-      const stat = await fs.stat(filePath);
+      const statResult = await stat(filePath);
       const cached = this.cache?.getKey<CacheEntry>(filePath);
       if (
         cached &&
-        cached.mtime === stat.mtimeMs &&
-        cached.size === stat.size &&
+        cached.mtime === statResult.mtimeMs &&
+        cached.size === statResult.size &&
         !this.fix
       ) {
         return cached.result;
       }
-      const text = await fs.readFile(filePath, 'utf8');
+      const text = await readFile(filePath, 'utf8');
       let result = await lintFn(text, filePath);
-      let mtime = stat.mtimeMs;
-      let size = stat.size;
+      let mtime = statResult.mtimeMs;
+      let size = statResult.size;
       if (this.fix) {
         const output = applyFixes(text, result.messages);
         if (output !== text) {
-          await fs.writeFile(filePath, output, 'utf8');
+          await writeFile(filePath, output, 'utf8');
           result = await lintFn(output, filePath);
-          const newStat = await fs.stat(filePath);
+          const newStat = await stat(filePath);
           mtime = newStat.mtimeMs;
           size = newStat.size;
         }
@@ -41,19 +41,20 @@ export class CacheManager {
       return result;
     } catch (e: unknown) {
       this.cache?.removeKey(filePath);
-      const err = e as { message?: string };
-      return {
+      const message = e instanceof Error ? e.message : 'Failed to read file';
+      const result: LintResult = {
         filePath,
         messages: [
           {
             ruleId: 'parse-error',
-            message: err.message || 'Failed to read file',
+            message,
             severity: 'error',
             line: 1,
             column: 1,
           },
         ],
-      } as LintResult;
+      };
+      return result;
     }
   }
 
@@ -66,7 +67,7 @@ export class CacheManager {
 
 export function applyFixes(text: string, messages: LintMessage[]): string {
   const fixes: Fix[] = messages
-    .filter((m): m is LintMessage & { fix: Fix } => !!m.fix)
+    .filter((m): m is LintMessage & { fix: Fix } => m.fix !== undefined)
     .map((m) => m.fix);
   if (fixes.length === 0) return text;
   fixes.sort((a, b) => a.range[0] - b.range[0]);

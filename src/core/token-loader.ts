@@ -36,17 +36,15 @@ function normalizeSingle(tokens: DesignTokens, wrapVar: boolean): DesignTokens {
   const normalized: DesignTokens = {};
   for (const [group, defs] of Object.entries(tokens)) {
     if (Array.isArray(defs)) {
-      (normalized as Record<string, unknown>)[group] = defs;
+      normalized[group] = defs;
       continue;
     }
-    if (!defs || typeof defs !== 'object') {
-      (normalized as Record<string, unknown>)[group] = defs as unknown;
+    if (!isRecord(defs)) {
+      normalized[group] = defs;
       continue;
     }
     const map: Record<string, unknown> = {};
-    for (const [name, value] of Object.entries(
-      defs as Record<string, unknown>,
-    )) {
+    for (const [name, value] of Object.entries(defs)) {
       if (wrapVar && typeof value === 'string') {
         const trimmed = value.trim();
         if (trimmed.startsWith('var(')) {
@@ -59,7 +57,7 @@ function normalizeSingle(tokens: DesignTokens, wrapVar: boolean): DesignTokens {
         map[name] = value;
       }
     }
-    (normalized as Record<string, unknown>)[group] = map;
+    normalized[group] = map;
   }
   return normalized;
 }
@@ -75,27 +73,25 @@ export function mergeTokens(
     if (!source) continue;
     for (const [group, defs] of Object.entries(source)) {
       if (Array.isArray(defs)) {
-        const target = ((merged as Record<string, unknown>)[group] ||
-          []) as unknown[];
-        (merged as Record<string, unknown>)[group] = Array.from(
-          new Set([...target, ...defs]),
-        );
+        const existing = merged[group];
+        const target = Array.isArray(existing) ? existing : [];
+        merged[group] = Array.from(new Set([...target, ...defs]));
         continue;
       }
-      if (!defs || typeof defs !== 'object') {
-        if ((merged as Record<string, unknown>)[group] === undefined) {
-          (merged as Record<string, unknown>)[group] = defs as unknown;
+      if (!isRecord(defs)) {
+        if (merged[group] === undefined) {
+          merged[group] = defs;
         }
         continue;
       }
-      const targetMap = ((merged as Record<string, unknown>)[group] ||
-        {}) as Record<string, unknown>;
-      for (const [name, value] of Object.entries(
-        defs as Record<string, unknown>,
-      )) {
+      const existing = merged[group];
+      const targetMap: Record<string, unknown> = isRecord(existing)
+        ? existing
+        : {};
+      for (const [name, value] of Object.entries(defs)) {
         if (!(name in targetMap)) targetMap[name] = value;
       }
-      (merged as Record<string, unknown>)[group] = targetMap;
+      merged[group] = targetMap;
     }
   }
   return merged;
@@ -112,7 +108,11 @@ export function normalizeTokens(
       themes[theme] = normalizeSingle(defs, wrapVar);
     }
   } else {
-    themes.default = normalizeSingle(tokens as DesignTokens, wrapVar);
+    themes.default = normalizeSingle(tokens, wrapVar);
   }
   return { themes, merged: mergeTokens(themes) };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
