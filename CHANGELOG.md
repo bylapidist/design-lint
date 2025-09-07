@@ -1,5 +1,17 @@
 # @lapidist/design-lint
 
+## 4.9.0
+
+### Minor Changes
+
+- 6bd2bd0: extract scanning and caching logic into runner module
+
+### Patch Changes
+
+- 0a29269: increase coverage thresholds and add loadIgnore tests
+- d0c9edc: refactor parser into language-specific modules and add registry-based dispatch
+- 0a29269: use import.meta.resolve for formatter modules and extract init config utilities
+
 ## 4.8.3
 
 ### Patch Changes
