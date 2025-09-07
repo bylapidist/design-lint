@@ -1,4 +1,12 @@
-# @lapidist/design-lint
+<!-- markdownlint-disable MD041 -->
+<!-- markdownlint-disable MD033 -->
+<div>
+  <a href="https://design-lint.lapidist.net/" target="_blank" rel="noopener">
+    <img src="logo.svg" alt="Design Lint block grid logo" width="64" height="64" />
+  </a>
+</div>
+<h1>@lapidist/design-lint</h1>
+<!-- markdownlint-enable MD033 -->
 
 [![npm version](https://img.shields.io/npm/v/%40lapidist/design-lint.svg?logo=npm&color=cb3837)](https://www.npmjs.com/package/@lapidist/design-lint)
 [![build](https://img.shields.io/github/actions/workflow/status/bylapidist/design-lint/ci.yml?label=CI&logo=github)](https://github.com/bylapidist/design-lint/actions)
@@ -14,6 +22,7 @@ npx @lapidist/design-lint@latest src
 
 # or add to your project
 npm install --save-dev @lapidist/design-lint
+npx design-lint init
 npx design-lint src
 ```
 
@@ -27,6 +36,8 @@ General purpose linters understand code style, not design systems. `@lapidist/de
 - Replace deprecated tokens or components automatically with `--fix`
 - Lint JavaScript, TypeScript, CSS, SCSS, Sass and Less files, including inline styles and tagged template literals
 - Extend behaviour with custom rules, formatters and plugins
+
+For more background, read the [introductory blog post](https://lapidist.net/articles/2025/introducing-lapidist-design-lint/).
 
 ## Documentation
 

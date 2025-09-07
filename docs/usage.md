@@ -25,16 +25,20 @@ By default a `designlint.config.json` file is created. Use `--init-format` to wr
 | Flag | Description |
 | ---- | ----------- |
 | `--config <path>` | Use an explicit configuration file. |
+| `--init-format <format>` | Format for `design-lint init` (`js`, `cjs`, `mjs`, `ts`, `mts`, `json`). |
 | `--format <name>` | Select formatter: `stylish` (default), `json`, `sarif` or a module path. |
-| `--report <file>` | Write raw JSON results to a file. |
 | `--output <file>` | Redirect formatted output. |
+| `--report <file>` | Write raw JSON results to a file. |
 | `--ignore-path <file>` | Additional ignore patterns. |
 | `--concurrency <n>` | Limit parallel file processing. |
 | `--max-warnings <n>` | Exit with error when warnings exceed this number. |
+| `--quiet` | Suppress output and rely on the exit code. |
+| `--no-color` | Disable colored output. |
 | `--cache` | Enable result caching. |
 | `--cache-location <path>` | Custom cache file location. |
 | `--watch` | Re-run lint on file changes. |
 | `--fix` | Apply safe fixes automatically. |
+| `--version` | Print the CLI version. |
 
 ## Inline disabling
 
