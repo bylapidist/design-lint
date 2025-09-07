@@ -1,263 +1,208 @@
 # API
 
-`@lapidist/design-lint` exposes a small Node API for advanced scenarios.
+Design Lint exposes a small set of functions and classes for programmatic use in Node.js or browser environments.
 
-```js
-import { Linter, loadConfig, getFormatter, defineConfig } from '@lapidist/design-lint';
+## Programmatic overview
 
-const config = await loadConfig();
-const linter = new Linter(config);
-const { results } = await linter.lintFiles(['src']);
-const formatter = await getFormatter('stylish');
-console.log(formatter(results));
-```
-
-## `Linter` ([source](../src/core/linter.ts))
-
-Core engine for linting files and applying rules.
-
-### Constructor
-
-`new Linter(config)`
-
-#### Parameters
-
-- `config` [`Config`](../src/core/linter.ts) – configuration object controlling tokens, rules and plugins.
-
-#### Example
+A typical control flow when using the library directly:
 
 ```ts
-const config = await loadConfig(process.cwd());
-const linter = new Linter(config);
-```
+import {
+  loadConfig,
+  Linter,
+  getFormatter,
+  applyFixes,
+} from '@lapidist/design-lint';
 
-### Methods
+async function main() {
+  // 1. Load configuration from the current working directory
+  const config = await loadConfig(process.cwd());
 
-#### `lintText(text, filePath?)`
+  // 2. Create a linter instance
+  const linter = new Linter(config);
 
-Lints a string of code. Optionally provide a `filePath` for accurate reporting and to enable file-type-specific parsing.
+  // 3. Lint files and optionally apply automatic fixes
+  const { results } = await linter.lintFiles(['src/**/*.{ts,tsx}'], true);
 
-##### Parameters
+  // 4. Format and display results
+  const formatter = await getFormatter('stylish');
+  console.log(formatter(results));
 
-- `text` `string` – source code to lint.
-- `filePath?` `string` – optional path used for parsing and reporting.
+  // 5. Apply fixes to a string of source code
+  const fixed = applyFixes('color: var(--red);', results[0].messages);
+  console.log(fixed);
+}
 
-##### Returns
-
-- `Promise<LintResult>` – lint result for the provided text.
-
-##### Example
-
-```ts
-const res = await linter.lintText('const c = "#fff";', 'file.ts');
-```
-
-#### `lintFile(filePath, fix?, cache?, ignorePaths?, cacheLocation?)`
-
-Lints a single file on disk.
-
-##### Parameters
-
-- `filePath` `string` – path to the file to lint.
-- `fix?` `boolean` – apply autofixes. Defaults to `false`.
-- `cache?` `Map` – reuse results between runs.
-- `ignorePaths?` `string[]` – additional ignore globs.
-- `cacheLocation?` `string` – location to persist cache data.
-
-##### Returns
-
-- `Promise<LintResult>` – lint result for the file.
-
-##### Example
-
-```ts
-const res = await linter.lintFile('src/file.ts', true, undefined, ['**/dist/**']);
-```
-
-#### `lintFiles(files, fix?, cache?, ignorePaths?, cacheLocation?)`
-
-Lints multiple files or directories.
-
-##### Parameters
-
-- `files` `string[]` – targets to lint.
-- `fix?` `boolean` – apply autofixes.
-- `cache?` `Map` – reuse results between runs.
-- `ignorePaths?` `string[]` – additional ignore globs.
-- `cacheLocation?` `string` – location to persist cache data.
-
-##### Returns
-
-- `Promise<{ results: LintResult[]; ignoreFiles: string[] }>` – lint results and ignore files that were honored.
-
-##### Example
-
-```ts
-const { results, ignoreFiles } = await linter.lintFiles(['src', 'tests']);
-```
-
-#### `getTokenCompletions()`
-
-Retrieve token names grouped by token type. Useful for editor plugins to
-provide autocomplete suggestions.
-
-##### Returns
-
-- `Record<string, string[]>` – map of token groups to token variable names.
-
-##### Example
-
-```ts
-const linter = new Linter(config);
-const completions = linter.getTokenCompletions();
-console.log(completions.spacing[0]);
-```
-
-## `Runner` ([source](../src/core/runner.ts))
-
-Coordinates file scanning, caching, and concurrency for the linter. Useful for
-testing or custom integrations that need fine-grained control over execution.
-
-### Constructor
-
-`new Runner({ config, tokenTracker, lintText })`
-
-### Methods
-
-#### `run(targets, fix?, cache?, ignorePaths?, cacheLocation?)`
-
-Executes linting over a set of targets. Parameters and return value mirror
-`Linter.lintFiles`.
-
-## `loadConfig(cwd, configPath?)` ([source](../src/config/loader.ts))
-
-Loads a `designlint.config.*` file and validates its contents.
-
-### Parameters
-
-- `cwd` `string` – directory to search from.
-- `configPath?` `string` – explicit path to a config file.
-
-### Returns
-
-- `Promise<Config>` – merged configuration object.
-
-### Example
-
-```ts
-const config = await loadConfig(process.cwd());
-```
-
-See [Configuration](./configuration.md) for details.
-
-## `defineConfig(config)` ([source](../src/config/define-config.ts))
-
-Helper to provide type checking when writing configuration files.
-
-### Parameters
-
-- `config` `Config` – configuration object.
-
-### Returns
-
-- `Config` – the provided configuration.
-
-### Example
-
-```ts
-import { defineConfig } from '@lapidist/design-lint';
-
-export default defineConfig({
-  tokens: { colors: { primary: '#ff0000' } },
-  rules: { 'design-token/colors': 'error' },
+main().catch((err) => {
+  // Handle any errors thrown by the API
+  console.error(err);
 });
 ```
 
-## `getFormatter(name)` ([source](../src/formatters/index.ts))
+### Programmatic use cases
 
-Retrieve a formatter by built-in name or module path.
+- Integrate token validation into build scripts or custom CLIs
+- Power editor extensions that lint the current buffer
+- Format or fix files before committing them
+- Author custom rules or plugins using the exported types
 
-### Parameters
+## API reference
 
-- `name` `string` – `'stylish'`, `'json'`, `'sarif'`, or a path to a formatter module.
+### `loadConfig(cwd, configPath?)`
 
-### Returns
+Resolve and load the configuration used by the linter.
 
-- `Promise<(results: LintResult[], useColor?: boolean) => string>` – formatter function.
+- **Parameters**
+  - `cwd: string` – directory in which to search for configuration files.
+  - `configPath?: string` – optional explicit path to a configuration file.
+- **Returns** `Promise<Config>` – parsed and validated configuration object.
+- **Throws** if the file does not exist or the configuration is invalid.
 
-### Examples
+### `defineConfig(config)`
+
+Helper to define a configuration object with type checking.
+
+- **Parameters**
+  - `config: Config` – configuration definition.
+- **Returns** `Config` – the provided configuration.
+
+### `class Linter`
+
+Lints files using built-in and plugin-provided rules.
+
+#### `new Linter(config)`
+
+- **Parameters**
+  - `config: Config` – resolved configuration.
+- **Returns** `Linter` instance.
+
+#### `lintFiles(targets, fix?, cache?, additionalIgnorePaths?, cacheLocation?)`
+
+- **Parameters**
+  - `targets: string[]` – file paths or glob patterns to lint.
+  - `fix = false` – whether to apply automatic fixes.
+  - `cache?: Cache` – optional file cache.
+  - `additionalIgnorePaths: string[] = []` – extra ignore globs.
+  - `cacheLocation?: string` – path where cache data is stored.
+- **Returns** `Promise<{ results: LintResult[]; ignoreFiles: string[]; warning?: string; }>`
+- **Throws** if reading or parsing files fails.
+
+#### `lintFile(path, fix?, cache?, ignorePaths?, cacheLocation?)`
+
+- **Parameters**
+  - `path: string` – path to a single file.
+  - Other parameters mirror `lintFiles`.
+- **Returns** `Promise<LintResult>`
+- **Throws** if the file cannot be processed.
+
+#### `getTokenCompletions()`
+
+- **Returns** `Record<string, string[]>` – available token names grouped by type.
+
+#### `getPluginPaths()`
+
+- **Returns** `Promise<string[]>` – resolved paths to configured plugins.
+
+### `applyFixes(text, messages)`
+
+Apply non-overlapping fixes to the given source text.
+
+- **Parameters**
+  - `text: string` – original source code.
+  - `messages: LintMessage[]` – messages containing optional fix information.
+- **Returns** `string` – transformed text with fixes applied.
+
+### `getFormatter(name)`
+
+Retrieve a formatter by name or path.
+
+- **Parameters**
+  - `name: string` – formatter identifier or module path.
+- **Returns** `Promise<(results: LintResult[], useColor?: boolean) => string>`
+- **Throws** if the formatter cannot be resolved.
+
+### `class Runner`
+
+Executes linting tasks with concurrency control.
+
+#### `new Runner(options)`
+
+- **Parameters**
+  - `options` – object containing:
+    - `config: Config`
+    - `tokenTracker: TokenTracker`
+    - `lintText: (text: string, filePath: string) => Promise<LintResult>`
+
+#### `run(targets, fix?, cache?, additionalIgnorePaths?, cacheLocation?)`
+
+- **Parameters**
+  - `targets: string[]`
+  - `fix = false`
+  - `cache?: Cache`
+  - `additionalIgnorePaths: string[] = []`
+  - `cacheLocation?: string`
+- **Returns** `Promise<{ results: LintResult[]; ignoreFiles: string[]; warning?: string; }>`
+
+### `builtInRules`
+
+Array of bundled `RuleModule` implementations that ship with Design Lint.
+
+## Types
+
+Design Lint ships with comprehensive TypeScript definitions for composing advanced workflows.
 
 ```ts
-const formatter = await getFormatter('stylish');
-console.log(formatter(results));
+import type {
+  Config,
+  LintResult,
+  LintMessage,
+  RuleModule,
+  RuleContext,
+  RuleListener,
+  DesignTokens,
+  PluginModule,
+  CSSDeclaration,
+  Fix,
+} from '@lapidist/design-lint';
 ```
+
+### Custom rule example
 
 ```ts
-const formatter = await getFormatter('./minimal-formatter.js');
-console.log(formatter(results));
+import type { RuleModule } from '@lapidist/design-lint';
+
+export const noFooRule: RuleModule = {
+  name: 'no-foo',
+  meta: { description: 'disallow the value "foo"', recommended: 'warn' },
+  create(ctx) {
+    return {
+      Declaration(node) {
+        if (node.value === 'foo') {
+          ctx.report({
+            line: node.loc.start.line,
+            column: node.loc.start.column,
+            message: 'Avoid using foo',
+            fix: { range: node.range, text: 'bar' },
+          });
+        }
+      },
+    };
+  },
+};
 ```
 
-See [Formatters](./formatters.md) for built-in options and instructions on adding custom ones, and
-[Usage](./usage.md#options) for command‑line equivalents.
-
-## `applyFixes(text, messages)` ([source](../src/core/cache-manager.ts))
-
-Apply autofixes to file contents using message fix data.
-
-### Parameters
-
-- `text` `string` – original source code.
-- `messages` `LintMessage[]` – messages containing `fix` entries.
-
-### Returns
-
-- `string` – fixed source code.
-
-### Example
+### Dynamic configuration
 
 ```ts
-const fixed = applyFixes(code, res.messages);
+import { Linter } from '@lapidist/design-lint';
+import type { Config } from '@lapidist/design-lint';
+
+const config: Config = {
+  tokens: { color: ['red', 'blue'] },
+  rules: { 'token-colors': 'error' },
+};
+
+const linter = new Linter(config);
 ```
 
-## `builtInRules` ([source](../src/rules/index.ts))
-
-Array of rule modules bundled with the linter.
-
-Includes:
-
- - [`animation`](./rules/design-token/animation.md)
- - [`blur`](./rules/design-token/blur.md)
- - [`border-color`](./rules/design-token/border-color.md)
- - [`border-radius`](./rules/design-token/border-radius.md)
- - [`border-width`](./rules/design-token/border-width.md)
- - [`box-shadow`](./rules/design-token/box-shadow.md)
- - [`colors`](./rules/design-token/colors.md)
- - [`duration`](./rules/design-token/duration.md)
- - [`font-family`](./rules/design-token/font-family.md)
- - [`font-size`](./rules/design-token/font-size.md)
- - [`font-weight`](./rules/design-token/font-weight.md)
-- [`letter-spacing`](./rules/design-token/letter-spacing.md)
-- [`line-height`](./rules/design-token/line-height.md)
-- [`opacity`](./rules/design-token/opacity.md)
-- [`outline`](./rules/design-token/outline.md)
-- [`spacing`](./rules/design-token/spacing.md)
-- [`z-index`](./rules/design-token/z-index.md)
- - [`component-prefix`](./rules/design-system/component-prefix.md)
- - [`component-usage`](./rules/design-system/component-usage.md)
- - [`deprecation`](./rules/design-system/deprecation.md)
- - [`icon-usage`](./rules/design-system/icon-usage.md)
- - [`import-path`](./rules/design-system/import-path.md)
- - [`no-inline-styles`](./rules/design-system/no-inline-styles.md)
- - [`no-unused-tokens`](./rules/design-system/no-unused-tokens.md)
- - [`variant-prop`](./rules/design-system/variant-prop.md)
-
-### Returns
-
-- `RuleModule[]` – list of built-in rules.
-
-### Example
-
-```ts
-console.log(builtInRules.map((r) => r.name));
-```
-
+These types allow you to build custom integrations and tooling on top of Design Lint.

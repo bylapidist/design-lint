@@ -1,8 +1,10 @@
 # design-token/border-radius
 
+## Summary
 Enforces `border-radius` values to match the tokens defined in your configuration.
 
 ## Configuration
+Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
 
 ```json
 {
@@ -14,6 +16,11 @@ Enforces `border-radius` values to match the tokens defined in your configuratio
 ```
 
 Border radius tokens are defined under `tokens.borderRadius`. Numbers are treated as pixel values; strings may use `px`, `rem`, or `em` units.
+
+## Options
+No additional options.
+
+This rule is not auto-fixable.
 
 ## Examples
 
@@ -29,3 +36,10 @@ Border radius tokens are defined under `tokens.borderRadius`. Numbers are treate
 .box { border-radius: 4px; }
 .box { border-radius: md; }
 ```
+
+## When Not To Use
+If border radius values are not standardized, disable this rule.
+
+## Related Rules
+- [design-token/border-width](./border-width.md)
+- [design-token/colors](./colors.md)

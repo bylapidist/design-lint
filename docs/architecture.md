@@ -1,96 +1,36 @@
-# Architecture Overview
+# Architecture
 
-This document describes the major pieces that power `@lapidist/design-lint`.
+Design Lint orchestrates a pipeline that moves from file discovery to result formatting. It walks the filesystem, parses source content into abstract syntax trees (ASTs), evaluates registered rules and emits a report through the selected formatter. The flow below shows how data advances through each stage.
 
 ```mermaid
-flowchart TD
-  CLI[CLI] --> ConfigLoader
-  ConfigLoader --> Linter
-  Linter --> Runner
-  Linter --> RuleRegistry
-  Linter --> ParserRegistry
-  ParserRegistry --> VueParser[Vue Parser]
-  ParserRegistry --> SvelteParser[Svelte Parser]
-  ParserRegistry --> TSParser[TS/JS Parser]
-  ParserRegistry --> CSSParser[CSS Parser]
-  Linter --> TokenTracker
-  RuleRegistry --> PluginManager
-  Runner --> CacheManager
-  Runner --> FileScanner
-  FileScanner --> Files
-  Linter --> Rules
-  Rules --> Formatter
-  Formatter --> Output
+flowchart LR
+  A[Scan files] --> B[Parse sources]
+  B --> C[Apply rules]
+  C --> D[Format results]
 ```
 
-## Linter Core
+Starting with **file discovery**, glob patterns expand to concrete paths and respect ignore files or configuration. Each file is then **parsed** by language‑specific adapters: CSS uses PostCSS, JavaScript and TypeScript rely on the TypeScript compiler, and Vue/Svelte single‑file components compile before analysis. The **rule engine** traverses the ASTs and records messages, optionally providing fixes. Finally, the **formatter pipeline** transforms collected results into human‑ or machine‑readable output.
 
-The `Linter` class in [`src/core/linter.ts`](../src/core/linter.ts) orchestrates
-specialized modules. `RuleRegistry` registers built-in rules and loads any
-plugins. A `parserRegistry` in [`src/core/parser-registry.ts`](../src/core/parser-registry.ts)
-resolves language-specific strategies—Vue, Svelte, TypeScript/JavaScript, and
-CSS—that parse source files and dispatch AST nodes and CSS declarations to rule
-listeners. `TokenTracker` records which design tokens are used so
-`design-system/no-unused-tokens` can report leftovers. File discovery and cache
-management are delegated to the [`Runner`](../src/core/runner.ts), allowing the
-linter to focus on rule coordination and parsing.
+## Core modules
 
-## Rule Lifecycle
+### File discovery
 
-Rules expose a `name`, `meta.description`, and a `create` function. When linting
-begins, configuration enables specific rules with a severity and optional
-options. The engine calls each rule’s `create` function with a `context`
-providing `tokens`, `options`, `filePath`, and a `report` method. The returned
-listener hooks (`onNode`, `onCSSDeclaration`, etc.) run as the engine walks the
-parsed source. When a rule detects a problem it reports a `LintMessage`; fixes
-are collected and applied after all listeners finish.
+Resolves the working set of files using glob patterns and ignore rules. See [`src/core/file-service.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/file-service.ts).
 
-## Plugin Loading
+### Parser adapters
 
-Plugins extend the rule set by exporting an object like `{ rules: RuleModule[] }`.
-[`plugin-manager.ts`](../src/core/plugin-manager.ts) resolves each plugin
-relative to the config file and uses dynamic `import` when necessary. Each rule
-is validated for shape and uniqueness before being added to the rule map.
-Loading errors clearly identify the plugin and suggest remediation.
+Normalise different language parsers behind a common interface. See [`src/core/parsers`](https://github.com/bylapidist/design-lint/tree/main/src/core/parsers).
 
-## File Scanning and Ignoring
+### Rule engine
 
-The [`file-service.ts`](../src/core/file-service.ts) module gathers target files
-based on glob patterns and consults ignore files via [`ignore.ts`](../src/core/ignore.ts).
-The `Runner` consumes this service, keeping the core linter focused on analysis
-while delegating filesystem concerns to dedicated helpers.
+Registers rules and coordinates their execution over AST nodes. See [`src/core/linter.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/linter.ts) and [`src/core/rule-registry.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/rule-registry.ts).
 
-## Configuration Resolution
+### Formatter pipeline
 
-Configuration is resolved through [`loadConfig`](../src/config/loader.ts). It
-searches upward from the current directory for `designlint.config.*` files,
-supporting JavaScript, TypeScript, JSON, and ESM/CJS variants. Loaded settings
-are merged with defaults, validated against a schema, and returned with absolute
-paths. The resulting object supplies tokens, rule settings, plugins, and ignore
-patterns consumed by the engine.
+Streams lint results through built‑in or custom formatters. See [`src/formatters`](https://github.com/bylapidist/design-lint/tree/main/src/formatters).
 
-## Caching Subsystem
+## Performance considerations
 
-To avoid reprocessing unchanged files, `CacheManager` accepts an optional cache
-map and location. The `Runner` populates the map with each file’s modification
-time and `LintResult`, reading and writing to disk when `cacheLocation` is
-provided. A separate `CacheService` handles pruning stale entries and saving the
-cache after each run. Cache serialization lives in
-[`src/core/cache.ts`](../src/core/cache.ts) and is coordinated by the runner.
+Caching avoids repeated work across runs by storing file metadata and parsed ASTs. The runner processes files concurrently, distributing parsing and rule evaluation across available CPU cores.
 
-## Formatting
-
-Results are rendered through formatters such as `stylish`, `json`, or `sarif`.
-`getFormatter` in [`src/formatters/index.ts`](../src/formatters/index.ts)
-resolves a formatter by name and applies it to the collected `LintResult`s to
-produce CLI output or machine-readable reports.
-
-## Watch Workflow
-
-The CLI supports `--watch` mode to re-lint files on the fly. Using
-[`chokidar`](https://github.com/paulmillr/chokidar), it monitors target files,
-the configuration file, ignore files, and plugin modules. When any of these
-change, the CLI reloads configuration and plugins, clears caches, and invokes
-the engine again. Dynamic imports with cache-busting query strings ensure ESM
-plugins reload correctly. Implementation details can be found in
-[`src/cli/index.ts`](../src/cli/index.ts).
+See the [Plugin guide](plugins.md) for extending the engine beyond the core modules.

@@ -1,51 +1,91 @@
-# Framework components
+# Framework integrations
 
-`@lapidist/design-lint` can lint components from various frameworks and technologies.
+Design Lint works with many frontend stacks.
 
-## React components
-
-JSX and TSX files are linted so `style` props—whether specified as objects or
-strings—can be checked against the configured rules.
+## React / Vite
+Lint component files and styles:
 
 ```bash
-npx design-lint src/App.tsx
+npx design-lint src
 ```
 
-## Vue single-file components
-
-`.vue` files are parsed so both `<script>`/`<template>` code and `<style>` blocks
-are linted. SCSS, Sass, and Less syntax inside `<style>` sections is supported
-via each block's `lang` attribute.
+## Next.js
+Run in `next lint` or a separate script:
 
 ```bash
-npx design-lint src/components/App.vue
+npx design-lint pages components
 ```
 
-## Svelte components
-
-When linting Svelte files, the linter understands both `style` attributes and
-`style:` directives so each individual declaration is checked against the
-configured rules. `<style>` blocks may also specify `lang="scss"`, `lang="sass"`,
-or `lang="less"`.
+## Svelte
+Svelte components are parsed so `style:` directives and `<style>` blocks are checked automatically.
 
 ```bash
-npx design-lint src/App.svelte
+npx design-lint src/routes
 ```
 
-## Tagged template literals
-
-JavaScript and TypeScript files using tagged template literals are parsed so CSS
-inside constructs like `styled.div\`color: red;\`` and `css\`...\`` or
-`tw\`...\`` can be linted. Only static template strings without interpolated
-expressions are analyzed. Use the `patterns` configuration field to include or
-exclude JS/TS sources as needed.
-
-## Web Components
-
-Custom elements can be linted in `.html`, `.js`, or `.ts` files. Both inline
-`style` attributes and `<style>` tags are parsed, including SCSS, Sass, and Less
-syntax.
+## Vue
+`.vue` single‑file components are supported including SCSS, Sass and Less `<style>` blocks.
 
 ```bash
-npx design-lint src/components/my-element.js
+npx design-lint src/components
 ```
+
+## Angular
+Component templates (`.html`) and styles (`.scss`/`.css`) live alongside TypeScript files. Inline `template` and `styles` fields on `@Component` are checked automatically.
+
+```bash
+npx design-lint "src/**/*.component.{ts,html,scss}"
+```
+
+```json
+{
+  "scripts": {
+    "lint:design": "design-lint \"src/**/*.component.{ts,html,scss}\""
+  }
+}
+```
+
+## Astro
+`.astro` files mix markup and scripts. `<style>` tags and inline styles are linted without extra setup.
+
+```bash
+npx design-lint src/pages src/components
+```
+
+```json
+{
+  "scripts": {
+    "lint:design": "design-lint src/pages src/components"
+  }
+}
+```
+
+## HTML
+Static HTML files with inline `<style>` blocks or `style` attributes can be linted directly.
+
+```bash
+npx design-lint "public/**/*.html"
+```
+
+```json
+{
+  "scripts": {
+    "lint:design": "design-lint \"public/**/*.html\""
+  }
+}
+```
+
+Other frameworks using standard file extensions work without extra configuration.
+
+## ESLint and Stylelint
+Design Lint focuses on design token usage and component conventions, so keep existing linters for syntax rules. Run them side by side:
+
+```json
+{
+  "scripts": {
+    "lint": "eslint . && stylelint \"**/*.css\" && design-lint src"
+  }
+}
+```
+
+When migrating, disable overlapping token or naming checks in ESLint or Stylelint to avoid duplicate warnings, and share ignore files to skip build outputs.

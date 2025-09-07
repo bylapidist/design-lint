@@ -1,10 +1,10 @@
 # design-system/no-inline-styles
 
-Disallows inline `style` and `className` (or `class`) attributes on design system components.
-
-Works with React, Vue, Svelte, and Web Components.
+## Summary
+Disallows inline `style` and `className` (or `class`) attributes on design system components. Works with React, Vue, Svelte, and Web Components.
 
 ## Configuration
+Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
 
 ```json
 {
@@ -17,9 +17,10 @@ Works with React, Vue, Svelte, and Web Components.
 }
 ```
 
-### Options
-
+## Options
 - `ignoreClassName` (`boolean`, default: `false`): if `true`, `className`/`class` attributes are ignored.
+
+This rule is not auto-fixable.
 
 ## Examples
 
@@ -43,3 +44,10 @@ Works with React, Vue, Svelte, and Web Components.
 <Button className="custom" />
 // when ignoreClassName is true
 ```
+
+## When Not To Use
+If inline styles or custom class names are permitted, disable this rule.
+
+## Related Rules
+- [design-system/component-usage](./component-usage.md)
+- [design-system/variant-prop](./variant-prop.md)

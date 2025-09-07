@@ -1,8 +1,10 @@
 # design-token/font-family
 
+## Summary
 Ensures `font-family` declarations use values from your `fonts` tokens.
 
 ## Configuration
+Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
 
 ```json
 {
@@ -13,6 +15,11 @@ Ensures `font-family` declarations use values from your `fonts` tokens.
   "rules": { "design-token/font-family": "error" }
 }
 ```
+
+## Options
+No additional options.
+
+This rule is not auto-fixable.
 
 ## Examples
 
@@ -27,3 +34,10 @@ Ensures `font-family` declarations use values from your `fonts` tokens.
 ```css
 .title { font-family: "Inter, sans-serif"; }
 ```
+
+## When Not To Use
+If arbitrary font families are allowed, disable this rule.
+
+## Related Rules
+- [design-token/font-size](./font-size.md)
+- [design-token/font-weight](./font-weight.md)

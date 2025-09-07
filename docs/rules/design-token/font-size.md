@@ -1,8 +1,10 @@
 # design-token/font-size
 
+## Summary
 Ensures `font-size` declarations use values from your `fontSizes` tokens.
 
 ## Configuration
+Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
 
 ```json
 {
@@ -14,9 +16,12 @@ Ensures `font-size` declarations use values from your `fontSizes` tokens.
 }
 ```
 
-Font-size tokens may be defined as numbers (interpreted as `px`) or strings
-with `px`, `rem`, or `em` units. These units are converted to pixel values for
-comparison.
+Font-size tokens may be defined as numbers (interpreted as `px`) or strings with `px`, `rem`, or `em` units. These units are converted to pixel values for comparison.
+
+## Options
+No additional options.
+
+This rule is not auto-fixable.
 
 ## Examples
 
@@ -32,3 +37,10 @@ comparison.
 .title { font-size: 1rem; }
 .title { font-size: 20px; }
 ```
+
+## When Not To Use
+If font sizes are not managed via tokens, disable this rule.
+
+## Related Rules
+- [design-token/font-family](./font-family.md)
+- [design-token/line-height](./line-height.md)

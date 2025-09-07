@@ -1,42 +1,113 @@
 # Troubleshooting
 
-Common runtime errors and how to resolve them when using `@lapidist/design-lint`.
+## Config file not found
 
-## Invalid configuration
+### Symptom
+`Error: Config file not found` when running the CLI.
 
-The linter exits early if the configuration file cannot be parsed or is missing
-required fields.
+### Cause
+No configuration file is present or the provided path is incorrect.
 
-- Ensure `designlint.config.json` is valid JSON or that a `.js` file exports an
-  object.
-- Confirm the path passed with `--config` exists.
-- Run `npx design-lint init` to generate a starter config (`--init-format <format>`
-  can override the detected format with `js`, `cjs`, `mjs`, `ts`, `mts`, or
-  `json`).
+### Resolution
+Run `npx design-lint init` to generate a configuration file. Use `--config` to specify a path.
 
-## Plugin load failures
+### Related docs
+- [Configuration](./configuration.md)
 
-Plugins listed in the `plugins` field must be resolvable and export an object
-with a `rules` key. If a plugin cannot be loaded or exports the wrong shape, the
-CLI throws an error during initialization.
+## Unknown rule
 
-- Verify the plugin package is installed and spelled correctly.
-- If using a local path, ensure it is relative to the current working
-  directory.
-- Check that the plugin exports `{ rules: { ... } }`.
+### Symptom
+`Unknown rule "..."`
 
-## Missing tokens
+### Cause
+The rule is misspelled or the plugin providing it is not installed.
 
-Rules that validate design tokens error when a referenced token is not defined.
+### Resolution
+Ensure the rule name is correct and the plugin providing it is installed.
 
-- Confirm all tokens used in your code are declared in the configuration.
-- If using deprecation replacements, ensure both the deprecated and replacement
-  tokens exist.
+### Related docs
+- [Rule reference](./rules/index.md)
+- [Plugins](./plugins.md)
 
-## Node version mismatch
+## Plugin failed to load
 
-`@lapidist/design-lint` requires Node.js 22 or later. Running the CLI on an
-unsupported Node version results in a runtime error.
+### Symptom
+`Error: Failed to load plugin "..."`
 
-- Run `node --version` to verify your environment.
-- Upgrade Node.js if it is below the required version.
+### Cause
+Node.js cannot resolve the plugin module or it does not export a `rules` array.
+
+### Resolution
+Verify the package name and that the plugin exports a `rules` array.
+
+### Related docs
+- [Plugins](./plugins.md)
+
+## Parser error
+
+### Symptom
+`ParserError` or similar message.
+
+### Cause
+The file could not be parsed due to an incorrect extension or mismatched `lang` attribute.
+
+### Resolution
+Verify the file extension and that any `lang` attributes match the content.
+
+### Related docs
+- [Usage](./usage.md)
+
+## Formatter failure
+
+### Symptom
+`Error: Formatter threw an exception` or the CLI exits after selecting a custom formatter.
+
+### Cause
+The formatter failed to export a default function or raised a runtime error.
+
+### Resolution
+Ensure the formatter exports a default function that returns a string and handles all results.
+
+### Related docs
+- [Formatters](./formatters.md)
+
+## Outdated Node version
+
+### Symptom
+`Error: Node.js 18 is not supported` or unexpected syntax errors.
+
+### Cause
+Design Lint requires Node.js 22 or later.
+
+### Resolution
+Upgrade to Node.js 22 or later.
+
+### Related docs
+- [README](https://github.com/bylapidist/design-lint/blob/main/README.md)
+
+## Performance bottleneck
+
+### Symptom
+Linting takes an excessively long time or maxes out CPU usage.
+
+### Cause
+Large projects are scanned without caching or rules with high complexity.
+
+### Resolution
+Enable caching with `--cache`, limit the files to lint, or review custom rules for performance issues.
+
+### Related docs
+- [Usage](./usage.md)
+- [Architecture](./architecture.md)
+
+## Keyword index
+
+| Error message | Section |
+| ------------- | ------- |
+| `Config file not found` | [Config file not found](#config-file-not-found) |
+| `Unknown rule` | [Unknown rule](#unknown-rule) |
+| `Failed to load plugin` | [Plugin failed to load](#plugin-failed-to-load) |
+| `ParserError` | [Parser error](#parser-error) |
+| `Formatter threw an exception` | [Formatter failure](#formatter-failure) |
+| `Node.js 18 is not supported` | [Outdated Node version](#outdated-node-version) |
+| `Linting is slow` | [Performance bottleneck](#performance-bottleneck) |

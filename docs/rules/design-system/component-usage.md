@@ -1,8 +1,10 @@
 # design-system/component-usage
 
+## Summary
 Disallows raw HTML elements when a design system component should be used instead.
 
 ## Configuration
+Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
 
 ```json
 {
@@ -15,9 +17,10 @@ Disallows raw HTML elements when a design system component should be used instea
 }
 ```
 
-### Options
-
+## Options
 - `substitutions` (`Record<string, string>`): map of disallowed HTML tags to their design system components. Tag names are matched case-insensitively.
+
+*This rule is auto-fixable.*
 
 ## Examples
 
@@ -32,3 +35,10 @@ Disallows raw HTML elements when a design system component should be used instea
 ```tsx
 <DSButton>Save</DSButton>
 ```
+
+## When Not To Use
+If you allow raw HTML elements or lack a component library, disable this rule.
+
+## Related Rules
+- [design-system/component-prefix](./component-prefix.md)
+- [design-system/import-path](./import-path.md)
