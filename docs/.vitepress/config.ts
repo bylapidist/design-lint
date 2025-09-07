@@ -1,8 +1,27 @@
 import { defineConfig } from 'vitepress';
+import { readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+function getRuleItems(dir: string) {
+  return readdirSync(resolve(__dirname, dir))
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => {
+      const name = f.replace(/\.md$/, '');
+      const section = dir.split('/').pop();
+      return { text: name, link: `/rules/${section}/${name}` };
+    })
+    .sort((a, b) => a.text.localeCompare(b.text));
+}
+
+const designSystemRules = getRuleItems('../rules/design-system');
+const designTokenRules = getRuleItems('../rules/design-token');
 
 export default defineConfig({
   title: 'design-lint',
   description: 'Design system linter',
+  cleanUrls: true,
+  lastUpdated: true,
+  sitemap: { hostname: 'https://design-lint.lapidist.net' },
   themeConfig: {
     logo: '/logo.svg',
     nav: [
@@ -37,68 +56,8 @@ export default defineConfig({
       {
         text: 'Rules',
         items: [
-          {
-            text: 'Design System',
-            items: [
-              {
-                text: 'component-prefix',
-                link: '/rules/design-system/component-prefix',
-              },
-              {
-                text: 'component-usage',
-                link: '/rules/design-system/component-usage',
-              },
-              { text: 'deprecation', link: '/rules/design-system/deprecation' },
-              { text: 'icon-usage', link: '/rules/design-system/icon-usage' },
-              { text: 'import-path', link: '/rules/design-system/import-path' },
-              {
-                text: 'no-inline-styles',
-                link: '/rules/design-system/no-inline-styles',
-              },
-              {
-                text: 'no-unused-tokens',
-                link: '/rules/design-system/no-unused-tokens',
-              },
-              {
-                text: 'variant-prop',
-                link: '/rules/design-system/variant-prop',
-              },
-            ],
-          },
-          {
-            text: 'Design Token',
-            items: [
-              { text: 'animation', link: '/rules/design-token/animation' },
-              { text: 'blur', link: '/rules/design-token/blur' },
-              {
-                text: 'border-color',
-                link: '/rules/design-token/border-color',
-              },
-              {
-                text: 'border-radius',
-                link: '/rules/design-token/border-radius',
-              },
-              {
-                text: 'border-width',
-                link: '/rules/design-token/border-width',
-              },
-              { text: 'box-shadow', link: '/rules/design-token/box-shadow' },
-              { text: 'colors', link: '/rules/design-token/colors' },
-              { text: 'duration', link: '/rules/design-token/duration' },
-              { text: 'font-family', link: '/rules/design-token/font-family' },
-              { text: 'font-size', link: '/rules/design-token/font-size' },
-              { text: 'font-weight', link: '/rules/design-token/font-weight' },
-              {
-                text: 'letter-spacing',
-                link: '/rules/design-token/letter-spacing',
-              },
-              { text: 'line-height', link: '/rules/design-token/line-height' },
-              { text: 'opacity', link: '/rules/design-token/opacity' },
-              { text: 'outline', link: '/rules/design-token/outline' },
-              { text: 'spacing', link: '/rules/design-token/spacing' },
-              { text: 'z-index', link: '/rules/design-token/z-index' },
-            ],
-          },
+          { text: 'Design System', items: designSystemRules },
+          { text: 'Design Token', items: designTokenRules },
         ],
       },
     ],
