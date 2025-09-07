@@ -9,6 +9,7 @@ import { Linter } from '../src/index.ts';
 import type { LintResult } from '../src/core/types.ts';
 
 const tsxLoader = require.resolve('tsx/esm');
+const WATCH_TIMEOUT = 2000;
 
 void test('CLI aborts on unsupported Node versions', async () => {
   const { run } = await import('../src/cli/index.ts');
@@ -978,7 +979,7 @@ void test('CLI re-runs on file change in watch mode', async () => {
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1014,10 +1015,7 @@ void test('CLI ignores --output/--report files in watch mode', async () => {
       JSON.stringify({ tokens: {}, rules: {} }),
     );
     const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-    let writes = 0;
-    const watcher = fs.watch(dir, (event, filename) => {
-      if (event === 'rename' && filename === name) writes++;
-    });
+    const outPath = path.join(dir, name);
     const proc = spawn(
       process.execPath,
       [
@@ -1035,23 +1033,23 @@ void test('CLI ignores --output/--report files in watch mode', async () => {
       ],
       { cwd: dir },
     );
-    readWhenReady(path.join(dir, name));
+    readWhenReady(outPath);
+    const initial = fs.statSync(outPath).mtimeMs;
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => {
         proc.kill();
-      }, 1000);
+      }, WATCH_TIMEOUT);
       proc.on('exit', () => {
         clearTimeout(timer);
-        watcher.close();
         resolve();
       });
       proc.on('error', (err) => {
         clearTimeout(timer);
-        watcher.close();
         reject(err);
       });
     });
-    assert.equal(writes, 1);
+    const final = fs.statSync(outPath).mtimeMs;
+    assert.equal(initial, final);
   }
 });
 
@@ -1269,7 +1267,7 @@ void test('CLI re-runs with updated config in watch mode', async () => {
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1331,7 +1329,7 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1403,7 +1401,7 @@ export default plugin;`;
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1464,7 +1462,7 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 10000);
+    }, WATCH_TIMEOUT * 2);
     let stdout = '';
     proc.stdout.on('data', (data: Buffer) => {
       stdout += data.toString();
@@ -1530,7 +1528,7 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 10000);
+    }, WATCH_TIMEOUT * 2);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1593,7 +1591,7 @@ void test('CLI reloads when nested ignore file changes in watch mode', async () 
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1647,7 +1645,7 @@ void test('CLI updates ignore list when .gitignore changes in watch mode', async
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1706,7 +1704,7 @@ void test('CLI continues watching after deleting ignore files in watch mode', as
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1763,7 +1761,7 @@ void test('CLI clears cache when a watched file is deleted', async () => {
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1821,7 +1819,7 @@ void test('CLI continues linting after deleting a watched file', async () => {
   await new Promise<void>((resolve, reject) => {
     const timer = setTimeout(() => {
       proc.kill();
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1878,7 +1876,7 @@ void test('CLI closes watcher on SIGINT', async () => {
     const timer = setTimeout(() => {
       proc.kill();
       reject(new Error('Timed out'));
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
@@ -1937,7 +1935,7 @@ void test('CLI handles errors from watch callbacks', async () => {
     const timer = setTimeout(() => {
       proc.kill();
       reject(new Error('Timed out'));
-    }, 5000);
+    }, WATCH_TIMEOUT);
     let buffer = '';
     proc.stdout.on('data', (data: string) => {
       buffer += data;
