@@ -83,4 +83,4 @@ Ignore files via `.designlintignore` or the `ignoreFiles` array in the config. P
 - A rule requiring tokens is enabled but tokens are missing → add the token group or disable the rule.
 - Configuration file not found → run `npx design-lint init` to generate one.
 
-See [examples](examples) for sample configurations.
+See [examples](https://github.com/bylapidist/design-lint/tree/main/docs/examples) for sample configurations.

@@ -1,6 +1,6 @@
 # @lapidist/design-lint
 
-@lapidist/design-lint keeps JavaScript, TypeScript and style sheets aligned with your design system. These docs cover setup, rule configuration and integration examples. For background and a project overview, see the [README](../README.md).
+@lapidist/design-lint keeps JavaScript, TypeScript and style sheets aligned with your design system. These docs cover setup, rule configuration and integration examples. For background and a project overview, see the [README](https://github.com/bylapidist/design-lint/blob/main/README.md).
 
 ## Getting Started
 

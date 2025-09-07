@@ -83,7 +83,7 @@ Design Lint requires Node.js 22 or later.
 Upgrade to Node.js 22 or later.
 
 ### Related docs
-- [README](../README.md)
+- [README](https://github.com/bylapidist/design-lint/blob/main/README.md)
 
 ## Performance bottleneck
 
