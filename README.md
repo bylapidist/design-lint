@@ -34,10 +34,23 @@ See the [Usage guide](docs/usage.md) for the full command reference.
 
 General purpose linters understand code style, not design systems. `@lapidist/design-lint` bridges that gap by enforcing token usage and component conventions across your codebase.
 
-- Detect raw values that bypass design tokens
-- Replace deprecated tokens or components automatically with `--fix`
-- Lint JavaScript, TypeScript, CSS, SCSS, Sass and Less files, including inline styles and tagged template literals
-- Extend behaviour with custom rules, formatters and plugins
+### Token awareness
+`@lapidist/design-lint` flags raw values that bypass design tokens, keeping colour, spacing and typography consistent. Learn more in the [rule reference](docs/rules/index.md).
+
+### Auto-fixes
+Run with `--fix` to automatically replace deprecated tokens or components and tidy up your code. See the [usage guide](docs/usage.md) for fix options.
+
+### Broad language support
+Lint JavaScript, TypeScript, CSS, SCSS, Sass and Less, including inline styles and tagged template literals.
+
+### Extensible
+Extend behaviour with custom rules, formatters and plugins for your design system.
+
+| Advantage | @lapidist/design-lint | Generic linters |
+| --- | --- | --- |
+| Design token validation | ✅ | ❌ |
+| Component deprecation warnings | ✅ | ❌ |
+| Multi-language style + code linting | ✅ | ⚠️ (varies) |
 
 For more background, read the [introductory blog post](https://lapidist.net/articles/2025/introducing-lapidist-design-lint/).
 
