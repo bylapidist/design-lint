@@ -1,5 +1,28 @@
 import type { DesignTokens, LintResult } from './types.js';
 
+type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';
+
+const classifiers: Record<TokenType, (token: string, text: string) => boolean> =
+  {
+    cssVar: (token, text) =>
+      text.includes(`var(${token})`) || text.includes(token),
+    hexColor: (token, text) => text.toLowerCase().includes(token.toLowerCase()),
+    numeric: (token, text) =>
+      new RegExp(`\\b${escapeRegExp(token)}\\b`).test(text),
+    string: (token, text) => text.includes(token),
+  };
+
+function getTokenType(token: string): TokenType {
+  if (token.includes('--') || token.startsWith('-')) return 'cssVar';
+  if (token.startsWith('#')) return 'hexColor';
+  if (/^\d/.test(token)) return 'numeric';
+  return 'string';
+}
+
+function escapeRegExp(str: string): string {
+  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 interface UnusedRuleConfig {
   ruleId: string;
   severity: 'error' | 'warn';
@@ -41,22 +64,9 @@ export class TokenTracker {
   trackUsage(text: string): void {
     for (const token of this.allTokenValues) {
       if (this.usedTokenValues.has(token)) continue;
-      if (token.includes('--') || token.startsWith('-')) {
-        if (text.includes(`var(${token})`) || text.includes(token)) {
-          this.usedTokenValues.add(token);
-        }
-      } else if (token.startsWith('#')) {
-        const lowerText = text.toLowerCase();
-        if (lowerText.includes(token.toLowerCase())) {
-          this.usedTokenValues.add(token);
-        }
-      } else if (/^\d/.test(token)) {
-        const re = new RegExp(
-          `\\b${token.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`,
-        );
-        if (re.test(text)) this.usedTokenValues.add(token);
-      } else {
-        if (text.includes(token)) this.usedTokenValues.add(token);
+      const tokenType = getTokenType(token);
+      if (classifiers[tokenType](token, text)) {
+        this.usedTokenValues.add(token);
       }
     }
   }
