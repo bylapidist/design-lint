@@ -7,7 +7,11 @@ flowchart TD
   CLI[CLI] --> ConfigLoader
   ConfigLoader --> Linter
   Linter --> RuleRegistry
-  Linter --> ParserService
+  Linter --> ParserRegistry
+  ParserRegistry --> VueParser[Vue Parser]
+  ParserRegistry --> SvelteParser[Svelte Parser]
+  ParserRegistry --> TSParser[TS/JS Parser]
+  ParserRegistry --> CSSParser[CSS Parser]
   Linter --> TokenTracker
   Linter --> CacheManager
   RuleRegistry --> PluginManager
@@ -22,12 +26,14 @@ flowchart TD
 
 The `Linter` class in [`src/core/linter.ts`](../src/core/linter.ts) orchestrates
 specialized modules. `RuleRegistry` registers built-in rules and loads any
-plugins. `ParserService` parses source files, dispatching AST nodes and CSS
-declarations to rule listeners. `TokenTracker` records which design tokens are
-used so `design-system/no-unused-tokens` can report leftovers. `CacheManager`
-handles reading and writing lint results, applying fixes when requested. The
-linter coordinates these components while scanning files based on glob patterns
-and honoring ignore rules.
+plugins. A `parserRegistry` in [`src/core/parser-registry.ts`](../src/core/parser-registry.ts)
+resolves language-specific strategies—Vue, Svelte, TypeScript/JavaScript, and
+CSS—that parse source files and dispatch AST nodes and CSS declarations to rule
+listeners. `TokenTracker` records which design tokens are used so
+`design-system/no-unused-tokens` can report leftovers. `CacheManager` handles
+reading and writing lint results, applying fixes when requested. The linter
+coordinates these components while scanning files based on glob patterns and
+honoring ignore rules.
 
 ## Rule Lifecycle
 

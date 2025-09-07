@@ -276,12 +276,16 @@ If a plugin cannot be resolved or does not export the expected shape, the
 linter throws an error such as `Failed to load plugin "my-plugin"` or
 `Invalid plugin "my-plugin": expected { rules: RuleModule[] }`.
 
-## CSS Parsing
+## Parsing
 
-Design-lint uses [PostCSS](https://postcss.org/) to parse styles. Standard CSS
-is handled with `postcss.parse` while SCSS/Sass and Less syntax are parsed with
+Design-lint selects a parser strategy through a registry keyed by file
+extension. Vue (`.vue`) and Svelte (`.svelte`) files are processed with their
+respective compilers alongside the TypeScript AST. JavaScript and TypeScript
+sources use the TypeScript compiler API, while standalone stylesheets rely on
+[PostCSS](https://postcss.org/). Standard CSS is handled with `postcss.parse`
+and SCSS/Sass and Less syntax are parsed with
 [`postcss-scss`](https://github.com/postcss/postcss-scss) and
 [`postcss-less`](https://github.com/shellscape/postcss-less) respectively. The
-parser automatically selects the appropriate syntax based on file extension or a
-`<style>` block's `lang` attribute. It supports multi-line declarations and
+registry automatically selects the appropriate syntax based on file extension or
+a `<style>` block's `lang` attribute. It supports multi-line declarations and
 currently exposes no additional configuration options.
