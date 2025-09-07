@@ -2,15 +2,12 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { performance } from 'node:perf_hooks';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
-import ignore from 'ignore';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
+import { prepareEnvironment } from './env.js';
+import { executeLint } from './execute.js';
+import { watchMode } from './watch.js';
 import writeFileAtomic from 'write-file-atomic';
-import { getFormatter } from '../formatters/index.js';
-import { startWatch } from './watch.js';
-import { loadCache, type Cache } from '../core/cache.js';
 
 function initConfig(initFormat?: string) {
   const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
@@ -70,27 +67,12 @@ function initConfig(initFormat?: string) {
   console.log(`Created designlint.config.${format}`);
 }
 
-export async function run(argv = process.argv.slice(2)) {
-  const current = process.versions.node;
-  const [major] = current.split('.').map(Number);
-  if (major < 22) {
-    const message = `Node.js v${current} is not supported. Please upgrade to v22.0.0 or higher.`;
-    console.error(message);
-    process.exitCode = 1;
-    return;
-  }
-
-  let useColor = Boolean(process.stdout.isTTY && supportsColor);
-  const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
-    version: string;
-  };
-
+function createProgram(version: string) {
   const program = new Command();
   program
     .name('design-lint')
     .usage('[files...]')
-    .version(pkg.version, '--version', 'Show version number')
+    .version(version, '--version', 'Show version number')
     .helpOption('--help', 'Show this message')
     .argument('[files...]')
     .option('--config <path>', 'Path to configuration file')
@@ -143,138 +125,40 @@ export async function run(argv = process.argv.slice(2)) {
     .action((opts) => {
       initConfig(opts.initFormat);
     });
+  return program;
+}
+
+export async function run(argv = process.argv.slice(2)) {
+  const current = process.versions.node;
+  const [major] = current.split('.').map(Number);
+  if (major < 22) {
+    const message = `Node.js v${current} is not supported. Please upgrade to v22.0.0 or higher.`;
+    console.error(message);
+    process.exitCode = 1;
+    return;
+  }
+
+  let useColor = Boolean(process.stdout.isTTY && supportsColor);
+  const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as {
+    version: string;
+  };
+
+  const program = createProgram(pkg.version);
 
   program.action(async (files: string[], options) => {
     if (options.color === false) useColor = false;
-    let formatter: Awaited<ReturnType<typeof getFormatter>>;
+    const targets = files.length ? files : ['.'];
     try {
-      formatter = await getFormatter(options.format as string);
+      const env = await prepareEnvironment(options);
+      const services = { ...env, useColor };
+      const { exitCode } = await executeLint(targets, options, services);
+      process.exitCode = exitCode;
+      if (options.watch) await watchMode(targets, options, services);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(useColor ? chalk.red(message) : message);
       process.exitCode = 1;
-      return;
-    }
-    const targets = files.length ? files : ['.'];
-    const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
-      import('../config/loader.js'),
-      import('../core/linter.js'),
-      import('../core/ignore.js'),
-    ]);
-    let config = await loadConfig(process.cwd(), options.config);
-    if (options.concurrency !== undefined)
-      config.concurrency = options.concurrency;
-    const maxWarnings: number | undefined = options.maxWarnings;
-    if (config.configPath)
-      config.configPath = realpathIfExists(config.configPath);
-    const linterRef = { current: new Linter(config) };
-    let pluginPaths = await linterRef.current.getPluginPaths();
-    const cacheLocation = options.cache
-      ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
-      : undefined;
-    const cache: Cache | undefined = cacheLocation
-      ? loadCache(cacheLocation)
-      : undefined;
-    let ignorePath: string | undefined;
-    if (options.ignorePath) {
-      const resolved = path.resolve(options.ignorePath as string);
-      if (!fs.existsSync(resolved)) {
-        const message = `Ignore file not found: "${relFromCwd(resolved)}"`;
-        console.error(useColor ? chalk.red(message) : message);
-        process.exitCode = 1;
-        return;
-      }
-      ignorePath = realpathIfExists(resolved);
-    }
-    const gitIgnore = realpathIfExists(path.join(process.cwd(), '.gitignore'));
-    const designIgnore = realpathIfExists(
-      path.join(process.cwd(), '.designlintignore'),
-    );
-    let ig = ignore();
-    const refreshIgnore = async () => {
-      const { ig: newIg } = await loadIgnore(
-        config,
-        ignorePath ? [ignorePath] : [],
-      );
-      ig = newIg;
-    };
-    await refreshIgnore();
-    const state = { pluginPaths, ignoreFilePaths: [] as string[] };
-    const runLint = async (paths: string[]): Promise<string[]> => {
-      const start = performance.now();
-      const {
-        results,
-        ignoreFiles: newIgnore = [],
-        warning,
-      } = await linterRef.current.lintFiles(
-        paths,
-        options.fix,
-        cache,
-        ignorePath ? [ignorePath] : [],
-        cacheLocation,
-      );
-      const duration = performance.now() - start;
-      if (warning && !options.quiet) console.warn(warning);
-      const output = formatter(results, useColor);
-      if (options.output) {
-        await writeFileAtomic(options.output as string, output);
-      } else if (!options.quiet) {
-        console.log(output);
-      }
-      if (
-        !options.quiet &&
-        (options.format === undefined || options.format === 'stylish')
-      ) {
-        const time = (duration / 1000).toFixed(2);
-        const count = results.length;
-        const stat = `\nLinted ${count} file${count === 1 ? '' : 's'} in ${time}s`;
-        console.log(useColor ? chalk.cyan.bold(stat) : stat);
-      }
-      if (options.report) {
-        await writeFileAtomic(
-          options.report as string,
-          JSON.stringify({ results, ignoreFiles: newIgnore }, null, 2),
-        );
-      }
-      const hasErrors = results.some((r) =>
-        r.messages.some((m) => m.severity === 'error'),
-      );
-      const warningCount = results.reduce(
-        (count, r) =>
-          count + r.messages.filter((m) => m.severity === 'warn').length,
-        0,
-      );
-      let exit = hasErrors ? 1 : 0;
-      if (maxWarnings !== undefined && warningCount > maxWarnings) exit = 1;
-      process.exitCode = exit;
-      state.ignoreFilePaths = newIgnore;
-      return newIgnore;
-    };
-    const reportError = (err: unknown) => {
-      const output =
-        err instanceof Error && err.stack ? err.stack : String(err);
-      console.error(useColor ? chalk.red(output) : output);
-      process.exitCode = 1;
-    };
-    const firstIgnore = await runLint(targets);
-    state.ignoreFilePaths = firstIgnore;
-    if (options.watch) {
-      await startWatch({
-        targets,
-        options,
-        config,
-        refreshIgnore,
-        cache,
-        cacheLocation,
-        state,
-        designIgnore,
-        gitIgnore,
-        runLint,
-        linterRef,
-        reportError,
-        getIg: () => ig,
-        useColor,
-      });
     }
   });
 
