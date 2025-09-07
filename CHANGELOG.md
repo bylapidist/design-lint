@@ -1,5 +1,15 @@
 # @lapidist/design-lint
 
+## 4.8.2
+
+### Patch Changes
+
+- 19024f2: refactor plugin loading with centralized PluginManager
+- 51dc943: refactor CLI run flow into modular helpers for environment setup, execution, and watch mode
+- a194c4d: refactor lintFiles to delegate file scanning and cache handling to services
+- 8add001: refactor token tracker to use classifier strategy map
+- 52906ec: replace string-similarity with leven
+
 ## 4.8.1
 
 ### Patch Changes
