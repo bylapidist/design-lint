@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 4.8.1
+
+### Patch Changes
+
+- d9c4ede: fix stylish formatter to output relative paths
+
 ## 4.8.0
 
 ### Minor Changes
