@@ -1,33 +1,19 @@
 import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
 import { builtInRules } from '../rules/index.js';
-import { loadPlugins } from './plugin-loader.js';
-
-interface EngineErrorOptions {
-  message: string;
-  context: string;
-  remediation: string;
-}
-
-export function createEngineError(opts: EngineErrorOptions): Error {
-  return new Error(
-    `${opts.message}\nContext: ${opts.context}\nRemediation: ${opts.remediation}`,
-  );
-}
+import { PluginManager, createEngineError } from './plugin-manager.js';
 
 export class RuleRegistry {
   private ruleMap = new Map<string, { rule: RuleModule; source: string }>();
   private pluginLoad: Promise<void>;
   private pluginPaths: string[] = [];
+  private pluginManager: PluginManager;
   constructor(private config: Config) {
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
-    this.pluginLoad = loadPlugins(
-      this.config,
-      this.ruleMap,
-      createEngineError,
-    ).then((paths) => {
+    this.pluginManager = new PluginManager(this.config, this.ruleMap);
+    this.pluginLoad = this.pluginManager.getPlugins().then((paths) => {
       this.pluginPaths = paths;
     });
   }
