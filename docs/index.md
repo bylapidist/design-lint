@@ -1,19 +1,29 @@
 # @lapidist/design-lint
 
-Design Lint scans your project for design system violations. It validates token usage, enforces component conventions and integrates with modern build tools.
+@lapidist/design-lint keeps JavaScript, TypeScript and style sheets aligned with your design system. These docs cover setup, rule configuration and integration examples. For background and a project overview, see the [README](../README.md).
+
+## Getting Started
+
+- [Install and run the CLI](usage.md)
+- [Configure tokens and rules](configuration.md)
+- [Explore framework integrations](frameworks.md)
+
+## Feature Highlights
 
 - **Language aware** – JavaScript, TypeScript and style sheets, including Vue, Svelte and JSX blocks
 - **Token driven** – color, spacing, typography and more
 - **Extensible** – add custom rules, formatters and plugins
 
-```bash
-npx @lapidist/design-lint@latest --help
-```
+## Quick Reference
 
-## Learn more
+- [Rules reference](rules/index.md)
+- [Custom plugins](plugins.md)
+- [Formatting output](formatters.md)
+- [Continuous integration examples](ci.md)
+- [API usage](api.md)
+- [Troubleshooting tips](troubleshooting.md)
 
-- [Getting started](usage.md)
-- [Configuration](configuration.md)
-- [Rule reference](rules/index.md)
-- [Architecture](architecture.md)
-- [Troubleshooting](troubleshooting.md)
+## Search the docs
+
+Use the search field on [design-lint.lapidist.net](https://design-lint.lapidist.net) or your editor's find command to locate topics across these docs.
+
