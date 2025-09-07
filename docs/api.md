@@ -14,7 +14,9 @@ console.log(formatter(results));
 
 ## `Linter` ([source](../src/core/linter.ts))
 
-Core engine for linting files and applying rules.
+Core engine for linting files and applying rules. Internally it composes
+modular services like the `RuleRegistry`, `ParserService`, `TokenTracker`, and
+`CacheManager` to keep concerns separated and testable.
 
 ### Constructor
 

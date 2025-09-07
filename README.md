@@ -179,6 +179,9 @@ console.log(formatter(results));
 
 Additional exports such as `applyFixes` and `builtInRules` are documented in the [API guide](docs/api.md).
 
+Under the hood the `Linter` composes a `RuleRegistry`, `ParserService`,
+`TokenTracker`, and `CacheManager` to keep linting fast and maintainable.
+
 ## Configuration
 
 Create a `designlint.config.js` (or `.json`) file to define design tokens and rules:

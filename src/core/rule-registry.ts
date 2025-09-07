@@ -1,0 +1,76 @@
+import type { Config } from './linter.js';
+import type { RuleModule } from './types.js';
+import { builtInRules } from '../rules/index.js';
+import { loadPlugins } from './plugin-loader.js';
+
+interface EngineErrorOptions {
+  message: string;
+  context: string;
+  remediation: string;
+}
+
+function createEngineError(opts: EngineErrorOptions): Error {
+  return new Error(
+    `${opts.message}\nContext: ${opts.context}\nRemediation: ${opts.remediation}`,
+  );
+}
+
+export class RuleRegistry {
+  private ruleMap: Map<string, { rule: RuleModule; source: string }> =
+    new Map();
+  public ready: Promise<void>;
+  constructor(private config: Config) {
+    for (const rule of builtInRules) {
+      this.ruleMap.set(rule.name, { rule, source: 'built-in' });
+    }
+    this.ready = loadPlugins(this.config, this.ruleMap, createEngineError);
+  }
+
+  getEnabledRules(): {
+    rule: RuleModule;
+    options: unknown;
+    severity: 'error' | 'warn';
+  }[] {
+    const entries: {
+      rule: RuleModule;
+      options: unknown;
+      severity: 'error' | 'warn';
+    }[] = [];
+    const ruleConfig = (this.config.rules || {}) as Record<string, unknown>;
+    const unknown: string[] = [];
+    for (const [name, setting] of Object.entries(ruleConfig)) {
+      const entry = this.ruleMap.get(name);
+      if (!entry) {
+        unknown.push(name);
+        continue;
+      }
+      const rule = entry.rule;
+      let severity: 'error' | 'warn' | undefined;
+      let options: unknown = undefined;
+      if (Array.isArray(setting)) {
+        severity = this.normalizeSeverity(setting[0]);
+        options = setting[1];
+      } else {
+        severity = this.normalizeSeverity(setting);
+      }
+      if (severity) {
+        entries.push({ rule, options, severity });
+      }
+    }
+    if (unknown.length > 0) {
+      throw createEngineError({
+        message: `Unknown rule(s): ${unknown.join(', ')}`,
+        context: 'Config.rules',
+        remediation: 'Remove or correct these rule names.',
+      });
+    }
+    return entries;
+  }
+
+  private normalizeSeverity(value: unknown): 'error' | 'warn' | undefined {
+    if (value === 0 || value === 'off') return undefined;
+    if (value === 2 || value === 'error') return 'error';
+    if (value === 1 || value === 'warn') return 'warn';
+    return undefined;
+  }
+}
