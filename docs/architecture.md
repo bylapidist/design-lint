@@ -49,7 +49,7 @@ Loading errors clearly identify the plugin and suggest remediation.
 
 ## File Scanning and Ignoring
 
-The [`file-scanner.ts`](../src/core/file-scanner.ts) module gathers target files
+The [`file-service.ts`](../src/core/file-service.ts) module gathers target files
 based on glob patterns and consults ignore files via [`ignore.ts`](../src/core/ignore.ts).
 This keeps the core linter focused on analysis while delegating filesystem
 concerns to dedicated helpers.
@@ -68,8 +68,8 @@ patterns consumed by the engine.
 To avoid reprocessing unchanged files, `CacheManager` accepts an optional cache
 map and location. When `lintFiles` runs it populates the map with each file’s
 modification time and `LintResult`, reading and writing to disk when
-`cacheLocation` is provided. Stale entries are pruned and results are persisted
-after every run. Cache serialization lives in
+`cacheLocation` is provided. A separate `CacheService` handles pruning stale
+entries and saving the cache after each run. Cache serialization lives in
 [`src/core/cache.ts`](../src/core/cache.ts) and is coordinated by the linter.
 
 ## Formatting
