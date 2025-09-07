@@ -1,78 +1,18 @@
 #!/usr/bin/env node
 import fs from 'fs';
-import path from 'path';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
 import { prepareEnvironment, type PrepareEnvironmentOptions } from './env.js';
 import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
-import writeFileAtomic from 'write-file-atomic';
+import { initConfig } from './init-config.js';
 
 type CliOptions = ExecuteOptions &
   PrepareEnvironmentOptions & {
     color?: boolean;
     watch?: boolean;
   };
-
-function initConfig(initFormat?: string) {
-  const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
-  let format = initFormat;
-  if (format && !supported.has(format)) {
-    console.error(
-      `Unsupported init format: "${format}". Supported formats: ${[...supported].join(', ')}`,
-    );
-    process.exitCode = 1;
-    return;
-  }
-  if (!format) {
-    const tsconfigPath = path.resolve(process.cwd(), 'tsconfig.json');
-    if (fs.existsSync(tsconfigPath)) {
-      format = 'ts';
-    } else {
-      const pkgPath = path.resolve(process.cwd(), 'package.json');
-      if (fs.existsSync(pkgPath)) {
-        try {
-          const pkgText = fs.readFileSync(pkgPath, 'utf8');
-          const pkg = JSON.parse(pkgText) as unknown as {
-            dependencies?: Record<string, unknown>;
-            devDependencies?: Record<string, unknown>;
-          };
-          if (pkg.dependencies?.typescript || pkg.devDependencies?.typescript)
-            format = 'ts';
-        } catch {}
-      }
-    }
-    format ??= 'json';
-  }
-
-  const configPath = path.resolve(process.cwd(), `designlint.config.${format}`);
-  if (fs.existsSync(configPath)) {
-    console.log(`designlint.config.${format} already exists`);
-    return;
-  }
-
-  let contents = '';
-  switch (format) {
-    case 'json':
-      contents = `${JSON.stringify({ tokens: {}, rules: {} }, null, 2)}\n`;
-      break;
-    case 'js':
-    case 'cjs':
-      contents = `module.exports = {\n  tokens: {},\n  rules: {},\n};\n`;
-      break;
-    case 'mjs':
-      contents = `export default {\n  tokens: {},\n  rules: {},\n};\n`;
-      break;
-    case 'ts':
-    case 'mts':
-      contents = `import { defineConfig } from '@lapidist/design-lint';\n\nexport default defineConfig({\n  tokens: {},\n  rules: {},\n});\n`;
-      break;
-  }
-
-  writeFileAtomic.sync(configPath, contents);
-  console.log(`Created designlint.config.${format}`);
-}
 
 function createProgram(version: string) {
   const program = new Command();

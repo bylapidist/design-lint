@@ -192,12 +192,18 @@ void test('getFormatter returns formatter for valid name', async () => {
   assert.equal(await getFormatter('json'), jsonFormatter);
 });
 
-void test('getFormatter loads formatter from path', async () => {
+void test('getFormatter resolves formatter relative to cwd', async () => {
   const __dirname = fileURLToPath(new URL('.', import.meta.url));
-  const formatterPath = join(__dirname, 'fixtures', 'custom-formatter.ts');
-  const formatter = await getFormatter(formatterPath);
-  const out = formatter([{ filePath: 'a', messages: [] }]);
-  assert.equal(out, 'custom:1');
+  const fixtureDir = join(__dirname, 'fixtures');
+  const prev = process.cwd();
+  process.chdir(fixtureDir);
+  try {
+    const formatter = await getFormatter('./custom-formatter.ts');
+    const out = formatter([{ filePath: 'a', messages: [] }]);
+    assert.equal(out, 'custom:1');
+  } finally {
+    process.chdir(prev);
+  }
 });
 
 void test('getFormatter throws for invalid name', async () => {

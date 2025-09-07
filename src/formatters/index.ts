@@ -1,14 +1,11 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createRequire } from 'node:module';
 import type { LintResult } from '../core/types.js';
 import { stylish } from './stylish.js';
 import { jsonFormatter } from './json.js';
 import { sarifFormatter } from './sarif.js';
 
 type Formatter = (results: LintResult[], useColor?: boolean) => string;
-
-const requireFromCwd = createRequire(path.join(process.cwd(), 'noop.js'));
 
 /**
  * Retrieve a formatter by name.
@@ -25,8 +22,16 @@ export async function getFormatter(name: string): Promise<Formatter> {
       return sarifFormatter;
     default: {
       try {
-        const resolved = requireFromCwd.resolve(name);
-        const mod = (await import(pathToFileURL(resolved).href)) as unknown;
+        const resolved =
+          path.isAbsolute(name) ||
+          name.startsWith('./') ||
+          name.startsWith('../')
+            ? pathToFileURL(path.resolve(process.cwd(), name)).href
+            : import.meta.resolve(
+                name,
+                pathToFileURL(path.join(process.cwd(), 'index.js')).href,
+              );
+        const mod = (await import(resolved)) as unknown;
         const formatter = resolveFormatter(mod);
         if (!formatter) {
           throw new Error();

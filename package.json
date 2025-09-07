@@ -95,8 +95,8 @@
     "check-coverage": true,
     "branches": 75,
     "functions": 75,
-    "lines": 60,
-    "statements": 60
+    "lines": 80,
+    "statements": 80
   },
   "types": "dist/index.d.ts",
   "files": [
