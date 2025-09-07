@@ -184,7 +184,7 @@ console.log(formatter(results));
 See [Formatters](./formatters.md) for built-in options and instructions on adding custom ones, and
 [Usage](./usage.md#options) for command‑line equivalents.
 
-## `applyFixes(text, messages)` ([source](../src/core/linter.ts))
+## `applyFixes(text, messages)` ([source](../src/core/cache-manager.ts))
 
 Apply autofixes to file contents using message fix data.
 

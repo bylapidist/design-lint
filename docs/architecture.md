@@ -6,25 +6,28 @@ This document describes the major pieces that power `@lapidist/design-lint`.
 flowchart TD
   CLI[CLI] --> ConfigLoader
   ConfigLoader --> Linter
-  Linter --> PluginLoader
+  Linter --> RuleRegistry
+  Linter --> ParserService
+  Linter --> TokenTracker
+  Linter --> CacheManager
+  RuleRegistry --> PluginLoader
   Linter --> FileScanner
   FileScanner --> Files
   Linter --> Rules
   Rules --> Formatter
-  Linter --> Cache
   Formatter --> Output
 ```
 
 ## Linter Core
 
-The `Linter` class in [`src/core/linter.ts`](../src/core/linter.ts) drives the
-linting process. On construction it registers built-in rules, loads any
-configured plugins, and then scans files using glob patterns while honoring
-ignore rules. Files are parsed according to their extensions—TypeScript and
-JavaScript via the TypeScript compiler, CSS with PostCSS, and single-file
-components like Vue or Svelte through their respective parsers. The engine then
-executes rule listeners for each relevant AST node or CSS declaration and can
-apply fixes when requested.
+The `Linter` class in [`src/core/linter.ts`](../src/core/linter.ts) orchestrates
+specialized modules. `RuleRegistry` registers built-in rules and loads any
+plugins. `ParserService` parses source files, dispatching AST nodes and CSS
+declarations to rule listeners. `TokenTracker` records which design tokens are
+used so `design-system/no-unused-tokens` can report leftovers. `CacheManager`
+handles reading and writing lint results, applying fixes when requested. The
+linter coordinates these components while scanning files based on glob patterns
+and honoring ignore rules.
 
 ## Rule Lifecycle
 
@@ -62,12 +65,12 @@ patterns consumed by the engine.
 
 ## Caching Subsystem
 
-To avoid reprocessing unchanged files, the engine accepts an optional cache map
-and location. When `lintFiles` runs it populates the map with each file’s
+To avoid reprocessing unchanged files, `CacheManager` accepts an optional cache
+map and location. When `lintFiles` runs it populates the map with each file’s
 modification time and `LintResult`, reading and writing to disk when
 `cacheLocation` is provided. Stale entries are pruned and results are persisted
 after every run. Cache serialization lives in
-[`src/core/cache.ts`](../src/core/cache.ts), orchestrated by the linter.
+[`src/core/cache.ts`](../src/core/cache.ts) and is coordinated by the linter.
 
 ## Formatting
 
@@ -85,4 +88,3 @@ change, the CLI reloads configuration and plugins, clears caches, and invokes
 the engine again. Dynamic imports with cache-busting query strings ensure ESM
 plugins reload correctly. Implementation details can be found in
 [`src/cli/index.ts`](../src/cli/index.ts).
-
