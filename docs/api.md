@@ -113,6 +113,22 @@ const completions = linter.getTokenCompletions();
 console.log(completions.spacing[0]);
 ```
 
+## `Runner` ([source](../src/core/runner.ts))
+
+Coordinates file scanning, caching, and concurrency for the linter. Useful for
+testing or custom integrations that need fine-grained control over execution.
+
+### Constructor
+
+`new Runner({ config, tokenTracker, lintText })`
+
+### Methods
+
+#### `run(targets, fix?, cache?, ignorePaths?, cacheLocation?)`
+
+Executes linting over a set of targets. Parameters and return value mirror
+`Linter.lintFiles`.
+
 ## `loadConfig(cwd, configPath?)` ([source](../src/config/loader.ts))
 
 Loads a `designlint.config.*` file and validates its contents.

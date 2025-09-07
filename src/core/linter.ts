@@ -1,5 +1,3 @@
-import pLimit from 'p-limit';
-import os from 'node:os';
 import type {
   LintResult,
   DesignTokens,
@@ -12,8 +10,7 @@ export { defaultIgnore } from './ignore.js';
 import type { Cache } from './cache.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
-import { FileService } from './file-service.js';
-import { CacheService } from './cache-service.js';
+import { Runner } from './runner.js';
 import { parserRegistry } from './parser-registry.js';
 import path from 'node:path';
 
@@ -82,37 +79,18 @@ export class Linter {
     warning?: string;
   }> {
     await this.ruleRegistry.load();
-    const files = await FileService.scan(
+    const runner = new Runner({
+      config: this.config,
+      tokenTracker: this.tokenTracker,
+      lintText: this.lintText.bind(this),
+    });
+    return runner.run(
       targets,
-      this.config,
+      fix,
+      cache,
       additionalIgnorePaths,
+      cacheLocation,
     );
-    const ignoreFiles: string[] = [];
-    if (files.length === 0) {
-      return {
-        results: [],
-        ignoreFiles,
-        warning: 'No files matched the provided patterns.',
-      };
-    }
-    CacheService.prune(cache, files);
-    const concurrency = Math.max(
-      1,
-      Math.floor(this.config.concurrency ?? os.cpus().length),
-    );
-    const limit = pLimit(concurrency);
-    const cacheManager = CacheService.createManager(cache, fix);
-    const tasks = files.map((filePath) =>
-      limit(() => cacheManager.processFile(filePath, this.lintText.bind(this))),
-    );
-    const results = await Promise.all(tasks);
-    results.push(
-      ...this.tokenTracker.generateReports(
-        this.config.configPath ?? 'designlint.config',
-      ),
-    );
-    CacheService.save(cacheManager, cacheLocation);
-    return { results, ignoreFiles };
   }
 
   getTokenCompletions(): Record<string, string[]> {

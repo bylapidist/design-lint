@@ -6,6 +6,7 @@ This document describes the major pieces that power `@lapidist/design-lint`.
 flowchart TD
   CLI[CLI] --> ConfigLoader
   ConfigLoader --> Linter
+  Linter --> Runner
   Linter --> RuleRegistry
   Linter --> ParserRegistry
   ParserRegistry --> VueParser[Vue Parser]
@@ -13,9 +14,9 @@ flowchart TD
   ParserRegistry --> TSParser[TS/JS Parser]
   ParserRegistry --> CSSParser[CSS Parser]
   Linter --> TokenTracker
-  Linter --> CacheManager
   RuleRegistry --> PluginManager
-  Linter --> FileScanner
+  Runner --> CacheManager
+  Runner --> FileScanner
   FileScanner --> Files
   Linter --> Rules
   Rules --> Formatter
@@ -30,10 +31,9 @@ plugins. A `parserRegistry` in [`src/core/parser-registry.ts`](../src/core/parse
 resolves language-specific strategies—Vue, Svelte, TypeScript/JavaScript, and
 CSS—that parse source files and dispatch AST nodes and CSS declarations to rule
 listeners. `TokenTracker` records which design tokens are used so
-`design-system/no-unused-tokens` can report leftovers. `CacheManager` handles
-reading and writing lint results, applying fixes when requested. The linter
-coordinates these components while scanning files based on glob patterns and
-honoring ignore rules.
+`design-system/no-unused-tokens` can report leftovers. File discovery and cache
+management are delegated to the [`Runner`](../src/core/runner.ts), allowing the
+linter to focus on rule coordination and parsing.
 
 ## Rule Lifecycle
 
@@ -57,8 +57,8 @@ Loading errors clearly identify the plugin and suggest remediation.
 
 The [`file-service.ts`](../src/core/file-service.ts) module gathers target files
 based on glob patterns and consults ignore files via [`ignore.ts`](../src/core/ignore.ts).
-This keeps the core linter focused on analysis while delegating filesystem
-concerns to dedicated helpers.
+The `Runner` consumes this service, keeping the core linter focused on analysis
+while delegating filesystem concerns to dedicated helpers.
 
 ## Configuration Resolution
 
@@ -72,11 +72,11 @@ patterns consumed by the engine.
 ## Caching Subsystem
 
 To avoid reprocessing unchanged files, `CacheManager` accepts an optional cache
-map and location. When `lintFiles` runs it populates the map with each file’s
-modification time and `LintResult`, reading and writing to disk when
-`cacheLocation` is provided. A separate `CacheService` handles pruning stale
-entries and saving the cache after each run. Cache serialization lives in
-[`src/core/cache.ts`](../src/core/cache.ts) and is coordinated by the linter.
+map and location. The `Runner` populates the map with each file’s modification
+time and `LintResult`, reading and writing to disk when `cacheLocation` is
+provided. A separate `CacheService` handles pruning stale entries and saving the
+cache after each run. Cache serialization lives in
+[`src/core/cache.ts`](../src/core/cache.ts) and is coordinated by the runner.
 
 ## Formatting
 
