@@ -1,7 +1,7 @@
 export type TokenPattern = string | RegExp;
 
 import picomatch from 'picomatch';
-import { findBestMatch } from 'string-similarity';
+import leven from 'leven';
 
 /**
  * Match a CSS variable name against provided token patterns.
@@ -36,8 +36,16 @@ export function closestToken(
 ): string | null {
   const tokens = patterns.filter((p): p is string => typeof p === 'string');
   if (tokens.length === 0) return null;
-  const { bestMatch } = findBestMatch(name, tokens);
-  return bestMatch.target;
+  let best = tokens[0];
+  let bestDistance = leven(name, best);
+  for (const token of tokens.slice(1)) {
+    const distance = leven(name, token);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = token;
+    }
+  }
+  return best;
 }
 
 /** Extract a CSS variable name from a value like `var(--foo)` */
