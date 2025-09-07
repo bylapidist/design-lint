@@ -10,6 +10,7 @@ import { Linter } from '../core/linter.js';
 import type { Config } from '../core/linter.js';
 import type { Cache } from '../core/cache.js';
 import type { Ignore } from 'ignore';
+import { executeLint, type ExecuteServices } from './execute.js';
 
 export interface WatchState {
   pluginPaths: string[];
@@ -31,6 +32,52 @@ export interface WatchOptions {
   reportError: (err: unknown) => void;
   getIg: () => Ignore;
   useColor: boolean;
+}
+
+export interface WatchServices extends ExecuteServices {
+  config: Config;
+  refreshIgnore: () => Promise<void>;
+  designIgnore: string;
+  gitIgnore: string;
+  state: WatchState;
+  getIg: () => Ignore;
+}
+
+export async function watchMode(
+  targets: string[],
+  options: Record<string, unknown>,
+  services: WatchServices,
+) {
+  const reportError = (err: unknown) => {
+    const output = err instanceof Error && err.stack ? err.stack : String(err);
+    console.error(services.useColor ? chalk.red(output) : output);
+    process.exitCode = 1;
+  };
+  const runLint = async (paths: string[]) => {
+    const { ignoreFiles, exitCode } = await executeLint(
+      paths,
+      options,
+      services,
+    );
+    process.exitCode = exitCode;
+    return ignoreFiles;
+  };
+  await startWatch({
+    targets,
+    options,
+    config: services.config,
+    linterRef: services.linterRef,
+    refreshIgnore: services.refreshIgnore,
+    cache: services.cache,
+    cacheLocation: services.cacheLocation,
+    state: services.state,
+    designIgnore: services.designIgnore,
+    gitIgnore: services.gitIgnore,
+    runLint,
+    reportError,
+    getIg: services.getIg,
+    useColor: services.useColor,
+  });
 }
 
 export async function startWatch(ctx: WatchOptions) {
