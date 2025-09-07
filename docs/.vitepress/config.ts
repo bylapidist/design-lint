@@ -25,16 +25,6 @@ export default defineConfig({
   themeConfig: {
     logo: '/logo.svg',
     nav: [
-      { text: 'Usage', link: '/usage' },
-      { text: 'Configuration', link: '/configuration' },
-      { text: 'API', link: '/api' },
-      { text: 'Formatters', link: '/formatters' },
-      { text: 'Plugins', link: '/plugins' },
-      { text: 'Rules', link: '/rules/' },
-      { text: 'Architecture', link: '/architecture' },
-      { text: 'Frameworks', link: '/frameworks' },
-      { text: 'CI', link: '/ci' },
-      { text: 'Troubleshooting', link: '/troubleshooting' },
       { text: 'GitHub', link: 'https://github.com/bylapidist/design-lint' },
       { text: 'Author', link: 'https://lapidist.net' },
     ],
