@@ -1,8 +1,10 @@
 # design-token/animation
 
+## Summary
 Enforces `animation` values to match the animation tokens defined in your configuration.
 
 ## Configuration
+Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
 
 ```json
 {
@@ -12,6 +14,11 @@ Enforces `animation` values to match the animation tokens defined in your config
   "rules": { "design-token/animation": "error" }
 }
 ```
+
+## Options
+No additional options.
+
+This rule is not auto-fixable.
 
 ## Examples
 
@@ -26,3 +33,10 @@ Enforces `animation` values to match the animation tokens defined in your config
 ```css
 .box { animation: spin 1s linear infinite; }
 ```
+
+## When Not To Use
+If your project does not enforce animation tokens, disable this rule.
+
+## Related Rules
+- [design-token/duration](./duration.md)
+- [design-token/colors](./colors.md)
