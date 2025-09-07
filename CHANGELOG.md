@@ -1,5 +1,23 @@
 # @lapidist/design-lint
 
+## 4.8.0
+
+### Minor Changes
+
+- df018fb: refactor linter into modular architecture with rule registry, parser service, token tracker, and cache manager
+
+### Patch Changes
+
+- d44c263: refactor CLI to use commander, extract watch helper, and include typescript runtime dependency
+- d67b6c6: refactor plugin resolution into shared helper and expose resolved paths for watch mode
+- 503c22b: refactor CLI to use internal file scanner and drop fast-glob dependency
+- 460bbc1: remove redundant design-token/no-unused-tokens rule
+- fb3360d: migrate config loader to cosmiconfig and update tests
+- 6c63593: replace custom cache with flat-cache
+- 4a29a4c: refactor file scanning to use globby for gitignore-aware traversal
+- 987c83a: use picomatch for token matching and string similarity for suggestions
+- 58751ba: refactor tmp util to use tempy for temporary directories
+
 ## 4.7.10
 
 ### Patch Changes
