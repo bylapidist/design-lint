@@ -16,6 +16,8 @@
 
 ## Quick start
 
+**@lapidist/design-lint** requires Node.js ≥22. The commands below either run the linter once via `npx` or install it locally, initialise configuration, and lint your `src` directory. For deeper CLI details, see the [Usage guide](docs/usage.md).
+
 ```bash
 # run without installing
 npx @lapidist/design-lint@latest src
