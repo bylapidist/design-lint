@@ -56,6 +56,13 @@ test('stylish formatter outputs OK for files without messages', () => {
   assert.equal(out, '[OK] a.ts\n[OK] b.ts');
 });
 
+test('stylish formatter outputs relative paths', () => {
+  const abs = join(process.cwd(), 'c.ts');
+  const results: LintResult[] = [{ filePath: abs, messages: [] }];
+  const out = stylish(results, false);
+  assert.equal(out, '[OK] c.ts');
+});
+
 test('stylish formatter does not insert blank line before summary', () => {
   const results: LintResult[] = [
     {

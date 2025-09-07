@@ -1,4 +1,5 @@
 import type { LintResult } from '../core/types.js';
+import { relFromCwd } from '../utils/paths.js';
 
 const codes = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,
@@ -12,12 +13,13 @@ export function stylish(results: LintResult[], useColor = true): string {
   let errorCount = 0;
   let warnCount = 0;
   for (const res of results) {
+    const filePath = relFromCwd(res.filePath);
     if (res.messages.length === 0) {
       const ok = useColor ? codes.green('[OK]') : '[OK]';
-      lines.push(`${ok} ${res.filePath}`);
+      lines.push(`${ok} ${filePath}`);
       continue;
     }
-    lines.push(useColor ? codes.underline(res.filePath) : res.filePath);
+    lines.push(useColor ? codes.underline(filePath) : filePath);
     for (const msg of res.messages) {
       if (msg.severity === 'error') errorCount++;
       else warnCount++;
