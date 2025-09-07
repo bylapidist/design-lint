@@ -41,10 +41,4 @@ Streams lint results through built‑in or custom formatters. See [`src/formatte
 Caching avoids repeated work across runs by storing file metadata and parsed ASTs. The runner processes files concurrently, dis
 tributing parsing and rule evaluation across available CPU cores.
 
-## Roadmap
-
-- Incremental linting with persistent caches.
-- Pluggable concurrency strategies, including worker threads.
-- Enhanced formatter API for streaming large reports.
-
 See the [Plugin guide](plugins.md) for extending the engine beyond the core modules.
