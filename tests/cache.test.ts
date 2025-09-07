@@ -6,7 +6,7 @@ import path from 'node:path';
 import { loadCache } from '../src/core/cache.ts';
 import type { LintResult } from '../src/core/types.ts';
 
-test('loadCache loads and saves entries via flat-cache', async () => {
+void test('loadCache loads and saves entries via flat-cache', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-test-'));
   const file = path.join(dir, 'cache.json');
 
@@ -20,7 +20,7 @@ test('loadCache loads and saves entries via flat-cache', async () => {
   assert.deepEqual(cache.getKey('foo'), entry);
 });
 
-test('cache uses provided file location', async () => {
+void test('cache uses provided file location', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-test-'));
   const file = path.join(dir, 'cache.json');
 

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/opacity reports invalid value', async () => {
+void test('design-token/opacity reports invalid value', async () => {
   const linter = new Linter({
     tokens: { opacity: { low: 0.2 } },
     rules: { 'design-token/opacity': 'error' },
@@ -11,7 +11,7 @@ test('design-token/opacity reports invalid value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/opacity reports zero value', async () => {
+void test('design-token/opacity reports zero value', async () => {
   const linter = new Linter({
     tokens: { opacity: { low: 0.2 } },
     rules: { 'design-token/opacity': 'error' },
@@ -20,7 +20,7 @@ test('design-token/opacity reports zero value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/opacity accepts valid values', async () => {
+void test('design-token/opacity accepts valid values', async () => {
   const linter = new Linter({
     tokens: { opacity: { low: 0.2 } },
     rules: { 'design-token/opacity': 'error' },
@@ -29,7 +29,7 @@ test('design-token/opacity accepts valid values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/opacity reports numeric literals', async () => {
+void test('design-token/opacity reports numeric literals', async () => {
   const linter = new Linter({
     tokens: { opacity: { low: 0.2 } },
     rules: { 'design-token/opacity': 'error' },
@@ -41,7 +41,7 @@ test('design-token/opacity reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/opacity ignores numbers in JSX props', async () => {
+void test('design-token/opacity ignores numbers in JSX props', async () => {
   const linter = new Linter({
     tokens: { opacity: { low: 0.2 } },
     rules: { 'design-token/opacity': 'error' },
@@ -51,7 +51,7 @@ test('design-token/opacity ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/opacity warns when tokens missing', async () => {
+void test('design-token/opacity warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/opacity': 'warn' },
   });

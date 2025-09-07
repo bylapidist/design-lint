@@ -6,7 +6,7 @@ import { Linter } from '../../src/index.ts';
 
 // Ensure lintFiles works when concurrency is 0 or negative
 // by falling back to a minimum concurrency of 1.
-test('lintFiles handles non-positive concurrency values', async () => {
+void test('lintFiles handles non-positive concurrency values', async () => {
   const dir = await fs.mkdtemp(path.join(process.cwd(), 'tmp-'));
   const file = path.join(dir, 'test.css');
   await fs.writeFile(file, 'a{color:red}');

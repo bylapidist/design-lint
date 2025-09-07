@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-system/no-inline-styles flags style attribute on components', async () => {
+void test('design-system/no-inline-styles flags style attribute on components', async () => {
   const linter = new Linter({
     rules: { 'design-system/no-inline-styles': 'error' },
   });
@@ -13,7 +13,7 @@ test('design-system/no-inline-styles flags style attribute on components', async
   assert.equal(res.messages.length, 1);
 });
 
-test('design-system/no-inline-styles flags className attribute on components', async () => {
+void test('design-system/no-inline-styles flags className attribute on components', async () => {
   const linter = new Linter({
     rules: { 'design-system/no-inline-styles': 'error' },
   });
@@ -24,7 +24,7 @@ test('design-system/no-inline-styles flags className attribute on components', a
   assert.equal(res.messages.length, 1);
 });
 
-test('design-system/no-inline-styles ignores className when configured', async () => {
+void test('design-system/no-inline-styles ignores className when configured', async () => {
   const linter = new Linter({
     rules: {
       'design-system/no-inline-styles': ['error', { ignoreClassName: true }],
@@ -37,7 +37,7 @@ test('design-system/no-inline-styles ignores className when configured', async (
   assert.equal(res.messages.length, 0);
 });
 
-test('design-system/no-inline-styles flags inline styles in Vue templates', async () => {
+void test('design-system/no-inline-styles flags inline styles in Vue templates', async () => {
   const linter = new Linter({
     rules: { 'design-system/no-inline-styles': 'error' },
   });
@@ -48,7 +48,7 @@ test('design-system/no-inline-styles flags inline styles in Vue templates', asyn
   assert.equal(res.messages.length, 1);
 });
 
-test('design-system/no-inline-styles flags inline styles in Svelte components', async () => {
+void test('design-system/no-inline-styles flags inline styles in Svelte components', async () => {
   const linter = new Linter({
     rules: { 'design-system/no-inline-styles': 'error' },
   });
@@ -59,7 +59,7 @@ test('design-system/no-inline-styles flags inline styles in Svelte components', 
   assert.equal(res.messages.length, 1);
 });
 
-test('design-system/no-inline-styles flags inline styles on custom elements', async () => {
+void test('design-system/no-inline-styles flags inline styles on custom elements', async () => {
   const linter = new Linter({
     rules: { 'design-system/no-inline-styles': 'error' },
   });

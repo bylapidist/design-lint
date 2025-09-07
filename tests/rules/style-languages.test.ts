@@ -26,14 +26,14 @@ function assertIds(messages: { ruleId: string }[]) {
   ]);
 }
 
-test('reports raw tokens in .scss files', async () => {
+void test('reports raw tokens in .scss files', async () => {
   const linter = new Linter(config);
   const res = await linter.lintText(cssSample, 'file.scss');
   assert.equal(res.messages.length, 3);
   assertIds(res.messages);
 });
 
-test('reports raw tokens in Vue <style lang="scss">', async () => {
+void test('reports raw tokens in Vue <style lang="scss">', async () => {
   const linter = new Linter(config);
   const res = await linter.lintText(
     `<template><div/></template><style lang="scss">${cssSample}</style>`,
@@ -43,7 +43,7 @@ test('reports raw tokens in Vue <style lang="scss">', async () => {
   assertIds(res.messages);
 });
 
-test('reports raw tokens in Svelte <style lang="scss">', async () => {
+void test('reports raw tokens in Svelte <style lang="scss">', async () => {
   const linter = new Linter(config);
   const res = await linter.lintText(
     `<div></div><style lang="scss">${cssSample}</style>`,
@@ -53,7 +53,7 @@ test('reports raw tokens in Svelte <style lang="scss">', async () => {
   assertIds(res.messages);
 });
 
-test('reports raw tokens in string style attributes', async () => {
+void test('reports raw tokens in string style attributes', async () => {
   const linter = new Linter(config);
   const res = await linter.lintText(
     `const C = () => <div style="color: #fff; margin: 5px; opacity: 0.5"></div>;`,
@@ -63,7 +63,7 @@ test('reports raw tokens in string style attributes', async () => {
   assertIds(res.messages);
 });
 
-test('reports raw tokens once for single style property', async () => {
+void test('reports raw tokens once for single style property', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#000000' } },
     rules: { 'design-token/colors': 'error' },

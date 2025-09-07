@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 import { applyFixes } from '../../src/index.ts';
 
-test('design-system/icon-usage reports raw svg', async () => {
+void test('design-system/icon-usage reports raw svg', async () => {
   const linter = new Linter({
     rules: { 'design-system/icon-usage': 'error' },
   });
@@ -15,7 +15,7 @@ test('design-system/icon-usage reports raw svg', async () => {
   assert.equal(fixed, 'const a = <Icon/>;');
 });
 
-test('design-system/icon-usage matches substitutions', async () => {
+void test('design-system/icon-usage matches substitutions', async () => {
   const linter = new Linter({
     rules: {
       'design-system/icon-usage': [
@@ -32,7 +32,7 @@ test('design-system/icon-usage matches substitutions', async () => {
   assert.equal(fixed, 'const a = <Icon></Icon>;');
 });
 
-test('design-system/icon-usage fixes svg opening and closing tags', async () => {
+void test('design-system/icon-usage fixes svg opening and closing tags', async () => {
   const linter = new Linter({
     rules: { 'design-system/icon-usage': 'error' },
   });

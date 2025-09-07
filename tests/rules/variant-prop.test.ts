@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-system/variant-prop flags invalid variant', async () => {
+void test('design-system/variant-prop flags invalid variant', async () => {
   const linter = new Linter({
     rules: {
       'design-system/variant-prop': [
@@ -19,7 +19,7 @@ test('design-system/variant-prop flags invalid variant', async () => {
   assert.ok(res.messages[0].message.includes('danger'));
 });
 
-test('design-system/variant-prop allows valid variant', async () => {
+void test('design-system/variant-prop allows valid variant', async () => {
   const linter = new Linter({
     rules: {
       'design-system/variant-prop': [
@@ -35,7 +35,7 @@ test('design-system/variant-prop allows valid variant', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-system/variant-prop flags string literals in expressions', async () => {
+void test('design-system/variant-prop flags string literals in expressions', async () => {
   const linter = new Linter({
     rules: {
       'design-system/variant-prop': [
@@ -52,7 +52,7 @@ test('design-system/variant-prop flags string literals in expressions', async ()
   assert.ok(res.messages[0].message.includes('danger'));
 });
 
-test('design-system/variant-prop ignores dynamic expressions', async () => {
+void test('design-system/variant-prop ignores dynamic expressions', async () => {
   const linter = new Linter({
     rules: {
       'design-system/variant-prop': [
@@ -68,7 +68,7 @@ test('design-system/variant-prop ignores dynamic expressions', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-system/variant-prop supports custom prop names', async () => {
+void test('design-system/variant-prop supports custom prop names', async () => {
   const linter = new Linter({
     rules: {
       'design-system/variant-prop': [
@@ -85,7 +85,7 @@ test('design-system/variant-prop supports custom prop names', async () => {
   assert.ok(res.messages[0].message.includes('warn'));
 });
 
-test('design-system/variant-prop flags invalid variant in Vue components', async () => {
+void test('design-system/variant-prop flags invalid variant in Vue components', async () => {
   const linter = new Linter({
     rules: {
       'design-system/variant-prop': [
@@ -101,7 +101,7 @@ test('design-system/variant-prop flags invalid variant in Vue components', async
   assert.equal(res.messages.length, 1);
 });
 
-test('design-system/variant-prop flags invalid variant in Svelte components', async () => {
+void test('design-system/variant-prop flags invalid variant in Svelte components', async () => {
   const linter = new Linter({
     rules: {
       'design-system/variant-prop': [
@@ -117,7 +117,7 @@ test('design-system/variant-prop flags invalid variant in Svelte components', as
   assert.equal(res.messages.length, 1);
 });
 
-test('design-system/variant-prop flags invalid variant on custom elements', async () => {
+void test('design-system/variant-prop flags invalid variant on custom elements', async () => {
   const linter = new Linter({
     rules: {
       'design-system/variant-prop': [

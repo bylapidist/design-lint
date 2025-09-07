@@ -141,15 +141,21 @@ export async function startWatch(ctx: WatchOptions) {
     usePolling: process.platform === 'win32',
     interval: 100,
   });
-  watcher.on('error', (err) => reportError(err));
+  watcher.on('error', (err) => {
+    reportError(err);
+  });
   await once(watcher, 'ready');
 
   const cleanup = async () => {
     await watcher.close();
     process.exit(process.exitCode ?? 0);
   };
-  process.once('SIGINT', cleanup);
-  process.once('SIGTERM', cleanup);
+  process.once('SIGINT', () => {
+    void cleanup();
+  });
+  process.once('SIGTERM', () => {
+    void cleanup();
+  });
 
   const runAndUpdate = async (paths: string[]) => {
     const prev = ignoreFilePaths;
@@ -167,7 +173,7 @@ export async function startWatch(ctx: WatchOptions) {
       const req = config.configPath
         ? createRequire(config.configPath)
         : createRequire(import.meta.url);
-      for (const p of pluginPaths) delete req.cache?.[p];
+      for (const p of pluginPaths) Reflect.deleteProperty(req.cache, p);
       config = await loadConfig(process.cwd(), options.config);
       linterRef.current = new Linter(config);
       await refreshIgnore();
@@ -229,7 +235,13 @@ export async function startWatch(ctx: WatchOptions) {
     }
   };
 
-  watcher.on('add', (p) => handle(p).catch(reportError));
-  watcher.on('change', (p) => handle(p).catch(reportError));
-  watcher.on('unlink', (p) => handleUnlink(p).catch(reportError));
+  watcher.on('add', (p) => {
+    void handle(p).catch(reportError);
+  });
+  watcher.on('change', (p) => {
+    void handle(p).catch(reportError);
+  });
+  watcher.on('unlink', (p) => {
+    void handleUnlink(p).catch(reportError);
+  });
 }

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
 
-test('lintFiles ignores common directories by default', async () => {
+void test('lintFiles ignores common directories by default', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -32,7 +32,7 @@ test('lintFiles ignores common directories by default', async () => {
   }
 });
 
-test('lintFiles respects .gitignore via globby', async () => {
+void test('lintFiles respects .gitignore via globby', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
@@ -54,7 +54,7 @@ test('lintFiles respects .gitignore via globby', async () => {
   }
 });
 
-test('.designlintignore can unignore paths', async () => {
+void test('.designlintignore can unignore paths', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -80,7 +80,7 @@ test('.designlintignore can unignore paths', async () => {
   }
 });
 
-test('.designlintignore overrides .gitignore', async () => {
+void test('.designlintignore overrides .gitignore', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -102,7 +102,7 @@ test('.designlintignore overrides .gitignore', async () => {
   }
 });
 
-test('.designlintignore supports negative patterns', async () => {
+void test('.designlintignore supports negative patterns', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -127,7 +127,7 @@ test('.designlintignore supports negative patterns', async () => {
   }
 });
 
-test('.designlintignore supports Windows paths', async () => {
+void test('.designlintignore supports Windows paths', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
@@ -149,7 +149,7 @@ test('.designlintignore supports Windows paths', async () => {
   }
 });
 
-test('config ignoreFiles are respected', async () => {
+void test('config ignoreFiles are respected', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
@@ -171,7 +171,7 @@ test('config ignoreFiles are respected', async () => {
   }
 });
 
-test('additional ignore file is respected', async () => {
+void test('additional ignore file is respected', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
@@ -196,7 +196,7 @@ test('additional ignore file is respected', async () => {
   }
 });
 
-test('lintFiles respects nested .gitignore', async () => {
+void test('lintFiles respects nested .gitignore', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'nested'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'nested', 'keep.ts'), 'const a = "old";');
@@ -218,7 +218,7 @@ test('lintFiles respects nested .gitignore', async () => {
   }
 });
 
-test('nested .designlintignore overrides parent patterns', async () => {
+void test('nested .designlintignore overrides parent patterns', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');

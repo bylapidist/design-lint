@@ -23,12 +23,12 @@ function getStringNode(code: string, text: string): ts.StringLiteral {
   return found;
 }
 
-test('detects style values in JSX style attribute', () => {
+void test('detects style values in JSX style attribute', () => {
   const node = getStringNode(`<div style={{ color: 'red' }} />`, 'red');
   assert.equal(isStyleValue(node), true);
 });
 
-test('detects nested style properties', () => {
+void test('detects nested style properties', () => {
   const node = getStringNode(
     `<div style={{ background: { color: 'red' } }} />`,
     'red',
@@ -36,7 +36,7 @@ test('detects nested style properties', () => {
   assert.equal(isStyleValue(node), true);
 });
 
-test('detects style prop in React.createElement', () => {
+void test('detects style prop in React.createElement', () => {
   const node = getStringNode(
     `React.createElement('div', { style: { color: 'red' } });`,
     'red',
@@ -44,12 +44,12 @@ test('detects style prop in React.createElement', () => {
   assert.equal(isStyleValue(node), true);
 });
 
-test('detects style prop in h()', () => {
+void test('detects style prop in h()', () => {
   const node = getStringNode(`h('div', { style: { color: 'red' } });`, 'red');
   assert.equal(isStyleValue(node), true);
 });
 
-test('ignores non-style contexts', () => {
+void test('ignores non-style contexts', () => {
   const importNode = getStringNode(`import x from 'red';`, 'red');
   assert.equal(isStyleValue(importNode), false);
   const varNode = getStringNode(`const x = 'red';`, 'red');
@@ -58,7 +58,7 @@ test('ignores non-style contexts', () => {
   assert.equal(isStyleValue(attrNode), false);
 });
 
-test('detects string style attribute', () => {
+void test('detects string style attribute', () => {
   const node = getStringNode(`<div style="color: red" />`, 'color: red');
   assert.equal(isStyleValue(node), true);
 });

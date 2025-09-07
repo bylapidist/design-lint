@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 const tsxLoader = createRequire(import.meta.url).resolve('tsx/esm');
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
-test('CLI loads nearest config in nested project', () => {
+void test('CLI loads nearest config in nested project', () => {
   const appDir = path.join(
     __dirname,
     'fixtures',
@@ -26,10 +26,12 @@ test('CLI loads nearest config in nested project', () => {
     filePath: string;
     messages: { ruleId: string }[];
   }
-  const parsed: Result[] = JSON.parse(res.stdout);
-  const files = parsed.map((r) => path.relative(appDir, r.filePath)).sort();
+  const parsed = JSON.parse(res.stdout) as unknown;
+  assert(Array.isArray(parsed));
+  const results = parsed as Result[];
+  const files = results.map((r) => path.relative(appDir, r.filePath)).sort();
   assert.deepEqual(files, ['src/App.module.css', 'src/App.tsx']);
-  for (const r of parsed) {
+  for (const r of results) {
     for (const m of r.messages) {
       assert.equal(m.ruleId, 'design-token/colors');
     }

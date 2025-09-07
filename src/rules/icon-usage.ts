@@ -34,7 +34,7 @@ export const iconUsageRule: RuleModule<IconUsageOptions> = {
           const isSvg = tagLower === 'svg';
           const isCustomElement = tag.includes('-');
           const isComponent =
-            tag[0] === tag[0].toUpperCase() || isCustomElement;
+            tag.startsWith(tag[0].toUpperCase()) || isCustomElement;
           if (disallowed.has(tagLower) && (isSvg || isComponent)) {
             const pos = node
               .getSourceFile()

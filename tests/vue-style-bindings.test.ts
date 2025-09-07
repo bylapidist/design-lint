@@ -15,7 +15,7 @@ async function lint(file: string) {
   return res;
 }
 
-test('Vue style bindings report spacing and color violations', async () => {
+void test('Vue style bindings report spacing and color violations', async () => {
   for (const file of ['App.vue', 'Multi.vue']) {
     const res = await lint(file);
     const colorMessages = res.messages.filter(

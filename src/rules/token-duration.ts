@@ -58,7 +58,7 @@ export const durationRule: RuleModule = {
       if (typeof val === 'number') return val;
       if (typeof val === 'string') {
         const v = val.trim();
-        const match = v.match(/^(-?\d*\.?\d+)(ms|s)$/);
+        const match = /^(-?\d*\.?\d+)(ms|s)$/.exec(v);
         if (match) {
           const num = parseFloat(match[1]);
           return match[2] === 's' ? num * 1000 : num;
@@ -83,7 +83,7 @@ export const durationRule: RuleModule = {
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
             context.report({
-              message: `Unexpected duration ${value}`,
+              message: `Unexpected duration ${String(value)}`,
               line: pos.line + 1,
               column: pos.character + 1,
             });

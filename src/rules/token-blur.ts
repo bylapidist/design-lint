@@ -14,7 +14,7 @@ export const blurRule: RuleModule<BlurRuleOptions> = {
   name: 'design-token/blur',
   meta: { description: 'enforce blur tokens' },
   create(context) {
-    const blurTokens = context.tokens?.blurs;
+    const blurTokens = context.tokens.blurs;
     if (
       !blurTokens ||
       (Array.isArray(blurTokens)

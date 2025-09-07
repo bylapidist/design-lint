@@ -10,7 +10,7 @@ export const outlineRule: RuleModule = {
   name: 'design-token/outline',
   meta: { description: 'enforce outline tokens' },
   create(context) {
-    const outlineTokens = context.tokens?.outlines;
+    const outlineTokens = context.tokens.outlines;
     if (
       !outlineTokens ||
       (Array.isArray(outlineTokens)
@@ -46,7 +46,7 @@ export const outlineRule: RuleModule = {
     const normalize = (val: string): string =>
       valueParser.stringify(valueParser(val).nodes).trim();
     const allowed = new Set(
-      Object.values(outlineTokens).map((v) => normalize(String(v))),
+      Object.values(outlineTokens).map((v) => normalize(v)),
     );
     return {
       onCSSDeclaration(decl) {

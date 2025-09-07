@@ -12,7 +12,7 @@ async function lint(file: string) {
   return linter.lintFile(path.join(fixtureDir, 'src', file), false);
 }
 
-test('style bindings report spacing and color violations', async () => {
+void test('style bindings report spacing and color violations', async () => {
   for (const file of ['App.svelte', 'Directive.svelte']) {
     const res = await lint(file);
     assert(

@@ -8,7 +8,16 @@ import { sarifFormatter } from '../../src/formatters/sarif.ts';
 import { getFormatter } from '../../src/index.ts';
 import type { LintResult } from '../../src/core/types.ts';
 
-test('stylish formatter outputs text', () => {
+interface SarifLog {
+  runs: {
+    tool: {
+      driver: { rules: { id: string; shortDescription: { text: string } }[] };
+    };
+    results: { ruleId: string; ruleIndex: number }[];
+  }[];
+}
+
+void test('stylish formatter outputs text', () => {
   const results: LintResult[] = [
     {
       filePath: 'file.ts',
@@ -27,7 +36,7 @@ test('stylish formatter outputs text', () => {
   assert.ok(out.includes('file.ts'));
 });
 
-test('stylish formatter outputs suggestions', () => {
+void test('stylish formatter outputs suggestions', () => {
   const results: LintResult[] = [
     {
       filePath: 'file.ts',
@@ -47,7 +56,7 @@ test('stylish formatter outputs suggestions', () => {
   assert.ok(out.includes('Did you mean `--foo`?'));
 });
 
-test('stylish formatter outputs OK for files without messages', () => {
+void test('stylish formatter outputs OK for files without messages', () => {
   const results: LintResult[] = [
     { filePath: 'a.ts', messages: [] },
     { filePath: 'b.ts', messages: [] },
@@ -56,14 +65,14 @@ test('stylish formatter outputs OK for files without messages', () => {
   assert.equal(out, '[OK] a.ts\n[OK] b.ts');
 });
 
-test('stylish formatter outputs relative paths', () => {
+void test('stylish formatter outputs relative paths', () => {
   const abs = join(process.cwd(), 'c.ts');
   const results: LintResult[] = [{ filePath: abs, messages: [] }];
   const out = stylish(results, false);
   assert.equal(out, '[OK] c.ts');
 });
 
-test('stylish formatter does not insert blank line before summary', () => {
+void test('stylish formatter does not insert blank line before summary', () => {
   const results: LintResult[] = [
     {
       filePath: 'a.ts',
@@ -85,7 +94,7 @@ test('stylish formatter does not insert blank line before summary', () => {
   );
 });
 
-test('json formatter outputs json', () => {
+void test('json formatter outputs json', () => {
   const results: LintResult[] = [
     {
       filePath: 'file.ts',
@@ -101,11 +110,11 @@ test('json formatter outputs json', () => {
     },
   ];
   const out = jsonFormatter(results);
-  const parsed = JSON.parse(out);
-  assert.equal(parsed[0].filePath, 'file.ts');
+  const parsed = JSON.parse(out) as { filePath: string }[];
+  assert.equal(parsed[0]?.filePath, 'file.ts');
 });
 
-test('sarif formatter outputs rules and links results', () => {
+void test('sarif formatter outputs rules and links results', () => {
   const results: LintResult[] = [
     {
       filePath: 'file.ts',
@@ -129,8 +138,8 @@ test('sarif formatter outputs rules and links results', () => {
     },
   ];
   const out = sarifFormatter(results);
-  const parsed = JSON.parse(out);
-  const run = parsed.runs[0];
+  const parsed: unknown = JSON.parse(out);
+  const run = (parsed as SarifLog).runs[0];
   assert.equal(run.tool.driver.rules.length, 1);
   assert.equal(run.tool.driver.rules[0].id, 'rule');
   assert.equal(
@@ -141,7 +150,7 @@ test('sarif formatter outputs rules and links results', () => {
   assert.equal(run.results[0].ruleIndex, 0);
 });
 
-test('sarif formatter updates rule descriptions from later results', () => {
+void test('sarif formatter updates rule descriptions from later results', () => {
   const results: LintResult[] = [
     {
       filePath: 'a.ts',
@@ -170,8 +179,8 @@ test('sarif formatter updates rule descriptions from later results', () => {
     },
   ];
   const out = sarifFormatter(results);
-  const parsed = JSON.parse(out);
-  const run = parsed.runs[0];
+  const parsed: unknown = JSON.parse(out);
+  const run = (parsed as SarifLog).runs[0];
   assert.equal(run.tool.driver.rules.length, 1);
   assert.equal(
     run.tool.driver.rules[0].shortDescription.text,
@@ -179,11 +188,11 @@ test('sarif formatter updates rule descriptions from later results', () => {
   );
 });
 
-test('getFormatter returns formatter for valid name', async () => {
+void test('getFormatter returns formatter for valid name', async () => {
   assert.equal(await getFormatter('json'), jsonFormatter);
 });
 
-test('getFormatter loads formatter from path', async () => {
+void test('getFormatter loads formatter from path', async () => {
   const __dirname = fileURLToPath(new URL('.', import.meta.url));
   const formatterPath = join(__dirname, 'fixtures', 'custom-formatter.ts');
   const formatter = await getFormatter(formatterPath);
@@ -191,6 +200,6 @@ test('getFormatter loads formatter from path', async () => {
   assert.equal(out, 'custom:1');
 });
 
-test('getFormatter throws for invalid name', async () => {
+void test('getFormatter throws for invalid name', async () => {
   await assert.rejects(() => getFormatter('unknown'), /Unknown formatter/);
 });

@@ -6,7 +6,7 @@ import type { RuleModule, DesignTokens } from '../../src/core/types.ts';
 const tokensByTheme: Record<string, DesignTokens> = {};
 const parser = new ParserService(tokensByTheme);
 
-test('ParserService dispatches CSS declarations', async () => {
+void test('ParserService dispatches CSS declarations', async () => {
   const rule: RuleModule = {
     name: 'test',
     meta: { description: 'test rule' },

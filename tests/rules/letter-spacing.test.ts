@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/letter-spacing reports invalid value', async () => {
+void test('design-token/letter-spacing reports invalid value', async () => {
   const linter = new Linter({
     tokens: { letterSpacings: { tight: '-0.05em' } },
     rules: { 'design-token/letter-spacing': 'error' },
@@ -11,7 +11,7 @@ test('design-token/letter-spacing reports invalid value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/letter-spacing accepts valid values', async () => {
+void test('design-token/letter-spacing accepts valid values', async () => {
   const linter = new Linter({
     tokens: {
       letterSpacings: { tight: '-0.05em', none: 0 },
@@ -23,7 +23,7 @@ test('design-token/letter-spacing accepts valid values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/letter-spacing reports numeric literals', async () => {
+void test('design-token/letter-spacing reports numeric literals', async () => {
   const linter = new Linter({
     tokens: { letterSpacings: { none: 0 } },
     rules: { 'design-token/letter-spacing': 'error' },
@@ -35,7 +35,7 @@ test('design-token/letter-spacing reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/letter-spacing ignores numbers in JSX props', async () => {
+void test('design-token/letter-spacing ignores numbers in JSX props', async () => {
   const linter = new Linter({
     tokens: { letterSpacings: { none: 0 } },
     rules: { 'design-token/letter-spacing': 'error' },
@@ -45,7 +45,7 @@ test('design-token/letter-spacing ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/letter-spacing warns when tokens missing', async () => {
+void test('design-token/letter-spacing warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/letter-spacing': 'warn' },
   });

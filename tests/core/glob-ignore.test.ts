@@ -6,7 +6,7 @@ import { FileService } from '../../src/core/file-service.ts';
 import { makeTmpDir } from '../../src/utils/tmp.ts';
 import type { Config } from '../../src/core/linter.ts';
 
-test('FileService.scan applies nested ignore files for glob targets', async () => {
+void test('FileService.scan applies nested ignore files for glob targets', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), '');

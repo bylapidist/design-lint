@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/colors reports disallowed hwb', async () => {
+void test('design-token/colors reports disallowed hwb', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -14,7 +14,7 @@ test('design-token/colors reports disallowed hwb', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports disallowed lab', async () => {
+void test('design-token/colors reports disallowed lab', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -26,7 +26,7 @@ test('design-token/colors reports disallowed lab', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports disallowed lch', async () => {
+void test('design-token/colors reports disallowed lch', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -38,7 +38,7 @@ test('design-token/colors reports disallowed lch', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports disallowed color()', async () => {
+void test('design-token/colors reports disallowed color()', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -50,7 +50,7 @@ test('design-token/colors reports disallowed color()', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports template literal', async () => {
+void test('design-token/colors reports template literal', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -62,7 +62,7 @@ test('design-token/colors reports template literal', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports template expression', async () => {
+void test('design-token/colors reports template expression', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },

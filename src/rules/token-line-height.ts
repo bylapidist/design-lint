@@ -11,7 +11,7 @@ export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',
   meta: { description: 'enforce line-height tokens' },
   create(context) {
-    const lineHeights = context.tokens?.lineHeights;
+    const lineHeights = context.tokens.lineHeights;
     if (
       !lineHeights ||
       (Array.isArray(lineHeights)
@@ -49,14 +49,14 @@ export const lineHeightRule: RuleModule = {
       if (typeof val === 'string') {
         const v = val.trim();
         if (v === '') return null;
-        const unitMatch = v.match(/^(\d*\.?\d+)(px|rem|em)$/);
+        const unitMatch = /^(\d*\.?\d+)(px|rem|em)$/.exec(v);
         if (unitMatch) {
           const [, num, unit] = unitMatch;
           const n = parseFloat(num);
           const factor = unit === 'px' ? 1 : 16;
           return n * factor;
         }
-        const pctMatch = v.match(/^(\d*\.?\d+)%$/);
+        const pctMatch = /^(\d*\.?\d+)%$/.exec(v);
         if (pctMatch) {
           return parseFloat(pctMatch[1]) / 100;
         }
@@ -86,7 +86,7 @@ export const lineHeightRule: RuleModule = {
           }
         };
         if (ts.isNumericLiteral(node)) {
-          if (node.parent && ts.isPrefixUnaryExpression(node.parent)) return;
+          if (ts.isPrefixUnaryExpression(node.parent)) return;
           report(node.getText(), Number(node.text), node);
         } else if (
           ts.isPrefixUnaryExpression(node) &&

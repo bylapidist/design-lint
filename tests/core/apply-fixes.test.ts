@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { applyFixes } from '../../src/index.ts';
 import type { LintMessage } from '../../src/core/types.ts';
 
-test('applyFixes handles adjacent fix ranges', () => {
+void test('applyFixes handles adjacent fix ranges', () => {
   const messages: LintMessage[] = [
     {
       ruleId: 'a',
@@ -25,7 +25,7 @@ test('applyFixes handles adjacent fix ranges', () => {
   assert.equal(applyFixes('123456', messages), 'abcdef');
 });
 
-test('applyFixes skips overlapping fix ranges', () => {
+void test('applyFixes skips overlapping fix ranges', () => {
   const messages: LintMessage[] = [
     {
       ruleId: 'a',
@@ -47,7 +47,7 @@ test('applyFixes skips overlapping fix ranges', () => {
   assert.equal(applyFixes('abcdef', messages), 'Adef');
 });
 
-test('applyFixes is order-independent for overlapping ranges', () => {
+void test('applyFixes is order-independent for overlapping ranges', () => {
   const messages: LintMessage[] = [
     {
       ruleId: 'b',

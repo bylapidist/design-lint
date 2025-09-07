@@ -27,10 +27,11 @@ export const importPathRule: RuleModule<ImportPathOptions> = {
           const pos = nameNode
             .getSourceFile()
             .getLineAndCharacterOfPosition(nameNode.getStart());
+          const packagesText = opts.packages?.length
+            ? opts.packages.join(', ')
+            : 'configured packages';
           context.report({
-            message: `Design system component "${name}" must be imported from ${
-              opts.packages?.join(', ') || 'configured packages'
-            }`,
+            message: `Design system component "${name}" must be imported from ${packagesText}`,
             line: pos.line + 1,
             column: pos.character + 1,
           });

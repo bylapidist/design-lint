@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/font-family reports invalid font-family', async () => {
+void test('design-token/font-family reports invalid font-family', async () => {
   const linter = new Linter({
     tokens: {
       fontSizes: { base: 16 },
@@ -15,7 +15,7 @@ test('design-token/font-family reports invalid font-family', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/font-family warns when tokens missing', async () => {
+void test('design-token/font-family warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/font-family': 'warn' },
   });

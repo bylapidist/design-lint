@@ -31,13 +31,13 @@ export function stylish(results: LintResult[], useColor = true): string {
         : sevText;
       const suggestion = msg.suggest ? ` Did you mean \`${msg.suggest}\`?` : '';
       lines.push(
-        `  ${msg.line}:${msg.column}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}`,
+        `  ${String(msg.line)}:${String(msg.column)}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}`,
       );
     }
   }
   const total = errorCount + warnCount;
   if (total > 0) {
-    const summary = `${total} problems (${errorCount} errors, ${warnCount} warnings)`;
+    const summary = `${String(total)} problems (${String(errorCount)} errors, ${String(warnCount)} warnings)`;
     lines.push(useColor ? codes.red(summary) : summary);
   }
   return lines.join('\n');

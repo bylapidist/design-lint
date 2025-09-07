@@ -19,7 +19,7 @@ export function createEngineError(opts: EngineErrorOptions): Error {
 }
 
 export class PluginManager {
-  private req: NodeRequire;
+  private req: NodeJS.Require;
   private pluginPaths: string[] = [];
 
   constructor(
@@ -33,7 +33,7 @@ export class PluginManager {
 
   private resolvePluginPaths(): string[] {
     const paths: string[] = [];
-    for (const p of this.config.plugins || []) {
+    for (const p of this.config.plugins ?? []) {
       try {
         const resolved = realpathIfExists(this.req.resolve(p));
         if (!fs.existsSync(resolved)) {
@@ -62,15 +62,15 @@ export class PluginManager {
   async getPlugins(): Promise<string[]> {
     if (this.pluginPaths.length > 0) return this.pluginPaths;
     const pluginPaths = this.resolvePluginPaths();
-    const names = this.config.plugins || [];
+    const names = this.config.plugins ?? [];
     for (let i = 0; i < pluginPaths.length; i++) {
       const pluginSource = pluginPaths[i];
-      const name = names[i] || pluginSource;
+      const name = names[i] ?? pluginSource;
       let mod: unknown;
       try {
         if (pluginSource.endsWith('.mjs')) {
           mod = await import(
-            `${pathToFileURL(pluginSource).href}?t=${Date.now()}`
+            `${pathToFileURL(pluginSource).href}?t=${String(Date.now())}`
           );
         } else {
           mod = this.req(pluginSource);
@@ -78,7 +78,7 @@ export class PluginManager {
       } catch (e: unknown) {
         if (getErrorCode(e) === 'ERR_REQUIRE_ESM') {
           mod = await import(
-            `${pathToFileURL(pluginSource).href}?t=${Date.now()}`
+            `${pathToFileURL(pluginSource).href}?t=${String(Date.now())}`
           );
         } else {
           throw createEngineError({

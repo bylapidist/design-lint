@@ -10,32 +10,32 @@ import {
 } from '../src/utils/paths.ts';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 
-test('toPosix converts separators', () => {
+void test('toPosix converts separators', () => {
   const input = path.join('a', 'b', 'c');
   assert.equal(toPosix(input), 'a/b/c');
 });
 
-test('relFromCwd produces posix paths', () => {
+void test('relFromCwd produces posix paths', () => {
   const p = path.join(process.cwd(), 'a', 'b');
   assert.equal(relFromCwd(p), 'a/b');
 });
 
-test('relFrom handles empty path', () => {
+void test('relFrom handles empty path', () => {
   assert.equal(relFrom(process.cwd(), ''), '');
 });
 
-test('relFrom returns empty path for differing roots', () => {
+void test('relFrom returns empty path for differing roots', () => {
   const root = path.join(process.cwd(), 'foo');
   assert.equal(relFrom(root, ''), '');
 });
 
-test('realpathIfExists resolves paths', () => {
+void test('realpathIfExists resolves paths', () => {
   const tmp = makeTmpDir();
   const rp = realpathIfExists(tmp);
   assert.equal(rp, fs.realpathSync(tmp));
 });
 
-test('realpathIfExists falls back without native', () => {
+void test('realpathIfExists falls back without native', () => {
   const native = fs.realpathSync.native;
   Object.defineProperty(fs.realpathSync, 'native', {
     value: undefined,
@@ -51,7 +51,7 @@ test('realpathIfExists falls back without native', () => {
   });
 });
 
-test('realpathIfExists returns input when missing', () => {
+void test('realpathIfExists returns input when missing', () => {
   const missing = path.join(process.cwd(), 'no-such-file');
   assert.equal(realpathIfExists(missing), missing);
 });

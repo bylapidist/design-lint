@@ -11,7 +11,7 @@ export const zIndexRule: RuleModule = {
   name: 'design-token/z-index',
   meta: { description: 'enforce z-index tokens' },
   create(context) {
-    const zTokens = context.tokens?.zIndex;
+    const zTokens = context.tokens.zIndex;
     if (
       !zTokens ||
       (Array.isArray(zTokens)
@@ -45,9 +45,7 @@ export const zIndexRule: RuleModule = {
       };
     }
     const allowed = new Set<number>(
-      Object.values(zTokens)
-        .map((v) => Number(v))
-        .filter((n) => !isNaN(n)),
+      Object.values(zTokens).filter((n) => !Number.isNaN(n)),
     );
     return {
       onNode(node) {
@@ -59,7 +57,7 @@ export const zIndexRule: RuleModule = {
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
             context.report({
-              message: `Unexpected z-index ${value}`,
+              message: `Unexpected z-index ${String(value)}`,
               line: pos.line + 1,
               column: pos.character + 1,
             });

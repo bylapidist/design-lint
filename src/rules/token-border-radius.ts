@@ -16,7 +16,7 @@ export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
   name: 'design-token/border-radius',
   meta: { description: 'enforce border-radius tokens' },
   create(context) {
-    const radiiTokens = context.tokens?.borderRadius;
+    const radiiTokens = context.tokens.borderRadius;
     if (
       !radiiTokens ||
       (Array.isArray(radiiTokens)
@@ -79,7 +79,7 @@ export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
             context.report({
-              message: `Unexpected border radius ${value}`,
+              message: `Unexpected border radius ${String(value)}`,
               line: pos.line + 1,
               column: pos.character + 1,
             });

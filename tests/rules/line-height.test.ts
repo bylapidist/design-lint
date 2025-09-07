@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/line-height reports invalid value', async () => {
+void test('design-token/line-height reports invalid value', async () => {
   const linter = new Linter({
     tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
@@ -11,7 +11,7 @@ test('design-token/line-height reports invalid value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/line-height accepts valid values', async () => {
+void test('design-token/line-height accepts valid values', async () => {
   const linter = new Linter({
     tokens: {
       lineHeights: { base: 1.5, tight: '20px' },
@@ -23,7 +23,7 @@ test('design-token/line-height accepts valid values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/line-height reports numeric literals', async () => {
+void test('design-token/line-height reports numeric literals', async () => {
   const linter = new Linter({
     tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
@@ -35,7 +35,7 @@ test('design-token/line-height reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/line-height reports template literal', async () => {
+void test('design-token/line-height reports template literal', async () => {
   const linter = new Linter({
     tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
@@ -47,7 +47,7 @@ test('design-token/line-height reports template literal', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/line-height reports template expression', async () => {
+void test('design-token/line-height reports template expression', async () => {
   const linter = new Linter({
     tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
@@ -59,7 +59,7 @@ test('design-token/line-height reports template expression', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/line-height reports prefix unary', async () => {
+void test('design-token/line-height reports prefix unary', async () => {
   const linter = new Linter({
     tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
@@ -71,7 +71,7 @@ test('design-token/line-height reports prefix unary', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/line-height ignores numbers in JSX props', async () => {
+void test('design-token/line-height ignores numbers in JSX props', async () => {
   const linter = new Linter({
     tokens: { lineHeights: { base: 1.5 } },
     rules: { 'design-token/line-height': 'error' },
@@ -81,7 +81,7 @@ test('design-token/line-height ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/line-height warns when tokens missing', async () => {
+void test('design-token/line-height warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/line-height': 'warn' },
   });

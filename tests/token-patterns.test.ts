@@ -9,11 +9,8 @@ void test('accepts CSS variables matching string patterns', async () => {
     tokens: { colors: ['--colour-*'] },
     rules: rule,
   });
-  const { results } = await linter.lintText(
-    'a{color:var(--colour-primary);}',
-    'x.css',
-  );
-  assert.equal(results[0]?.messages.length, 0);
+  const res = await linter.lintText('a{color:var(--colour-primary);}', 'x.css');
+  assert.equal(res.messages.length, 0);
 });
 
 void test('reports variables not matching patterns', async () => {
@@ -21,18 +18,12 @@ void test('reports variables not matching patterns', async () => {
     tokens: { colors: ['--colour-*'] },
     rules: rule,
   });
-  const { results } = await linter.lintText('a{color:var(--other);}', 'x.css');
-  assert.equal(
-    results[0]?.messages[0]?.message,
-    'Unexpected color var(--other)',
-  );
+  const res2 = await linter.lintText('a{color:var(--other);}', 'x.css');
+  assert.equal(res2.messages[0]?.message, 'Unexpected color var(--other)');
 });
 
 void test('supports regex token patterns', async () => {
   const linter = new Linter({ tokens: { colors: [/^--brand-/] }, rules: rule });
-  const { results } = await linter.lintText(
-    'a{color:var(--brand-primary);}',
-    'x.css',
-  );
-  assert.equal(results[0]?.messages.length, 0);
+  const res3 = await linter.lintText('a{color:var(--brand-primary);}', 'x.css');
+  assert.equal(res3.messages.length, 0);
 });

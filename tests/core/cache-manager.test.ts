@@ -6,16 +6,13 @@ import os from 'node:os';
 import path from 'node:path';
 import type { LintResult } from '../../src/core/types.ts';
 
-test('CacheManager applies fixes when enabled', async () => {
+void test('CacheManager applies fixes when enabled', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cm-'));
   const file = path.join(dir, 'a.txt');
   await fs.writeFile(file, 'bad');
-  const lintFn = async (
-    text: string,
-    filePath: string,
-  ): Promise<LintResult> => {
+  const lintFn = (text: string, filePath: string): Promise<LintResult> => {
     if (text === 'bad') {
-      return {
+      return Promise.resolve({
         filePath,
         messages: [
           {
@@ -27,9 +24,9 @@ test('CacheManager applies fixes when enabled', async () => {
             fix: { range: [0, 3], text: 'good' },
           },
         ],
-      };
+      });
     }
-    return { filePath, messages: [] };
+    return Promise.resolve({ filePath, messages: [] });
   };
   const manager = new CacheManager(undefined, true);
   await manager.processFile(file, lintFn);

@@ -26,7 +26,7 @@ export async function getFormatter(name: string): Promise<Formatter> {
     default: {
       try {
         const resolved = requireFromCwd.resolve(name);
-        const mod = await import(pathToFileURL(resolved).href);
+        const mod = (await import(pathToFileURL(resolved).href)) as unknown;
         const formatter = resolveFormatter(mod);
         if (!formatter) {
           throw new Error();

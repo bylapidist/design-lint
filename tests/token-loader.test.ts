@@ -3,25 +3,25 @@ import assert from 'node:assert/strict';
 import { normalizeTokens } from '../src/core/token-loader.ts';
 import { Linter } from '../src/core/linter.ts';
 
-test('normalizeTokens wraps values with var when enabled', () => {
+void test('normalizeTokens wraps values with var when enabled', () => {
   const tokens = { colors: { primary: '--color-primary' } };
   const normalized = normalizeTokens(tokens, true).merged;
   assert.equal(normalized.colors?.primary, 'var(--color-primary)');
 });
 
-test('normalizeTokens merges tokens across themes', () => {
+void test('normalizeTokens merges tokens across themes', () => {
   const tokens = {
     base: { colors: { primary: '#000' } },
     light: { colors: { secondary: '#fff' } },
   };
   const normalized = normalizeTokens(tokens);
-  assert.equal(normalized.themes.base.colors?.primary, '#000');
-  assert.equal(normalized.themes.light.colors?.secondary, '#fff');
-  assert.equal(normalized.merged.colors?.primary, '#000');
-  assert.equal(normalized.merged.colors?.secondary, '#fff');
+  assert.equal(normalized.themes.base.colors.primary, '#000');
+  assert.equal(normalized.themes.light.colors.secondary, '#fff');
+  assert.equal(normalized.merged.colors.primary, '#000');
+  assert.equal(normalized.merged.colors.secondary, '#fff');
 });
 
-test('Linter applies wrapTokensWithVar option', async () => {
+void test('Linter applies wrapTokensWithVar option', async () => {
   const linter = new Linter({
     tokens: { fonts: { sans: '--font-sans' } },
     wrapTokensWithVar: true,
@@ -34,7 +34,7 @@ test('Linter applies wrapTokensWithVar option', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('Linter reports unknown CSS variable with wrapTokensWithVar', async () => {
+void test('Linter reports unknown CSS variable with wrapTokensWithVar', async () => {
   const linter = new Linter({
     tokens: { fonts: { sans: '--font-sans' } },
     wrapTokensWithVar: true,
@@ -47,7 +47,7 @@ test('Linter reports unknown CSS variable with wrapTokensWithVar', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('Rule theme filtering validates selected themes', async () => {
+void test('Rule theme filtering validates selected themes', async () => {
   const linter = new Linter({
     tokens: {
       light: { colors: { primary: '#fff' } },
@@ -61,7 +61,7 @@ test('Rule theme filtering validates selected themes', async () => {
   assert.equal(bad.messages.length, 1);
 });
 
-test('Rules validate all themes by default', async () => {
+void test('Rules validate all themes by default', async () => {
   const linter = new Linter({
     tokens: {
       light: { colors: { primary: '#fff' } },

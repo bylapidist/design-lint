@@ -20,7 +20,7 @@ function getStrings(code: string): ts.StringLiteral[] {
   return nodes;
 }
 
-test('isInNonStyleJsx handles React.createElement props', () => {
+void test('isInNonStyleJsx handles React.createElement props', () => {
   const [, title, color] = getStrings(
     "React.createElement('div', { title: 'foo', style: { color: 'bar' } })",
   );
@@ -28,7 +28,7 @@ test('isInNonStyleJsx handles React.createElement props', () => {
   assert.equal(isInNonStyleJsx(color), false);
 });
 
-test('isInNonStyleJsx handles h() props', () => {
+void test('isInNonStyleJsx handles h() props', () => {
   const [, title, color] = getStrings(
     "h('div', { title: 'foo', style: { color: 'bar' } })",
   );

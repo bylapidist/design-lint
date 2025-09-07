@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/border-radius reports invalid value', async () => {
+void test('design-token/border-radius reports invalid value', async () => {
   const linter = new Linter({
     tokens: { borderRadius: { sm: 2, md: 4 } },
     rules: { 'design-token/border-radius': 'error' },
@@ -11,7 +11,7 @@ test('design-token/border-radius reports invalid value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/border-radius accepts valid values', async () => {
+void test('design-token/border-radius accepts valid values', async () => {
   const linter = new Linter({
     tokens: { borderRadius: { sm: 2, md: 4 } },
     rules: { 'design-token/border-radius': 'error' },
@@ -21,7 +21,7 @@ test('design-token/border-radius accepts valid values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/border-radius reports numeric literals', async () => {
+void test('design-token/border-radius reports numeric literals', async () => {
   const linter = new Linter({
     tokens: { borderRadius: { sm: 2, md: 4 } },
     rules: { 'design-token/border-radius': 'error' },
@@ -33,7 +33,7 @@ test('design-token/border-radius reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/border-radius ignores numbers in JSX props', async () => {
+void test('design-token/border-radius ignores numbers in JSX props', async () => {
   const linter = new Linter({
     tokens: { borderRadius: { sm: 2, md: 4 } },
     rules: { 'design-token/border-radius': 'error' },
@@ -43,7 +43,7 @@ test('design-token/border-radius ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/border-radius warns when tokens missing', async () => {
+void test('design-token/border-radius warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/border-radius': 'warn' },
   });

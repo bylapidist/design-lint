@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { TokenTracker } from '../../src/core/token-tracker.ts';
 import type { DesignTokens } from '../../src/core/types.ts';
 
-test('TokenTracker reports unused tokens', () => {
+void test('TokenTracker reports unused tokens', () => {
   const tokens: DesignTokens = {
     colors: { red: 'var(--red)' },
     spacing: ['4px'],
@@ -22,7 +22,7 @@ test('TokenTracker reports unused tokens', () => {
   assert.equal(reports[0].messages[0].message.includes('4px'), true);
 });
 
-test('cssVar classifier tracks custom property usage', () => {
+void test('cssVar classifier tracks custom property usage', () => {
   const tokens: DesignTokens = {
     colors: { used: 'var(--used)', unused: 'var(--unused)' },
   };
@@ -40,7 +40,7 @@ test('cssVar classifier tracks custom property usage', () => {
   assert.equal(reports[0].messages[0].message.includes('--unused'), true);
 });
 
-test('hexColor classifier is case-insensitive', () => {
+void test('hexColor classifier is case-insensitive', () => {
   const tokens: DesignTokens = {
     colors: { brand: '#ABCDEF', other: '#123456' },
   };
@@ -58,7 +58,7 @@ test('hexColor classifier is case-insensitive', () => {
   assert.equal(reports[0].messages[0].message.includes('#123456'), true);
 });
 
-test('numeric classifier matches number tokens', () => {
+void test('numeric classifier matches number tokens', () => {
   const tokens: DesignTokens = {
     spacing: ['4px', '8px'],
   };
@@ -76,7 +76,7 @@ test('numeric classifier matches number tokens', () => {
   assert.equal(reports[0].messages[0].message.includes('8px'), true);
 });
 
-test('string classifier matches plain string tokens', () => {
+void test('string classifier matches plain string tokens', () => {
   const tokens: DesignTokens = {
     colors: { used: 'red', unused: 'blue' },
   };

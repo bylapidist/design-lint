@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/spacing enforces multiples', async () => {
+void test('design-token/spacing enforces multiples', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -14,7 +14,7 @@ test('design-token/spacing enforces multiples', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/spacing reports template literal', async () => {
+void test('design-token/spacing reports template literal', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -26,7 +26,7 @@ test('design-token/spacing reports template literal', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/spacing reports template expression', async () => {
+void test('design-token/spacing reports template expression', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -38,7 +38,7 @@ test('design-token/spacing reports template expression', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/spacing reports prefix unary', async () => {
+void test('design-token/spacing reports prefix unary', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -50,7 +50,7 @@ test('design-token/spacing reports prefix unary', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/spacing handles multi-line CSS', async () => {
+void test('design-token/spacing handles multi-line CSS', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -60,7 +60,7 @@ test('design-token/spacing handles multi-line CSS', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/spacing ignores unsupported units', async () => {
+void test('design-token/spacing ignores unsupported units', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -69,7 +69,7 @@ test('design-token/spacing ignores unsupported units', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/spacing ignores calc() values', async () => {
+void test('design-token/spacing ignores calc() values', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -78,7 +78,7 @@ test('design-token/spacing ignores calc() values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/spacing ignores var() fallbacks', async () => {
+void test('design-token/spacing ignores var() fallbacks', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -87,7 +87,7 @@ test('design-token/spacing ignores var() fallbacks', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/spacing ignores numbers in JSX props', async () => {
+void test('design-token/spacing ignores numbers in JSX props', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -97,7 +97,7 @@ test('design-token/spacing ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/spacing ignores nested functions', async () => {
+void test('design-token/spacing ignores nested functions', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -109,7 +109,7 @@ test('design-token/spacing ignores nested functions', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/spacing ignores nested var() fallbacks', async () => {
+void test('design-token/spacing ignores nested var() fallbacks', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4 }] },
@@ -121,7 +121,7 @@ test('design-token/spacing ignores nested var() fallbacks', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/spacing supports custom units', async () => {
+void test('design-token/spacing supports custom units', async () => {
   const linter = new Linter({
     tokens: { spacing: { sm: 4, md: 8 } },
     rules: { 'design-token/spacing': ['error', { base: 4, units: ['vw'] }] },
@@ -130,7 +130,7 @@ test('design-token/spacing supports custom units', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/spacing warns when tokens missing', async () => {
+void test('design-token/spacing warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/spacing': 'warn' },
   });

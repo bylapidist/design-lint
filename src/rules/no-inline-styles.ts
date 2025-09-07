@@ -19,7 +19,8 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
         if (!ts.isJsxOpeningLikeElement(node)) return;
         const tag = node.tagName.getText();
         const isCustomElement = tag.includes('-');
-        const isComponent = tag[0] === tag[0].toUpperCase() || isCustomElement;
+        const isComponent =
+          tag.startsWith(tag[0].toUpperCase()) || isCustomElement;
         if (!isComponent) return;
         for (const attr of node.attributes.properties) {
           if (!ts.isJsxAttribute(attr)) continue;

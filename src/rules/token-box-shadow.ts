@@ -10,7 +10,7 @@ export const boxShadowRule: RuleModule = {
   name: 'design-token/box-shadow',
   meta: { description: 'enforce box-shadow tokens' },
   create(context) {
-    const shadowTokens = context.tokens?.shadows;
+    const shadowTokens = context.tokens.shadows;
     if (
       !shadowTokens ||
       (Array.isArray(shadowTokens)
@@ -46,7 +46,7 @@ export const boxShadowRule: RuleModule = {
     const normalize = (val: string): string =>
       valueParser.stringify(valueParser(val).nodes).trim();
     const allowed = new Set(
-      Object.values(shadowTokens).map((v) => normalize(String(v))),
+      Object.values(shadowTokens).map((v) => normalize(v)),
     );
     return {
       onCSSDeclaration(decl) {

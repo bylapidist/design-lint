@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/box-shadow reports disallowed value', async () => {
+void test('design-token/box-shadow reports disallowed value', async () => {
   const linter = new Linter({
     tokens: { shadows: { sm: '0 1px 2px rgba(0,0,0,0.1)' } },
     rules: { 'design-token/box-shadow': 'error' },
@@ -14,7 +14,7 @@ test('design-token/box-shadow reports disallowed value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/box-shadow allows configured tokens', async () => {
+void test('design-token/box-shadow allows configured tokens', async () => {
   const linter = new Linter({
     tokens: {
       shadows: {
@@ -31,7 +31,7 @@ test('design-token/box-shadow allows configured tokens', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/box-shadow warns when tokens missing', async () => {
+void test('design-token/box-shadow warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/box-shadow': 'warn' },
   });

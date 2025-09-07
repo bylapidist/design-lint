@@ -102,7 +102,7 @@ function collectTokenValues(tokens?: DesignTokens): Set<string> {
     } else if (isRecord(defs)) {
       for (const val of Object.values(defs)) {
         if (typeof val === 'string') {
-          const m = val.match(/^var\((--[^)]+)\)$/);
+          const m = /^var\((--[^)]+)\)$/.exec(val);
           values.add(m ? m[1] : val);
         } else if (typeof val === 'number') {
           values.add(String(val));
