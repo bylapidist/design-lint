@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/animation reports invalid value', async () => {
+void test('design-token/animation reports invalid value', async () => {
   const linter = new Linter({
     tokens: { animations: { spin: 'spin 1s linear infinite' } },
     rules: { 'design-token/animation': 'error' },
@@ -14,7 +14,7 @@ test('design-token/animation reports invalid value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/animation accepts valid values', async () => {
+void test('design-token/animation accepts valid values', async () => {
   const linter = new Linter({
     tokens: { animations: { spin: 'spin 1s linear infinite' } },
     rules: { 'design-token/animation': 'error' },
@@ -26,7 +26,7 @@ test('design-token/animation accepts valid values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/animation warns when tokens missing', async () => {
+void test('design-token/animation warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/animation': 'warn' },
   });

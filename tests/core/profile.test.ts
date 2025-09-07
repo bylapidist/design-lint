@@ -12,7 +12,7 @@ import type { Config } from '../../src/core/linter.ts';
 
 // Use separate test for profiling
 
-test('FileService.scan logs when DESIGNLINT_PROFILE is set', async () => {
+void test('FileService.scan logs when DESIGNLINT_PROFILE is set', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const linter = new Linter({ tokens: {}, rules: {} });
@@ -32,10 +32,10 @@ test('FileService.scan logs when DESIGNLINT_PROFILE is set', async () => {
     delete process.env.DESIGNLINT_PROFILE;
     process.chdir(cwd);
   }
-  assert.ok(logs.some((l) => /Scanned 1 files in/.test(l)));
+  assert.ok(logs.some((l) => l.includes('Scanned 1 files in')));
 });
 
-test('FileService.scan collects files from directory targets', async () => {
+void test('FileService.scan collects files from directory targets', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'a.ts'), '');
   const config: Config = { tokens: {}, rules: {} };

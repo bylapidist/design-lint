@@ -2,7 +2,11 @@ import flatCache, { type FlatCache } from 'flat-cache';
 import path from 'path';
 import type { LintResult } from './types.js';
 
-export type CacheEntry = { mtime: number; size?: number; result: LintResult };
+export interface CacheEntry {
+  mtime: number;
+  size?: number;
+  result: LintResult;
+}
 export type Cache = FlatCache;
 
 export function loadCache(cacheLocation: string): Cache {

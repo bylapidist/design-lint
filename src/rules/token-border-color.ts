@@ -41,7 +41,7 @@ export const borderColorRule: RuleModule = {
   name: 'design-token/border-color',
   meta: { description: 'enforce border-color tokens' },
   create(context) {
-    const borderColorTokens = context.tokens?.borderColors;
+    const borderColorTokens = context.tokens.borderColors;
     if (
       !borderColorTokens ||
       (Array.isArray(borderColorTokens)
@@ -77,7 +77,7 @@ export const borderColorRule: RuleModule = {
       };
     }
     const allowed = new Set(
-      Object.values(borderColorTokens).map((v) => String(v).toLowerCase()),
+      Object.values(borderColorTokens).map((v) => v.toLowerCase()),
     );
     return {
       onCSSDeclaration(decl) {

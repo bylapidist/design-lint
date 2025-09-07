@@ -53,7 +53,7 @@ export async function executeLint(
   if (!opts.quiet && (fmt === undefined || fmt === 'stylish')) {
     const time = (duration / 1000).toFixed(2);
     const count = results.length;
-    const stat = `\nLinted ${count} file${count === 1 ? '' : 's'} in ${time}s`;
+    const stat = `\nLinted ${String(count)} file${count === 1 ? '' : 's'} in ${time}s`;
     console.log(services.useColor ? chalk.cyan.bold(stat) : stat);
   }
   if (opts.report) {

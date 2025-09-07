@@ -9,7 +9,7 @@ export const fontFamilyRule: RuleModule = {
   name: 'design-token/font-family',
   meta: { description: 'enforce font-family tokens' },
   create(context) {
-    const fontFamilies = context.tokens?.fonts;
+    const fontFamilies = context.tokens.fonts;
     if (
       !fontFamilies ||
       (Array.isArray(fontFamilies)

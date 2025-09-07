@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { CacheService } from '../../src/core/cache-service.ts';
 import { CacheManager } from '../../src/core/cache-manager.ts';
 
-test('CacheService.prune removes cache entries not in file list', () => {
+void test('CacheService.prune removes cache entries not in file list', () => {
   const removed: string[] = [];
   const cache: { keys: () => string[]; removeKey: (k: string) => void } = {
     keys: () => ['a.ts', 'b.ts'],
@@ -13,7 +13,7 @@ test('CacheService.prune removes cache entries not in file list', () => {
   assert.deepEqual(removed, ['b.ts']);
 });
 
-test('CacheService.save delegates to CacheManager.save', () => {
+void test('CacheService.save delegates to CacheManager.save', () => {
   class TestManager extends CacheManager {
     saved = false;
     constructor() {

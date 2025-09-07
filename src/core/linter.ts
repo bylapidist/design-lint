@@ -59,11 +59,11 @@ export class Linter {
       [filePath],
       fix,
       cache,
-      ignorePaths ?? [],
+      ignorePaths,
       cacheLocation,
     );
     const [res] = results;
-    return res ?? { filePath, messages: [] };
+    return res;
   }
 
   async lintFiles(
@@ -104,7 +104,7 @@ export class Linter {
     const results = await Promise.all(tasks);
     results.push(
       ...this.tokenTracker.generateReports(
-        this.config.configPath || 'designlint.config',
+        this.config.configPath ?? 'designlint.config',
       ),
     );
     CacheService.save(cacheManager, cacheLocation);

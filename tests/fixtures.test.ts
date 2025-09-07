@@ -54,7 +54,7 @@ const fixtures: Fixture[] = [
 ];
 
 for (const { name, files } of fixtures) {
-  test(`CLI reports built-in rule violations in ${name} fixture`, () => {
+  void test(`CLI reports built-in rule violations in ${name} fixture`, () => {
     const fixture = path.join(__dirname, 'fixtures', name);
     const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
     const result = spawnSync(
@@ -76,16 +76,18 @@ for (const { name, files } of fixtures) {
       filePath: string;
       messages: { ruleId: string }[];
     }
-    const parsed: Result[] = JSON.parse(result.stdout);
+    const parsed = JSON.parse(result.stdout) as unknown;
+    assert(Array.isArray(parsed));
+    const results = parsed as Result[];
     const byFile = Object.fromEntries(
-      parsed.map((r) => [
+      results.map((r) => [
         path.relative(fixture, r.filePath),
         new Set(r.messages.map((m) => m.ruleId)),
       ]),
     );
     assert.deepEqual(Object.keys(byFile).sort(), files.sort());
     const ruleSet = new Set(
-      parsed.flatMap((r) => r.messages.map((m) => m.ruleId)),
+      results.flatMap((r) => r.messages.map((m) => m.ruleId)),
     );
     assert.deepEqual(Array.from(ruleSet).sort(), builtInRules.slice().sort());
   });

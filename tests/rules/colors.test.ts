@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/colors reports disallowed hex', async () => {
+void test('design-token/colors reports disallowed hex', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -15,7 +15,7 @@ test('design-token/colors reports disallowed hex', async () => {
   assert.equal(res.messages[0].ruleId, 'design-token/colors');
 });
 
-test('design-token/colors ignores hex case', async () => {
+void test('design-token/colors ignores hex case', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#FFFFFF' } },
     rules: { 'design-token/colors': 'error' },
@@ -27,7 +27,7 @@ test('design-token/colors ignores hex case', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/colors ignores invalid hex lengths', async () => {
+void test('design-token/colors ignores invalid hex lengths', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#fff' } },
     rules: { 'design-token/colors': 'error' },
@@ -39,7 +39,7 @@ test('design-token/colors ignores invalid hex lengths', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/colors reports disallowed rgb', async () => {
+void test('design-token/colors reports disallowed rgb', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -51,7 +51,7 @@ test('design-token/colors reports disallowed rgb', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports disallowed rgba', async () => {
+void test('design-token/colors reports disallowed rgba', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -63,7 +63,7 @@ test('design-token/colors reports disallowed rgba', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports disallowed hsl', async () => {
+void test('design-token/colors reports disallowed hsl', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -75,7 +75,7 @@ test('design-token/colors reports disallowed hsl', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports disallowed hsla', async () => {
+void test('design-token/colors reports disallowed hsla', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -87,7 +87,7 @@ test('design-token/colors reports disallowed hsla', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports disallowed named color', async () => {
+void test('design-token/colors reports disallowed named color', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -99,7 +99,7 @@ test('design-token/colors reports disallowed named color', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors reports correct column for mid-string color', async () => {
+void test('design-token/colors reports correct column for mid-string color', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -112,7 +112,7 @@ test('design-token/colors reports correct column for mid-string color', async ()
   assert.ok(res.messages[0].column > 0);
 });
 
-test('design-token/colors reports various named colors', async () => {
+void test('design-token/colors reports various named colors', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -124,7 +124,7 @@ test('design-token/colors reports various named colors', async () => {
   assert.equal(res.messages.length, 2);
 });
 
-test('design-token/colors reports correct column for css declarations', async () => {
+void test('design-token/colors reports correct column for css declarations', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -134,7 +134,7 @@ test('design-token/colors reports correct column for css declarations', async ()
   assert.equal(res.messages[0].column, 10);
 });
 
-test('design-token/colors allows configured formats', async () => {
+void test('design-token/colors allows configured formats', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': ['error', { allow: ['named'] }] },
@@ -146,7 +146,7 @@ test('design-token/colors allows configured formats', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/colors handles gradients', async () => {
+void test('design-token/colors handles gradients', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },
@@ -156,7 +156,7 @@ test('design-token/colors handles gradients', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/colors warns when tokens missing', async () => {
+void test('design-token/colors warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/colors': 'warn' },
   });
@@ -165,7 +165,7 @@ test('design-token/colors warns when tokens missing', async () => {
   assert.ok(res.messages[0].message.includes('tokens.colors'));
 });
 
-test('design-token/colors ignores non-style jsx attributes', async () => {
+void test('design-token/colors ignores non-style jsx attributes', async () => {
   const linter = new Linter({
     tokens: { colors: { primary: '#ffffff' } },
     rules: { 'design-token/colors': 'error' },

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
 
-test('inline directives disable linting', async () => {
+void test('inline directives disable linting', async () => {
   const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(
@@ -29,7 +29,7 @@ test('inline directives disable linting', async () => {
   assert.deepEqual(lines, [1, 9]);
 });
 
-test('strings resembling directives do not disable next line', async () => {
+void test('strings resembling directives do not disable next line', async () => {
   const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(

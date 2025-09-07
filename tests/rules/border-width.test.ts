@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/border-width reports invalid value', async () => {
+void test('design-token/border-width reports invalid value', async () => {
   const linter = new Linter({
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
@@ -11,7 +11,7 @@ test('design-token/border-width reports invalid value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/border-width accepts valid values', async () => {
+void test('design-token/border-width accepts valid values', async () => {
   const linter = new Linter({
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
@@ -21,7 +21,7 @@ test('design-token/border-width accepts valid values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/border-width reports numeric literals', async () => {
+void test('design-token/border-width reports numeric literals', async () => {
   const linter = new Linter({
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
@@ -33,7 +33,7 @@ test('design-token/border-width reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/border-width reports template literal', async () => {
+void test('design-token/border-width reports template literal', async () => {
   const linter = new Linter({
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
@@ -45,7 +45,7 @@ test('design-token/border-width reports template literal', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/border-width reports template expression', async () => {
+void test('design-token/border-width reports template expression', async () => {
   const linter = new Linter({
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
@@ -57,7 +57,7 @@ test('design-token/border-width reports template expression', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/border-width reports prefix unary', async () => {
+void test('design-token/border-width reports prefix unary', async () => {
   const linter = new Linter({
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
@@ -69,7 +69,7 @@ test('design-token/border-width reports prefix unary', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/border-width ignores numbers in JSX props', async () => {
+void test('design-token/border-width ignores numbers in JSX props', async () => {
   const linter = new Linter({
     tokens: { borderWidths: { sm: 1, md: 2 } },
     rules: { 'design-token/border-width': 'error' },
@@ -79,7 +79,7 @@ test('design-token/border-width ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/border-width warns when tokens missing', async () => {
+void test('design-token/border-width warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/border-width': 'warn' },
   });

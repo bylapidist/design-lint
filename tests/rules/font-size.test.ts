@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/font-size reports invalid font-size', async () => {
+void test('design-token/font-size reports invalid font-size', async () => {
   const linter = new Linter({
     tokens: {
       fontSizes: { base: 16 },
@@ -15,7 +15,7 @@ test('design-token/font-size reports invalid font-size', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/font-size accepts unit-based font-sizes', async () => {
+void test('design-token/font-size accepts unit-based font-sizes', async () => {
   const linter = new Linter({
     tokens: {
       fontSizes: { base: '1rem', lg: '2rem' },
@@ -32,7 +32,7 @@ test('design-token/font-size accepts unit-based font-sizes', async () => {
   assert.equal(invalid.messages.length, 1);
 });
 
-test('design-token/font-size warns when tokens missing', async () => {
+void test('design-token/font-size warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/font-size': 'warn' },
   });

@@ -2,7 +2,7 @@ import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
 
 interface VariantPropOptions {
-  components?: Record<string, string[]>;
+  components?: Record<string, string[] | undefined>;
   prop?: string;
 }
 

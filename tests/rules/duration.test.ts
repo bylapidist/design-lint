@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/duration reports invalid transition duration', async () => {
+void test('design-token/duration reports invalid transition duration', async () => {
   const linter = new Linter({
     tokens: { durations: { fast: '200ms' } },
     rules: { 'design-token/duration': 'error' },
@@ -14,7 +14,7 @@ test('design-token/duration reports invalid transition duration', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/duration reports invalid animation duration', async () => {
+void test('design-token/duration reports invalid animation duration', async () => {
   const linter = new Linter({
     tokens: { durations: { fast: '200ms' } },
     rules: { 'design-token/duration': 'error' },
@@ -26,7 +26,7 @@ test('design-token/duration reports invalid animation duration', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/duration accepts valid values', async () => {
+void test('design-token/duration accepts valid values', async () => {
   const linter = new Linter({
     tokens: { durations: { fast: '200ms', slow: 400 } },
     rules: { 'design-token/duration': 'error' },
@@ -37,7 +37,7 @@ test('design-token/duration accepts valid values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/duration reports numeric literals', async () => {
+void test('design-token/duration reports numeric literals', async () => {
   const linter = new Linter({
     tokens: { durations: { fast: '200ms' } },
     rules: { 'design-token/duration': 'error' },
@@ -49,7 +49,7 @@ test('design-token/duration reports numeric literals', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/duration ignores numbers in JSX props', async () => {
+void test('design-token/duration ignores numbers in JSX props', async () => {
   const linter = new Linter({
     tokens: { durations: { fast: '200ms' } },
     rules: { 'design-token/duration': 'error' },
@@ -59,7 +59,7 @@ test('design-token/duration ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/duration warns when tokens missing', async () => {
+void test('design-token/duration warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/duration': 'warn' },
   });

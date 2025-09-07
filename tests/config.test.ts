@@ -6,7 +6,7 @@ import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
 import { Linter } from '../src/core/linter.ts';
 
-test('returns default config when none found', async () => {
+void test('returns default config when none found', async () => {
   const tmp = makeTmpDir();
   const config = await loadConfig(tmp);
   assert.deepEqual(config, {
@@ -18,7 +18,7 @@ test('returns default config when none found', async () => {
   });
 });
 
-test('finds config in parent directories', async () => {
+void test('finds config in parent directories', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
@@ -31,21 +31,21 @@ test('finds config in parent directories', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('throws on malformed JSON config', async () => {
+void test('throws on malformed JSON config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, '{ invalid json');
   await assert.rejects(loadConfig(tmp), /JSON Error/);
 });
 
-test('throws on malformed JS config', async () => {
+void test('throws on malformed JS config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.js');
   fs.writeFileSync(configPath, 'module.exports = { tokens: {},');
   await assert.rejects(loadConfig(tmp), /Transform failed/);
 });
 
-test('throws when specified config file is missing', async () => {
+void test('throws when specified config file is missing', async () => {
   const tmp = makeTmpDir();
   await assert.rejects(
     loadConfig(tmp, 'designlint.config.json'),
@@ -53,7 +53,7 @@ test('throws when specified config file is missing', async () => {
   );
 });
 
-test('validates additional token groups', async () => {
+void test('validates additional token groups', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
@@ -68,13 +68,15 @@ test('validates additional token groups', async () => {
     }),
   );
   const loaded = await loadConfig(tmp);
-  assert.equal(loaded.tokens?.borderRadius?.sm, 2);
-  assert.equal(loaded.tokens?.borderWidths?.sm, 1);
-  assert.equal(loaded.tokens?.shadows?.sm, '0 1px 2px rgba(0,0,0,0.1)');
-  assert.equal(loaded.tokens?.durations?.fast, '200ms');
+  assert.ok(loaded.tokens);
+  const tokens = loaded.tokens;
+  assert.equal(tokens.borderRadius.sm, 2);
+  assert.equal(tokens.borderWidths.sm, 1);
+  assert.equal(tokens.shadows.sm, '0 1px 2px rgba(0,0,0,0.1)');
+  assert.equal(tokens.durations.fast, '200ms');
 });
 
-test('throws on invalid rule setting', async () => {
+void test('throws on invalid rule setting', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
@@ -84,14 +86,14 @@ test('throws on invalid rule setting', async () => {
   await assert.rejects(loadConfig(tmp), /Invalid config/);
 });
 
-test('throws on invalid plugin path', async () => {
+void test('throws on invalid plugin path', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, JSON.stringify({ plugins: [123] }));
   await assert.rejects(loadConfig(tmp), /Invalid config/);
 });
 
-test('loads config from .mjs', async () => {
+void test('loads config from .mjs', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.mjs');
   fs.writeFileSync(
@@ -102,7 +104,7 @@ test('loads config from .mjs', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads config from .js', async () => {
+void test('loads config from .js', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.js');
   fs.writeFileSync(
@@ -113,7 +115,7 @@ test('loads config from .js', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads config from .cjs', async () => {
+void test('loads config from .cjs', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.cjs');
   fs.writeFileSync(
@@ -124,7 +126,7 @@ test('loads config from .cjs', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads async config from .mjs', async () => {
+void test('loads async config from .mjs', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.mjs');
   fs.writeFileSync(
@@ -135,7 +137,7 @@ test('loads async config from .mjs', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads config from .ts using defineConfig', async () => {
+void test('loads config from .ts using defineConfig', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
   const rel = path
@@ -149,7 +151,7 @@ test('loads config from .ts using defineConfig', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads config from .ts with type annotations', async () => {
+void test('loads config from .ts with type annotations', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
   const rel = path
@@ -163,7 +165,7 @@ test('loads config from .ts with type annotations', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads .ts config with commonjs module output', async () => {
+void test('loads .ts config with commonjs module output', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'tsconfig.json'),
@@ -181,7 +183,7 @@ test('loads .ts config with commonjs module output', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test('loads config when package.json type module', async () => {
+void test('loads config when package.json type module', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'package.json'),
@@ -196,7 +198,7 @@ test('loads config when package.json type module', async () => {
   assert.equal(loaded.tokens?.colors?.primary, '#000');
 });
 
-test("rule configured as 'off' is ignored", async () => {
+void test("rule configured as 'off' is ignored", async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
@@ -212,7 +214,7 @@ test("rule configured as 'off' is ignored", async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('throws on unknown rule name', async () => {
+void test('throws on unknown rule name', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
@@ -227,7 +229,7 @@ test('throws on unknown rule name', async () => {
   );
 });
 
-test('loads config with multi-theme tokens', async () => {
+void test('loads config with multi-theme tokens', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
@@ -248,7 +250,7 @@ test('loads config with multi-theme tokens', async () => {
   assert.equal(light?.colors?.primary, '#fff');
 });
 
-test('surfaces errors thrown by ts config', async () => {
+void test('surfaces errors thrown by ts config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
   fs.writeFileSync(configPath, "throw new Error('boom'); export default {};");

@@ -12,7 +12,7 @@ export const opacityRule: RuleModule = {
   name: 'design-token/opacity',
   meta: { description: 'enforce opacity tokens' },
   create(context) {
-    const opacityTokens = context.tokens?.opacity;
+    const opacityTokens = context.tokens.opacity;
     if (
       !opacityTokens ||
       (Array.isArray(opacityTokens)
@@ -68,7 +68,7 @@ export const opacityRule: RuleModule = {
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
             context.report({
-              message: `Unexpected opacity ${value}`,
+              message: `Unexpected opacity ${String(value)}`,
               line: pos.line + 1,
               column: pos.character + 1,
             });

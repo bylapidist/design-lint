@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 import { applyFixes } from '../../src/index.ts';
 
-test('design-system/component-usage suggests substitutions', async () => {
+void test('design-system/component-usage suggests substitutions', async () => {
   const linter = new Linter({
     rules: {
       'design-system/component-usage': [
@@ -17,7 +17,7 @@ test('design-system/component-usage suggests substitutions', async () => {
   assert.ok(res.messages[0].message.includes('DSButton'));
 });
 
-test('design-system/component-usage matches mixed-case tags', async () => {
+void test('design-system/component-usage matches mixed-case tags', async () => {
   const linter = new Linter({
     rules: {
       'design-system/component-usage': [
@@ -31,7 +31,7 @@ test('design-system/component-usage matches mixed-case tags', async () => {
   assert.ok(res.messages[0].message.includes('DSButton'));
 });
 
-test('design-system/component-usage matches mixed-case substitution keys', async () => {
+void test('design-system/component-usage matches mixed-case substitution keys', async () => {
   const linter = new Linter({
     rules: {
       'design-system/component-usage': [
@@ -45,7 +45,7 @@ test('design-system/component-usage matches mixed-case substitution keys', async
   assert.ok(res.messages[0].message.includes('DSButton'));
 });
 
-test('design-system/component-usage fixes self-closing tags', async () => {
+void test('design-system/component-usage fixes self-closing tags', async () => {
   const linter = new Linter({
     rules: {
       'design-system/component-usage': [
@@ -62,7 +62,7 @@ test('design-system/component-usage fixes self-closing tags', async () => {
   assert.equal(fixed, 'const a = <DSButton/>;');
 });
 
-test('design-system/component-usage fixes opening and closing tags', async () => {
+void test('design-system/component-usage fixes opening and closing tags', async () => {
   const linter = new Linter({
     rules: {
       'design-system/component-usage': [

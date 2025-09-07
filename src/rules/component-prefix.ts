@@ -23,7 +23,7 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
           if (!tag) return;
           const isCustomElement = tag.includes('-');
           const isComponent =
-            tag[0] === tag[0].toUpperCase() || isCustomElement;
+            tag.startsWith(tag[0].toUpperCase()) || isCustomElement;
           if (!isComponent) return; // ignore standard HTML tags
           if (!tag.startsWith(prefix)) {
             const pos = node

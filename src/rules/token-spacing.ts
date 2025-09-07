@@ -17,7 +17,7 @@ export const spacingRule: RuleModule<SpacingOptions> = {
   name: 'design-token/spacing',
   meta: { description: 'enforce spacing scale' },
   create(context) {
-    const spacingTokens = context.tokens?.spacing;
+    const spacingTokens = context.tokens.spacing;
     if (
       !spacingTokens ||
       (Array.isArray(spacingTokens)
@@ -82,7 +82,7 @@ export const spacingRule: RuleModule<SpacingOptions> = {
           }
         };
         if (ts.isNumericLiteral(node)) {
-          if (node.parent && ts.isPrefixUnaryExpression(node.parent)) return;
+          if (ts.isPrefixUnaryExpression(node.parent)) return;
           report(node.getText(), Number(node.text), node);
         } else if (
           ts.isPrefixUnaryExpression(node) &&

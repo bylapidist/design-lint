@@ -11,7 +11,7 @@ export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',
   meta: { description: 'enforce letter-spacing tokens' },
   create(context) {
-    const letterSpacings = context.tokens?.letterSpacings;
+    const letterSpacings = context.tokens.letterSpacings;
     if (
       !letterSpacings ||
       (Array.isArray(letterSpacings)
@@ -48,7 +48,7 @@ export const letterSpacingRule: RuleModule = {
       if (typeof val === 'number') return val;
       if (typeof val === 'string') {
         const v = val.trim();
-        const unitMatch = v.match(/^(-?\d*\.?\d+)(px|rem|em)$/);
+        const unitMatch = /^(-?\d*\.?\d+)(px|rem|em)$/.exec(v);
         if (unitMatch) {
           const [, num, unit] = unitMatch;
           const n = parseFloat(num);
@@ -76,7 +76,7 @@ export const letterSpacingRule: RuleModule = {
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
             context.report({
-              message: `Unexpected letter spacing ${value}`,
+              message: `Unexpected letter spacing ${String(value)}`,
               line: pos.line + 1,
               column: pos.character + 1,
             });

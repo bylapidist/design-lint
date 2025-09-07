@@ -4,10 +4,16 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
-import { prepareEnvironment } from './env.js';
-import { executeLint } from './execute.js';
+import { prepareEnvironment, type PrepareEnvironmentOptions } from './env.js';
+import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
 import writeFileAtomic from 'write-file-atomic';
+
+type CliOptions = ExecuteOptions &
+  PrepareEnvironmentOptions & {
+    color?: boolean;
+    watch?: boolean;
+  };
 
 function initConfig(initFormat?: string) {
   const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
@@ -28,16 +34,16 @@ function initConfig(initFormat?: string) {
       if (fs.existsSync(pkgPath)) {
         try {
           const pkgText = fs.readFileSync(pkgPath, 'utf8');
-          const pkg: {
+          const pkg = JSON.parse(pkgText) as unknown as {
             dependencies?: Record<string, unknown>;
             devDependencies?: Record<string, unknown>;
-          } = JSON.parse(pkgText);
+          };
           if (pkg.dependencies?.typescript || pkg.devDependencies?.typescript)
             format = 'ts';
         } catch {}
       }
     }
-    if (!format) format = 'json';
+    format ??= 'json';
   }
 
   const configPath = path.resolve(process.cwd(), `designlint.config.${format}`);
@@ -123,7 +129,7 @@ function createProgram(version: string) {
       '--init-format <fmt>',
       "Config format for 'init' (js, cjs, mjs, ts, mts, json)",
     )
-    .action((opts) => {
+    .action((opts: { initFormat?: string }) => {
       initConfig(opts.initFormat);
     });
   return program;
@@ -142,11 +148,11 @@ export async function run(argv = process.argv.slice(2)) {
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
   const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
   const pkgData = fs.readFileSync(pkgPath, 'utf8');
-  const pkg: { version: string } = JSON.parse(pkgData);
+  const pkg = JSON.parse(pkgData) as unknown as { version: string };
 
   const program = createProgram(pkg.version);
 
-  program.action(async (files: string[], options) => {
+  program.action(async (files: string[], options: CliOptions) => {
     if (options.color === false) useColor = false;
     const targets = files.length ? files : ['.'];
     try {
@@ -171,7 +177,7 @@ try {
     fs.realpathSync(process.argv[1]) ===
       fs.realpathSync(fileURLToPath(import.meta.url))
   ) {
-    run();
+    void run();
   }
 } catch {
   // ignore resolution errors

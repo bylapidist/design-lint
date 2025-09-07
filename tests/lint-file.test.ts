@@ -7,7 +7,7 @@ import { loadConfig } from '../src/config/loader.ts';
 
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
-test('lintFile delegates to lintFiles', async () => {
+void test('lintFile delegates to lintFiles', async () => {
   const config = await loadConfig(fixtureDir);
   const linter = new Linter(config);
   const file = path.join(fixtureDir, 'src', 'App.svelte');
@@ -16,7 +16,7 @@ test('lintFile delegates to lintFiles', async () => {
   assert.deepEqual(res1, res2[0]);
 });
 
-test('lintFile reports unreadable file', async () => {
+void test('lintFile reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
   const linter = new Linter(config);
   const file = path.join(fixtureDir, 'src', 'App.svelte');
@@ -43,7 +43,7 @@ test('lintFile reports unreadable file', async () => {
   }
 });
 
-test('lintFiles reports unreadable file', async () => {
+void test('lintFiles reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
   const linter = new Linter(config);
   const file = path.join(fixtureDir, 'src', 'App.svelte');

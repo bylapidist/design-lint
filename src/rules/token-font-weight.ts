@@ -11,7 +11,7 @@ export const fontWeightRule: RuleModule = {
   name: 'design-token/font-weight',
   meta: { description: 'enforce font-weight tokens' },
   create(context) {
-    const fontWeights = context.tokens?.fontWeights;
+    const fontWeights = context.tokens.fontWeights;
     if (
       !fontWeights ||
       (Array.isArray(fontWeights)
@@ -62,7 +62,7 @@ export const fontWeightRule: RuleModule = {
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
             context.report({
-              message: `Unexpected font weight ${value}`,
+              message: `Unexpected font weight ${String(value)}`,
               line: pos.line + 1,
               column: pos.character + 1,
             });

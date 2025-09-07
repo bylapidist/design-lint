@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { Linter } from '../../src/core/linter.ts';
 
-test('Linter integrates registry, parser and trackers', async () => {
+void test('Linter integrates registry, parser and trackers', async () => {
   const linter = new Linter({
     tokens: {},
     rules: { 'design-token/colors': 'error' },

@@ -1,7 +1,8 @@
 import ts from 'typescript';
 
 export function isInNonStyleJsx(node: ts.Node): boolean {
-  for (let curr = node.parent; curr; curr = curr.parent) {
+  let curr: ts.Node | undefined = node.parent;
+  while (curr) {
     if (ts.isJsxAttribute(curr)) {
       return curr.name.getText() !== 'style';
     }
@@ -31,7 +32,7 @@ export function isInNonStyleJsx(node: ts.Node): boolean {
           }
           break;
         }
-        p = p.parent;
+        p = p.parent as ts.Node | undefined;
       }
     }
     if (
@@ -41,6 +42,7 @@ export function isInNonStyleJsx(node: ts.Node): boolean {
     ) {
       return true;
     }
+    curr = curr.parent as ts.Node | undefined;
   }
   return false;
 }

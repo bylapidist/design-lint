@@ -10,7 +10,7 @@ export const animationRule: RuleModule = {
   name: 'design-token/animation',
   meta: { description: 'enforce animation tokens' },
   create(context) {
-    const animationTokens = context.tokens?.animations;
+    const animationTokens = context.tokens.animations;
     if (
       !animationTokens ||
       (Array.isArray(animationTokens)
@@ -46,7 +46,7 @@ export const animationRule: RuleModule = {
     const normalize = (val: string): string =>
       valueParser.stringify(valueParser(val).nodes).trim();
     const allowed = new Set(
-      Object.values(animationTokens).map((v) => normalize(String(v))),
+      Object.values(animationTokens).map((v) => normalize(v)),
     );
     return {
       onCSSDeclaration(decl) {

@@ -34,9 +34,7 @@ export const relFromCwd = (p: string) => relFrom(process.cwd(), p);
  */
 export const realpathIfExists = (p: string) => {
   try {
-    return fs.realpathSync.native
-      ? fs.realpathSync.native(p)
-      : fs.realpathSync(p);
+    return fs.realpathSync.native(p);
   } catch {
     return p;
   }

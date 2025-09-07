@@ -8,8 +8,8 @@ const defaultPatterns = [
   '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,scss,sass,less,svelte,vue}',
 ];
 
-export class FileService {
-  static async scan(
+export const FileService = {
+  async scan(
     targets: string[],
     config: Config,
     additionalIgnorePaths: string[] = [],
@@ -29,8 +29,10 @@ export class FileService {
     ).map(realpathIfExists);
     const duration = performance.now() - start;
     if (process.env.DESIGNLINT_PROFILE) {
-      console.log(`Scanned ${files.length} files in ${duration.toFixed(2)}ms`);
+      console.log(
+        `Scanned ${String(files.length)} files in ${duration.toFixed(2)}ms`,
+      );
     }
     return files;
-  }
-}
+  },
+} as const;

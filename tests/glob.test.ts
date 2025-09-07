@@ -5,7 +5,7 @@ import path from 'node:path';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
 
-test('lintFiles expands glob patterns with globby', async () => {
+void test('lintFiles expands glob patterns with globby', async () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'a.module.css'), '');

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
 
-test('lintFiles uses patterns option to include custom extensions', async () => {
+void test('lintFiles uses patterns option to include custom extensions', async () => {
   const tmp = makeTmpDir();
   const file = path.join(tmp, 'bad.foo');
   fs.writeFileSync(file, "const color = '#ffffff';");

@@ -2,16 +2,16 @@ import type { LintResult } from '../core/types.js';
 
 interface SarifLog {
   version: string;
-  runs: Array<{
+  runs: {
     tool: {
       driver: {
         name: string;
         informationUri: string;
-        rules: Array<{ id: string; shortDescription: { text: string } }>;
+        rules: { id: string; shortDescription: { text: string } }[];
       };
     };
-    results: Array<Record<string, unknown>>;
-  }>;
+    results: Record<string, unknown>[];
+  }[];
 }
 
 export function sarifFormatter(

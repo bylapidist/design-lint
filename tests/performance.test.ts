@@ -6,7 +6,7 @@ import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
 import { Linter } from '../src/core/linter.ts';
 
-test('lints large projects without crashing', async () => {
+void test('lints large projects without crashing', async () => {
   const dir = path.join(__dirname, 'fixtures', 'large-project');
   const config = await loadConfig(dir);
   const linter = new Linter(config);
@@ -14,12 +14,15 @@ test('lints large projects without crashing', async () => {
   assert.equal(results.length, 200);
 });
 
-test('lints very large projects without EMFILE', async () => {
+void test('lints very large projects without EMFILE', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(path.join(tmp, 'designlint.config.json'), '{}');
   const count = 2000;
   for (let i = 0; i < count; i++) {
-    fs.writeFileSync(path.join(tmp, `file${i}.ts`), 'export const x = 1;\n');
+    fs.writeFileSync(
+      path.join(tmp, `file${String(i)}.ts`),
+      'export const x = 1;\n',
+    );
   }
   const config = await loadConfig(tmp);
   const linter = new Linter(config);
@@ -28,7 +31,7 @@ test('lints very large projects without EMFILE', async () => {
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
-test('respects configured concurrency limit', async () => {
+void test('respects configured concurrency limit', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'designlint.config.json'),
@@ -36,7 +39,10 @@ test('respects configured concurrency limit', async () => {
   );
   const count = 10;
   for (let i = 0; i < count; i++) {
-    fs.writeFileSync(path.join(tmp, `file${i}.ts`), 'export const x = 1;\n');
+    fs.writeFileSync(
+      path.join(tmp, `file${String(i)}.ts`),
+      'export const x = 1;\n',
+    );
   }
   const fsp = fs.promises;
   const origRead = fsp.readFile;

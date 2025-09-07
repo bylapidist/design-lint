@@ -16,7 +16,7 @@ export const borderWidthRule: RuleModule<BorderWidthOptions> = {
   name: 'design-token/border-width',
   meta: { description: 'enforce border-width tokens' },
   create(context) {
-    const widthTokens = context.tokens?.borderWidths;
+    const widthTokens = context.tokens.borderWidths;
     if (
       !widthTokens ||
       (Array.isArray(widthTokens)
@@ -96,7 +96,7 @@ export const borderWidthRule: RuleModule<BorderWidthOptions> = {
           }
         };
         if (ts.isNumericLiteral(node)) {
-          if (node.parent && ts.isPrefixUnaryExpression(node.parent)) return;
+          if (ts.isPrefixUnaryExpression(node.parent)) return;
           report(node.getText(), Number(node.text), node);
         } else if (
           ts.isPrefixUnaryExpression(node) &&

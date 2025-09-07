@@ -4,7 +4,7 @@ import path from 'path';
 import { Linter } from '../src/core/linter.ts';
 import { loadConfig } from '../src/config/loader.ts';
 
-test('external plugin rules execute', async () => {
+void test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
   const linter = new Linter({
     plugins: [pluginPath],
@@ -15,7 +15,7 @@ test('external plugin rules execute', async () => {
   assert.equal(res.messages[0].ruleId, 'plugin/test');
 });
 
-test('plugins resolve relative to config file', async () => {
+void test('plugins resolve relative to config file', async () => {
   const dir = path.join(__dirname, 'fixtures', 'plugin-relative');
   const config = await loadConfig(dir);
   const linter = new Linter(config);
@@ -24,7 +24,7 @@ test('plugins resolve relative to config file', async () => {
   assert.equal(res.messages[0].ruleId, 'plugin/test');
 });
 
-test('loads ESM plugin modules', async () => {
+void test('loads ESM plugin modules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin-esm.mjs');
   const linter = new Linter({
     plugins: [pluginPath],
@@ -35,7 +35,7 @@ test('loads ESM plugin modules', async () => {
   assert.equal(res.messages[0].ruleId, 'plugin/esm');
 });
 
-test('throws for invalid plugin modules', async () => {
+void test('throws for invalid plugin modules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'invalid-plugin.ts');
   const linter = new Linter({ plugins: [pluginPath] });
   await assert.rejects(
@@ -44,7 +44,7 @@ test('throws for invalid plugin modules', async () => {
   );
 });
 
-test('throws for invalid plugin rules', async () => {
+void test('throws for invalid plugin rules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'invalid-rule-plugin.ts');
   const linter = new Linter({ plugins: [pluginPath] });
   await assert.rejects(
@@ -53,7 +53,7 @@ test('throws for invalid plugin rules', async () => {
   );
 });
 
-test('throws when plugin module missing', async () => {
+void test('throws when plugin module missing', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'missing-plugin.js');
   const linter = new Linter({ plugins: [pluginPath] });
   await assert.rejects(
@@ -62,7 +62,7 @@ test('throws when plugin module missing', async () => {
   );
 });
 
-test('throws when plugin rule conflicts with existing rule', async () => {
+void test('throws when plugin rule conflicts with existing rule', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'conflict-plugin.ts');
   const linter = new Linter({ plugins: [pluginPath] });
   await assert.rejects(
@@ -71,7 +71,7 @@ test('throws when plugin rule conflicts with existing rule', async () => {
   );
 });
 
-test('throws when two plugins define the same rule name', async () => {
+void test('throws when two plugins define the same rule name', async () => {
   const pluginA = path.join(__dirname, 'fixtures', 'test-plugin.ts');
   const pluginB = path.join(__dirname, 'fixtures', 'duplicate-rule-plugin.ts');
   const linter = new Linter({ plugins: [pluginA, pluginB] });
@@ -86,7 +86,7 @@ test('throws when two plugins define the same rule name', async () => {
   );
 });
 
-test('getPluginPaths returns resolved plugin paths', async () => {
+void test('getPluginPaths returns resolved plugin paths', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
   const linter = new Linter({ plugins: [pluginPath] });
   await linter.lintText('const a = 1;', 'file.ts');

@@ -23,11 +23,11 @@ export function isStyleValue(node: ts.Node): boolean {
         if (ts.isJsxAttribute(p) && p.name.getText() === 'style') {
           return true;
         }
-        p = p.parent;
+        p = p.parent as ts.Node | undefined;
       }
       return false;
     }
-    curr = curr.parent;
+    curr = curr.parent as ts.Node | undefined;
   }
   return false;
 }

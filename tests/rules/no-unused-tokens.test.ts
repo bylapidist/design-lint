@@ -11,7 +11,7 @@ async function tempFile(content: string): Promise<string> {
   return path.relative(process.cwd(), file);
 }
 
-test('design-system/no-unused-tokens reports unused tokens', async () => {
+void test('design-system/no-unused-tokens reports unused tokens', async () => {
   const file = await tempFile('const color = "#000000";');
   const linter = new Linter({
     tokens: { colors: { primary: '#000000', unused: '#123456' } },
@@ -26,7 +26,7 @@ test('design-system/no-unused-tokens reports unused tokens', async () => {
   assert.ok(msg.message.includes('#123456'));
 });
 
-test('design-system/no-unused-tokens passes when tokens used', async () => {
+void test('design-system/no-unused-tokens passes when tokens used', async () => {
   const file = await tempFile('const color = "#000000";');
   const linter = new Linter({
     tokens: { colors: { primary: '#000000' } },
@@ -39,7 +39,7 @@ test('design-system/no-unused-tokens passes when tokens used', async () => {
   assert.equal(has, false);
 });
 
-test('design-system/no-unused-tokens can ignore tokens', async () => {
+void test('design-system/no-unused-tokens can ignore tokens', async () => {
   const file = await tempFile('const color = "#000000";');
   const linter = new Linter({
     tokens: { colors: { primary: '#000000', unused: '#123456' } },
@@ -54,7 +54,7 @@ test('design-system/no-unused-tokens can ignore tokens', async () => {
   assert.equal(has, false);
 });
 
-test('design-system/no-unused-tokens matches hex case-insensitively', async () => {
+void test('design-system/no-unused-tokens matches hex case-insensitively', async () => {
   const file = await tempFile('const color = "#ABCDEF";');
   const linter = new Linter({
     tokens: { colors: { primary: '#abcdef' } },

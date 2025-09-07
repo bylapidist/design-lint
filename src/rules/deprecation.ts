@@ -6,7 +6,7 @@ export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',
   meta: { description: 'flag deprecated tokens or components' },
   create(context) {
-    const deprecations = context.tokens?.deprecations;
+    const deprecations = context.tokens.deprecations;
     if (!deprecations || Object.keys(deprecations).length === 0) {
       context.report({
         message:

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 
-test('design-token/blur reports invalid value', async () => {
+void test('design-token/blur reports invalid value', async () => {
   const linter = new Linter({
     tokens: { blurs: { sm: '4px' } },
     rules: { 'design-token/blur': 'error' },
@@ -11,7 +11,7 @@ test('design-token/blur reports invalid value', async () => {
   assert.equal(res.messages.length, 1);
 });
 
-test('design-token/blur accepts valid values', async () => {
+void test('design-token/blur accepts valid values', async () => {
   const linter = new Linter({
     tokens: { blurs: { sm: '4px' } },
     rules: { 'design-token/blur': 'error' },
@@ -20,7 +20,7 @@ test('design-token/blur accepts valid values', async () => {
   assert.equal(res.messages.length, 0);
 });
 
-test('design-token/blur warns when tokens missing', async () => {
+void test('design-token/blur warns when tokens missing', async () => {
   const linter = new Linter({
     rules: { 'design-token/blur': 'warn' },
   });

@@ -6,7 +6,7 @@ import { loadConfig } from '../src/config/loader.ts';
 
 const fixtureDir = path.join(__dirname, 'fixtures', 'tagged-template');
 
-test('reports CSS in tagged template literals', async () => {
+void test('reports CSS in tagged template literals', async () => {
   const config = await loadConfig(fixtureDir);
   const linter = new Linter(config);
   const file = path.join(fixtureDir, 'src', 'styled.ts');

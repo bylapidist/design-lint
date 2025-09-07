@@ -1,7 +1,12 @@
 import ts from 'typescript';
-import postcss from 'postcss';
-import postcssScss from 'postcss-scss';
+import postcss, { type Parser, type Root } from 'postcss';
+import { parse as scssParseRaw } from 'postcss-scss';
 import postcssLess from 'postcss-less';
+
+const scssParse: Parser<Root> = scssParseRaw as unknown as Parser<Root>;
+const lessParse: Parser<Root> = (
+  postcssLess as unknown as { parse: Parser<Root> }
+).parse;
 import type { parse as svelteParse } from 'svelte/compiler';
 import type {
   DesignTokens,
@@ -44,19 +49,27 @@ export class ParserService {
       return rule.create(ctx);
     });
 
-    if (/\.vue$/.test(filePath)) {
+    if (filePath.endsWith('.vue')) {
       await lintVue(text, filePath, listeners, messages);
-    } else if (/\.svelte$/.test(filePath)) {
+    } else if (filePath.endsWith('.svelte')) {
       await lintSvelte(text, filePath, listeners, messages);
     } else if (/\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(filePath)) {
       lintTS(text, filePath, listeners, messages);
-    } else if (/\.(?:css|scss|sass|less)$/.test(filePath)) {
-      let syntax: string | undefined;
-      if (/\.s[ac]ss$/i.test(filePath)) syntax = 'scss';
-      else if (/\.less$/i.test(filePath)) syntax = 'less';
-      const decls = parseCSS(text, messages, syntax);
-      for (const decl of decls) {
-        for (const l of listeners) l.onCSSDeclaration?.(decl);
+    } else {
+      const lower = filePath.toLowerCase();
+      if (
+        lower.endsWith('.css') ||
+        lower.endsWith('.scss') ||
+        lower.endsWith('.sass') ||
+        lower.endsWith('.less')
+      ) {
+        let syntax: string | undefined;
+        if (lower.endsWith('.scss') || lower.endsWith('.sass')) syntax = 'scss';
+        else if (lower.endsWith('.less')) syntax = 'less';
+        const decls = parseCSS(text, messages, syntax);
+        for (const decl of decls) {
+          for (const l of listeners) l.onCSSDeclaration?.(decl);
+        }
       }
     }
     const filtered = messages.filter((m) => !disabledLines.has(m.line));
@@ -75,7 +88,10 @@ async function lintVue(
   const template = descriptor.template?.content ?? '';
   const templateTsx = template
     .replace(/class=/g, 'className=')
-    .replace(/:style="{([^}]+)}"/g, (_, expr) => `style={{ ${expr.trim()} }}`);
+    .replace(
+      /:style="{([^}]+)}"/g,
+      (_: string, expr: string) => `style={{ ${expr.trim()} }}`,
+    );
   const scripts: string[] = [];
   if (descriptor.script?.content) scripts.push(descriptor.script.content);
   if (descriptor.scriptSetup?.content)
@@ -133,11 +149,11 @@ async function lintSvelte(
   const extractStyleAttribute = (attr: {
     start: number;
     end: number;
-    value: Array<{
+    value: {
       type: string;
       data?: string;
       expression?: { start: number; end: number };
-    }>;
+    }[];
   }): CSSDeclaration[] => {
     const exprs: string[] = [];
     let content = '';
@@ -146,7 +162,7 @@ async function lintSvelte(
       else if (part.type === 'MustacheTag' && part.expression) {
         const i = exprs.length;
         exprs.push(text.slice(part.expression.start, part.expression.end));
-        content += `__EXPR_${i}__`;
+        content += `__EXPR_${String(i)}__`;
       }
     }
     const attrText = text.slice(attr.start, attr.end);
@@ -230,7 +246,7 @@ async function lintSvelte(
     const langAttr =
       isRecord(ast.css) && Array.isArray(ast.css.attributes)
         ? ast.css.attributes.find(
-            (a): a is { name: string; value?: Array<{ data?: string }> } =>
+            (a): a is { name: string; value?: { data?: string }[] } =>
               isRecord(a) && typeof a.name === 'string' && a.name === 'lang',
           )
         : undefined;
@@ -340,18 +356,18 @@ function parseCSS(
 ): CSSDeclaration[] {
   const decls: CSSDeclaration[] = [];
   try {
-    const root: postcss.Root =
+    const root: Root =
       lang === 'scss' || lang === 'sass'
-        ? postcssScss.parse(text)
+        ? scssParse(text)
         : lang === 'less'
-          ? postcssLess.parse(text)
+          ? lessParse(text)
           : postcss.parse(text);
     root.walkDecls((d) => {
       decls.push({
         prop: d.prop,
         value: d.value,
-        line: d.source?.start?.line || 1,
-        column: d.source?.start?.column || 1,
+        line: d.source?.start?.line ?? 1,
+        column: d.source?.start?.column ?? 1,
       });
     });
   } catch (e: unknown) {
@@ -381,11 +397,11 @@ function isSvelteAttr(value: unknown): value is {
   name: string;
   start: number;
   end: number;
-  value: Array<{
+  value: {
     type: string;
     data?: string;
     expression?: { start: number; end: number };
-  }>;
+  }[];
 } {
   return (
     isRecord(value) &&
@@ -415,7 +431,7 @@ function getDisabledLines(text: string): Set<number> {
       disabled.add(i + 2);
       continue;
     }
-    if (/design-lint-disable-line/.test(line)) {
+    if (line.includes('design-lint-disable-line')) {
       disabled.add(i + 1);
       continue;
     }

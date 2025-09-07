@@ -20,7 +20,7 @@ const numberOrString = z.union([z.number(), z.string()]);
 
 const tokenPatternArray = z.array(z.union([z.string(), z.instanceof(RegExp)]));
 
-const tokenGroup = <T extends z.ZodTypeAny>(
+const tokenGroup = <T extends z.ZodType>(
   schema: T,
 ): z.ZodType<Record<string, z.infer<T>> | (string | RegExp)[]> =>
   z.union([z.record(z.string(), schema), tokenPatternArray]);
@@ -53,7 +53,7 @@ const baseTokensSchema: z.ZodType<DesignTokens> = z
 const tokensSchema: z.ZodType<DesignTokens | Record<string, DesignTokens>> =
   z.union([baseTokensSchema, z.record(z.string(), baseTokensSchema)]);
 
-export const configSchema: z.ZodSchema<Config> = z
+export const configSchema: z.ZodType<Config> = z
   .object({
     tokens: tokensSchema.optional(),
     rules: z.record(z.string(), ruleSettingSchema).optional(),

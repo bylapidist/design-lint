@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { RuleRegistry } from '../../src/core/rule-registry.ts';
 import type { Config } from '../../src/core/linter.ts';
 
-test('RuleRegistry enables configured rules', async () => {
+void test('RuleRegistry enables configured rules', async () => {
   const config: Config = {
     tokens: {},
     rules: { 'design-token/colors': 'warn' },

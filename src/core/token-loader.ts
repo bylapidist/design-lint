@@ -70,12 +70,16 @@ export function mergeTokens(
   const selected = themes ?? Object.keys(tokensByTheme);
   for (const theme of selected) {
     const source = tokensByTheme[theme];
-    if (!source) continue;
     for (const [group, defs] of Object.entries(source)) {
       if (Array.isArray(defs)) {
         const existing = merged[group];
-        const target = Array.isArray(existing) ? existing : [];
-        merged[group] = Array.from(new Set([...target, ...defs]));
+        const target: (string | RegExp)[] = Array.isArray(existing)
+          ? (existing as (string | RegExp)[])
+          : [];
+        const defsArray = defs as (string | RegExp)[];
+        merged[group] = Array.from(
+          new Set<string | RegExp>([...target, ...defsArray]),
+        );
         continue;
       }
       if (!isRecord(defs)) {

@@ -9,7 +9,7 @@ export const fontSizeRule: RuleModule = {
   name: 'design-token/font-size',
   meta: { description: 'enforce font-size tokens' },
   create(context) {
-    const fontSizes = context.tokens?.fontSizes;
+    const fontSizes = context.tokens.fontSizes;
     if (
       !fontSizes ||
       (Array.isArray(fontSizes)
@@ -45,7 +45,7 @@ export const fontSizeRule: RuleModule = {
     const parseSize = (val: unknown): number | null => {
       if (typeof val === 'number') return val;
       if (typeof val === 'string') {
-        const match = val.trim().match(/^(\d*\.?\d+)(px|rem|em)$/);
+        const match = /^(\d*\.?\d+)(px|rem|em)$/.exec(val.trim());
         if (match) {
           const [, num, unit] = match;
           const n = parseFloat(num);
