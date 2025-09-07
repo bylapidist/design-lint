@@ -4,12 +4,12 @@ import type { LintResult, DesignTokens } from './types.js';
 import { normalizeTokens } from './token-loader.js';
 import { extractVarName } from '../utils/token-match.js';
 export { defaultIgnore } from './ignore.js';
-import { scanFiles } from './file-scanner.js';
 import type { Cache } from './cache.js';
 import { RuleRegistry } from './rule-registry.js';
 import { ParserService } from './parser-service.js';
 import { TokenTracker } from './token-tracker.js';
-import { CacheManager } from './cache-manager.js';
+import { FileService } from './file-service.js';
+import { CacheService } from './cache-service.js';
 
 export interface Config {
   tokens?: DesignTokens | Record<string, DesignTokens>;
@@ -74,7 +74,11 @@ export class Linter {
     warning?: string;
   }> {
     await this.ruleRegistry.load();
-    const files = await scanFiles(targets, this.config, additionalIgnorePaths);
+    const files = await FileService.scan(
+      targets,
+      this.config,
+      additionalIgnorePaths,
+    );
     const ignoreFiles: string[] = [];
     if (files.length === 0) {
       return {
@@ -83,17 +87,13 @@ export class Linter {
         warning: 'No files matched the provided patterns.',
       };
     }
-    if (cache) {
-      for (const key of cache.keys()) {
-        if (!files.includes(key)) cache.removeKey(key);
-      }
-    }
+    CacheService.prune(cache, files);
     const concurrency = Math.max(
       1,
       Math.floor(this.config.concurrency ?? os.cpus().length),
     );
     const limit = pLimit(concurrency);
-    const cacheManager = new CacheManager(cache, fix);
+    const cacheManager = CacheService.createManager(cache, fix);
     const tasks = files.map((filePath) =>
       limit(() => cacheManager.processFile(filePath, this.lintText.bind(this))),
     );
@@ -103,7 +103,7 @@ export class Linter {
         this.config.configPath || 'designlint.config',
       ),
     );
-    cacheManager.save(cacheLocation);
+    CacheService.save(cacheManager, cacheLocation);
     return { results, ignoreFiles };
   }
 
