@@ -3,7 +3,7 @@ const tsParser = require('@typescript-eslint/parser');
 
 module.exports = [
   {
-    ignores: ['tests/fixtures/**'],
+    ignores: ['**/tests/fixtures/**'],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],

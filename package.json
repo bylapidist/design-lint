@@ -1,79 +1,14 @@
 {
-  "name": "@lapidist/design-lint",
-  "version": "4.10.0",
-  "description": "Design system linter",
-  "type": "module",
-  "main": "dist/index.js",
-  "bin": {
-    "design-lint": "dist/cli/index.js"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./cli": {
-      "types": "./dist/cli/index.d.ts",
-      "default": "./dist/cli/index.js"
-    }
-  },
-  "engines": {
-    "node": ">=22"
-  },
+  "name": "design-lint-monorepo",
+  "private": true,
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "postbuild": "node scripts/postbuild.js",
-    "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
-    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
-    "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
-    "test": "tsx --test tests/**/*.test.ts",
-    "test:coverage": "c8 --reporter=lcov --reporter=text --reporter=json-summary tsx --test tests/**/*.test.ts",
-    "changeset": "changeset",
-    "release": "npm run build && changeset publish",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces",
+    "format:check": "npm run format:check --workspaces",
+    "test": "npm test --workspaces",
     "lint:md": "markdownlint '**/*.md'"
-  },
-  "keywords": [
-    "design",
-    "linter",
-    "cli"
-  ],
-  "author": "Brett Dorrans <hello@lapidist.net>",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bylapidist/design-lint.git"
-  },
-  "bugs": {
-    "url": "https://github.com/bylapidist/design-lint/issues"
-  },
-  "homepage": "https://design-lint.lapidist.net",
-  "license": "MIT",
-  "dependencies": {
-    "@vue/compiler-sfc": "3.5.21",
-    "chalk": "5.6.0",
-    "chokidar": "4.0.3",
-    "color-name": "2.0.0",
-    "color-string": "2.1.0",
-    "commander": "14.0.0",
-    "cosmiconfig": "9.0.0",
-    "cosmiconfig-typescript-loader": "6.1.0",
-    "flat-cache": "6.1.13",
-    "globby": "14.1.0",
-    "ignore": "7.0.5",
-    "p-limit": "7.1.1",
-    "picomatch": "4.0.3",
-    "postcss": "8.5.6",
-    "postcss-less": "6.0.0",
-    "postcss-scss": "4.0.9",
-    "postcss-value-parser": "4.2.0",
-    "leven": "4.0.0",
-    "svelte": "5.38.7",
-    "tempy": "3.1.0",
-    "typescript": "5.9.2",
-    "write-file-atomic": "6.0.0",
-    "zod": "4.1.5"
   },
   "devDependencies": {
     "@changesets/cli": "2.29.6",
@@ -89,20 +24,7 @@
     "markdownlint-cli": "0.45.0",
     "prettier": "3.6.2",
     "tsx": "4.20.5",
-    "vitepress": "1.6.4"
-  },
-  "c8": {
-    "check-coverage": true,
-    "branches": 75,
-    "functions": 75,
-    "lines": 80,
-    "statements": 80
-  },
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "publishConfig": {
-    "access": "public"
+    "vitepress": "1.6.4",
+    "typescript": "5.9.2"
   }
 }
