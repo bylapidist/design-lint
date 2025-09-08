@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/core/file-source.ts';
-import { applyFixes } from '../../src/index.ts';
+import { Linter } from '../../packages/core/src/core/linter.ts';
+import { FileSource } from '../../packages/core/src/core/file-source.ts';
+import { applyFixes } from '../../packages/core/src/index.ts';
 
 void test('design-system/icon-usage reports raw svg', async () => {
   const linter = new Linter(

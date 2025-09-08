@@ -4,11 +4,14 @@ import { once } from 'node:events';
 import { createRequire } from 'module';
 import chokidar from 'chokidar';
 import chalk from 'chalk';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
-import { loadConfig } from '../config/loader.js';
-import { Linter } from '../core/linter.js';
-import type { Config } from '../core/linter.js';
-import type { Cache } from '../core/cache.js';
+import {
+  relFromCwd,
+  realpathIfExists,
+} from '../../packages/core/src/utils/paths.js';
+import { loadConfig } from '../../packages/core/src/config/loader.js';
+import { Linter } from '../../packages/core/src/core/linter.js';
+import type { Config } from '../../packages/core/src/core/linter.js';
+import type { Cache } from '../../packages/core/src/core/cache.js';
 import type { Ignore } from 'ignore';
 import {
   executeLint,

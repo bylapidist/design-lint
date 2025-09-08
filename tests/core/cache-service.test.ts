@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CacheService } from '../../src/core/cache-service.ts';
-import { CacheManager } from '../../src/core/cache-manager.ts';
+import { CacheService } from '../../packages/core/src/core/cache-service.ts';
+import { CacheManager } from '../../packages/core/src/core/cache-manager.ts';
 
 void test('CacheService.prune removes cache entries not in file list', () => {
   const removed: string[] = [];

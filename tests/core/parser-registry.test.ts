@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parserRegistry } from '../../src/core/parser-registry.ts';
+import { parserRegistry } from '../../packages/core/src/core/parser-registry.ts';
 import type {
   RuleModule,
   RuleContext,
   LintMessage,
-} from '../../src/core/types.ts';
+} from '../../packages/core/src/core/types.ts';
 
 const rule: RuleModule = {
   name: 'test',

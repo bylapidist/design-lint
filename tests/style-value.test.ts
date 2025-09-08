@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
-import { isStyleValue } from '../src/utils/style.ts';
+import { isStyleValue } from '../packages/core/src/utils/style.ts';
 
 function getStringNode(code: string, text: string): ts.StringLiteral {
   const sf = ts.createSourceFile(

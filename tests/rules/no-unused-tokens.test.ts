@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/core/file-source.ts';
+import { Linter } from '../../packages/core/src/core/linter.ts';
+import { FileSource } from '../../packages/core/src/core/file-source.ts';
 
 async function tempFile(content: string): Promise<string> {
   const dir = await fs.mkdtemp(path.join(process.cwd(), 'tmp-'));
