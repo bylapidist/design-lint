@@ -3,12 +3,18 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces",
-    "format": "npm run format --workspaces",
-    "format:check": "npm run format:check --workspaces",
-    "test": "npm test --workspaces",
-    "lint:md": "markdownlint '**/*.md'"
+    "build": "npm --workspaces run build",
+    "lint": "npm --workspaces run lint",
+    "format": "npm --workspaces run format",
+    "format:check": "npm --workspaces run format:check",
+    "test": "npm --workspaces run test",
+    "test:coverage": "npm --workspaces run test:coverage",
+    "lint:md": "markdownlint '**/*.md'",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "changeset": "changeset",
+    "release": "npm run build && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "2.29.6",
