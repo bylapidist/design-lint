@@ -2,7 +2,14 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lapidist/design-lint-core": ["packages/core/src/index.ts"],
+      "@lapidist/design-lint-core/*": ["packages/core/src/*"],
+      "@lapidist/design-lint-shared": ["packages/shared/src/index.ts"],
+      "@lapidist/design-lint-shared/*": ["packages/shared/src/*"]
+    }
   },
   "include": ["src/**/*", "tests/**/*", "packages/*/src/**/*"]
 }
