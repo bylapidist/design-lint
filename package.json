@@ -20,8 +20,9 @@
   "engines": {
     "node": ">=22"
   },
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.base.json --outDir dist",
     "postbuild": "node scripts/postbuild.js",
     "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
