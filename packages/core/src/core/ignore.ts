@@ -1,6 +1,6 @@
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
 import ignore from 'ignore';
+import type { Env } from '@lapidist/design-lint-shared';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 import type { Config } from './linter.js';
 
 export const defaultIgnore = [
@@ -23,6 +23,7 @@ export function getIgnorePatterns(config?: Config): string[] {
 export async function loadIgnore(
   config?: Config,
   additionalPaths: string[] = [],
+  env: Env = nodeEnv,
 ): Promise<{ ig: ignore.Ignore; patterns: string[] }> {
   const ig = ignore();
   const patterns = getIgnorePatterns(config);
@@ -30,8 +31,8 @@ export async function loadIgnore(
   const files = ['.gitignore', '.designlintignore', ...additionalPaths];
   for (const file of files) {
     try {
-      const content = await fs.readFile(
-        path.resolve(process.cwd(), file),
+      const content = await env.fs.readFile(
+        env.path.resolve(process.cwd(), file),
         'utf8',
       );
       ig.add(content);

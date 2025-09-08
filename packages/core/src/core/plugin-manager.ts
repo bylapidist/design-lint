@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
 import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
+import type { Env } from '@lapidist/design-lint-shared';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
 import { realpathIfExists, relFromCwd } from '../utils/paths.js';
@@ -25,6 +25,7 @@ export class PluginManager {
   constructor(
     private config: Config,
     private ruleMap: Map<string, { rule: RuleModule; source: string }>,
+    private env: Env = nodeEnv,
   ) {
     this.req = config.configPath
       ? createRequire(config.configPath)
@@ -35,20 +36,23 @@ export class PluginManager {
     const paths: string[] = [];
     for (const p of this.config.plugins ?? []) {
       try {
-        const resolved = realpathIfExists(this.req.resolve(p));
-        if (!fs.existsSync(resolved)) {
+        const resolved = realpathIfExists(this.req.resolve(p), this.env.fs);
+        if (!this.env.fs.existsSync(resolved)) {
           throw createEngineError({
-            message: `Plugin not found: "${relFromCwd(resolved)}"`,
+            message: `Plugin not found: "${relFromCwd(resolved, this.env.path)}"`,
             context: `Plugin "${p}"`,
             remediation: 'Ensure the plugin is installed and resolvable.',
           });
         }
         paths.push(resolved);
       } catch {
-        const resolved = realpathIfExists(path.resolve(p));
-        if (!fs.existsSync(resolved)) {
+        const resolved = realpathIfExists(
+          this.env.path.resolve(p),
+          this.env.fs,
+        );
+        if (!this.env.fs.existsSync(resolved)) {
           throw createEngineError({
-            message: `Plugin not found: "${relFromCwd(resolved)}"`,
+            message: `Plugin not found: "${relFromCwd(resolved, this.env.path)}"`,
             context: `Plugin "${p}"`,
             remediation: 'Ensure the plugin is installed and resolvable.',
           });

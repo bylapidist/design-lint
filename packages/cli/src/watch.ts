@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import { once } from 'node:events';
 import { createRequire } from 'module';
 import chokidar from 'chokidar';
@@ -18,6 +17,7 @@ import {
   type ExecuteServices,
   type ExecuteOptions,
 } from './execute.js';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 
 export interface WatchState {
   pluginPaths: string[];
@@ -121,15 +121,15 @@ export async function startWatch(ctx: WatchOptions) {
     ...ignoreFilePaths.filter((p) => fs.existsSync(p)),
   );
   const outputPath = options.output
-    ? realpathIfExists(path.resolve(options.output))
+    ? realpathIfExists(nodeEnv.path.resolve(options.output), nodeEnv.fs)
     : undefined;
   const reportPath = options.report
-    ? realpathIfExists(path.resolve(options.report))
+    ? realpathIfExists(nodeEnv.path.resolve(options.report), nodeEnv.fs)
     : undefined;
   const watcher = chokidar.watch(watchPaths, {
     ignored: (p: string) => {
-      const rel = relFromCwd(realpathIfExists(p));
-      const resolved = realpathIfExists(path.resolve(p));
+      const rel = relFromCwd(realpathIfExists(p, nodeEnv.fs), nodeEnv.path);
+      const resolved = realpathIfExists(nodeEnv.path.resolve(p), nodeEnv.fs);
       if (config.configPath && resolved === config.configPath) return false;
       if (resolved === designIgnore || resolved === gitIgnore) return false;
       if (pluginPaths.includes(resolved)) return false;
@@ -177,8 +177,8 @@ export async function startWatch(ctx: WatchOptions) {
         ? createRequire(config.configPath)
         : createRequire(import.meta.url);
       for (const p of pluginPaths) Reflect.deleteProperty(req.cache, p);
-      config = await loadConfig(process.cwd(), options.config);
-      linterRef.current = new Linter(config);
+      config = await loadConfig(process.cwd(), options.config, nodeEnv);
+      linterRef.current = new Linter(config, undefined, nodeEnv);
       await refreshIgnore();
       cache?.clear();
       if (cacheLocation) {
@@ -204,7 +204,10 @@ export async function startWatch(ctx: WatchOptions) {
   };
 
   const handle = async (filePath: string) => {
-    const resolved = realpathIfExists(path.resolve(filePath));
+    const resolved = realpathIfExists(
+      nodeEnv.path.resolve(filePath),
+      nodeEnv.fs,
+    );
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;
     if (
@@ -221,7 +224,10 @@ export async function startWatch(ctx: WatchOptions) {
   };
 
   const handleUnlink = async (filePath: string) => {
-    const resolved = realpathIfExists(path.resolve(filePath));
+    const resolved = realpathIfExists(
+      nodeEnv.path.resolve(filePath),
+      nodeEnv.fs,
+    );
     cache?.removeKey(resolved);
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;

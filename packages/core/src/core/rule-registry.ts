@@ -2,17 +2,22 @@ import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
 import { builtInRules } from '../rules/index.js';
 import { PluginManager, createEngineError } from './plugin-manager.js';
+import type { Env } from '@lapidist/design-lint-shared';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 
 export class RuleRegistry {
   private ruleMap = new Map<string, { rule: RuleModule; source: string }>();
   private pluginLoad: Promise<void>;
   private pluginPaths: string[] = [];
   private pluginManager: PluginManager;
-  constructor(private config: Config) {
+  constructor(
+    private config: Config,
+    private env: Env = nodeEnv,
+  ) {
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
-    this.pluginManager = new PluginManager(this.config, this.ruleMap);
+    this.pluginManager = new PluginManager(this.config, this.ruleMap, env);
     this.pluginLoad = this.pluginManager.getPlugins().then((paths) => {
       this.pluginPaths = paths;
     });

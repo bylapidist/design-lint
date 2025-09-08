@@ -6,6 +6,8 @@ import type { LintResult } from './types.js';
 import type { DocumentSource } from './document-source.js';
 import { CacheService } from './cache-service.js';
 import { TokenTracker } from './token-tracker.js';
+import type { Env } from '@lapidist/design-lint-shared';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 
 export interface RunnerOptions {
   config: Config;
@@ -16,6 +18,7 @@ export interface RunnerOptions {
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
   source: DocumentSource;
+  env?: Env;
 }
 
 export class Runner {
@@ -27,12 +30,14 @@ export class Runner {
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
   private source: DocumentSource;
+  private env: Env;
 
   constructor(options: RunnerOptions) {
     this.config = options.config;
     this.tokenTracker = options.tokenTracker;
     this.lintText = options.lintText;
     this.source = options.source;
+    this.env = options.env ?? nodeEnv;
   }
 
   async run(
@@ -65,7 +70,7 @@ export class Runner {
       Math.floor(this.config.concurrency ?? os.cpus().length),
     );
     const limit = pLimit(concurrency);
-    const cacheManager = CacheService.createManager(cache, fix);
+    const cacheManager = CacheService.createManager(cache, fix, this.env.fs);
     const tasks = files.map((filePath) =>
       limit(() => cacheManager.processFile(filePath, this.lintText)),
     );

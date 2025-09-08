@@ -10,5 +10,9 @@
     "lint": "eslint 'src/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts'",
     "test": "tsx --test tests/**/*.test.ts"
+  },
+  "dependencies": {
+    "@lapidist/design-lint-core": "file:../core",
+    "@lapidist/design-lint-shared": "file:../shared"
   }
 }

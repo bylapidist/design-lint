@@ -1,5 +1,6 @@
 import flatCache, { type FlatCache } from 'flat-cache';
-import path from 'path';
+import type { PathUtils } from '@lapidist/design-lint-shared';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 import type { LintResult } from './types.js';
 
 export interface CacheEntry {
@@ -9,8 +10,11 @@ export interface CacheEntry {
 }
 export type Cache = FlatCache;
 
-export function loadCache(cacheLocation: string): Cache {
-  const cacheId = path.basename(cacheLocation);
-  const cacheDir = path.dirname(cacheLocation);
+export function loadCache(
+  cacheLocation: string,
+  pathUtils: PathUtils = nodeEnv.path,
+): Cache {
+  const cacheId = pathUtils.basename(cacheLocation);
+  const cacheDir = pathUtils.dirname(cacheLocation);
   return flatCache.create({ cacheId, cacheDir });
 }

@@ -13,7 +13,8 @@ import { Runner } from './runner.js';
 import type { DocumentSource } from './document-source.js';
 import { FileSource } from './file-source.js';
 import { parserRegistry } from './parser-registry.js';
-import path from 'node:path';
+import type { Env } from '@lapidist/design-lint-shared';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 
 export interface Config {
   tokens?: DesignTokens | Record<string, DesignTokens>;
@@ -39,17 +40,19 @@ export class Linter {
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
   private source: DocumentSource;
+  private env: Env;
 
-  constructor(config: Config, source: DocumentSource = new FileSource()) {
+  constructor(config: Config, source?: DocumentSource, env: Env = nodeEnv) {
+    this.env = env;
+    this.source = source ?? new FileSource(env.logger, env.fs);
     const normalized = normalizeTokens(
       config.tokens,
       config.wrapTokensWithVar ?? false,
     );
     this.tokensByTheme = normalized.themes;
     this.config = { ...config, tokens: normalized.merged };
-    this.ruleRegistry = new RuleRegistry(this.config);
+    this.ruleRegistry = new RuleRegistry(this.config, this.env);
     this.tokenTracker = new TokenTracker(this.config.tokens);
-    this.source = source;
   }
 
   async lintFile(
@@ -87,6 +90,7 @@ export class Linter {
       tokenTracker: this.tokenTracker,
       lintText: this.lintText.bind(this),
       source: this.source,
+      env: this.env,
     });
     return runner.run(
       targets,
@@ -150,7 +154,7 @@ export class Linter {
       };
       return rule.create(ctx);
     });
-    const ext = path.extname(filePath).toLowerCase();
+    const ext = this.env.path.extname(filePath).toLowerCase();
     const parser = parserRegistry[ext];
     if (parser) {
       await parser(text, filePath, listeners, messages);

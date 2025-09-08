@@ -1,4 +1,5 @@
-import { stat, readFile, writeFile } from 'node:fs/promises';
+import type { FileSystem } from '@lapidist/design-lint-shared';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 import type { Cache, CacheEntry } from './cache.js';
 import type { LintResult, LintMessage, Fix } from './types.js';
 
@@ -6,6 +7,7 @@ export class CacheManager {
   constructor(
     private cache: Cache | undefined,
     private fix: boolean,
+    private fs: FileSystem = nodeEnv.fs,
   ) {}
 
   async processFile(
@@ -17,7 +19,7 @@ export class CacheManager {
     ) => Promise<LintResult>,
   ): Promise<LintResult> {
     try {
-      const statResult = await stat(filePath);
+      const statResult = await this.fs.stat(filePath);
       const cached = this.cache?.getKey<CacheEntry>(filePath);
       if (
         cached &&
@@ -27,16 +29,16 @@ export class CacheManager {
       ) {
         return cached.result;
       }
-      const text = await readFile(filePath, 'utf8');
+      const text = await this.fs.readFile(filePath, 'utf8');
       let result = await lintFn(text, filePath);
       let mtime = statResult.mtimeMs;
       let size = statResult.size;
       if (this.fix) {
         const output = applyFixes(text, result.messages);
         if (output !== text) {
-          await writeFile(filePath, output, 'utf8');
+          await this.fs.writeFile(filePath, output, 'utf8');
           result = await lintFn(output, filePath);
-          const newStat = await stat(filePath);
+          const newStat = await this.fs.stat(filePath);
           mtime = newStat.mtimeMs;
           size = newStat.size;
         }

@@ -1,6 +1,5 @@
-import fs from 'fs';
-import path from 'path';
 import ignore, { type Ignore } from 'ignore';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 import {
   getFormatter,
   relFromCwd,
@@ -41,34 +40,45 @@ export interface PrepareEnvironmentOptions {
 export async function prepareEnvironment(
   options: PrepareEnvironmentOptions,
 ): Promise<Environment> {
-  const formatter = await getFormatter(options.format);
-  let config = await loadConfig(process.cwd(), options.config);
+  const formatter = await getFormatter(options.format, nodeEnv);
+  let config = await loadConfig(process.cwd(), options.config, nodeEnv);
   if (options.concurrency !== undefined) {
     config.concurrency = options.concurrency;
   }
   if (config.configPath) {
-    config.configPath = realpathIfExists(config.configPath);
+    config.configPath = realpathIfExists(config.configPath, nodeEnv.fs);
   }
-  const linterRef = { current: new Linter(config) };
+  const linterRef = { current: new Linter(config, undefined, nodeEnv) };
   const pluginPaths = await linterRef.current.getPluginPaths();
 
   const cacheLocation = options.cache
-    ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
+    ? nodeEnv.path.resolve(
+        process.cwd(),
+        options.cacheLocation ?? '.designlintcache',
+      )
     : undefined;
-  const cache = cacheLocation ? loadCache(cacheLocation) : undefined;
+  const cache = cacheLocation
+    ? loadCache(cacheLocation, nodeEnv.path)
+    : undefined;
 
   let ignorePath: string | undefined;
   if (options.ignorePath) {
-    const resolved = path.resolve(options.ignorePath);
-    if (!fs.existsSync(resolved)) {
-      throw new Error(`Ignore file not found: "${relFromCwd(resolved)}"`);
+    const resolved = nodeEnv.path.resolve(options.ignorePath);
+    if (!nodeEnv.fs.existsSync(resolved)) {
+      throw new Error(
+        `Ignore file not found: "${relFromCwd(resolved, nodeEnv.path)}"`,
+      );
     }
-    ignorePath = realpathIfExists(resolved);
+    ignorePath = realpathIfExists(resolved, nodeEnv.fs);
   }
 
-  const gitIgnore = realpathIfExists(path.join(process.cwd(), '.gitignore'));
+  const gitIgnore = realpathIfExists(
+    nodeEnv.path.join(process.cwd(), '.gitignore'),
+    nodeEnv.fs,
+  );
   const designIgnore = realpathIfExists(
-    path.join(process.cwd(), '.designlintignore'),
+    nodeEnv.path.join(process.cwd(), '.designlintignore'),
+    nodeEnv.fs,
   );
 
   let ig = ignore();
@@ -76,6 +86,7 @@ export async function prepareEnvironment(
     const { ig: newIg } = await loadIgnore(
       config,
       ignorePath ? [ignorePath] : [],
+      nodeEnv,
     );
     ig = newIg;
   };
