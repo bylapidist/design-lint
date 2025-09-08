@@ -4,11 +4,11 @@ import { once } from 'node:events';
 import { createRequire } from 'module';
 import chokidar from 'chokidar';
 import chalk from 'chalk';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
+import { relFromCwd, realpathIfExists } from '../node-adapter/paths.js';
 import { loadConfig } from '../config/loader.js';
-import { Linter } from '../core/linter.js';
-import type { Config } from '../core/linter.js';
-import type { Cache } from '../core/cache.js';
+import { Linter } from '../node-adapter/linter.js';
+import type { Config } from '../engine/linter.js';
+import type { Cache } from '../engine/cache.js';
 import type { Ignore } from 'ignore';
 import {
   executeLint,
@@ -177,7 +177,11 @@ export async function startWatch(ctx: WatchOptions) {
       config = await loadConfig(process.cwd(), options.config);
       linterRef.current = new Linter(config);
       await refreshIgnore();
-      cache?.clear();
+      if (cache) {
+        cache.keys().forEach((k) => {
+          cache.removeKey(k);
+        });
+      }
       if (cacheLocation) {
         try {
           fs.unlinkSync(cacheLocation);

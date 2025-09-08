@@ -2,10 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import ignore, { type Ignore } from 'ignore';
 import { getFormatter } from '../formatters/index.js';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
-import { loadCache, type Cache } from '../core/cache.js';
-import type { Config, Linter } from '../core/linter.js';
-import type { LintResult } from '../core/types.js';
+import { relFromCwd, realpathIfExists } from '../node-adapter/paths.js';
+import { loadCache } from '../node-adapter/cache.js';
+import type { Cache } from '../engine/cache.js';
+import type { Config } from '../engine/linter.js';
+import type { Linter } from '../node-adapter/linter.js';
+import type { LintResult } from '../engine/types.js';
 
 export interface Environment {
   formatter: (results: LintResult[], useColor?: boolean) => string;
@@ -36,8 +38,8 @@ export async function prepareEnvironment(
 ): Promise<Environment> {
   const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
     import('../config/loader.js'),
-    import('../core/linter.js'),
-    import('../core/ignore.js'),
+    import('../node-adapter/linter.js'),
+    import('../node-adapter/ignore.js'),
   ]);
 
   const formatter = await getFormatter(options.format);

@@ -1,5 +1,5 @@
-import type { LintResult } from '../core/types.js';
-import { relFromCwd } from '../utils/paths.js';
+import type { LintResult } from '../engine/types.js';
+import { relFromCwd } from '../node-adapter/paths.js';
 
 const codes = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,

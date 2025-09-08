@@ -1,12 +1,12 @@
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule } from '../engine/types.js';
 import {
   matchToken,
   extractVarName,
   closestToken,
-} from '../core/token-utils.js';
+} from '../engine/token-utils.js';
 
 type ColorFormat =
   | 'hex'

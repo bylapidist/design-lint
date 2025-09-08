@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Runner } from '../../src/index.ts';
-import { TokenTracker } from '../../src/core/token-tracker.ts';
+import { TokenTracker } from '../../src/engine/token-tracker.ts';
 import { FileSource } from '../../src/index.ts';
+import { CacheService } from '../../src/node-adapter/cache-service.ts';
 
 interface CacheEntry {
   mtime: number;
@@ -41,6 +42,7 @@ void test('Runner handles non-positive concurrency values', async () => {
     tokenTracker: new TokenTracker({}),
     lintText: (text, filePath) => Promise.resolve({ filePath, messages: [] }),
     source: new FileSource(),
+    cacheService: CacheService,
   });
   const res = await runner.run([file]);
   assert.equal(res.results[0]?.filePath, file);
@@ -58,6 +60,7 @@ void test('Runner prunes cache and saves results', async () => {
     tokenTracker: new TokenTracker({}),
     lintText: (text, filePath) => Promise.resolve({ filePath, messages: [] }),
     source: new FileSource(),
+    cacheService: CacheService,
   });
   await runner.run([file], false, cache, [], 'cache');
   assert.deepEqual(cache.keys(), [file]);

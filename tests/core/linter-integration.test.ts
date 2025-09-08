@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/core/file-source.ts';
+import { Linter } from '../../src/node-adapter/linter.ts';
+import { FileSource } from '../../src/node-adapter/file-source.ts';
 
 void test('Linter integrates registry, parser and trackers', async () => {
   const linter = new Linter(

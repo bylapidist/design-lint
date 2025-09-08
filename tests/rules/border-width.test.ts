@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/core/file-source.ts';
+import { Linter } from '../../src/node-adapter/linter.ts';
+import { FileSource } from '../../src/node-adapter/file-source.ts';
 
 void test('design-token/border-width reports invalid value', async () => {
   const linter = new Linter(

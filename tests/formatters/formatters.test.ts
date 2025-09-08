@@ -6,7 +6,7 @@ import { stylish } from '../../src/formatters/stylish.ts';
 import { jsonFormatter } from '../../src/formatters/json.ts';
 import { sarifFormatter } from '../../src/formatters/sarif.ts';
 import { getFormatter } from '../../src/index.ts';
-import type { LintResult } from '../../src/core/types.ts';
+import type { LintResult } from '../../src/engine/types.ts';
 
 interface SarifLog {
   runs: {

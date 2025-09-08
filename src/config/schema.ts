@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { Config } from '../core/linter.js';
-import type { DesignTokens } from '../core/types.js';
+import type { Config } from '../engine/linter.js';
+import type { DesignTokens } from '../engine/types.js';
 
 const severitySchema = z.union([
   z.literal('error'),

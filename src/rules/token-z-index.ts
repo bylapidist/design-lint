@@ -1,11 +1,11 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule } from '../engine/types.js';
 import {
   matchToken,
   extractVarName,
   closestToken,
-} from '../core/token-utils.js';
-import { isStyleValue } from '../utils/style.js';
+} from '../engine/token-utils.js';
+import { isStyleValue } from '../engine/style.js';
 
 export const zIndexRule: RuleModule = {
   name: 'design-token/z-index',

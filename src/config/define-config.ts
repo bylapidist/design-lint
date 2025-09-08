@@ -1,4 +1,4 @@
-import type { Config } from '../core/linter.js';
+import type { Config } from '../engine/linter.js';
 
 /**
  * Helper to define a configuration object with type checking.

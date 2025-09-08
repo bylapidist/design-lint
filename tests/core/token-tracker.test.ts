@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TokenTracker } from '../../src/core/token-tracker.ts';
-import type { DesignTokens } from '../../src/core/types.ts';
+import { TokenTracker } from '../../src/engine/token-tracker.ts';
+import type { DesignTokens } from '../../src/engine/types.ts';
 
 void test('TokenTracker reports unused tokens', () => {
   const tokens: DesignTokens = {

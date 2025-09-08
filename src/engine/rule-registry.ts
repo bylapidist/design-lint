@@ -1,21 +1,30 @@
 import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
 import { builtInRules } from '../rules/index.js';
-import { PluginManager, createEngineError } from './plugin-manager.js';
+import { createEngineError } from './error.js';
+
+export interface PluginLoader {
+  load(
+    ruleMap: Map<string, { rule: RuleModule; source: string }>,
+  ): Promise<string[]>;
+}
 
 export class RuleRegistry {
   private ruleMap = new Map<string, { rule: RuleModule; source: string }>();
   private pluginLoad: Promise<void>;
   private pluginPaths: string[] = [];
-  private pluginManager: PluginManager;
-  constructor(private config: Config) {
+  constructor(
+    private config: Config,
+    pluginManager?: PluginLoader,
+  ) {
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
-    this.pluginManager = new PluginManager(this.config, this.ruleMap);
-    this.pluginLoad = this.pluginManager.getPlugins().then((paths) => {
-      this.pluginPaths = paths;
-    });
+    this.pluginLoad = pluginManager
+      ? pluginManager.load(this.ruleMap).then((paths) => {
+          this.pluginPaths = paths;
+        })
+      : Promise.resolve();
   }
 
   async load(): Promise<void> {

@@ -1,7 +1,11 @@
-import type { Cache } from './cache.js';
-import { CacheManager } from './cache-manager.js';
+import type {
+  Cache,
+  CacheService as CacheServiceType,
+  CacheManager,
+} from '../engine/cache.js';
+import { CacheManager as Manager } from './cache-manager.js';
 
-export const CacheService = {
+export const CacheService: CacheServiceType = {
   prune(cache: Cache | undefined, files: string[]): void {
     if (!cache) return;
     for (const key of cache.keys()) {
@@ -10,10 +14,10 @@ export const CacheService = {
   },
 
   createManager(cache: Cache | undefined, fix: boolean): CacheManager {
-    return new CacheManager(cache, fix);
+    return new Manager(cache, fix);
   },
 
   save(manager: CacheManager, cacheLocation?: string): void {
     manager.save(cacheLocation);
   },
-} as const;
+};

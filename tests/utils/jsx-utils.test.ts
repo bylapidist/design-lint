@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
-import { isInNonStyleJsx } from '../../src/utils/jsx.ts';
+import { isInNonStyleJsx } from '../../src/engine/jsx.ts';
 
 function getStrings(code: string): ts.StringLiteral[] {
   const sf = ts.createSourceFile(

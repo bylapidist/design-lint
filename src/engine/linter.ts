@@ -6,14 +6,12 @@ import type {
 } from './types.js';
 import { normalizeTokens, mergeTokens, extractVarName } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
-import type { Cache } from './cache.js';
-import { RuleRegistry } from './rule-registry.js';
+import type { Cache, CacheService } from './cache.js';
+import { RuleRegistry, type PluginLoader } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
 import type { DocumentSource } from './document-source.js';
-import { FileSource } from './file-source.js';
 import { parserRegistry } from './parser-registry.js';
-import path from 'node:path';
 
 export interface Config {
   tokens?: DesignTokens | Record<string, DesignTokens>;
@@ -30,6 +28,37 @@ interface ResolvedConfig extends Omit<Config, 'tokens'> {
   tokens: DesignTokens;
 }
 
+interface LinterOptions {
+  source?: DocumentSource;
+  pluginManager?: PluginLoader;
+  cacheService?: CacheService;
+}
+
+const defaultSource: DocumentSource = {
+  scan(targets) {
+    return Promise.resolve(targets);
+  },
+};
+
+const noopCacheService: CacheService = {
+  prune() {
+    /* noop */
+  },
+  createManager() {
+    return {
+      async processFile(_fp, lintFn) {
+        return lintFn('', _fp);
+      },
+      save() {
+        /* noop */
+      },
+    };
+  },
+  save() {
+    /* noop */
+  },
+};
+
 /**
  * Lints files using built-in and plugin-provided rules.
  */
@@ -39,17 +68,19 @@ export class Linter {
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
   private source: DocumentSource;
+  private cacheService: CacheService;
 
-  constructor(config: Config, source: DocumentSource = new FileSource()) {
+  constructor(config: Config, options: LinterOptions = {}) {
     const normalized = normalizeTokens(
       config.tokens,
       config.wrapTokensWithVar ?? false,
     );
     this.tokensByTheme = normalized.themes;
     this.config = { ...config, tokens: normalized.merged };
-    this.ruleRegistry = new RuleRegistry(this.config);
+    this.ruleRegistry = new RuleRegistry(this.config, options.pluginManager);
     this.tokenTracker = new TokenTracker(this.config.tokens);
-    this.source = source;
+    this.source = options.source ?? defaultSource;
+    this.cacheService = options.cacheService ?? noopCacheService;
   }
 
   async lintFile(
@@ -87,6 +118,7 @@ export class Linter {
       tokenTracker: this.tokenTracker,
       lintText: this.lintText.bind(this),
       source: this.source,
+      cacheService: this.cacheService,
     });
     return runner.run(
       targets,
@@ -150,7 +182,7 @@ export class Linter {
       };
       return rule.create(ctx);
     });
-    const ext = path.extname(filePath).toLowerCase();
+    const ext = getExtension(filePath);
     const parser = parserRegistry[ext];
     if (parser) {
       await parser(text, filePath, listeners, messages);
@@ -159,8 +191,6 @@ export class Linter {
     return { filePath, messages: filtered, ruleDescriptions };
   }
 }
-
-export { applyFixes } from './cache-manager.js';
 
 function getDisabledLines(text: string): Set<number> {
   const disabled = new Set<number>();
@@ -187,6 +217,11 @@ function getDisabledLines(text: string): Set<number> {
     if (block) disabled.add(i + 1);
   }
   return disabled;
+}
+
+function getExtension(filePath: string): string {
+  const idx = filePath.lastIndexOf('.');
+  return idx >= 0 ? filePath.slice(idx).toLowerCase() : '';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

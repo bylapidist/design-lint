@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule } from '../engine/types.js';
 
 interface NoInlineStylesOptions {
   /** When true, the rule will ignore class/className attributes. */

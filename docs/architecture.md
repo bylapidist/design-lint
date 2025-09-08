@@ -15,15 +15,15 @@ Starting with **file discovery**, glob patterns expand to concrete paths and res
 
 ### File discovery
 
-Resolves the working set of files using glob patterns and ignore rules. See [`src/core/file-source.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/file-source.ts).
+Resolves the working set of files using glob patterns and ignore rules. See [`src/node-adapter/file-source.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/file-source.ts).
 
 ### Parser adapters
 
-Normalise different language parsers behind a common interface. See [`src/core/parsers`](https://github.com/bylapidist/design-lint/tree/main/src/core/parsers).
+Normalise different language parsers behind a common interface. See [`src/engine/parsers`](https://github.com/bylapidist/design-lint/tree/main/src/core/parsers).
 
 ### Rule engine
 
-Registers rules and coordinates their execution over AST nodes. See [`src/core/linter.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/linter.ts) and [`src/core/rule-registry.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/rule-registry.ts).
+Registers rules and coordinates their execution over AST nodes. See [`src/engine/linter.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/linter.ts) and [`src/engine/rule-registry.ts`](https://github.com/bylapidist/design-lint/blob/main/src/engine/rule-registry.ts).
 
 ### Formatter pipeline
 

@@ -1,6 +1,6 @@
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import type { Cache, CacheEntry } from './cache.js';
-import type { LintResult, LintMessage, Fix } from './types.js';
+import type { Cache, CacheEntry } from '../engine/cache.js';
+import type { LintResult, LintMessage, Fix } from '../engine/types.js';
 
 export class CacheManager {
   constructor(

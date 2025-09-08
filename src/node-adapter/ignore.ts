@@ -1,24 +1,10 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import ignore from 'ignore';
-import type { Config } from './linter.js';
+import type { Config } from '../engine/linter.js';
+import { getIgnorePatterns, defaultIgnore } from '../engine/ignore.js';
 
-export const defaultIgnore = [
-  '**/node_modules/**',
-  '**/dist/**',
-  '**/build/**',
-  '**/coverage/**',
-  '**/.next/**',
-  '**/.nuxt/**',
-  '**/out/**',
-  '**/.cache/**',
-];
-
-export function getIgnorePatterns(config?: Config): string[] {
-  const fromConfig =
-    config?.ignoreFiles?.map((p) => p.replace(/\\/g, '/')) ?? [];
-  return [...defaultIgnore, ...fromConfig];
-}
+export { defaultIgnore, getIgnorePatterns };
 
 export async function loadIgnore(
   config?: Config,

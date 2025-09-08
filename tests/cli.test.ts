@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+import { makeTmpDir } from '../src/node-adapter/tmp.ts';
 import { readWhenReady } from './helpers/fs.ts';
 import { Linter } from '../src/index.ts';
 import { FileSource } from '../src/index.ts';
-import type { LintResult } from '../src/core/types.ts';
+import type { LintResult } from '../src/engine/types.ts';
 
 const tsxLoader = require.resolve('tsx/esm');
 const WATCH_TIMEOUT = 2000;

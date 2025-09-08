@@ -2,8 +2,8 @@ import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { Linter } from '../src/node-adapter/linter.ts';
+import { FileSource } from '../src/node-adapter/file-source.ts';
 import { loadConfig } from '../src/config/loader.ts';
 
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');

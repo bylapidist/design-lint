@@ -1,10 +1,8 @@
 import pLimit from 'p-limit';
-import os from 'node:os';
 import type { Config } from './linter.js';
-import type { Cache } from './cache.js';
+import type { Cache, CacheService } from './cache.js';
 import type { LintResult } from './types.js';
 import type { DocumentSource } from './document-source.js';
-import { CacheService } from './cache-service.js';
 import { TokenTracker } from './token-tracker.js';
 
 export interface RunnerOptions {
@@ -16,6 +14,7 @@ export interface RunnerOptions {
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
   source: DocumentSource;
+  cacheService: CacheService;
 }
 
 export class Runner {
@@ -27,12 +26,14 @@ export class Runner {
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
   private source: DocumentSource;
+  private cacheService: CacheService;
 
   constructor(options: RunnerOptions) {
     this.config = options.config;
     this.tokenTracker = options.tokenTracker;
     this.lintText = options.lintText;
     this.source = options.source;
+    this.cacheService = options.cacheService;
   }
 
   async run(
@@ -59,13 +60,10 @@ export class Runner {
         warning: 'No files matched the provided patterns.',
       };
     }
-    CacheService.prune(cache, files);
-    const concurrency = Math.max(
-      1,
-      Math.floor(this.config.concurrency ?? os.cpus().length),
-    );
+    this.cacheService.prune(cache, files);
+    const concurrency = Math.max(1, Math.floor(this.config.concurrency ?? 1));
     const limit = pLimit(concurrency);
-    const cacheManager = CacheService.createManager(cache, fix);
+    const cacheManager = this.cacheService.createManager(cache, fix);
     const tasks = files.map((filePath) =>
       limit(() => cacheManager.processFile(filePath, this.lintText)),
     );
@@ -75,7 +73,7 @@ export class Runner {
         this.config.configPath ?? 'designlint.config',
       ),
     );
-    CacheService.save(cacheManager, cacheLocation);
+    this.cacheService.save(cacheManager, cacheLocation);
     return { results, ignoreFiles };
   }
 }

@@ -2,30 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
-import type { Config } from './linter.js';
-import type { RuleModule } from './types.js';
-import { realpathIfExists, relFromCwd } from '../utils/paths.js';
-
-export interface EngineErrorOptions {
-  message: string;
-  context: string;
-  remediation: string;
-}
-
-export function createEngineError(opts: EngineErrorOptions): Error {
-  return new Error(
-    `${opts.message}\nContext: ${opts.context}\nRemediation: ${opts.remediation}`,
-  );
-}
+import type { Config } from '../engine/linter.js';
+import type { RuleModule } from '../engine/types.js';
+import { realpathIfExists, relFromCwd } from './paths.js';
+import { createEngineError } from '../engine/error.js';
 
 export class PluginManager {
   private req: NodeJS.Require;
   private pluginPaths: string[] = [];
 
-  constructor(
-    private config: Config,
-    private ruleMap: Map<string, { rule: RuleModule; source: string }>,
-  ) {
+  constructor(private config: Config) {
     this.req = config.configPath
       ? createRequire(config.configPath)
       : createRequire(import.meta.url);
@@ -59,7 +45,9 @@ export class PluginManager {
     return paths;
   }
 
-  async getPlugins(): Promise<string[]> {
+  async load(
+    ruleMap: Map<string, { rule: RuleModule; source: string }>,
+  ): Promise<string[]> {
     if (this.pluginPaths.length > 0) return this.pluginPaths;
     const pluginPaths = this.resolvePluginPaths();
     const names = this.config.plugins ?? [];
@@ -100,17 +88,17 @@ export class PluginManager {
       }
       for (const rule of plugin.rules) {
         if (!isRuleModule(rule)) {
-          const name = getRuleName(rule) ?? '<unknown>';
+          const ruleName = getRuleName(rule) ?? '<unknown>';
           throw createEngineError({
             message:
-              `Invalid rule "${name}" in plugin "${pluginSource}": ` +
+              `Invalid rule "${ruleName}" in plugin "${pluginSource}": ` +
               'expected { name: string; meta: { description: string }; create: Function }',
             context: `Plugin "${pluginSource}"`,
             remediation:
               'Ensure each rule has a non-empty name, meta.description, and a create function.',
           });
         }
-        const existing = this.ruleMap.get(rule.name);
+        const existing = ruleMap.get(rule.name);
         if (existing) {
           throw createEngineError({
             message: `Rule "${rule.name}" from plugin "${pluginSource}" conflicts with rule from "${existing.source}"`,
@@ -118,7 +106,7 @@ export class PluginManager {
             remediation: 'Use a unique rule name to avoid collisions.',
           });
         }
-        this.ruleMap.set(rule.name, { rule, source: pluginSource });
+        ruleMap.set(rule.name, { rule, source: pluginSource });
       }
     }
     this.pluginPaths = pluginPaths;

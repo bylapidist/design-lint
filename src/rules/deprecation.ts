@@ -1,6 +1,6 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
-import { isInNonStyleJsx } from '../utils/jsx.js';
+import type { RuleModule } from '../engine/types.js';
+import { isInNonStyleJsx } from '../engine/jsx.js';
 
 export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',
