@@ -20,7 +20,13 @@
   "engines": {
     "node": ">=22"
   },
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/cli",
+    "packages/core",
+    "packages/shared",
+    "packages/figma-plugin",
+    "packages/figma-connector"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.base.json --outDir dist",
     "postbuild": "node scripts/postbuild.js",
