@@ -32,16 +32,18 @@ jobs:
       - run: npm run build
       - name: Pack
         run: |
-          PKG=$(npm pack)
-          echo "PKG=$PKG" >> $GITHUB_ENV
+          CORE_PKG=$(npm pack ./packages/core)
+          CLI_PKG=$(npm pack ./packages/cli)
+          echo "CORE_PKG=$CORE_PKG" >> $GITHUB_ENV
+          echo "CLI_PKG=$CLI_PKG" >> $GITHUB_ENV
       - name: Scoped npx
-        run: npx --yes "./$PKG" --help
+        run: npx --yes --package "./$CORE_PKG" --package "./$CLI_PKG" design-lint --help
       - name: Local install bin and options
         run: |
           mkdir -p tmp/test
           cd tmp/test
           npm init -y >/dev/null 2>&1
-          npm install -D "../../$PKG" >/dev/null 2>&1
+          npm install -D "../../$CORE_PKG" "../../$CLI_PKG" >/dev/null 2>&1
           npx design-lint --help
           npx design-lint --version
           npx design-lint init
