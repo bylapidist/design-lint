@@ -1,18 +1,23 @@
-import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { LintResult } from '../core/types.js';
 import { stylish } from './stylish.js';
 import { jsonFormatter } from './json.js';
 import { sarifFormatter } from './sarif.js';
+import type { Env } from '@lapidist/design-lint-shared';
+import { nodeEnv } from '@lapidist/design-lint-shared';
 
 type Formatter = (results: LintResult[], useColor?: boolean) => string;
 
 /**
  * Retrieve a formatter by name.
  * @param name Formatter identifier or module path.
+ * @param env Environment adapters.
  * @returns Promise resolving to a formatter function.
  */
-export async function getFormatter(name: string): Promise<Formatter> {
+export async function getFormatter(
+  name: string,
+  env: Env = nodeEnv,
+): Promise<Formatter> {
   switch (name) {
     case 'stylish':
       return stylish;
@@ -23,13 +28,13 @@ export async function getFormatter(name: string): Promise<Formatter> {
     default: {
       try {
         const resolved =
-          path.isAbsolute(name) ||
+          env.path.isAbsolute(name) ||
           name.startsWith('./') ||
           name.startsWith('../')
-            ? pathToFileURL(path.resolve(process.cwd(), name)).href
+            ? pathToFileURL(env.path.resolve(process.cwd(), name)).href
             : import.meta.resolve(
                 name,
-                pathToFileURL(path.join(process.cwd(), 'index.js')).href,
+                pathToFileURL(env.path.join(process.cwd(), 'index.js')).href,
               );
         const mod = (await import(resolved)) as unknown;
         const formatter = resolveFormatter(mod);
