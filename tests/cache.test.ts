@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { loadCache } from '../src/core/cache.ts';
-import type { LintResult } from '../src/core/types.ts';
+import { loadCache } from '../packages/core/src/core/cache.ts';
+import type { LintResult } from '../packages/core/src/core/types.ts';
 
 void test('loadCache loads and saves entries via flat-cache', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-test-'));

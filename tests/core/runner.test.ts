@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Runner } from '../../src/index.ts';
-import { TokenTracker } from '../../src/core/token-tracker.ts';
-import { FileSource } from '../../src/index.ts';
+import { Runner } from '../../packages/core/src/index.ts';
+import { TokenTracker } from '../../packages/core/src/core/token-tracker.ts';
+import { FileSource } from '../../packages/core/src/index.ts';
 
 interface CacheEntry {
   mtime: number;

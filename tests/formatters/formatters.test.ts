@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stylish } from '../../src/formatters/stylish.ts';
-import { jsonFormatter } from '../../src/formatters/json.ts';
-import { sarifFormatter } from '../../src/formatters/sarif.ts';
-import { getFormatter } from '../../src/index.ts';
-import type { LintResult } from '../../src/core/types.ts';
+import { stylish } from '../../packages/core/src/formatters/stylish.ts';
+import { jsonFormatter } from '../../packages/core/src/formatters/json.ts';
+import { sarifFormatter } from '../../packages/core/src/formatters/sarif.ts';
+import { getFormatter } from '../../packages/core/src/index.ts';
+import type { LintResult } from '../../packages/core/src/core/types.ts';
 
 interface SarifLog {
   runs: {

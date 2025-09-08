@@ -1,0 +1,12 @@
+{
+  "name": "@lapidist/design-lint-core",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && cp dist/index.js dist/index.cjs",
+    "test": "tsx --test ../../tests/**/*.test.ts"
+  }
+}
