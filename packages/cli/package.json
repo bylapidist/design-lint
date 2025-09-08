@@ -9,6 +9,6 @@
     "build": "tsc -b tsconfig.json && cp dist/index.js dist/cli.js",
     "lint": "eslint 'src/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts'",
-    "test": "tsx --test ../../tests/**/*.test.ts"
+    "test": "tsx --test tests/**/*.test.ts"
   }
 }
