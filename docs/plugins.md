@@ -76,7 +76,7 @@ Tests run against the `Linter` API:
 // test/acme-plugin.test.ts
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '@lapidist/design-lint';
+import { Linter, FileSource } from '@lapidist/design-lint';
 import plugin from '../index.js';
 
 void test('reports raw colors and px units', async () => {
@@ -86,7 +86,7 @@ void test('reports raw colors and px units', async () => {
       'acme/no-raw-colors': 'error',
       'acme/no-px': 'warn'
     }
-  });
+  }, new FileSource());
   const res = await linter.lintText('h1 { color: #fff; margin: 4px; }', 'file.css');
   assert.equal(res.messages.length, 2);
 });

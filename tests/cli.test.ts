@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import { readWhenReady } from './helpers/fs.ts';
 import { Linter } from '../src/index.ts';
+import { FileSource } from '../src/index.ts';
 import type { LintResult } from '../src/core/types.ts';
 
 const tsxLoader = require.resolve('tsx/esm');
@@ -1061,7 +1062,7 @@ void test('CLI cache updates after --fix run', async () => {
     tokens: { deprecations: { old: { replacement: 'new' } } },
     rules: { 'design-system/deprecation': 'error' },
   };
-  const linter = new Linter(config);
+  const linter = new Linter(config, new FileSource());
   const cache = new Map<
     string,
     {

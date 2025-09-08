@@ -11,6 +11,8 @@ import type { Cache } from './cache.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
+import type { DocumentSource } from './document-source.js';
+import { FileSource } from './file-source.js';
 import { parserRegistry } from './parser-registry.js';
 import path from 'node:path';
 
@@ -37,8 +39,9 @@ export class Linter {
   private tokensByTheme: Record<string, DesignTokens> = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
+  private source: DocumentSource;
 
-  constructor(config: Config) {
+  constructor(config: Config, source: DocumentSource = new FileSource()) {
     const normalized = normalizeTokens(
       config.tokens,
       config.wrapTokensWithVar ?? false,
@@ -47,6 +50,7 @@ export class Linter {
     this.config = { ...config, tokens: normalized.merged };
     this.ruleRegistry = new RuleRegistry(this.config);
     this.tokenTracker = new TokenTracker(this.config.tokens);
+    this.source = source;
   }
 
   async lintFile(
@@ -83,6 +87,7 @@ export class Linter {
       config: this.config,
       tokenTracker: this.tokenTracker,
       lintText: this.lintText.bind(this),
+      source: this.source,
     });
     return runner.run(
       targets,

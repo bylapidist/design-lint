@@ -1,12 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
+import { FileSource } from '../../src/core/file-source.ts';
 
 void test('design-token/animation reports invalid value', async () => {
-  const linter = new Linter({
-    tokens: { animations: { spin: 'spin 1s linear infinite' } },
-    rules: { 'design-token/animation': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { animations: { spin: 'spin 1s linear infinite' } },
+      rules: { 'design-token/animation': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     '.a{animation: wiggle 2s ease-in-out;}',
     'file.css',
@@ -15,10 +19,13 @@ void test('design-token/animation reports invalid value', async () => {
 });
 
 void test('design-token/animation accepts valid values', async () => {
-  const linter = new Linter({
-    tokens: { animations: { spin: 'spin 1s linear infinite' } },
-    rules: { 'design-token/animation': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { animations: { spin: 'spin 1s linear infinite' } },
+      rules: { 'design-token/animation': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     '.a{animation: spin 1s linear infinite;}',
     'file.css',
@@ -27,9 +34,12 @@ void test('design-token/animation accepts valid values', async () => {
 });
 
 void test('design-token/animation warns when tokens missing', async () => {
-  const linter = new Linter({
-    rules: { 'design-token/animation': 'warn' },
-  });
+  const linter = new Linter(
+    {
+      rules: { 'design-token/animation': 'warn' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText('', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.ok(res.messages[0].message.includes('animations'));

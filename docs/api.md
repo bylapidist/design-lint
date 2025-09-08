@@ -10,6 +10,7 @@ A typical control flow when using the library directly:
 import {
   loadConfig,
   Linter,
+  FileSource,
   getFormatter,
   applyFixes,
 } from '@lapidist/design-lint';
@@ -19,7 +20,7 @@ async function main() {
   const config = await loadConfig(process.cwd());
 
   // 2. Create a linter instance
-  const linter = new Linter(config);
+  const linter = new Linter(config, new FileSource());
 
   // 3. Lint files and optionally apply automatic fixes
   const { results } = await linter.lintFiles(['src/**/*.{ts,tsx}'], true);
@@ -70,10 +71,11 @@ Helper to define a configuration object with type checking.
 
 Lints files using built-in and plugin-provided rules.
 
-#### `new Linter(config)`
+#### `new Linter(config, source?)`
 
 - **Parameters**
   - `config: Config` – resolved configuration.
+  - `source: DocumentSource = new FileSource()` – document source used to resolve lint targets.
 - **Returns** `Linter` instance.
 
 #### `lintFiles(targets, fix?, cache?, additionalIgnorePaths?, cacheLocation?)`
@@ -132,6 +134,7 @@ Executes linting tasks with concurrency control.
     - `config: Config`
     - `tokenTracker: TokenTracker`
     - `lintText: (text: string, filePath: string) => Promise<LintResult>`
+    - `source: DocumentSource`
 
 #### `run(targets, fix?, cache?, additionalIgnorePaths?, cacheLocation?)`
 
@@ -194,7 +197,7 @@ export const noFooRule: RuleModule = {
 ### Dynamic configuration
 
 ```ts
-import { Linter } from '@lapidist/design-lint';
+import { Linter, FileSource } from '@lapidist/design-lint';
 import type { Config } from '@lapidist/design-lint';
 
 const config: Config = {
@@ -202,7 +205,7 @@ const config: Config = {
   rules: { 'token-colors': 'error' },
 };
 
-const linter = new Linter(config);
+const linter = new Linter(config, new FileSource());
 ```
 
 These types allow you to build custom integrations and tooling on top of Design Lint.

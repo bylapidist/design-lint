@@ -3,7 +3,7 @@ import os from 'node:os';
 import type { Config } from './linter.js';
 import type { Cache } from './cache.js';
 import type { LintResult } from './types.js';
-import { FileService } from './file-service.js';
+import type { DocumentSource } from './document-source.js';
 import { CacheService } from './cache-service.js';
 import { TokenTracker } from './token-tracker.js';
 
@@ -11,17 +11,20 @@ export interface RunnerOptions {
   config: Config;
   tokenTracker: TokenTracker;
   lintText: (text: string, filePath: string) => Promise<LintResult>;
+  source: DocumentSource;
 }
 
 export class Runner {
   private config: Config;
   private tokenTracker: TokenTracker;
   private lintText: (text: string, filePath: string) => Promise<LintResult>;
+  private source: DocumentSource;
 
   constructor(options: RunnerOptions) {
     this.config = options.config;
     this.tokenTracker = options.tokenTracker;
     this.lintText = options.lintText;
+    this.source = options.source;
   }
 
   async run(
@@ -35,7 +38,7 @@ export class Runner {
     ignoreFiles: string[];
     warning?: string;
   }> {
-    const files = await FileService.scan(
+    const files = await this.source.scan(
       targets,
       this.config,
       additionalIgnorePaths,
