@@ -14,13 +14,14 @@ async function main() {
   ];
   const rows = metrics
     .map(([name, data, threshold]) => {
+      const pct = Number(data.pct) || 0;
       const status =
         typeof threshold === 'number'
-          ? data.pct >= threshold
+          ? pct >= threshold
             ? '✅'
             : '❌'
           : '';
-      return `| ${name} | ${data.pct.toFixed(2)}% (${data.covered}/${data.total}) | ${
+      return `| ${name} | ${pct.toFixed(2)}% (${data.covered}/${data.total}) | ${
         threshold ?? 'n/a'
       }% | ${status} |`;
     })
