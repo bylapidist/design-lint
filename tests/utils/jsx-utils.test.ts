@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import ts from 'typescript';
-import { isInNonStyleJsx } from '../../packages/core/src/utils/jsx.ts';
+import { isInNonStyleJsx } from '../../packages/shared/src/utils/jsx.ts';
 
 function getStrings(code: string): ts.StringLiteral[] {
   const sf = ts.createSourceFile(

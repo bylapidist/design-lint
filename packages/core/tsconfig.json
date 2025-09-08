@@ -3,9 +3,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "typeRoots": ["./src/types", "../../node_modules/@types"],
+    "typeRoots": ["../shared/src/types", "../../node_modules/@types"],
     "composite": true
   },
-  "include": ["src"],
-  "exclude": ["dist"]
+  "include": ["src", "../shared/src/types/**/*.d.ts"],
+  "exclude": ["dist"],
+  "references": [{ "path": "../shared" }]
 }

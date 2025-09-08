@@ -5,7 +5,7 @@ import {
   extractVarName,
   closestToken,
 } from '../core/token-utils.js';
-import { isStyleValue } from '../utils/style.js';
+import { isStyleValue } from '@lapidist/design-lint-shared';
 
 export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',

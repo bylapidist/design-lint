@@ -5,7 +5,7 @@ import {
   extractVarName,
   closestToken,
 } from '../core/token-utils.js';
-import { isStyleValue } from '../utils/style.js';
+import { isStyleValue } from '@lapidist/design-lint-shared';
 
 export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',

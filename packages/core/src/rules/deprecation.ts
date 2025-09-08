@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
-import { isInNonStyleJsx } from '../utils/jsx.js';
+import { isInNonStyleJsx } from '@lapidist/design-lint-shared';
 
 export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',
