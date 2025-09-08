@@ -4,18 +4,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../../src/utils/tmp.ts';
 import { Linter } from '../../src/core/linter.ts';
-import { FileService } from '../../src/core/file-service.ts';
+import { FileSource } from '../../src/core/file-source.ts';
 import type { Config } from '../../src/core/linter.ts';
 
-// Ensure FileService.scan logs when profiling is enabled
+// Ensure FileSource.scan logs when profiling is enabled
 // This also covers the catch branch for missing files by passing a non-existent target
 
 // Use separate test for profiling
 
-void test('FileService.scan logs when DESIGNLINT_PROFILE is set', async () => {
+void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
-  const linter = new Linter({ tokens: {}, rules: {} });
+  const linter = new Linter({ tokens: {}, rules: {} }, new FileSource());
   const cwd = process.cwd();
   process.chdir(dir);
   process.env.DESIGNLINT_PROFILE = '1';
@@ -35,14 +35,14 @@ void test('FileService.scan logs when DESIGNLINT_PROFILE is set', async () => {
   assert.ok(logs.some((l) => l.includes('Scanned 1 files in')));
 });
 
-void test('FileService.scan collects files from directory targets', async () => {
+void test('FileSource.scan collects files from directory targets', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'a.ts'), '');
   const config: Config = { tokens: {}, rules: {} };
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const files = await FileService.scan(['.'], config);
+    const files = await new FileSource().scan(['.'], config);
     const rels = files.map((f) => path.relative(dir, f));
     assert.deepEqual(rels, ['a.ts']);
   } finally {

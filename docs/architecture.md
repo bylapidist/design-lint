@@ -15,7 +15,7 @@ Starting with **file discovery**, glob patterns expand to concrete paths and res
 
 ### File discovery
 
-Resolves the working set of files using glob patterns and ignore rules. See [`src/core/file-service.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/file-service.ts).
+Resolves the working set of files using glob patterns and ignore rules. See [`src/core/file-source.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/file-source.ts).
 
 ### Parser adapters
 

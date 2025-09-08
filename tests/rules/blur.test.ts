@@ -1,29 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
+import { FileSource } from '../../src/core/file-source.ts';
 
 void test('design-token/blur reports invalid value', async () => {
-  const linter = new Linter({
-    tokens: { blurs: { sm: '4px' } },
-    rules: { 'design-token/blur': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { blurs: { sm: '4px' } },
+      rules: { 'design-token/blur': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText('.a{filter:blur(2px);}', 'file.css');
   assert.equal(res.messages.length, 1);
 });
 
 void test('design-token/blur accepts valid values', async () => {
-  const linter = new Linter({
-    tokens: { blurs: { sm: '4px' } },
-    rules: { 'design-token/blur': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { blurs: { sm: '4px' } },
+      rules: { 'design-token/blur': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText('.a{filter:blur(4px);}', 'file.css');
   assert.equal(res.messages.length, 0);
 });
 
 void test('design-token/blur warns when tokens missing', async () => {
-  const linter = new Linter({
-    rules: { 'design-token/blur': 'warn' },
-  });
+  const linter = new Linter(
+    {
+      rules: { 'design-token/blur': 'warn' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText('', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.ok(res.messages[0].message.includes('blurs'));

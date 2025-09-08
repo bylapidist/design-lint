@@ -1,12 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
+import { FileSource } from '../../src/core/file-source.ts';
 
 void test('design-token/colors reports disallowed hwb', async () => {
-  const linter = new Linter({
-    tokens: { colors: { primary: '#ffffff' } },
-    rules: { 'design-token/colors': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { colors: { primary: '#ffffff' } },
+      rules: { 'design-token/colors': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     'const c = <div style={{ color: "hwb(0, 0%, 0%)" }} />;',
     'file.tsx',
@@ -15,10 +19,13 @@ void test('design-token/colors reports disallowed hwb', async () => {
 });
 
 void test('design-token/colors reports disallowed lab', async () => {
-  const linter = new Linter({
-    tokens: { colors: { primary: '#ffffff' } },
-    rules: { 'design-token/colors': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { colors: { primary: '#ffffff' } },
+      rules: { 'design-token/colors': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     'const c = <div style={{ color: "lab(0% 0 0)" }} />;',
     'file.tsx',
@@ -27,10 +34,13 @@ void test('design-token/colors reports disallowed lab', async () => {
 });
 
 void test('design-token/colors reports disallowed lch', async () => {
-  const linter = new Linter({
-    tokens: { colors: { primary: '#ffffff' } },
-    rules: { 'design-token/colors': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { colors: { primary: '#ffffff' } },
+      rules: { 'design-token/colors': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     'const c = <div style={{ color: "lch(0% 0 0)" }} />;',
     'file.tsx',
@@ -39,10 +49,13 @@ void test('design-token/colors reports disallowed lch', async () => {
 });
 
 void test('design-token/colors reports disallowed color()', async () => {
-  const linter = new Linter({
-    tokens: { colors: { primary: '#ffffff' } },
-    rules: { 'design-token/colors': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { colors: { primary: '#ffffff' } },
+      rules: { 'design-token/colors': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     'const c = <div style={{ color: "color(display-p3 1 0 0)" }} />;',
     'file.tsx',
@@ -51,10 +64,13 @@ void test('design-token/colors reports disallowed color()', async () => {
 });
 
 void test('design-token/colors reports template literal', async () => {
-  const linter = new Linter({
-    tokens: { colors: { primary: '#ffffff' } },
-    rules: { 'design-token/colors': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { colors: { primary: '#ffffff' } },
+      rules: { 'design-token/colors': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     'const c = <div style={{ color: `hwb(0, 0%, 0%)` }} />;',
     'file.tsx',
@@ -63,10 +79,13 @@ void test('design-token/colors reports template literal', async () => {
 });
 
 void test('design-token/colors reports template expression', async () => {
-  const linter = new Linter({
-    tokens: { colors: { primary: '#ffffff' } },
-    rules: { 'design-token/colors': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { colors: { primary: '#ffffff' } },
+      rules: { 'design-token/colors': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     'const c = <div style={{ color: `hwb(0, 0%, 0%) ${foo}` }} />;',
     'file.tsx',

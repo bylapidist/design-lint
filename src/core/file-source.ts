@@ -3,12 +3,13 @@ import { performance } from 'node:perf_hooks';
 import { realpathIfExists } from '../utils/paths.js';
 import { getIgnorePatterns } from './ignore.js';
 import type { Config } from './linter.js';
+import type { DocumentSource } from './document-source.js';
 
 const defaultPatterns = [
   '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,scss,sass,less,svelte,vue}',
 ];
 
-export const FileService = {
+export class FileSource implements DocumentSource {
   async scan(
     targets: string[],
     config: Config,
@@ -34,5 +35,5 @@ export const FileService = {
       );
     }
     return files;
-  },
-} as const;
+  }
+}

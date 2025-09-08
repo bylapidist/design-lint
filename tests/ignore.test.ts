@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
+import { FileSource } from '../src/core/file-source.ts';
 
 void test('lintFiles ignores common directories by default', async () => {
   const dir = makeTmpDir();
@@ -20,10 +21,13 @@ void test('lintFiles ignores common directories by default', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath));
     assert.deepEqual(files, ['src/file.ts']);
@@ -42,10 +46,13 @@ void test('lintFiles respects .gitignore via globby', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['src/keep.ts']);
@@ -68,10 +75,13 @@ void test('.designlintignore can unignore paths', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['node_modules/pkg/index.ts', 'src/file.ts']);
@@ -90,10 +100,13 @@ void test('.designlintignore overrides .gitignore', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['src/file.ts']);
@@ -115,10 +128,13 @@ void test('.designlintignore supports negative patterns', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['src/file.ts']);
@@ -137,10 +153,13 @@ void test('.designlintignore supports Windows paths', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['src/keep.ts']);
@@ -158,11 +177,14 @@ void test('config ignoreFiles are respected', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-      ignoreFiles: ['src/skip.ts'],
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+        ignoreFiles: ['src/skip.ts'],
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['src/keep.ts']);
@@ -182,10 +204,13 @@ void test('additional ignore file is respected', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.'], false, undefined, [
       extra,
     ]);
@@ -206,10 +231,13 @@ void test('lintFiles respects nested .gitignore', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['nested/keep.ts']);
@@ -229,10 +257,13 @@ void test('nested .designlintignore overrides parent patterns', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    });
+    const linter = new Linter(
+      {
+        tokens: { deprecations: { old: { replacement: 'new' } } },
+        rules: { 'design-system/deprecation': 'error' },
+      },
+      new FileSource(),
+    );
     const { results } = await linter.lintFiles(['.']);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['src/keep.ts', 'src/skip.ts']);

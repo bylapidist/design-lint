@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../src/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
+import { FileSource } from '../src/core/file-source.ts';
 
 void test('lintFiles expands glob patterns with globby', async () => {
   const dir = makeTmpDir();
@@ -13,7 +14,7 @@ void test('lintFiles expands glob patterns with globby', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({ tokens: {}, rules: {} });
+    const linter = new Linter({ tokens: {}, rules: {} }, new FileSource());
     const { results, warning } = await linter.lintFiles([
       '**/*.module.{css,scss}',
     ]);

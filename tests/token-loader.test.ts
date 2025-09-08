@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeTokens } from '../src/core/token-loader.ts';
 import { Linter } from '../src/core/linter.ts';
+import { FileSource } from '../src/core/file-source.ts';
 
 void test('normalizeTokens wraps values with var when enabled', () => {
   const tokens = { colors: { primary: '--color-primary' } };
@@ -22,11 +23,14 @@ void test('normalizeTokens merges tokens across themes', () => {
 });
 
 void test('Linter applies wrapTokensWithVar option', async () => {
-  const linter = new Linter({
-    tokens: { fonts: { sans: '--font-sans' } },
-    wrapTokensWithVar: true,
-    rules: { 'design-token/font-family': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { fonts: { sans: '--font-sans' } },
+      wrapTokensWithVar: true,
+      rules: { 'design-token/font-family': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     '.a{font-family:var(--font-sans);}',
     'file.css',
@@ -35,11 +39,14 @@ void test('Linter applies wrapTokensWithVar option', async () => {
 });
 
 void test('Linter reports unknown CSS variable with wrapTokensWithVar', async () => {
-  const linter = new Linter({
-    tokens: { fonts: { sans: '--font-sans' } },
-    wrapTokensWithVar: true,
-    rules: { 'design-token/font-family': 'error' },
-  });
+  const linter = new Linter(
+    {
+      tokens: { fonts: { sans: '--font-sans' } },
+      wrapTokensWithVar: true,
+      rules: { 'design-token/font-family': 'error' },
+    },
+    new FileSource(),
+  );
   const res = await linter.lintText(
     '.a{font-family:var(--other);}',
     'file.css',
@@ -48,13 +55,16 @@ void test('Linter reports unknown CSS variable with wrapTokensWithVar', async ()
 });
 
 void test('Rule theme filtering validates selected themes', async () => {
-  const linter = new Linter({
-    tokens: {
-      light: { colors: { primary: '#fff' } },
-      dark: { colors: { primary: '#000' } },
+  const linter = new Linter(
+    {
+      tokens: {
+        light: { colors: { primary: '#fff' } },
+        dark: { colors: { primary: '#000' } },
+      },
+      rules: { 'design-token/colors': ['error', { themes: ['dark'] }] },
     },
-    rules: { 'design-token/colors': ['error', { themes: ['dark'] }] },
-  });
+    new FileSource(),
+  );
   const ok = await linter.lintText('.a{color:#000}', 'file.css');
   assert.equal(ok.messages.length, 0);
   const bad = await linter.lintText('.a{color:#fff}', 'file.css');
@@ -62,13 +72,16 @@ void test('Rule theme filtering validates selected themes', async () => {
 });
 
 void test('Rules validate all themes by default', async () => {
-  const linter = new Linter({
-    tokens: {
-      light: { colors: { primary: '#fff' } },
-      dark: { colors: { primary: '#000' } },
+  const linter = new Linter(
+    {
+      tokens: {
+        light: { colors: { primary: '#fff' } },
+        dark: { colors: { primary: '#000' } },
+      },
+      rules: { 'design-token/colors': 'error' },
     },
-    rules: { 'design-token/colors': 'error' },
-  });
+    new FileSource(),
+  );
   const res1 = await linter.lintText('.a{color:#000}', 'file.css');
   assert.equal(res1.messages.length, 0);
   const res2 = await linter.lintText('.a{color:#fff}', 'file.css');
