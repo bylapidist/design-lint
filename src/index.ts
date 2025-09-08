@@ -17,3 +17,12 @@ export type {
   CSSDeclaration,
   Fix,
 } from './core/types.js';
+export {
+  matchToken,
+  closestToken,
+  extractVarName,
+  mergeTokens,
+  normalizeTokens,
+  type TokenPattern,
+  type NormalizedTokens,
+} from './core/token-utils.js';

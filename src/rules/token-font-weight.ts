@@ -4,7 +4,7 @@ import {
   matchToken,
   extractVarName,
   closestToken,
-} from '../utils/token-match.js';
+} from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
 export const fontWeightRule: RuleModule = {

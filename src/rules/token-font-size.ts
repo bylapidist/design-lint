@@ -3,7 +3,7 @@ import {
   matchToken,
   extractVarName,
   closestToken,
-} from '../utils/token-match.js';
+} from '../core/token-utils.js';
 
 export const fontSizeRule: RuleModule = {
   name: 'design-token/font-size',
