@@ -1,5 +1,16 @@
 # @lapidist/design-lint
 
+## 4.10.0
+
+### Minor Changes
+
+- bc4adaf: feat: add optional metadata field to rule context
+- fad454a: allow injecting custom document sources and expose default file-based implementation
+
+### Patch Changes
+
+- c7ffed2: refactor token utilities into shared module
+
 ## 4.9.0
 
 ### Minor Changes
