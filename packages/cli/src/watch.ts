@@ -7,11 +7,11 @@ import chalk from 'chalk';
 import {
   relFromCwd,
   realpathIfExists,
-} from '../../packages/core/src/utils/paths.js';
-import { loadConfig } from '../../packages/core/src/config/loader.js';
-import { Linter } from '../../packages/core/src/core/linter.js';
-import type { Config } from '../../packages/core/src/core/linter.js';
-import type { Cache } from '../../packages/core/src/core/cache.js';
+  loadConfig,
+  Linter,
+  type Config,
+  type Cache,
+} from '@lapidist/design-lint-core';
 import type { Ignore } from 'ignore';
 import {
   executeLint,

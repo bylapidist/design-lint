@@ -1,0 +1,12 @@
+{
+  "name": "@lapidist/design-lint-cli",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "design-lint": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.json && cp dist/index.js dist/cli.js",
+    "test": "tsx --test ../../tests/**/*.test.ts"
+  }
+}

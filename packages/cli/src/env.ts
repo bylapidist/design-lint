@@ -1,14 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import ignore, { type Ignore } from 'ignore';
-import { getFormatter } from '../../packages/core/src/formatters/index.js';
 import {
+  getFormatter,
   relFromCwd,
   realpathIfExists,
-} from '../../packages/core/src/utils/paths.js';
-import { loadCache, type Cache } from '../../packages/core/src/core/cache.js';
-import type { Config, Linter } from '../../packages/core/src/core/linter.js';
-import type { LintResult } from '../../packages/core/src/core/types.js';
+  loadCache,
+  loadConfig,
+  loadIgnore,
+  Linter,
+  type Cache,
+  type Config,
+  type LintResult,
+} from '@lapidist/design-lint-core';
 
 export interface Environment {
   formatter: (results: LintResult[], useColor?: boolean) => string;
@@ -37,12 +41,6 @@ export interface PrepareEnvironmentOptions {
 export async function prepareEnvironment(
   options: PrepareEnvironmentOptions,
 ): Promise<Environment> {
-  const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
-    import('../../packages/core/src/config/loader.js'),
-    import('../../packages/core/src/core/linter.js'),
-    import('../../packages/core/src/core/ignore.js'),
-  ]);
-
   const formatter = await getFormatter(options.format);
   let config = await loadConfig(process.cwd(), options.config);
   if (options.concurrency !== undefined) {
