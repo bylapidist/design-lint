@@ -6,7 +6,10 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json && cp dist/index.js dist/index.cjs",
+    "build": "tsc -b tsconfig.json && cp dist/index.js dist/index.cjs",
     "test": "tsx --test ../../tests/**/*.test.ts"
+  },
+  "dependencies": {
+    "@lapidist/design-lint-shared": "file:../shared"
   }
 }

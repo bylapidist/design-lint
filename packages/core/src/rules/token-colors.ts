@@ -8,7 +8,7 @@ import {
   extractVarName,
   closestToken,
 } from '../core/token-utils.js';
-import { isStyleValue } from '../utils/style.js';
+import { isStyleValue } from '@lapidist/design-lint-shared';
 
 type ColorFormat =
   | 'hex'
