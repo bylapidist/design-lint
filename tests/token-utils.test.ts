@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeTokens } from '../src/core/token-loader.ts';
+import {
+  normalizeTokens,
+  matchToken,
+  closestToken,
+  extractVarName,
+} from '../src/core/token-utils.ts';
 import { Linter } from '../src/core/linter.ts';
 import { FileSource } from '../src/core/file-source.ts';
 
@@ -20,6 +25,29 @@ void test('normalizeTokens merges tokens across themes', () => {
   assert.equal(normalized.themes.light.colors.secondary, '#fff');
   assert.equal(normalized.merged.colors.primary, '#000');
   assert.equal(normalized.merged.colors.secondary, '#fff');
+});
+
+void test('matchToken handles regexp and glob patterns and missing matches', () => {
+  assert.equal(matchToken('--brand-primary', [/^--brand-/]), '--brand-primary');
+  assert.equal(matchToken('--brand-primary', ['--brand-*']), '--brand-primary');
+  assert.equal(matchToken('--foo', ['--bar']), null);
+});
+
+void test('matchToken is case-insensitive for string patterns', () => {
+  assert.equal(matchToken('--BRAND-primary', ['--brand-*']), '--BRAND-primary');
+});
+
+void test('closestToken skips non-string patterns and suggests best match', () => {
+  assert.equal(closestToken('--baz', ['--bar', /^--foo-/]), '--bar');
+  assert.equal(closestToken('--baz', [/^--foo-/]), null);
+});
+
+void test('extractVarName parses var() and ignores invalid values', () => {
+  assert.equal(extractVarName('var(--x)'), '--x');
+  assert.equal(extractVarName('var(--x, 10px)'), '--x');
+  assert.equal(extractVarName('var(  --x  )'), '--x');
+  assert.equal(extractVarName('--x'), null);
+  assert.equal(extractVarName('var(--foo.bar)'), null);
 });
 
 void test('Linter applies wrapTokensWithVar option', async () => {

@@ -4,7 +4,7 @@ import {
   matchToken,
   extractVarName,
   closestToken,
-} from '../utils/token-match.js';
+} from '../core/token-utils.js';
 
 export const outlineRule: RuleModule = {
   name: 'design-token/outline',

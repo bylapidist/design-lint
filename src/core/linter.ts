@@ -4,8 +4,7 @@ import type {
   LintMessage,
   RuleContext,
 } from './types.js';
-import { normalizeTokens, mergeTokens } from './token-loader.js';
-import { extractVarName } from '../utils/token-match.js';
+import { normalizeTokens, mergeTokens, extractVarName } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
 import type { Cache } from './cache.js';
 import { RuleRegistry } from './rule-registry.js';
