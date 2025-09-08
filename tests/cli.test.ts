@@ -13,7 +13,7 @@ const tsxLoader = require.resolve('tsx/esm');
 const WATCH_TIMEOUT = 2000;
 
 void test('CLI aborts on unsupported Node versions', async () => {
-  const { run } = await import('../src/cli/index.ts');
+  const { run } = await import('../packages/cli/src/index.ts');
   const original = process.versions.node;
   Object.defineProperty(process.versions, 'node', { value: '21.0.0' });
   const originalError = console.error;
@@ -31,7 +31,7 @@ void test('CLI aborts on unsupported Node versions', async () => {
 });
 
 void test('CLI runs when executed via a symlink', () => {
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const dir = makeTmpDir();
   const link = path.join(dir, 'cli-link.ts');
   fs.symlinkSync(cli, link);
@@ -45,7 +45,7 @@ void test('CLI runs when executed via a symlink', () => {
 });
 
 void test('init creates json config by default', () => {
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const dir = makeTmpDir();
   const res = spawnSync(
     process.execPath,
@@ -57,7 +57,7 @@ void test('init creates json config by default', () => {
 });
 
 void test('init detects TypeScript and creates ts config', () => {
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
   const res = spawnSync(
@@ -73,7 +73,7 @@ void test('init detects TypeScript and creates ts config', () => {
 });
 
 void test('--init-format overrides detection', () => {
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
   const res = spawnSync(
@@ -86,7 +86,7 @@ void test('--init-format overrides detection', () => {
 });
 
 void test('--init-format supports all formats', () => {
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const formats: readonly ['js', 'cjs', 'mjs', 'ts', 'mts', 'json'] = [
     'js',
     'cjs',
@@ -108,7 +108,7 @@ void test('--init-format supports all formats', () => {
 });
 
 void test('CLI expands glob patterns with braces', () => {
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'a.module.css'), '');
@@ -130,7 +130,7 @@ void test('CLI expands glob patterns with braces', () => {
 
 void test('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const result = spawnSync(
     process.execPath,
     [
@@ -155,7 +155,7 @@ void test('CLI warns when no files match', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: {}, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -178,7 +178,7 @@ void test('--quiet suppresses "No files matched" warning', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: {}, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -203,7 +203,7 @@ void test('CLI exits 0 when warnings are within --max-warnings', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: {}, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -233,7 +233,7 @@ void test('CLI exits 0 when warnings equal --max-warnings', () => {
       rules: { 'design-system/deprecation': 'warn' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -263,7 +263,7 @@ void test('CLI exits 1 when warnings exceed --max-warnings', () => {
       rules: { 'design-system/deprecation': 'warn' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -290,7 +290,7 @@ void test('CLI errors on invalid --max-warnings', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: {}, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -316,7 +316,7 @@ void test('CLI reports missing ignore file', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: {}, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -342,7 +342,7 @@ void test('CLI reports missing plugin', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: {}, rules: {}, plugins: ['./missing-plugin.js'] }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -369,7 +369,7 @@ void test('CLI --fix applies fixes', () => {
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -392,7 +392,7 @@ void test('CLI surfaces config load errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{ invalid');
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -412,7 +412,7 @@ void test('CLI surfaces config load errors', () => {
 void test('CLI surfaces output write errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -439,7 +439,7 @@ void test('CLI writes report to file with --output', () => {
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -464,7 +464,7 @@ void test('CLI writes report to file with --output', () => {
 
 void test('CLI --quiet suppresses stdout output', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -486,7 +486,7 @@ void test('CLI --quiet suppresses stdout output', () => {
 
 void test('CLI disables colors when stdout is not a TTY', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -509,7 +509,7 @@ void test('CLI disables colors when stdout is not a TTY', () => {
 
 void test('CLI reports unknown formatter', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -530,7 +530,7 @@ void test('CLI reports unknown formatter', () => {
 
 void test('CLI loads formatter from module path', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const formatterPath = path.join(
     __dirname,
     'formatters',
@@ -566,7 +566,14 @@ void test('CLI outputs SARIF reports', () => {
         rules: { 'design-system/deprecation': 'error' },
       }),
     );
-    const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+    const cli = path.join(
+      __dirname,
+      '..',
+      'packages',
+      'cli',
+      'src',
+      'index.ts',
+    );
     const res = spawnSync(
       process.execPath,
       [
@@ -602,7 +609,7 @@ void test('CLI loads external plugin rules', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ plugins: [plugin], rules: { 'plugin/test': 'error' } }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -629,7 +636,7 @@ void test('CLI reports plugin load errors', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ plugins: [badPlugin] }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -665,7 +672,7 @@ void test('CLI ignores common directories by default', () => {
     }),
   );
   const parent = path.dirname(dir);
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -708,7 +715,7 @@ void test('.designlintignore can unignore paths via CLI', () => {
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -759,7 +766,7 @@ void test('CLI skips directories listed in .designlintignore', () => {
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -799,7 +806,7 @@ void test('CLI --ignore-path excludes files', () => {
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -838,7 +845,7 @@ void test('CLI --concurrency limits parallel lint tasks', () => {
       'export const x = 1;\n',
     );
   }
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const out = path.join(dir, 'conc.txt');
   const res = spawnSync(
     process.execPath,
@@ -866,7 +873,7 @@ void test('CLI errors on invalid --concurrency', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -892,7 +899,7 @@ void test('CLI plugin load errors include context and remediation', () => {
     JSON.stringify({ plugins: ['missing-plugin'] }),
   );
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const res = spawnSync(
     process.execPath,
     [
@@ -921,7 +928,7 @@ void test('CLI --report outputs JSON log', () => {
     }),
   );
   const report = path.join(dir, 'report.json');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   spawnSync(
     process.execPath,
     [
@@ -959,7 +966,7 @@ void test('CLI re-runs on file change in watch mode', async () => {
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1015,7 +1022,14 @@ void test('CLI ignores --output/--report files in watch mode', async () => {
       path.join(dir, 'designlint.config.json'),
       JSON.stringify({ tokens: {}, rules: {} }),
     );
-    const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+    const cli = path.join(
+      __dirname,
+      '..',
+      'packages',
+      'cli',
+      'src',
+      'index.ts',
+    );
     const outPath = path.join(dir, name);
     const proc = spawn(
       process.execPath,
@@ -1095,7 +1109,7 @@ void test('CLI --cache reuses results from disk', () => {
       plugins: ['./plugin.cjs'],
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const args = [
     '--loader',
     tsxLoader,
@@ -1131,7 +1145,7 @@ void test('CLI --cache invalidates when files change', () => {
       plugins: ['./plugin.cjs'],
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const args = [
     '--loader',
     tsxLoader,
@@ -1185,7 +1199,7 @@ void test('CLI --cache busts when mtime is unchanged but size differs', () => {
       plugins: ['./plugin.cjs'],
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const args = [
     '--loader',
     tsxLoader,
@@ -1213,7 +1227,7 @@ void test('CLI writes cache to specified --cache-location', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: {}, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const cacheFile = 'custom.cache';
   const res = spawnSync(
     process.execPath,
@@ -1247,7 +1261,7 @@ void test('CLI re-runs with updated config in watch mode', async () => {
       rules: {},
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1309,7 +1323,7 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
       rules: { 'plugin/test': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1381,7 +1395,7 @@ export default plugin;`;
       rules: { 'plugin/test': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1439,7 +1453,7 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
       rules: { 'plugin/test': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1507,7 +1521,7 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
       rules: { 'plugin/test': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1571,7 +1585,7 @@ void test('CLI reloads when nested ignore file changes in watch mode', async () 
   );
   const ignorePath = path.join(nested, '.designlintignore');
   fs.writeFileSync(ignorePath, 'file.ts\n');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1625,7 +1639,7 @@ void test('CLI updates ignore list when .gitignore changes in watch mode', async
     }),
   );
   fs.writeFileSync(path.join(dir, '.gitignore'), '');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1684,7 +1698,7 @@ void test('CLI continues watching after deleting ignore files in watch mode', as
   const designIgnorePath = path.join(dir, '.designlintignore');
   fs.writeFileSync(gitIgnorePath, '');
   fs.writeFileSync(designIgnorePath, '');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1741,7 +1755,7 @@ void test('CLI clears cache when a watched file is deleted', async () => {
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1798,7 +1812,7 @@ void test('CLI continues linting after deleting a watched file', async () => {
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1855,7 +1869,7 @@ void test('CLI closes watcher on SIGINT', async () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: {}, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [
@@ -1912,7 +1926,7 @@ void test('CLI handles errors from watch callbacks', async () => {
       plugins: ['./plugin.cjs'],
     }),
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const cli = path.join(__dirname, '..', 'packages', 'cli', 'src', 'index.ts');
   const proc = spawn(
     process.execPath,
     [

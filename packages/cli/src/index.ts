@@ -86,7 +86,7 @@ export async function run(argv = process.argv.slice(2)) {
   }
 
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
-  const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
+  const pkgPath = fileURLToPath(new URL('../package.json', import.meta.url));
   const pkgData = fs.readFileSync(pkgPath, 'utf8');
   const pkg = JSON.parse(pkgData) as unknown as { version: string };
 

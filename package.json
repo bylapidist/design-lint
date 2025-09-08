@@ -24,9 +24,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.base.json --outDir dist",
     "postbuild": "node scripts/postbuild.js",
-    "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
-    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
-    "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
+    "lint": "eslint 'packages/*/src/**/*.ts' 'tests/**/*.ts'",
+    "format": "prettier --write 'packages/*/src/**/*.ts' 'tests/**/*.ts'",
+    "format:check": "prettier --check 'packages/*/src/**/*.ts' 'tests/**/*.ts'",
     "test": "tsx --test tests/**/*.test.ts",
     "test:coverage": "c8 --reporter=lcov --reporter=text --reporter=json-summary tsx --test tests/**/*.test.ts",
     "changeset": "changeset",
