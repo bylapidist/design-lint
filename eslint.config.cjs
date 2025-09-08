@@ -3,14 +3,14 @@ const tsParser = require('@typescript-eslint/parser');
 
 module.exports = [
   {
-    ignores: ['tests/fixtures/**'],
+    ignores: ['tests/fixtures/**', 'packages/**/dist/**', 'packages/figma-*'],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        project: './tsconfig.eslint.json',
+        project: ['./tsconfig.eslint.json', './packages/*/tsconfig.json'],
         tsconfigRootDir: __dirname,
       },
     },
