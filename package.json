@@ -28,12 +28,12 @@
     "packages/figma-connector"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.base.json --outDir dist",
+    "build": "turbo run build",
     "postbuild": "node scripts/postbuild.js",
-    "lint": "eslint 'packages/*/src/**/*.ts' 'tests/**/*.ts'",
+    "lint": "turbo run lint",
     "format": "prettier --write 'packages/*/src/**/*.ts' 'tests/**/*.ts'",
-    "format:check": "prettier --check 'packages/*/src/**/*.ts' 'tests/**/*.ts'",
-    "test": "tsx --test tests/**/*.test.ts",
+    "format:check": "turbo run format:check",
+    "test": "turbo run test",
     "test:coverage": "c8 --reporter=lcov --reporter=text --reporter=json-summary tsx --test tests/**/*.test.ts",
     "changeset": "changeset",
     "release": "npm run build && changeset publish",
@@ -57,6 +57,7 @@
   },
   "homepage": "https://design-lint.lapidist.net",
   "license": "MIT",
+  "packageManager": "npm@11.4.2",
   "dependencies": {
     "@vue/compiler-sfc": "3.5.21",
     "chalk": "5.6.0",
@@ -69,13 +70,13 @@
     "flat-cache": "6.1.13",
     "globby": "14.1.0",
     "ignore": "7.0.5",
+    "leven": "4.0.0",
     "p-limit": "7.1.1",
     "picomatch": "4.0.3",
     "postcss": "8.5.6",
     "postcss-less": "6.0.0",
     "postcss-scss": "4.0.9",
     "postcss-value-parser": "4.2.0",
-    "leven": "4.0.0",
     "svelte": "5.38.7",
     "tempy": "3.1.0",
     "typescript": "5.9.2",
@@ -96,6 +97,7 @@
     "markdownlint-cli": "0.45.0",
     "prettier": "3.6.2",
     "tsx": "4.20.5",
+    "turbo": "^2.5.6",
     "vitepress": "1.6.4"
   },
   "c8": {
