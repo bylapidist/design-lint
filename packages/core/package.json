@@ -7,6 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -b tsconfig.json && cp dist/index.js dist/index.cjs",
+    "lint": "eslint 'src/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts'",
     "test": "tsx --test ../../tests/**/*.test.ts"
   },
   "dependencies": {

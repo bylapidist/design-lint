@@ -1,5 +1,11 @@
 {
   "name": "@lapidist/design-lint-figma-connector",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "echo 'no build'",
+    "lint": "echo 'no lint'",
+    "test": "echo 'no test'",
+    "format:check": "echo 'no format'"
+  }
 }
