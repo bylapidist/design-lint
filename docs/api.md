@@ -133,7 +133,7 @@ Executes linting tasks with concurrency control.
   - `options` – object containing:
     - `config: Config`
     - `tokenTracker: TokenTracker`
-    - `lintText: (text: string, filePath: string) => Promise<LintResult>`
+    - `lintText: (text: string, filePath: string, metadata?: Record<string, unknown>) => Promise<LintResult>`
     - `source: DocumentSource`
 
 #### `run(targets, fix?, cache?, additionalIgnorePaths?, cacheLocation?)`
@@ -171,6 +171,8 @@ import type {
 
 ### Custom rule example
 
+Rules receive a `RuleContext` with available design tokens, configuration options, the file path, and optional `metadata` supplied when linting.
+
 ```ts
 import type { RuleModule } from '@lapidist/design-lint';
 
@@ -178,6 +180,7 @@ export const noFooRule: RuleModule = {
   name: 'no-foo',
   meta: { description: 'disallow the value "foo"', recommended: 'warn' },
   create(ctx) {
+    // ctx.metadata contains optional information passed to lintText
     return {
       Declaration(node) {
         if (node.value === 'foo') {

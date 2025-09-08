@@ -10,14 +10,22 @@ import { TokenTracker } from './token-tracker.js';
 export interface RunnerOptions {
   config: Config;
   tokenTracker: TokenTracker;
-  lintText: (text: string, filePath: string) => Promise<LintResult>;
+  lintText: (
+    text: string,
+    filePath: string,
+    metadata?: Record<string, unknown>,
+  ) => Promise<LintResult>;
   source: DocumentSource;
 }
 
 export class Runner {
   private config: Config;
   private tokenTracker: TokenTracker;
-  private lintText: (text: string, filePath: string) => Promise<LintResult>;
+  private lintText: (
+    text: string,
+    filePath: string,
+    metadata?: Record<string, unknown>,
+  ) => Promise<LintResult>;
   private source: DocumentSource;
 
   constructor(options: RunnerOptions) {
