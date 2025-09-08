@@ -10,7 +10,11 @@ export class CacheManager {
 
   async processFile(
     filePath: string,
-    lintFn: (text: string, filePath: string) => Promise<LintResult>,
+    lintFn: (
+      text: string,
+      filePath: string,
+      metadata?: Record<string, unknown>,
+    ) => Promise<LintResult>,
   ): Promise<LintResult> {
     try {
       const statResult = await stat(filePath);

@@ -124,6 +124,7 @@ export class Linter {
   private async lintText(
     text: string,
     filePath = 'unknown',
+    metadata?: Record<string, unknown>,
   ): Promise<LintResult> {
     await this.ruleRegistry.load();
     const enabled = this.ruleRegistry.getEnabledRules();
@@ -145,6 +146,7 @@ export class Linter {
         filePath,
         tokens,
         options,
+        metadata,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
       };
       return rule.create(ctx);

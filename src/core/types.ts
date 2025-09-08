@@ -61,6 +61,7 @@ export interface RuleContext<TOptions = unknown> {
   report: (msg: Omit<LintMessage, 'ruleId' | 'severity'>) => void;
   tokens: DesignTokens;
   options?: TOptions;
+  metadata?: Record<string, unknown>;
   filePath: string;
 }
 

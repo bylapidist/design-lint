@@ -87,7 +87,12 @@ void test('reports raw colors and px units', async () => {
       'acme/no-px': 'warn'
     }
   }, new FileSource());
-  const res = await linter.lintText('h1 { color: #fff; margin: 4px; }', 'file.css');
+  // Optional metadata can be provided as the third argument
+  const res = await linter.lintText(
+    'h1 { color: #fff; margin: 4px; }',
+    'file.css',
+    { from: 'test' }
+  );
   assert.equal(res.messages.length, 2);
 });
 ```
