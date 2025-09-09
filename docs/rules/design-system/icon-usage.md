@@ -1,3 +1,8 @@
+---
+title: design-system/icon-usage
+description: "Ensure icons come from the design system library."
+---
+
 # design-system/icon-usage
 
 ## Summary
@@ -43,3 +48,7 @@ If raw SVGs or third-party icons are acceptable in your project, disable this ru
 ## Related Rules
 - [design-system/component-usage](./component-usage.md)
 - [design-system/variant-prop](./variant-prop.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

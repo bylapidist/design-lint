@@ -1,3 +1,8 @@
+---
+title: design-system/no-unused-tokens
+description: "Report tokens defined but never used."
+---
+
 # design-system/no-unused-tokens
 
 ## Summary
@@ -74,3 +79,7 @@ If unused tokens are acceptable or token usage is tracked elsewhere, disable thi
 ## Related Rules
 - [design-system/deprecation](./deprecation.md)
 - [design-token/colors](../design-token/colors.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

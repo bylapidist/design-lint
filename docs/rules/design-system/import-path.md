@@ -1,3 +1,8 @@
+---
+title: design-system/import-path
+description: "Restrict imports to approved component entry points."
+---
+
 # design-system/import-path
 
 ## Summary
@@ -43,3 +48,7 @@ If component import sources are not enforced, disable this rule.
 ## Related Rules
 - [design-system/component-prefix](./component-prefix.md)
 - [design-system/component-usage](./component-usage.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

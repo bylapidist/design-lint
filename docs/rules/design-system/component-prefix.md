@@ -1,3 +1,8 @@
+---
+title: design-system/component-prefix
+description: "Enforce a prefix for design system component names."
+---
+
 # design-system/component-prefix
 
 ## Summary
@@ -42,3 +47,7 @@ If your project does not enforce a component prefix, disable this rule.
 ## Related Rules
 - [design-system/component-usage](./component-usage.md)
 - [design-system/import-path](./import-path.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

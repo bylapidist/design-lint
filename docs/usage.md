@@ -1,71 +1,98 @@
-# Usage
+---
+title: Getting Started
+description: "Install design-lint, create a config, and lint your first project."
+sidebar_position: 2
+---
 
-Design Lint is distributed as a CLI. Node.js 22 or later is required.
+# Getting Started
 
-## Running the CLI
+This guide walks you through installing and running @lapidist/design-lint for the first time. It targets developers new to the tool.
+
+## Table of contents
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Initial configuration](#initial-configuration)
+- [Run the linter](#run-the-linter)
+- [Fix issues automatically](#fix-issues-automatically)
+- [Watch mode and caching](#watch-mode-and-caching)
+- [Target files and directories](#target-files-and-directories)
+- [Exit codes](#exit-codes)
+- [Troubleshooting](#troubleshooting)
+- [See also](#see-also)
+
+## Prerequisites
+- Node.js \>=22
+- A project with source files to lint
+
+Install Node using your preferred version manager and ensure `node --version` returns 22 or higher.
+
+## Installation
+Run the linter once without installing it locally:
 
 ```bash
-# lint a directory
-npx @lapidist/design-lint src
-
-# lint specific files or globs
-npx design-lint "src/**/*.scss"
+npx design-lint .
 ```
 
-Generate a starter configuration:
+To add design-lint to your project:
+
+```bash
+npm install --save-dev @lapidist/design-lint
+```
+
+## Initial configuration
+Generate a starter configuration file:
 
 ```bash
 npx design-lint init
 ```
 
-By default a `designlint.config.json` file is created. Use `--init-format` to write `js`, `ts` or other formats.
+The command creates `designlint.config.json`. See [configuration](./configuration.md) for all available options.
 
-## Command line options
+## Run the linter
+Lint all files under `src`:
 
-| Flag | Description |
-| ---- | ----------- |
-| `--config <path>` | Use an explicit configuration file. |
-| `--init-format <format>` | Format for `design-lint init` (`js`, `cjs`, `mjs`, `ts`, `mts`, `json`). |
-| `--format <name>` | Select formatter: `stylish` (default), `json`, `sarif` or a module path. |
-| `--output <file>` | Redirect formatted output. |
-| `--report <file>` | Write raw JSON results to a file. |
-| `--ignore-path <file>` | Additional ignore patterns. |
-| `--concurrency <n>` | Limit parallel file processing. |
-| `--max-warnings <n>` | Exit with error when warnings exceed this number. |
-| `--quiet` | Suppress output and rely on the exit code. |
-| `--no-color` | Disable colored output. |
-| `--cache` | Enable result caching. |
-| `--cache-location <path>` | Custom cache file location. |
-| `--watch` | Re-run lint on file changes. |
-| `--fix` | Apply safe fixes automatically. |
-| `--version` | Print the CLI version. |
-
-## Inline disabling
-
-Suppress rules with comments:
-
-```js
-// design-lint-disable-next-line
-const color = 'red';
+```bash
+npx design-lint "src/**/*"
 ```
 
-```css
-/* design-lint-disable */
-.button { color: red; }
-/* design-lint-enable */
+Use quotes around globs to prevent shell expansion. By default the CLI exits with code `1` when errors are found.
+
+## Fix issues automatically
+Many rules support auto-fix. Use the `--fix` flag to update files in place:
+
+```bash
+npx design-lint "src/**/*" --fix
 ```
 
-## Caching
+## Watch mode and caching
+Use `--watch` to rerun the linter when files change. design-lint caches results to speed up subsequent runs. Cache data lives in `.designlintcache` and is safe to commit to CI caches.
 
-`--cache` stores results in `.designlintcache` and skips unchanged files. Delete the file to reset.
+```bash
+npx design-lint "src/**/*" --watch
+```
+
+> **Tip:** Use watch mode during development and caching in CI to shorten feedback loops.
+
+## Target files and directories
+You can pass specific files or directories:
+
+```bash
+npx design-lint src/button.tsx styles/*.css
+```
 
 ## Exit codes
+- `0` – no lint errors
+- `1` – lint errors found
+- `2` – configuration or runtime error
 
-- `0` – no errors and warnings within `--max-warnings`
-- `1` – any error or warnings beyond the threshold
+## Troubleshooting
+If the CLI fails or reports unexpected results:
+- Increase verbosity with `--debug`
+- Verify the [configuration](./configuration.md)
+- Consult the [troubleshooting guide](./troubleshooting.md)
 
-## Further reading
-
-- [Configuration](configuration.md)
-- [Formatters](formatters.md)
-- [CI integration](ci.md)
+## See also
+- [Configuration](./configuration.md)
+- [Rule reference](./rules/index.md)
+- [CI integration](./ci.md)
+- [Examples](./examples/index.md)

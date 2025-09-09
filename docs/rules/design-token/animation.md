@@ -1,3 +1,8 @@
+---
+title: design-token/animation
+description: "Require animation values to reference defined tokens."
+---
+
 # design-token/animation
 
 ## Summary
@@ -40,3 +45,7 @@ If your project does not enforce animation tokens, disable this rule.
 ## Related Rules
 - [design-token/duration](./duration.md)
 - [design-token/colors](./colors.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

@@ -1,9 +1,8 @@
 {
   "tokens": {
-    "colors": ["--colour-*", "--brand-*"]
+    "colors": { "primary": "#ff0000" }
   },
   "rules": {
     "design-token/colors": "error"
   }
 }
-

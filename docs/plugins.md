@@ -1,47 +1,45 @@
+---
+title: Plugins
+description: "Extend design-lint with custom rules or formatters."
+sidebar_position: 6
+---
+
 # Plugins
 
-Plugins bundle custom rules for specific design systems. A plugin is a Node module that exports an object with a `rules` array.
+Plugins let you package and share rules, formatters, and other extensions. This guide targets developers who want to extend design-lint.
 
-## Architecture and naming
+## Table of contents
+- [Overview](#overview)
+- [Creating a plugin](#creating-a-plugin)
+- [Publishing and versioning](#publishing-and-versioning)
+- [Distributing within a team](#distributing-within-a-team)
+- [See also](#see-also)
 
-Plugin packages should be named `design-lint-plugin-<scope>` or `@scope/design-lint-plugin`. The package name forms the rule namespace: rules are referenced as `<plugin>/<rule>`.
+## Overview
+A plugin is an npm package that exports an object with a `rules` array. The package name forms the rule namespace: `<plugin>/<rule>`.
 
-```ts
-// my-plugin/index.ts
-export default {
-  rules: [
-    {
-      name: 'my-plugin/no-raw-colors',
-      meta: { description: 'disallow hex colors' },
-      create(context) {
-        return {
-          Declaration(node) {
-            // report violations
-          }
-        };
-      }
-    }
-  ]
-};
+> **Note:** Declare `@lapidist/design-lint` as a `peerDependency` to ensure users install a compatible version.
+
+## Creating a plugin
+### 1. Scaffold the project
+```text
+my-plugin/
+├─ package.json
+└─ index.ts
 ```
 
-Enable plugins in your configuration:
-
-```ts
-export default {
-  plugins: ['my-plugin'],
-  rules: { 'my-plugin/no-raw-colors': 'error' }
-};
+`package.json`:
+```json
+{
+  "name": "design-lint-plugin-acme",
+  "type": "module",
+  "peerDependencies": { "@lapidist/design-lint": "^1.0.0" }
+}
 ```
 
-Plugins resolve using standard Node module resolution and may be written in CommonJS or ESM. Declare `@lapidist/design-lint` as a `peerDependency` to ensure version compatibility with your plugin.
-
-## Advanced example
-
-The following plugin exposes multiple rules and accompanying tests.
-
+### 2. Implement rules
 ```ts
-// acme-plugin/index.ts
+// index.ts
 export default {
   rules: [
     {
@@ -50,87 +48,38 @@ export default {
       create(ctx) {
         return {
           Declaration(node) {
-            // ...
-          }
+            // report violations
+          },
         };
-      }
+      },
     },
-    {
-      name: 'acme/no-px',
-      meta: { description: 'enforce tokens over px units' },
-      create(ctx) {
-        return {
-          Declaration(node) {
-            // ...
-          }
-        };
-      }
-    }
-  ]
+  ],
 };
 ```
 
-Tests run against the `Linter` API:
-
+### 3. Test the plugin
 ```ts
-// test/acme-plugin.test.ts
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter, FileSource } from '@lapidist/design-lint';
 import plugin from '../index.js';
 
-void test('reports raw colors and px units', async () => {
-  const linter = new Linter({
-    plugins: [plugin],
-    rules: {
-      'acme/no-raw-colors': 'error',
-      'acme/no-px': 'warn'
-    }
-  }, new FileSource());
-  // Optional metadata can be provided as the third argument
-  const res = await linter.lintText(
-    'h1 { color: #fff; margin: 4px; }',
-    'file.css',
-    { from: 'test' }
-  );
-  assert.equal(res.messages.length, 2);
+void test('reports raw colors', async () => {
+  const linter = new Linter({ plugins: [plugin], rules: { 'acme/no-raw-colors': 'error' } }, new FileSource());
+  const res = await linter.lintText('h1 { color: #fff; }', 'file.css');
+  assert.equal(res.messages.length, 1);
 });
 ```
 
-## Publishing to npm
+## Publishing and versioning
+- Build to CommonJS or ESM before publishing.
+- Follow semantic versioning and reference it in `peerDependencies`.
+- Publish with `npm publish` or a private registry.
 
-- Build the plugin to a distributable format (CommonJS or ESM).
-- Set the `name` field to follow the `design-lint-plugin-*` convention.
-- Declare `@lapidist/design-lint` in `peerDependencies` to specify compatible versions.
-- Run `npm publish --access public` to release.
+## Distributing within a team
+You can share plugins privately via Git repositories or internal registries. Document rule options in the plugin README so users can configure them correctly.
 
-## Debugging plugin load failures
-
-If a plugin fails to load:
-
-- Verify the package can be resolved with `node -p "require.resolve('my-plugin')"`.
-- Confirm the module exports an object with a `rules` array.
-- Ensure the plugin version matches the `peerDependency` range for `@lapidist/design-lint`.
-- Use verbose logs (`DEBUG=design-lint*`) to inspect resolution issues.
-
-## Documenting plugin options
-
-Each rule may accept options. Define a JSON schema in `meta.schema` and document options in the plugin README:
-
-```ts
-{
-  name: 'acme/no-raw-colors',
-  meta: {
-    description: 'disallow hex colors',
-    schema: [{ type: 'object', properties: { allow: { type: 'array', items: { type: 'string' } } } }]
-  },
-  create(ctx) { /* ... */ }
-}
-```
-
-## Best practices
-
-- Prefix rule names with the plugin name to avoid collisions.
-- Provide unit tests for each rule.
-- Publish plugins to npm with clear documentation.
-- Document all rule options and maintain `peerDependencies` for version compatibility.
+## See also
+- [API reference](./api.md)
+- [Configuration](./configuration.md)
+- [Formatters](./formatters.md)

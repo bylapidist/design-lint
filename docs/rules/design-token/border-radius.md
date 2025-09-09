@@ -1,3 +1,8 @@
+---
+title: design-token/border-radius
+description: "Enforce use of border radius tokens."
+---
+
 # design-token/border-radius
 
 ## Summary
@@ -43,3 +48,7 @@ If border radius values are not standardized, disable this rule.
 ## Related Rules
 - [design-token/border-width](./border-width.md)
 - [design-token/colors](./colors.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)
