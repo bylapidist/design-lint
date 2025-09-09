@@ -126,10 +126,18 @@ export class Linter {
     const tokens = this.config.tokens;
     const completions: Record<string, string[]> = {};
     for (const [group, defs] of Object.entries(tokens)) {
+      if (group === 'variables' && isRecord(defs)) {
+        const names: string[] = [];
+        for (const v of Object.values(defs)) {
+          if (isRecord(v) && typeof v.id === 'string') names.push(v.id);
+        }
+        if (names.length) completions[group] = names;
+        continue;
+      }
       if (Array.isArray(defs)) {
         const names = defs.filter((t): t is string => typeof t === 'string');
         if (names.length) completions[group] = names;
-      } else if (defs && typeof defs === 'object') {
+      } else if (isRecord(defs)) {
         const names: string[] = [];
         for (const val of Object.values(defs)) {
           const v = typeof val === 'string' ? extractVarName(val) : null;

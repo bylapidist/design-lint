@@ -38,6 +38,18 @@ Tokens may be defined as key–value maps or as pattern arrays for matching CSS 
 }
 ```
 
+The optional `variables` group defines CSS custom property values directly. Each entry supplies an `id` and `value` for the variable.
+
+```json
+{
+  "tokens": {
+    "variables": {
+      "primary-color": { "id": "--color-primary", "value": "#ff0000" }
+    }
+  }
+}
+```
+
 ## Rule configuration
 
 Each entry in the `rules` section begins with a severity: `'off'` (or `0`) disables a rule, `'warn'` (or `1`) reports a warning, and `'error'` (or `2`) fails the lint run.

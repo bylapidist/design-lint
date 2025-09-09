@@ -17,14 +17,27 @@ void test('normalizeTokens wraps values with var when enabled', () => {
 
 void test('normalizeTokens merges tokens across themes', () => {
   const tokens = {
-    base: { colors: { primary: '#000' } },
-    light: { colors: { secondary: '#fff' } },
+    base: {
+      colors: { primary: '#000' },
+      variables: { primary: { id: '--color-primary', value: '#000' } },
+    },
+    light: {
+      colors: { secondary: '#fff' },
+      variables: { secondary: { id: '--color-secondary', value: '#fff' } },
+    },
   };
   const normalized = normalizeTokens(tokens);
   assert.equal(normalized.themes.base.colors.primary, '#000');
   assert.equal(normalized.themes.light.colors.secondary, '#fff');
   assert.equal(normalized.merged.colors.primary, '#000');
   assert.equal(normalized.merged.colors.secondary, '#fff');
+  assert.equal(normalized.themes.base.variables.primary.id, '--color-primary');
+  assert.equal(
+    normalized.themes.light.variables.secondary.id,
+    '--color-secondary',
+  );
+  assert.equal(normalized.merged.variables.primary.id, '--color-primary');
+  assert.equal(normalized.merged.variables.secondary.id, '--color-secondary');
 });
 
 void test('matchToken handles regexp and glob patterns and missing matches', () => {
