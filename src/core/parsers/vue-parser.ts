@@ -4,12 +4,12 @@ import type { RuleModule, LintMessage } from '../types.js';
 
 export async function lintVue(
   text: string,
-  filePath: string,
+  sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
 ): Promise<void> {
   const { parse } = await import('@vue/compiler-sfc');
-  const { descriptor } = parse(text, { filename: filePath });
+  const { descriptor } = parse(text, { filename: sourceId });
   const template = descriptor.template?.content ?? '';
   const templateTsx = template
     .replace(/class=/g, 'className=')
@@ -25,7 +25,7 @@ export async function lintVue(
   for (const scriptContent of scriptBlocks) {
     const combined = `${scriptContent}\nfunction __render(){ return (${templateTsx}); }`;
     const source = ts.createSourceFile(
-      filePath,
+      sourceId,
       combined,
       ts.ScriptTarget.Latest,
       true,

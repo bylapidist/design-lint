@@ -13,7 +13,7 @@ export function stylish(results: LintResult[], useColor = true): string {
   let errorCount = 0;
   let warnCount = 0;
   for (const res of results) {
-    const filePath = relFromCwd(res.filePath);
+    const filePath = relFromCwd(res.sourceId);
     if (res.messages.length === 0) {
       const ok = useColor ? codes.green('[OK]') : '[OK]';
       lines.push(`${ok} ${filePath}`);

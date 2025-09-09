@@ -6,7 +6,7 @@ import { lintCSS } from './parsers/css-parser.js';
 
 export type ParserStrategy = (
   text: string,
-  filePath: string,
+  sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
 ) => Promise<void> | void;

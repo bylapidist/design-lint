@@ -14,7 +14,7 @@ export class CacheManager {
     doc: LintDocument,
     lintFn: (
       text: string,
-      filePath: string,
+      sourceId: string,
       docType: string,
       metadata?: Record<string, unknown>,
     ) => Promise<LintResult>,
@@ -56,7 +56,7 @@ export class CacheManager {
       await this.cache?.remove(doc.id);
       const message = e instanceof Error ? e.message : 'Failed to read file';
       const result: LintResult = {
-        filePath: doc.id,
+        sourceId: doc.id,
         messages: [
           {
             ruleId: 'parse-error',

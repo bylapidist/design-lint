@@ -147,8 +147,8 @@ void test('CLI expands glob patterns with braces', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(res.stdout) as unknown;
   const files = Array.isArray(out)
-    ? (out as { filePath: string }[])
-        .map((r) => path.relative(dir, r.filePath))
+    ? (out as { sourceId: string }[])
+        .map((r) => path.relative(dir, r.sourceId))
         .sort()
     : [];
   assert.deepEqual(files, ['src/a.module.css', 'src/b.module.scss']);
@@ -707,12 +707,12 @@ void test('CLI ignores common directories by default', () => {
     { encoding: 'utf8', cwd: parent },
   );
   interface Result {
-    filePath: string;
+    sourceId: string;
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const files = (parsed as Result[])
-    .map((r) => path.relative(dir, r.filePath))
+    .map((r) => path.relative(dir, r.sourceId))
     .sort();
   assert.deepEqual(files, ['src/file.ts']);
 });
@@ -758,12 +758,12 @@ void test('.designlintignore can unignore paths via CLI', () => {
     },
   );
   interface Result {
-    filePath: string;
+    sourceId: string;
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const files = (parsed as Result[])
-    .map((r) => path.relative(dir, r.filePath))
+    .map((r) => path.relative(dir, r.sourceId))
     .sort();
   assert.deepEqual(files, ['node_modules/pkg/index.ts', 'src/file.ts']);
 });
@@ -802,12 +802,12 @@ void test('CLI skips directories listed in .designlintignore', () => {
     { encoding: 'utf8', cwd: dir },
   );
   interface Result {
-    filePath: string;
+    sourceId: string;
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const files = (parsed as Result[])
-    .map((r) => path.relative(dir, r.filePath))
+    .map((r) => path.relative(dir, r.sourceId))
     .sort();
   assert.deepEqual(files, ['src/file.ts']);
 });
@@ -844,12 +844,12 @@ void test('CLI --ignore-path excludes files', () => {
   );
   assert.notEqual(res.status, 0);
   interface Result {
-    filePath: string;
+    sourceId: string;
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const files = (parsed as Result[])
-    .map((r) => path.relative(dir, r.filePath))
+    .map((r) => path.relative(dir, r.sourceId))
     .sort();
   assert.deepEqual(files, ['src/keep.ts']);
 });
@@ -967,10 +967,10 @@ void test('CLI --report outputs JSON log', () => {
   assert.ok(fs.existsSync(report));
   const parsed: unknown = JSON.parse(readWhenReady(report));
   const log = parsed as {
-    filePath: string;
+    sourceId: string;
     messages: { ruleId: string }[];
   }[];
-  assert.equal(path.relative(dir, log[0]?.filePath), 'file.ts');
+  assert.equal(path.relative(dir, log[0]?.sourceId), 'file.ts');
   assert.equal(log[0]?.messages[0]?.ruleId, 'design-system/deprecation');
 });
 

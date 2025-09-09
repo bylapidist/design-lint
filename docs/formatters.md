@@ -35,7 +35,7 @@ Use when you need machine-readable output for scripts or dashboards.
 ```json
 [
   {
-    "filePath": "a.ts",
+    "sourceId": "a.ts",
     "messages": [
       {
         "ruleId": "rule",
@@ -93,7 +93,7 @@ my-formatter/
 
 ```js
 export default function (results) {
-  return results.map((r) => r.filePath).join('\n');
+  return results.map((r) => r.sourceId).join('\n');
 }
 ```
 
@@ -103,7 +103,7 @@ export default function (results) {
 import assert from 'node:assert/strict';
 import formatter from './formatter.js';
 
-const out = formatter([{ filePath: 'a.ts', messages: [] }]);
+const out = formatter([{ sourceId: 'a.ts', messages: [] }]);
 assert.equal(out, 'a.ts');
 ```
 

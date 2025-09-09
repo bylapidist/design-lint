@@ -41,11 +41,11 @@ void test('Runner handles non-positive concurrency values', async () => {
   const runner = new Runner({
     config: { concurrency: 0, tokens: {} },
     tokenTracker: new TokenTracker(),
-    lintDocument: (text, filePath) =>
-      Promise.resolve({ filePath, messages: [] }),
+    lintDocument: (text, sourceId) =>
+      Promise.resolve({ sourceId, messages: [] }),
   });
   const res = await runner.run([createFileDocument(file)]);
-  assert.equal(res.results[0]?.filePath, file);
+  assert.equal(res.results[0]?.sourceId, file);
   await fs.rm(dir, { recursive: true, force: true });
 });
 
@@ -58,8 +58,8 @@ void test('Runner prunes cache and saves results', async () => {
   const runner = new Runner({
     config: { tokens: {} },
     tokenTracker: new TokenTracker(),
-    lintDocument: (text, filePath) =>
-      Promise.resolve({ filePath, messages: [] }),
+    lintDocument: (text, sourceId) =>
+      Promise.resolve({ sourceId, messages: [] }),
   });
   await runner.run([createFileDocument(file)], false, cache, 'cache');
   assert.deepEqual(await cache.keys(), [file]);

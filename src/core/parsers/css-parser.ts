@@ -45,11 +45,11 @@ export function parseCSS(
 
 export function lintCSS(
   text: string,
-  filePath: string,
+  sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
 ): void {
-  const lower = filePath.toLowerCase();
+  const lower = sourceId.toLowerCase();
   let lang: string | undefined;
   if (lower.endsWith('.scss') || lower.endsWith('.sass')) lang = 'scss';
   else if (lower.endsWith('.less')) lang = 'less';

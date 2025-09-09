@@ -12,7 +12,7 @@ export interface RunnerOptions {
   tokenTracker: TokenTracker;
   lintDocument: (
     text: string,
-    filePath: string,
+    sourceId: string,
     docType: string,
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
@@ -23,7 +23,7 @@ export class Runner {
   private tokenTracker: TokenTracker;
   private lintDocumentFn: (
     text: string,
-    filePath: string,
+    sourceId: string,
     docType: string,
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;

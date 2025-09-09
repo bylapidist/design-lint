@@ -70,7 +70,7 @@ export function sarifFormatter(
         locations: [
           {
             physicalLocation: {
-              artifactLocation: { uri: res.filePath },
+              artifactLocation: { uri: res.sourceId },
               region: { startLine: msg.line, startColumn: msg.column },
             },
           },

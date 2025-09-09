@@ -23,5 +23,5 @@ void test('lintFiles uses patterns option to include custom extensions', async (
   );
   const { results: customResults } = await customLinter.lintFiles([tmp]);
   assert.equal(customResults.length, 1);
-  assert.equal(customResults[0].filePath, file);
+  assert.equal(customResults[0].sourceId, file);
 });
