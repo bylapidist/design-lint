@@ -28,6 +28,3 @@ export function createNodeEnvironment(
     ),
   };
 }
-
-// Backward compatibility for previous name
-export const NodeEnvironment = createNodeEnvironment;

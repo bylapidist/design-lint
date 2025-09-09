@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.ts';
 import { Linter } from '../../src/core/linter.ts';
-import { NodeEnvironment } from '../../src/adapters/node/environment.ts';
+import { createNodeEnvironment } from '../../src/adapters/node/environment.ts';
 import type { Config } from '../../src/core/linter.ts';
 
 // Ensure FileSource.scan logs when profiling is enabled
@@ -16,7 +16,7 @@ void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const config = { tokens: {}, rules: {} };
-  const env = NodeEnvironment(config);
+  const env = createNodeEnvironment(config);
   const linter = new Linter(config, env);
   const cwd = process.cwd();
   process.chdir(dir);
@@ -44,7 +44,7 @@ void test('FileSource.scan collects files from directory targets', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const env = NodeEnvironment(config);
+    const env = createNodeEnvironment(config);
     const docs = await env.documentSource.scan(['.'], config);
     const rels = docs.map((d) => path.relative(dir, d.id));
     assert.deepEqual(rels, ['a.ts']);
