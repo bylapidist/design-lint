@@ -12,8 +12,6 @@ import type { PluginLoader } from './plugin-loader.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
 import type { DocumentSource, LintDocument } from './document-source.js';
-import { FileSource } from './file-source.js';
-import { createFileDocument } from '../node/file-document.js';
 import { parserRegistry } from './parser-registry.js';
 
 export interface Config {
@@ -41,11 +39,7 @@ export class Linter {
   private tokenTracker: TokenTracker;
   private source: DocumentSource;
 
-  constructor(
-    config: Config,
-    source: DocumentSource = new FileSource(),
-    loader?: PluginLoader,
-  ) {
+  constructor(config: Config, source: DocumentSource, loader?: PluginLoader) {
     const normalized = normalizeTokens(
       config.tokens,
       config.wrapTokensWithVar ?? false,
@@ -99,7 +93,7 @@ export class Linter {
     _ignorePaths?: string[],
     cacheLocation?: string,
   ): Promise<LintResult> {
-    const doc = createFileDocument(filePath);
+    const [doc] = await this.source.scan([filePath], this.config, _ignorePaths);
     return this.lintDocument(doc, fix, cache, cacheLocation);
   }
 
@@ -156,7 +150,7 @@ export class Linter {
   private async lintText(
     text: string,
     filePath = 'unknown',
-    docType = '',
+    docType?: string,
     metadata?: Record<string, unknown>,
   ): Promise<LintResult> {
     await this.ruleRegistry.load();
@@ -184,7 +178,7 @@ export class Linter {
       };
       return rule.create(ctx);
     });
-    const type = docType || createFileDocument(filePath).type;
+    const type = docType ?? inferFileType(filePath);
     const parser = parserRegistry[type];
     if (parser) {
       await parser(text, filePath, listeners, messages);
@@ -194,7 +188,7 @@ export class Linter {
   }
 }
 
-export { applyFixes } from './cache-manager.js';
+export { applyFixes } from './apply-fixes.js';
 
 function getDisabledLines(text: string): Set<number> {
   const disabled = new Set<number>();
@@ -229,4 +223,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
+
+function inferFileType(filePath: string): string {
+  const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+  const map: Record<string, string> = {
+    ts: 'ts',
+    tsx: 'ts',
+    mts: 'ts',
+    cts: 'ts',
+    js: 'ts',
+    jsx: 'ts',
+    mjs: 'ts',
+    cjs: 'ts',
+    css: 'css',
+    scss: 'css',
+    sass: 'css',
+    less: 'css',
+    vue: 'vue',
+    svelte: 'svelte',
+  };
+  return map[ext] ?? ext;
 }

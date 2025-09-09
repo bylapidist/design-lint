@@ -15,6 +15,10 @@
     "./cli": {
       "types": "./dist/cli/index.d.ts",
       "default": "./dist/cli/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
     }
   },
   "engines": {

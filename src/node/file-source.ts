@@ -1,10 +1,10 @@
 import { globby } from 'globby';
 import { performance } from 'node:perf_hooks';
 import { realpathIfExists } from '../utils/paths.js';
-import { getIgnorePatterns } from './ignore.js';
-import type { Config } from './linter.js';
-import type { DocumentSource } from './document-source.js';
-import { createFileDocument } from '../node/file-document.js';
+import { getIgnorePatterns } from '../core/ignore.js';
+import type { Config } from '../core/linter.js';
+import type { DocumentSource } from '../core/document-source.js';
+import { createFileDocument } from './file-document.js';
 
 const defaultPatterns = [
   '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,scss,sass,less,svelte,vue}',

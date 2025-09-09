@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'path';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/node/file-source.ts';
 import { loadConfig } from '../src/config/loader.ts';
 import { NodePluginLoader } from '../src/node/plugin-loader.ts';
 import type { PluginLoader } from '../src/core/plugin-loader.ts';

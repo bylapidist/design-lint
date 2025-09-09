@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/node/file-source.ts';
 import { createFileDocument } from '../src/node/file-document.ts';
 import { loadConfig } from '../src/config/loader.ts';
 
