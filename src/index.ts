@@ -17,6 +17,8 @@ export type {
   CSSDeclaration,
   Fix,
 } from './core/types.js';
+export type { PluginLoader, LoadedPlugin } from './core/plugin-loader.js';
+export { NodePluginLoader } from './node/plugin-loader.js';
 export {
   matchToken,
   closestToken,

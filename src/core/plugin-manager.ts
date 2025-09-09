@@ -1,10 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { createRequire } from 'module';
-import { pathToFileURL } from 'url';
 import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
-import { realpathIfExists, relFromCwd } from '../utils/paths.js';
+import type { PluginLoader } from './plugin-loader.js';
 
 export interface EngineErrorOptions {
   message: string;
@@ -19,78 +15,22 @@ export function createEngineError(opts: EngineErrorOptions): Error {
 }
 
 export class PluginManager {
-  private req: NodeJS.Require;
   private pluginPaths: string[] = [];
 
   constructor(
     private config: Config,
     private ruleMap: Map<string, { rule: RuleModule; source: string }>,
-  ) {
-    this.req = config.configPath
-      ? createRequire(config.configPath)
-      : createRequire(import.meta.url);
-  }
-
-  private resolvePluginPaths(): string[] {
-    const paths: string[] = [];
-    for (const p of this.config.plugins ?? []) {
-      try {
-        const resolved = realpathIfExists(this.req.resolve(p));
-        if (!fs.existsSync(resolved)) {
-          throw createEngineError({
-            message: `Plugin not found: "${relFromCwd(resolved)}"`,
-            context: `Plugin "${p}"`,
-            remediation: 'Ensure the plugin is installed and resolvable.',
-          });
-        }
-        paths.push(resolved);
-      } catch {
-        const resolved = realpathIfExists(path.resolve(p));
-        if (!fs.existsSync(resolved)) {
-          throw createEngineError({
-            message: `Plugin not found: "${relFromCwd(resolved)}"`,
-            context: `Plugin "${p}"`,
-            remediation: 'Ensure the plugin is installed and resolvable.',
-          });
-        }
-        paths.push(resolved);
-      }
-    }
-    return paths;
-  }
+    private loader: PluginLoader,
+  ) {}
 
   async getPlugins(): Promise<string[]> {
     if (this.pluginPaths.length > 0) return this.pluginPaths;
-    const pluginPaths = this.resolvePluginPaths();
     const names = this.config.plugins ?? [];
-    for (let i = 0; i < pluginPaths.length; i++) {
-      const pluginSource = pluginPaths[i];
-      const name = names[i] ?? pluginSource;
-      let mod: unknown;
-      try {
-        if (pluginSource.endsWith('.mjs')) {
-          mod = await import(
-            `${pathToFileURL(pluginSource).href}?t=${String(Date.now())}`
-          );
-        } else {
-          mod = this.req(pluginSource);
-        }
-      } catch (e: unknown) {
-        if (getErrorCode(e) === 'ERR_REQUIRE_ESM') {
-          mod = await import(
-            `${pathToFileURL(pluginSource).href}?t=${String(Date.now())}`
-          );
-        } else {
-          throw createEngineError({
-            message: `Failed to load plugin "${name}": ${
-              e instanceof Error ? e.message : String(e)
-            }`,
-            context: `Plugin "${name}"`,
-            remediation: 'Ensure the plugin is installed and resolvable.',
-          });
-        }
-      }
-      const plugin = resolvePlugin(mod);
+    for (const name of names) {
+      const { path: pluginSource, plugin } = await this.loader.load(
+        name,
+        this.config.configPath,
+      );
       if (!isRecord(plugin) || !Array.isArray(plugin.rules)) {
         throw createEngineError({
           message: `Invalid plugin "${pluginSource}": expected { rules: RuleModule[] }`,
@@ -100,10 +40,10 @@ export class PluginManager {
       }
       for (const rule of plugin.rules) {
         if (!isRuleModule(rule)) {
-          const name = getRuleName(rule) ?? '<unknown>';
+          const ruleName = getRuleName(rule) ?? '<unknown>';
           throw createEngineError({
             message:
-              `Invalid rule "${name}" in plugin "${pluginSource}": ` +
+              `Invalid rule "${ruleName}" in plugin "${pluginSource}": ` +
               'expected { name: string; meta: { description: string }; create: Function }',
             context: `Plugin "${pluginSource}"`,
             remediation:
@@ -120,19 +60,10 @@ export class PluginManager {
         }
         this.ruleMap.set(rule.name, { rule, source: pluginSource });
       }
+      this.pluginPaths.push(pluginSource);
     }
-    this.pluginPaths = pluginPaths;
-    return pluginPaths;
+    return this.pluginPaths;
   }
-}
-
-function resolvePlugin(mod: unknown): unknown {
-  if (isRecord(mod)) return mod.default ?? mod.plugin ?? mod;
-  return mod;
-}
-
-function getErrorCode(e: unknown): string | undefined {
-  return isRecord(e) && typeof e.code === 'string' ? e.code : undefined;
 }
 
 function getRuleName(rule: unknown): string | undefined {

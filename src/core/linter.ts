@@ -8,6 +8,7 @@ import { normalizeTokens, mergeTokens, extractVarName } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
 import type { Cache } from './cache.js';
 import { RuleRegistry } from './rule-registry.js';
+import type { PluginLoader } from './plugin-loader.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
 import type { DocumentSource, LintDocument } from './document-source.js';
@@ -40,14 +41,18 @@ export class Linter {
   private tokenTracker: TokenTracker;
   private source: DocumentSource;
 
-  constructor(config: Config, source: DocumentSource = new FileSource()) {
+  constructor(
+    config: Config,
+    source: DocumentSource = new FileSource(),
+    loader?: PluginLoader,
+  ) {
     const normalized = normalizeTokens(
       config.tokens,
       config.wrapTokensWithVar ?? false,
     );
     this.tokensByTheme = normalized.themes;
     this.config = { ...config, tokens: normalized.merged };
-    this.ruleRegistry = new RuleRegistry(this.config);
+    this.ruleRegistry = new RuleRegistry(this.config, loader);
     this.tokenTracker = new TokenTracker(this.config.tokens);
     this.source = source;
   }
