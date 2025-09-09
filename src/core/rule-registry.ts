@@ -1,5 +1,6 @@
 import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
+import type { PluginLoader } from './plugin-loader.js';
 import { builtInRules } from '../rules/index.js';
 import { PluginManager, createEngineError } from './plugin-manager.js';
 
@@ -7,15 +8,22 @@ export class RuleRegistry {
   private ruleMap = new Map<string, { rule: RuleModule; source: string }>();
   private pluginLoad: Promise<void>;
   private pluginPaths: string[] = [];
-  private pluginManager: PluginManager;
-  constructor(private config: Config) {
+  private pluginManager?: PluginManager;
+  constructor(
+    private config: Config,
+    loader?: PluginLoader,
+  ) {
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
-    this.pluginManager = new PluginManager(this.config, this.ruleMap);
-    this.pluginLoad = this.pluginManager.getPlugins().then((paths) => {
-      this.pluginPaths = paths;
-    });
+    if (loader && (this.config.plugins?.length ?? 0) > 0) {
+      this.pluginManager = new PluginManager(this.config, this.ruleMap, loader);
+      this.pluginLoad = this.pluginManager.getPlugins().then((paths) => {
+        this.pluginPaths = paths;
+      });
+    } else {
+      this.pluginLoad = Promise.resolve();
+    }
   }
 
   async load(): Promise<void> {

@@ -6,6 +6,7 @@ import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import { loadCache, type Cache } from '../core/cache.js';
 import type { Config, Linter } from '../core/linter.js';
 import type { LintResult } from '../core/types.js';
+import { NodePluginLoader } from '../node/plugin-loader.js';
 
 export interface Environment {
   formatter: (results: LintResult[], useColor?: boolean) => string;
@@ -48,7 +49,9 @@ export async function prepareEnvironment(
   if (config.configPath) {
     config.configPath = realpathIfExists(config.configPath);
   }
-  const linterRef = { current: new Linter(config) };
+  const linterRef = {
+    current: new Linter(config, undefined, new NodePluginLoader()),
+  };
   const pluginPaths = await linterRef.current.getPluginPaths();
 
   const cacheLocation = options.cache

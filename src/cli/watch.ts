@@ -8,6 +8,7 @@ import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import { loadConfig } from '../config/loader.js';
 import { Linter } from '../core/linter.js';
 import type { Config } from '../core/linter.js';
+import { NodePluginLoader } from '../node/plugin-loader.js';
 import type { Cache } from '../core/cache.js';
 import type { Ignore } from 'ignore';
 import {
@@ -175,7 +176,7 @@ export async function startWatch(ctx: WatchOptions) {
         : createRequire(import.meta.url);
       for (const p of pluginPaths) Reflect.deleteProperty(req.cache, p);
       config = await loadConfig(process.cwd(), options.config);
-      linterRef.current = new Linter(config);
+      linterRef.current = new Linter(config, undefined, new NodePluginLoader());
       await refreshIgnore();
       cache?.clear();
       if (cacheLocation) {
