@@ -58,7 +58,7 @@ Additional checks for maintainability.
 - [design-system/no-unused-tokens](./design-system/no-unused-tokens.md)
 
 ## Adding or deprecating rules
-To propose a new rule or retire an existing one, open an issue or pull request following the guidelines in [CONTRIBUTING.md](../../CONTRIBUTING.md). Include rationale, examples, and implementation notes. Deprecated rules should remain in the documentation until removed in a major release.
+To propose a new rule or retire an existing one, open an issue or pull request following the guidelines in [CONTRIBUTING.md](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md). Include rationale, examples, and implementation notes. Deprecated rules should remain in the documentation until removed in a major release.
 
 ## See also
 - [Configuration](../configuration.md)

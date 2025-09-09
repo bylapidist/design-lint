@@ -49,9 +49,9 @@ Design decisions often live outside your source tree. design-lint brings those d
 - [Examples](./examples/index.md)
 
 ## What's new
-See the [CHANGELOG](../CHANGELOG.md) for the latest features and fixes. For guidance on interpreting entries, read the [changelog guide](./changelog-guide.md).
+See the [CHANGELOG](https://github.com/bylapidist/design-lint/blob/main/CHANGELOG.md) for the latest features and fixes. For guidance on interpreting entries, read the [changelog guide](./changelog-guide.md).
 
 ## See also
 - [Glossary](./glossary.md)
 - [Troubleshooting](./troubleshooting.md)
-- [Contributing](../CONTRIBUTING.md)
+- [Contributing](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md)

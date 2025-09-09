@@ -30,31 +30,31 @@ The `Environment` abstraction hides platform concerns. The default Node environm
 
 ## Core modules
 ### DocumentSource
-Supplies raw text to the linter. The Node adapter [`FileSource`](../src/adapters/node/file-source.ts) reads from disk.
+Supplies raw text to the linter. The Node adapter [`FileSource`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/file-source.ts) reads from disk.
 
 ### Parser adapters
-Convert documents into ASTs. CSS uses PostCSS, JavaScript and TypeScript rely on the TypeScript compiler, and Vue/Svelte files compile before analysis. See [`src/core/parsers`](../src/core/parsers).
+Convert documents into ASTs. CSS uses PostCSS, JavaScript and TypeScript rely on the TypeScript compiler, and Vue/Svelte files compile before analysis. See [`src/core/parsers`](https://github.com/bylapidist/design-lint/tree/main/src/core/parsers).
 
 ### Rule engine
-Registers rules and coordinates execution. See [`src/core/linter.ts`](../src/core/linter.ts) and [`src/core/rule-registry.ts`](../src/core/rule-registry.ts).
+Registers rules and coordinates execution. See [`src/core/linter.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/linter.ts) and [`src/core/rule-registry.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/rule-registry.ts).
 
 ### Formatter pipeline
-Transforms collected results into human- or machine-readable output. Implementations live under [`src/formatters`](../src/formatters).
+Transforms collected results into human- or machine-readable output. Implementations live under [`src/formatters`](https://github.com/bylapidist/design-lint/tree/main/src/formatters).
 
 ### Plugin loader
-Resolves configuration packages, rules, and formatters. The Node implementation is [`src/adapters/node/plugin-loader.ts`](../src/adapters/node/plugin-loader.ts).
+Resolves configuration packages, rules, and formatters. The Node implementation is [`src/adapters/node/plugin-loader.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/plugin-loader.ts).
 
 ### Cache provider
-Stores metadata and parsed documents across runs. [`src/adapters/node/node-cache-provider.ts`](../src/adapters/node/node-cache-provider.ts) caches to disk.
+Stores metadata and parsed documents across runs. [`src/adapters/node/node-cache-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk.
 
 ### Token provider
-Supplies design tokens to rules. [`src/adapters/node/token-provider.ts`](../src/adapters/node/token-provider.ts) normalises tokens from configuration.
+Supplies design tokens to rules. [`src/adapters/node/token-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/token-provider.ts) normalises tokens from configuration.
 
 ## Performance and caching
 design-lint processes files concurrently across CPU cores. Parsed documents and rule results are cached between runs in `.designlintcache` to reduce work.
 
 ## Contributing to core
-To work on design-lint itself, read [CONTRIBUTING.md](../CONTRIBUTING.md). It covers the testing and build process, commit guidelines, and release workflow.
+To work on design-lint itself, read [CONTRIBUTING.md](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md). It covers the testing and build process, commit guidelines, and release workflow.
 
 ## See also
 - [API reference](./api.md)
