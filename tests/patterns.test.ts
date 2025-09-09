@@ -24,6 +24,4 @@ void test('lintFiles uses patterns option to include custom extensions', async (
   const { results: customResults } = await customLinter.lintFiles([tmp]);
   assert.equal(customResults.length, 1);
   assert.equal(customResults[0].sourceId, file);
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  assert.equal(customResults[0].filePath, file);
 });

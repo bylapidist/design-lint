@@ -27,34 +27,33 @@ const rule: RuleModule = {
 };
 
 const cases = [
-  { filePath: 'a.css', text: 'a{color:red;}' },
-  { filePath: 'a.ts', text: 'css`color:red;`' },
+  { sourceId: 'a.css', text: 'a{color:red;}' },
+  { sourceId: 'a.ts', text: 'css`color:red;`' },
   {
-    filePath: 'a.vue',
+    sourceId: 'a.vue',
     text: '<template></template><style>a{color:red;}</style>',
   },
   {
-    filePath: 'a.svelte',
+    sourceId: 'a.svelte',
     text: '<div class="a"></div><style>.a{color:red;}</style>',
   },
 ];
 
 for (const c of cases) {
-  void test(`parser ${c.filePath} dispatches CSS declarations`, async () => {
-    const doc = createFileDocument(c.filePath);
+  void test(`parser ${c.sourceId} dispatches CSS declarations`, async () => {
+    const doc = createFileDocument(c.sourceId);
     const parser = parserRegistry[doc.type];
     assert.ok(parser, 'parser exists');
     const messages: LintMessage[] = [];
     const ctx: RuleContext = {
-      sourceId: c.filePath,
-      filePath: c.filePath,
+      sourceId: c.sourceId,
       tokens: {},
       options: undefined,
       report: (m) =>
         messages.push({ ...m, severity: 'error', ruleId: rule.name }),
     };
     const listener = rule.create(ctx);
-    await parser(c.text, c.filePath, [listener], messages);
+    await parser(c.text, c.sourceId, [listener], messages);
     assert.equal(messages.length, 1);
     assert.equal(messages[0].message, 'bad color');
   });

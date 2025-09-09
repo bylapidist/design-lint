@@ -1,5 +1,5 @@
 ---
-"@lapidist/design-lint": minor
+"@lapidist/design-lint": major
 ---
 
-rename filePath to sourceId in lint results and rule context
+rename filePath to sourceId and remove deprecated alias

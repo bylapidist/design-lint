@@ -15,7 +15,6 @@ void test('CacheManager applies fixes when enabled', async () => {
     if (text === 'bad') {
       return Promise.resolve({
         sourceId,
-        filePath: sourceId,
         messages: [
           {
             ruleId: 'test',
@@ -28,7 +27,7 @@ void test('CacheManager applies fixes when enabled', async () => {
         ],
       });
     }
-    return Promise.resolve({ sourceId, filePath: sourceId, messages: [] });
+    return Promise.resolve({ sourceId, messages: [] });
   };
   const manager = new CacheManager(undefined, true);
   const doc = createFileDocument(file);

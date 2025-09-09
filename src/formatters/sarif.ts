@@ -70,8 +70,7 @@ export function sarifFormatter(
         locations: [
           {
             physicalLocation: {
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-deprecated
-              artifactLocation: { uri: res.sourceId ?? res.filePath },
+              artifactLocation: { uri: res.sourceId },
               region: { startLine: msg.line, startColumn: msg.column },
             },
           },

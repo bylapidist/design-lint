@@ -36,7 +36,6 @@ Use when you need machine-readable output for scripts or dashboards.
 [
   {
     "sourceId": "a.ts",
-    "filePath": "a.ts",
     "messages": [
       {
         "ruleId": "rule",
@@ -104,7 +103,7 @@ export default function (results) {
 import assert from 'node:assert/strict';
 import formatter from './formatter.js';
 
-const out = formatter([{ sourceId: 'a.ts', filePath: 'a.ts', messages: [] }]);
+const out = formatter([{ sourceId: 'a.ts', messages: [] }]);
 assert.equal(out, 'a.ts');
 ```
 

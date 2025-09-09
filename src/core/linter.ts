@@ -171,7 +171,6 @@ export class Linter {
       const tokens = mergeTokens(this.tokensByTheme, themes);
       const ctx: RuleContext = {
         sourceId,
-        filePath: sourceId,
         tokens,
         options,
         metadata,
@@ -187,7 +186,6 @@ export class Linter {
     const filtered = messages.filter((m) => !disabledLines.has(m.line));
     return {
       sourceId,
-      filePath: sourceId,
       messages: filtered,
       ruleDescriptions,
     };

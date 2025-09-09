@@ -88,7 +88,6 @@ export class TokenTracker {
       if (unused.length) {
         results.push({
           sourceId: configPath,
-          filePath: configPath,
           messages: unused.map((t) => ({
             ruleId,
             message: `Token ${t} is defined but never used`,

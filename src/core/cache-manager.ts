@@ -57,7 +57,6 @@ export class CacheManager {
       const message = e instanceof Error ? e.message : 'Failed to read file';
       const result: LintResult = {
         sourceId: doc.id,
-        filePath: doc.id,
         messages: [
           {
             ruleId: 'parse-error',

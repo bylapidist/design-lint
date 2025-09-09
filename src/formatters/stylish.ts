@@ -13,8 +13,7 @@ export function stylish(results: LintResult[], useColor = true): string {
   let errorCount = 0;
   let warnCount = 0;
   for (const res of results) {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-deprecated
-    const filePath = relFromCwd(res.sourceId ?? res.filePath ?? '');
+    const filePath = relFromCwd(res.sourceId);
     if (res.messages.length === 0) {
       const ok = useColor ? codes.green('[OK]') : '[OK]';
       lines.push(`${ok} ${filePath}`);
