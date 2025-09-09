@@ -1,3 +1,8 @@
+---
+title: design-system/component-usage
+description: "Replace raw HTML elements with design system components."
+---
+
 # design-system/component-usage
 
 ## Summary
@@ -42,3 +47,7 @@ If you allow raw HTML elements or lack a component library, disable this rule.
 ## Related Rules
 - [design-system/component-prefix](./component-prefix.md)
 - [design-system/import-path](./import-path.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

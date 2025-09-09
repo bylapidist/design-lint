@@ -1,12 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/adapters/node/file-source.ts';
 
 void test('getTokenCompletions returns token names', () => {
   const linter = new Linter(
     {
       tokens: {
+        variables: {
+          primary: { id: '--color-primary', modes: { base: '#fff' } },
+          accent: { id: '--color-accent', modes: { base: '#000' } },
+        },
         spacing: ['--space-scale-100'],
         colors: {
           primary: 'var(--color-primary)',
@@ -19,6 +23,7 @@ void test('getTokenCompletions returns token names', () => {
     new FileSource(),
   );
   const comps = linter.getTokenCompletions();
+  assert.deepEqual(comps.variables, ['--color-primary', '--color-accent']);
   assert.deepEqual(comps.spacing, ['--space-scale-100']);
   assert.deepEqual(comps.colors, [
     '--color-primary',

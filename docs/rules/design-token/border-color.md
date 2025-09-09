@@ -1,3 +1,8 @@
+---
+title: design-token/border-color
+description: "Enforce use of border color tokens."
+---
+
 # design-token/border-color
 
 ## Summary
@@ -40,3 +45,7 @@ If border colors aren't standardized through tokens, disable this rule.
 ## Related Rules
 - [design-token/colors](./colors.md)
 - [design-token/border-width](./border-width.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

@@ -11,6 +11,7 @@ export const iconUsageRule: RuleModule<IconUsageOptions> = {
   meta: {
     description:
       'disallow raw svg elements or non design system icon components',
+    category: 'component',
   },
   create(context) {
     const subs: Record<string, string> = {

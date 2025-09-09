@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/core/file-source.ts';
+import { FileSource } from '../../src/adapters/node/file-source.ts';
 
 const config = {
   tokens: {
@@ -28,14 +28,14 @@ function assertIds(messages: { ruleId: string }[]) {
 }
 
 void test('reports raw tokens in .scss files', async () => {
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(cssSample, 'file.scss');
   assert.equal(res.messages.length, 3);
   assertIds(res.messages);
 });
 
 void test('reports raw tokens in Vue <style lang="scss">', async () => {
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(
     `<template><div/></template><style lang="scss">${cssSample}</style>`,
     'Comp.vue',
@@ -45,7 +45,7 @@ void test('reports raw tokens in Vue <style lang="scss">', async () => {
 });
 
 void test('reports raw tokens in Svelte <style lang="scss">', async () => {
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(
     `<div></div><style lang="scss">${cssSample}</style>`,
     'Comp.svelte',
@@ -55,7 +55,7 @@ void test('reports raw tokens in Svelte <style lang="scss">', async () => {
 });
 
 void test('reports raw tokens in string style attributes', async () => {
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(
     `const C = () => <div style="color: #fff; margin: 5px; opacity: 0.5"></div>;`,
     'file.tsx',

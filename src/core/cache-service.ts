@@ -1,19 +1,23 @@
-import type { Cache } from './cache.js';
+import type { CacheProvider } from './cache-provider.js';
 import { CacheManager } from './cache-manager.js';
 
 export const CacheService = {
-  prune(cache: Cache | undefined, files: string[]): void {
+  async prune(
+    cache: CacheProvider | undefined,
+    files: string[],
+  ): Promise<void> {
     if (!cache) return;
-    for (const key of cache.keys()) {
-      if (!files.includes(key)) cache.removeKey(key);
+    const keys = await cache.keys();
+    for (const key of keys) {
+      if (!files.includes(key)) await cache.remove(key);
     }
   },
 
-  createManager(cache: Cache | undefined, fix: boolean): CacheManager {
+  createManager(cache: CacheProvider | undefined, fix: boolean): CacheManager {
     return new CacheManager(cache, fix);
   },
 
-  save(manager: CacheManager, cacheLocation?: string): void {
-    manager.save(cacheLocation);
+  async save(manager: CacheManager): Promise<void> {
+    await manager.save();
   },
 } as const;

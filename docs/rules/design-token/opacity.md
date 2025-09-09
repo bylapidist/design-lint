@@ -1,3 +1,8 @@
+---
+title: design-token/opacity
+description: "Use opacity tokens."
+---
+
 # design-token/opacity
 
 ## Summary
@@ -40,3 +45,7 @@ If opacity values are not standardized, disable this rule.
 ## Related Rules
 - [design-token/colors](./colors.md)
 - [design-token/duration](./duration.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

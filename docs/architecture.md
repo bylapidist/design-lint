@@ -1,36 +1,61 @@
-# Architecture
+---
+title: Architecture Overview
+description: "Understand the internals of design-lint and how it processes files."
+sidebar_position: 8
+---
 
-Design Lint orchestrates a pipeline that moves from file discovery to result formatting. It walks the filesystem, parses source content into abstract syntax trees (ASTs), evaluates registered rules and emits a report through the selected formatter. The flow below shows how data advances through each stage.
+# Architecture Overview
 
-```mermaid
-flowchart LR
-  A[Scan files] --> B[Parse sources]
-  B --> C[Apply rules]
-  C --> D[Format results]
+This overview targets contributors and advanced users who want to understand how design-lint works under the hood.
+
+## Table of contents
+- [Processing flow](#processing-flow)
+- [Environment model](#environment-model)
+- [Core modules](#core-modules)
+- [Performance and caching](#performance-and-caching)
+- [Contributing to core](#contributing-to-core)
+- [See also](#see-also)
+
+## Processing flow
+Files pass through a series of stages:
+
+```text
+Scan sources → Create documents → Parse → Run rules → Format results
 ```
 
-Starting with **file discovery**, glob patterns expand to concrete paths and respect ignore files or configuration. Each file is then **parsed** by language‑specific adapters: CSS uses PostCSS, JavaScript and TypeScript rely on the TypeScript compiler, and Vue/Svelte single‑file components compile before analysis. The **rule engine** traverses the ASTs and records messages, optionally providing fixes. Finally, the **formatter pipeline** transforms collected results into human‑ or machine‑readable output.
+Each stage is extensible through plugins or custom environments.
+
+## Environment model
+The `Environment` abstraction hides platform concerns. The default Node environment bundles a file-based `DocumentSource`, module resolution, disk caching, and token loading. Other environments can provide equivalents for editors, build tools, or cloud services.
 
 ## Core modules
-
-### File discovery
-
-Resolves the working set of files using glob patterns and ignore rules. See [`src/core/file-source.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/file-source.ts).
+### DocumentSource
+Supplies raw text to the linter. The Node adapter [`FileSource`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/file-source.ts) reads from disk.
 
 ### Parser adapters
-
-Normalise different language parsers behind a common interface. See [`src/core/parsers`](https://github.com/bylapidist/design-lint/tree/main/src/core/parsers).
+Convert documents into ASTs. CSS uses PostCSS, JavaScript and TypeScript rely on the TypeScript compiler, and Vue/Svelte files compile before analysis. See [`src/core/parsers`](https://github.com/bylapidist/design-lint/tree/main/src/core/parsers).
 
 ### Rule engine
-
-Registers rules and coordinates their execution over AST nodes. See [`src/core/linter.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/linter.ts) and [`src/core/rule-registry.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/rule-registry.ts).
+Registers rules and coordinates execution. See [`src/core/linter.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/linter.ts) and [`src/core/rule-registry.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/rule-registry.ts).
 
 ### Formatter pipeline
+Transforms collected results into human- or machine-readable output. Implementations live under [`src/formatters`](https://github.com/bylapidist/design-lint/tree/main/src/formatters).
 
-Streams lint results through built‑in or custom formatters. See [`src/formatters`](https://github.com/bylapidist/design-lint/tree/main/src/formatters).
+### Plugin loader
+Resolves configuration packages, rules, and formatters. The Node implementation is [`src/adapters/node/plugin-loader.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/plugin-loader.ts).
 
-## Performance considerations
+### Cache provider
+Stores metadata and parsed documents across runs. [`src/adapters/node/node-cache-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk.
 
-Caching avoids repeated work across runs by storing file metadata and parsed ASTs. The runner processes files concurrently, distributing parsing and rule evaluation across available CPU cores.
+### Token provider
+Supplies design tokens to rules. [`src/adapters/node/token-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/token-provider.ts) normalises tokens from configuration.
 
-See the [Plugin guide](plugins.md) for extending the engine beyond the core modules.
+## Performance and caching
+design-lint processes files concurrently across CPU cores. Parsed documents and rule results are cached between runs in `.designlintcache` to reduce work.
+
+## Contributing to core
+To work on design-lint itself, read [CONTRIBUTING.md](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md). It covers the testing and build process, commit guidelines, and release workflow.
+
+## See also
+- [API reference](./api.md)
+- [Plugins](./plugins.md)

@@ -7,7 +7,7 @@ import {
 
 export const fontFamilyRule: RuleModule = {
   name: 'design-token/font-family',
-  meta: { description: 'enforce font-family tokens' },
+  meta: { description: 'enforce font-family tokens', category: 'design-token' },
   create(context) {
     const fontFamilies = context.tokens.fonts;
     if (

@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import { readWhenReady } from './helpers/fs.ts';
 import { Linter } from '../src/index.ts';
 import { FileSource } from '../src/index.ts';
 import type { LintResult } from '../src/core/types.ts';
+import ignore from 'ignore';
 
 const tsxLoader = require.resolve('tsx/esm');
 const WATCH_TIMEOUT = 2000;
@@ -28,6 +29,31 @@ void test('CLI aborts on unsupported Node versions', async () => {
   assert.equal(process.exitCode, 1);
   process.exitCode = originalExit ?? 0;
   assert.match(out, /Node\.js v21\.0\.0 is not supported/);
+});
+
+void test('CLI passes targets to environment factory', async () => {
+  const { run } = await import('../src/cli/index.ts');
+  const envMod = await import('../src/cli/env.ts');
+  const mock = test.mock.method(envMod, 'prepareEnvironment', () =>
+    Promise.resolve({
+      formatter: () => '',
+      config: { tokens: {}, rules: {} },
+      linterRef: {
+        current: {
+          lintTargets: () => Promise.resolve({ results: [], ignoreFiles: [] }),
+          getPluginPaths: () => Promise.resolve([]),
+        } as unknown as Linter,
+      },
+      pluginPaths: [],
+      designIgnore: '',
+      gitIgnore: '',
+      refreshIgnore: () => Promise.resolve(),
+      state: { pluginPaths: [], ignoreFilePaths: [] },
+      getIg: () => ignore(),
+    }),
+  );
+  await run(['a.ts']);
+  assert.deepEqual(mock.mock.calls[0].arguments[0].patterns, ['a.ts']);
 });
 
 void test('CLI runs when executed via a symlink', () => {
@@ -121,8 +147,8 @@ void test('CLI expands glob patterns with braces', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(res.stdout) as unknown;
   const files = Array.isArray(out)
-    ? (out as { filePath: string }[])
-        .map((r) => path.relative(dir, r.filePath))
+    ? (out as { sourceId: string }[])
+        .map((r) => path.relative(dir, r.sourceId))
         .sort()
     : [];
   assert.deepEqual(files, ['src/a.module.css', 'src/b.module.scss']);
@@ -681,12 +707,12 @@ void test('CLI ignores common directories by default', () => {
     { encoding: 'utf8', cwd: parent },
   );
   interface Result {
-    filePath: string;
+    sourceId: string;
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const files = (parsed as Result[])
-    .map((r) => path.relative(dir, r.filePath))
+    .map((r) => path.relative(dir, r.sourceId))
     .sort();
   assert.deepEqual(files, ['src/file.ts']);
 });
@@ -732,12 +758,12 @@ void test('.designlintignore can unignore paths via CLI', () => {
     },
   );
   interface Result {
-    filePath: string;
+    sourceId: string;
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const files = (parsed as Result[])
-    .map((r) => path.relative(dir, r.filePath))
+    .map((r) => path.relative(dir, r.sourceId))
     .sort();
   assert.deepEqual(files, ['node_modules/pkg/index.ts', 'src/file.ts']);
 });
@@ -776,12 +802,12 @@ void test('CLI skips directories listed in .designlintignore', () => {
     { encoding: 'utf8', cwd: dir },
   );
   interface Result {
-    filePath: string;
+    sourceId: string;
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const files = (parsed as Result[])
-    .map((r) => path.relative(dir, r.filePath))
+    .map((r) => path.relative(dir, r.sourceId))
     .sort();
   assert.deepEqual(files, ['src/file.ts']);
 });
@@ -818,12 +844,12 @@ void test('CLI --ignore-path excludes files', () => {
   );
   assert.notEqual(res.status, 0);
   interface Result {
-    filePath: string;
+    sourceId: string;
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const files = (parsed as Result[])
-    .map((r) => path.relative(dir, r.filePath))
+    .map((r) => path.relative(dir, r.sourceId))
     .sort();
   assert.deepEqual(files, ['src/keep.ts']);
 });
@@ -941,10 +967,10 @@ void test('CLI --report outputs JSON log', () => {
   assert.ok(fs.existsSync(report));
   const parsed: unknown = JSON.parse(readWhenReady(report));
   const log = parsed as {
-    filePath: string;
+    sourceId: string;
     messages: { ruleId: string }[];
   }[];
-  assert.equal(path.relative(dir, log[0]?.filePath), 'file.ts');
+  assert.equal(path.relative(dir, log[0]?.sourceId), 'file.ts');
   assert.equal(log[0]?.messages[0]?.ruleId, 'design-system/deprecation');
 });
 
@@ -1062,8 +1088,7 @@ void test('CLI cache updates after --fix run', async () => {
     tokens: { deprecations: { old: { replacement: 'new' } } },
     rules: { 'design-system/deprecation': 'error' },
   };
-  const linter = new Linter(config, new FileSource());
-  const cache = new Map<
+  const store = new Map<
     string,
     {
       mtime: number;
@@ -1071,8 +1096,38 @@ void test('CLI cache updates after --fix run', async () => {
       result: LintResult;
     }
   >();
-  const { results: res1 } = await linter.lintFiles([file], true, cache);
-  const { results: res2 } = await linter.lintFiles([file], false, cache);
+  const cache = {
+    get(key: string) {
+      return Promise.resolve(store.get(key));
+    },
+    set(
+      key: string,
+      entry: {
+        mtime: number;
+        size: number;
+        result: LintResult;
+      },
+    ) {
+      store.set(key, entry);
+      return Promise.resolve();
+    },
+    remove(key: string) {
+      store.delete(key);
+      return Promise.resolve();
+    },
+    keys() {
+      return Promise.resolve([...store.keys()]);
+    },
+    save() {
+      return Promise.resolve();
+    },
+  };
+  const linter = new Linter(config, {
+    documentSource: new FileSource(),
+    cacheProvider: cache,
+  });
+  const { results: res1 } = await linter.lintTargets([file], true);
+  const { results: res2 } = await linter.lintTargets([file], false);
   assert.equal(res1[0].messages.length, 0);
   assert.strictEqual(res1[0], res2[0]);
 });

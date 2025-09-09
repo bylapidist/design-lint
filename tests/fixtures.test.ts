@@ -73,7 +73,7 @@ for (const { name, files } of fixtures) {
     );
     assert.notEqual(result.status, 0);
     interface Result {
-      filePath: string;
+      sourceId: string;
       messages: { ruleId: string }[];
     }
     const parsed = JSON.parse(result.stdout) as unknown;
@@ -81,7 +81,7 @@ for (const { name, files } of fixtures) {
     const results = parsed as Result[];
     const byFile = Object.fromEntries(
       results.map((r) => [
-        path.relative(fixture, r.filePath),
+        path.relative(fixture, r.sourceId),
         new Set(r.messages.map((m) => m.ruleId)),
       ]),
     );

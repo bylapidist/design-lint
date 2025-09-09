@@ -1,51 +1,65 @@
-# Rules
+---
+title: Rule Reference
+description: "Complete list of design-lint rules grouped by category."
+sidebar_position: 4
+---
 
-Design-lint organizes rules into categories. Enable any rule by adding its category and name to your configuration:
+# Rule Reference
 
-```json
-{
-  "rules": {
-    "design-system/component-prefix": "error",
-    "design-token/colors": "warn"
-  }
-}
-```
+Rules enforce your design system. This reference targets developers configuring rule behaviour or writing custom rules.
 
-## Design system
+## Table of contents
+- [Token Validation](#token-validation)
+- [Component Usage](#component-usage)
+- [Styling](#styling)
+- [Misc](#misc)
+- [Adding or deprecating rules](#adding-or-deprecating-rules)
+- [See also](#see-also)
 
-Rules that enforce consistent usage of your design system's components and patterns.
+## Token Validation
+Validate usage of design tokens in code and style sheets.
 
-| Rule | Description |
-| ---- | ----------- |
-| [component-prefix](./design-system/component-prefix.md) | Enforces a prefix for design system component names. |
-| [component-usage](./design-system/component-usage.md) | Requires design system components instead of raw HTML. |
-| [deprecation](./design-system/deprecation.md) | Flags deprecated tokens or components and can auto-fix replacements. |
-| [icon-usage](./design-system/icon-usage.md) | Reports raw `<svg>` elements or non-design system icon components. |
-| [import-path](./design-system/import-path.md) | Ensures components are imported from specified packages. |
-| [no-inline-styles](./design-system/no-inline-styles.md) | Disallows inline `style` or `class` attributes on components. |
-| [no-unused-tokens](./design-system/no-unused-tokens.md) | Reports tokens from your config that never appear in linted files. |
-| [variant-prop](./design-system/variant-prop.md) | Limits variant props to allowed values. |
+- [design-token/animation](./design-token/animation.md)
+- [design-token/blur](./design-token/blur.md)
+- [design-token/border-color](./design-token/border-color.md)
+- [design-token/border-radius](./design-token/border-radius.md)
+- [design-token/border-width](./design-token/border-width.md)
+- [design-token/box-shadow](./design-token/box-shadow.md)
+- [design-token/colors](./design-token/colors.md)
+- [design-token/duration](./design-token/duration.md)
+- [design-token/font-family](./design-token/font-family.md)
+- [design-token/font-size](./design-token/font-size.md)
+- [design-token/font-weight](./design-token/font-weight.md)
+- [design-token/letter-spacing](./design-token/letter-spacing.md)
+- [design-token/line-height](./design-token/line-height.md)
+- [design-token/opacity](./design-token/opacity.md)
+- [design-token/outline](./design-token/outline.md)
+- [design-token/spacing](./design-token/spacing.md)
+- [design-token/z-index](./design-token/z-index.md)
 
-## Design token
+## Component Usage
+Ensure components follow naming and usage conventions.
 
-Rules that ensure only approved design tokens are used for visual styles.
+- [design-system/component-prefix](./design-system/component-prefix.md)
+- [design-system/component-usage](./design-system/component-usage.md)
+- [design-system/import-path](./design-system/import-path.md)
+- [design-system/icon-usage](./design-system/icon-usage.md)
+- [design-system/variant-prop](./design-system/variant-prop.md)
 
-| Rule | Description |
-| ---- | ----------- |
-| [animation](./design-token/animation.md) | Enforces `animation` values to match configured tokens. |
-| [blur](./design-token/blur.md) | Enforces `blur()` values to match blur tokens. |
-| [border-color](./design-token/border-color.md) | Enforces `border-color` values to match border color tokens. |
-| [border-radius](./design-token/border-radius.md) | Enforces `border-radius` values to match configured tokens. |
-| [border-width](./design-token/border-width.md) | Enforces `border-width` values to match border width tokens. |
-| [box-shadow](./design-token/box-shadow.md) | Enforces `box-shadow` values to match shadow tokens. |
-| [colors](./design-token/colors.md) | Disallows raw color values and enforces color tokens. |
-| [duration](./design-token/duration.md) | Enforces transition and animation durations to match tokens. |
-| [font-family](./design-token/font-family.md) | Ensures `font-family` declarations use token values. |
-| [font-size](./design-token/font-size.md) | Ensures `font-size` declarations use token values. |
-| [font-weight](./design-token/font-weight.md) | Enforces `font-weight` values to match tokens. |
-| [letter-spacing](./design-token/letter-spacing.md) | Enforces `letter-spacing` values to match tokens. |
-| [line-height](./design-token/line-height.md) | Enforces `line-height` values to match tokens. |
-| [opacity](./design-token/opacity.md) | Enforces `opacity` values to match tokens. |
-| [outline](./design-token/outline.md) | Enforces `outline` values to match tokens. |
-| [spacing](./design-token/spacing.md) | Allows only spacing tokens or base-unit multiples. |
-| [z-index](./design-token/z-index.md) | Enforces `z-index` values to match tokens. |
+## Styling
+Rules that govern styles inside components.
+
+- [design-system/no-inline-styles](./design-system/no-inline-styles.md)
+
+## Misc
+Additional checks for maintainability.
+
+- [design-system/deprecation](./design-system/deprecation.md)
+- [design-system/no-unused-tokens](./design-system/no-unused-tokens.md)
+
+## Adding or deprecating rules
+To propose a new rule or retire an existing one, open an issue or pull request following the guidelines in [CONTRIBUTING.md](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md). Include rationale, examples, and implementation notes. Deprecated rules should remain in the documentation until removed in a major release.
+
+## See also
+- [Configuration](../configuration.md)
+- [Plugins](../plugins.md)

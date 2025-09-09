@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { FileSource } from '../../src/core/file-source.ts';
-import { makeTmpDir } from '../../src/utils/tmp.ts';
+import { FileSource } from '../../src/adapters/node/file-source.ts';
+import { makeTmpDir } from '../../src/adapters/node/utils/tmp.ts';
 import type { Config } from '../../src/core/linter.ts';
 
 void test('FileSource.scan applies nested ignore files for glob targets', async () => {
@@ -17,8 +17,8 @@ void test('FileSource.scan applies nested ignore files for glob targets', async 
   process.chdir(dir);
   try {
     const config: Config = { tokens: {}, rules: {} };
-    const files = await new FileSource().scan(['**/*.ts'], config);
-    const rels = files.map((f) => path.relative(dir, f)).sort();
+    const { documents } = await new FileSource().scan(['**/*.ts'], config);
+    const rels = documents.map((d) => path.relative(dir, d.id)).sort();
     assert.deepEqual(rels, ['src/keep.ts']);
   } finally {
     process.chdir(cwd);

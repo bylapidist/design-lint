@@ -1,4 +1,5 @@
 import type { DesignTokens, LintResult } from './types.js';
+import type { TokenProvider } from './environment.js';
 
 type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';
 
@@ -33,18 +34,28 @@ export class TokenTracker {
   private allTokenValues = new Set<string>();
   private usedTokenValues = new Set<string>();
   private unusedTokenRules: UnusedRuleConfig[] = [];
+  private provider?: TokenProvider;
+  private loaded = false;
 
-  constructor(tokens?: DesignTokens) {
-    this.allTokenValues = collectTokenValues(tokens);
+  constructor(provider?: TokenProvider) {
+    this.provider = provider;
   }
 
-  configure(
+  private async loadTokens(): Promise<void> {
+    if (this.loaded) return;
+    const tokens = (await this.provider?.load())?.merged;
+    this.allTokenValues = collectTokenValues(tokens);
+    this.loaded = true;
+  }
+
+  async configure(
     rules: {
       rule: { name: string };
       options?: unknown;
       severity: 'error' | 'warn';
     }[],
-  ): void {
+  ): Promise<void> {
+    await this.loadTokens();
     const unusedRules = rules.filter(isUnusedTokenRule);
     this.unusedTokenRules = unusedRules.map((u) => ({
       ruleId: u.rule.name,
@@ -57,7 +68,8 @@ export class TokenTracker {
     return this.unusedTokenRules.length > 0;
   }
 
-  trackUsage(text: string): void {
+  async trackUsage(text: string): Promise<void> {
+    await this.loadTokens();
     for (const token of this.allTokenValues) {
       if (this.usedTokenValues.has(token)) continue;
       const tokenType = getTokenType(token);
@@ -75,7 +87,7 @@ export class TokenTracker {
       );
       if (unused.length) {
         results.push({
-          filePath: configPath,
+          sourceId: configPath,
           messages: unused.map((t) => ({
             ruleId,
             message: `Token ${t} is defined but never used`,
@@ -95,6 +107,12 @@ function collectTokenValues(tokens?: DesignTokens): Set<string> {
   if (!tokens) return values;
   for (const [group, defs] of Object.entries(tokens)) {
     if (group === 'deprecations') continue;
+    if (group === 'variables' && isRecord(defs)) {
+      for (const v of Object.values(defs)) {
+        if (isRecord(v) && typeof v.id === 'string') values.add(v.id);
+      }
+      continue;
+    }
     if (Array.isArray(defs)) {
       for (const t of defs) {
         if (typeof t === 'string' && !t.includes('*')) values.add(t);

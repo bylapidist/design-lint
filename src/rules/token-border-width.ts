@@ -14,7 +14,10 @@ interface BorderWidthOptions {
 
 export const borderWidthRule: RuleModule<BorderWidthOptions> = {
   name: 'design-token/border-width',
-  meta: { description: 'enforce border-width tokens' },
+  meta: {
+    description: 'enforce border-width tokens',
+    category: 'design-token',
+  },
   create(context) {
     const widthTokens = context.tokens.borderWidths;
     if (

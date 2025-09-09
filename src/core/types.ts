@@ -1,5 +1,11 @@
 import type ts from 'typescript';
 
+export interface VariableDefinition {
+  id: string;
+  modes?: Record<string, string | number>;
+  aliasOf?: string;
+}
+
 export interface DesignTokens {
   /** Color tokens. */
   colors?: Record<string, string> | (string | RegExp)[];
@@ -35,6 +41,8 @@ export interface DesignTokens {
   fontWeights?: Record<string, number | string> | (string | RegExp)[];
   /** Letter spacing tokens. */
   letterSpacings?: Record<string, number | string> | (string | RegExp)[];
+  /** Variable definitions. */
+  variables?: Record<string, VariableDefinition>;
   /** Deprecated tokens and their replacements. */
   deprecations?: Record<string, { replacement?: string }>;
   /** Allow additional custom token groups. */
@@ -49,12 +57,14 @@ export interface LintMessage {
   column: number;
   fix?: Fix;
   suggest?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LintResult {
-  filePath: string;
+  sourceId: string;
   messages: LintMessage[];
   ruleDescriptions?: Record<string, string>;
+  ruleCategories?: Record<string, string>;
 }
 
 export interface RuleContext<TOptions = unknown> {
@@ -62,13 +72,14 @@ export interface RuleContext<TOptions = unknown> {
   tokens: DesignTokens;
   options?: TOptions;
   metadata?: Record<string, unknown>;
-  filePath: string;
+  sourceId: string;
 }
 
 export interface RuleModule<TOptions = unknown> {
   name: string;
   meta: {
     description: string;
+    category?: string;
   };
   create(context: RuleContext<TOptions>): RuleListener;
 }

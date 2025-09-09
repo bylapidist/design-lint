@@ -1,3 +1,8 @@
+---
+title: design-token/z-index
+description: "Use z-index tokens."
+---
+
 # design-token/z-index
 
 ## Summary
@@ -46,3 +51,7 @@ If z-index values are not standardized, disable this rule.
 ## Related Rules
 - [design-token/opacity](./opacity.md)
 - [design-token/spacing](./spacing.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

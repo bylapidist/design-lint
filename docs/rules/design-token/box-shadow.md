@@ -1,3 +1,8 @@
+---
+title: design-token/box-shadow
+description: "Require box shadow tokens."
+---
+
 # design-token/box-shadow
 
 ## Summary
@@ -41,3 +46,7 @@ If box shadows are not tokenized, disable this rule.
 ## Related Rules
 - [design-token/colors](./colors.md)
 - [design-token/border-radius](./border-radius.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

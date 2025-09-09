@@ -2,18 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/adapters/node/file-source.ts';
 import { loadConfig } from '../src/config/loader.ts';
 
 const fixtureDir = path.join(__dirname, 'fixtures', 'tagged-template');
 
 void test('reports CSS in tagged template literals', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const file = path.join(fixtureDir, 'src', 'styled.ts');
   const {
     results: [res],
-  } = await linter.lintFiles([file]);
+  } = await linter.lintTargets([file]);
   const colorMessages = res.messages.filter(
     (m) => m.ruleId === 'design-token/colors',
   );

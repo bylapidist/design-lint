@@ -1,17 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/adapters/node/file-source.ts';
 
 void test('lints large projects without crashing', async () => {
   const dir = path.join(__dirname, 'fixtures', 'large-project');
   const config = await loadConfig(dir);
-  const linter = new Linter(config, new FileSource());
-  const { results } = await linter.lintFiles([dir]);
+  const linter = new Linter(config, { documentSource: new FileSource() });
+  const { results } = await linter.lintTargets([dir]);
   assert.equal(results.length, 200);
 });
 
@@ -26,8 +26,8 @@ void test('lints very large projects without EMFILE', async () => {
     );
   }
   const config = await loadConfig(tmp);
-  const linter = new Linter(config, new FileSource());
-  const { results } = await linter.lintFiles([tmp]);
+  const linter = new Linter(config, { documentSource: new FileSource() });
+  const { results } = await linter.lintTargets([tmp]);
   assert.equal(results.length, count);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
@@ -75,8 +75,8 @@ void test('respects configured concurrency limit', async () => {
   fsp.stat = trackedStat;
 
   const config = await loadConfig(tmp);
-  const linter = new Linter(config, new FileSource());
-  const { results } = await linter.lintFiles([tmp]);
+  const linter = new Linter(config, { documentSource: new FileSource() });
+  const { results } = await linter.lintTargets([tmp]);
   assert.equal(results.length, count);
   assert.ok(max <= 2);
   fsp.readFile = origRead;

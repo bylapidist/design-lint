@@ -12,7 +12,7 @@ interface BlurRuleOptions {
 
 export const blurRule: RuleModule<BlurRuleOptions> = {
   name: 'design-token/blur',
-  meta: { description: 'enforce blur tokens' },
+  meta: { description: 'enforce blur tokens', category: 'design-token' },
   create(context) {
     const blurTokens = context.tokens.blurs;
     if (

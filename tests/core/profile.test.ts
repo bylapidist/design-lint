@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeTmpDir } from '../../src/utils/tmp.ts';
+import { makeTmpDir } from '../../src/adapters/node/utils/tmp.ts';
 import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/core/file-source.ts';
+import { createNodeEnvironment } from '../../src/adapters/node/environment.ts';
 import type { Config } from '../../src/core/linter.ts';
 
 // Ensure FileSource.scan logs when profiling is enabled
@@ -15,7 +15,9 @@ import type { Config } from '../../src/core/linter.ts';
 void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
-  const linter = new Linter({ tokens: {}, rules: {} }, new FileSource());
+  const config = { tokens: {}, rules: {} };
+  const env = createNodeEnvironment(config);
+  const linter = new Linter(config, env);
   const cwd = process.cwd();
   process.chdir(dir);
   process.env.DESIGNLINT_PROFILE = '1';
@@ -26,7 +28,7 @@ void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   };
   try {
     // Include a missing file to hit the catch branch
-    await linter.lintFiles(['file.ts', 'missing.ts']);
+    await linter.lintTargets(['file.ts', 'missing.ts']);
   } finally {
     console.log = origLog;
     delete process.env.DESIGNLINT_PROFILE;
@@ -42,8 +44,9 @@ void test('FileSource.scan collects files from directory targets', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const files = await new FileSource().scan(['.'], config);
-    const rels = files.map((f) => path.relative(dir, f));
+    const env = createNodeEnvironment(config);
+    const { documents } = await env.documentSource.scan(['.'], config);
+    const rels = documents.map((d) => path.relative(dir, d.id));
     assert.deepEqual(rels, ['a.ts']);
   } finally {
     process.chdir(cwd);

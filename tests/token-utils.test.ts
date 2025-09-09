@@ -7,7 +7,7 @@ import {
   extractVarName,
 } from '../src/core/token-utils.ts';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/adapters/node/file-source.ts';
 
 void test('normalizeTokens wraps values with var when enabled', () => {
   const tokens = { colors: { primary: '--color-primary' } };
@@ -17,14 +17,41 @@ void test('normalizeTokens wraps values with var when enabled', () => {
 
 void test('normalizeTokens merges tokens across themes', () => {
   const tokens = {
-    base: { colors: { primary: '#000' } },
-    light: { colors: { secondary: '#fff' } },
+    base: {
+      colors: { primary: '#000' },
+      variables: {
+        primary: { id: '--color-primary', modes: { base: '#000' } },
+      },
+    },
+    light: {
+      colors: { secondary: '#fff' },
+      variables: {
+        secondary: {
+          id: '--color-secondary',
+          modes: { base: '#fff' },
+          aliasOf: '--color-primary',
+        },
+      },
+    },
   };
   const normalized = normalizeTokens(tokens);
   assert.equal(normalized.themes.base.colors.primary, '#000');
   assert.equal(normalized.themes.light.colors.secondary, '#fff');
   assert.equal(normalized.merged.colors.primary, '#000');
   assert.equal(normalized.merged.colors.secondary, '#fff');
+  assert.equal(normalized.themes.base.variables.primary.id, '--color-primary');
+  assert.equal(
+    normalized.themes.light.variables.secondary.aliasOf,
+    '--color-primary',
+  );
+  assert.equal(normalized.merged.variables.primary.id, '--color-primary');
+  assert.equal(normalized.merged.variables.secondary.id, '--color-secondary');
+  assert.equal(
+    normalized.merged.variables.secondary.aliasOf,
+    '--color-primary',
+  );
+  assert.equal(normalized.merged.variables.primary.modes?.base, '#000');
+  assert.equal(normalized.merged.variables.secondary.modes?.base, '#fff');
 });
 
 void test('matchToken handles regexp and glob patterns and missing matches', () => {

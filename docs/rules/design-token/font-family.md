@@ -1,3 +1,8 @@
+---
+title: design-token/font-family
+description: "Use font family tokens in typography."
+---
+
 # design-token/font-family
 
 ## Summary
@@ -41,3 +46,7 @@ If arbitrary font families are allowed, disable this rule.
 ## Related Rules
 - [design-token/font-size](./font-size.md)
 - [design-token/font-weight](./font-weight.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

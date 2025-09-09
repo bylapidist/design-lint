@@ -4,16 +4,17 @@ import type {
   LintMessage,
   RuleContext,
 } from './types.js';
-import { normalizeTokens, mergeTokens, extractVarName } from './token-utils.js';
+import { mergeTokens, extractVarName } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
-import type { Cache } from './cache.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
-import type { DocumentSource } from './document-source.js';
-import { FileSource } from './file-source.js';
+import type {
+  Environment,
+  LintDocument,
+  TokenProvider,
+} from './environment.js';
 import { parserRegistry } from './parser-registry.js';
-import path from 'node:path';
 
 export interface Config {
   tokens?: DesignTokens | Record<string, DesignTokens>;
@@ -38,73 +39,99 @@ export class Linter {
   private tokensByTheme: Record<string, DesignTokens> = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
-  private source: DocumentSource;
+  private source: Environment['documentSource'];
+  private cache?: Environment['cacheProvider'];
+  private tokensReady: Promise<void>;
 
-  constructor(config: Config, source: DocumentSource = new FileSource()) {
-    const normalized = normalizeTokens(
-      config.tokens,
-      config.wrapTokensWithVar ?? false,
-    );
-    this.tokensByTheme = normalized.themes;
-    this.config = { ...config, tokens: normalized.merged };
-    this.ruleRegistry = new RuleRegistry(this.config);
-    this.tokenTracker = new TokenTracker(this.config.tokens);
-    this.source = source;
+  constructor(config: Config, env: Environment) {
+    const provider: TokenProvider = env.tokenProvider ?? {
+      load: () =>
+        Promise.resolve({
+          themes: (config.tokens ? { default: config.tokens } : {}) as Record<
+            string,
+            DesignTokens
+          >,
+          merged: (config.tokens ?? {}) as DesignTokens,
+        }),
+    };
+    this.config = { ...config, tokens: {} };
+    this.ruleRegistry = new RuleRegistry(this.config, env.pluginLoader);
+    this.tokenTracker = new TokenTracker(provider);
+    this.source = env.documentSource;
+    this.cache = env.cacheProvider;
+    this.tokensReady = provider.load().then((t) => {
+      this.tokensByTheme = t.themes;
+      this.config.tokens = t.merged;
+    });
   }
 
-  async lintFile(
-    filePath: string,
-    fix = false,
-    cache?: Cache,
-    ignorePaths?: string[],
-    cacheLocation?: string,
-  ): Promise<LintResult> {
-    const { results } = await this.lintFiles(
-      [filePath],
-      fix,
-      cache,
-      ignorePaths,
-      cacheLocation,
-    );
+  async lintDocument(doc: LintDocument, fix = false): Promise<LintResult> {
+    const { results } = await this.lintDocuments([doc], fix);
     const [res] = results;
     return res;
   }
 
-  async lintFiles(
-    targets: string[],
+  async lintDocuments(
+    documents: LintDocument[],
     fix = false,
-    cache?: Cache,
-    additionalIgnorePaths: string[] = [],
-    cacheLocation?: string,
   ): Promise<{
     results: LintResult[];
     ignoreFiles: string[];
     warning?: string;
   }> {
+    await this.tokensReady;
     await this.ruleRegistry.load();
     const runner = new Runner({
       config: this.config,
       tokenTracker: this.tokenTracker,
-      lintText: this.lintText.bind(this),
-      source: this.source,
+      lintDocument: this.lintText.bind(this),
     });
-    return runner.run(
-      targets,
-      fix,
-      cache,
-      additionalIgnorePaths,
-      cacheLocation,
-    );
+    return runner.run(documents, fix, this.cache);
+  }
+
+  async lintTargets(
+    targets: string[],
+    fix = false,
+    ignore: string[] = [],
+  ): Promise<{
+    results: LintResult[];
+    ignoreFiles: string[];
+    warning?: string;
+  }> {
+    const {
+      documents,
+      ignoreFiles: scanIgnores,
+      warning: scanWarning,
+    } = await this.source.scan(targets, this.config, ignore);
+    const {
+      results,
+      ignoreFiles: runIgnores,
+      warning: runWarning,
+    } = await this.lintDocuments(documents, fix);
+    const ignoreFiles = Array.from(new Set([...scanIgnores, ...runIgnores]));
+    return {
+      results,
+      ignoreFiles,
+      warning: scanWarning ?? runWarning,
+    };
   }
 
   getTokenCompletions(): Record<string, string[]> {
     const tokens = this.config.tokens;
     const completions: Record<string, string[]> = {};
     for (const [group, defs] of Object.entries(tokens)) {
+      if (group === 'variables' && isRecord(defs)) {
+        const names: string[] = [];
+        for (const v of Object.values(defs)) {
+          if (isRecord(v) && typeof v.id === 'string') names.push(v.id);
+        }
+        if (names.length) completions[group] = names;
+        continue;
+      }
       if (Array.isArray(defs)) {
         const names = defs.filter((t): t is string => typeof t === 'string');
         if (names.length) completions[group] = names;
-      } else if (defs && typeof defs === 'object') {
+      } else if (isRecord(defs)) {
         const names: string[] = [];
         for (const val of Object.values(defs)) {
           const v = typeof val === 'string' ? extractVarName(val) : null;
@@ -122,27 +149,33 @@ export class Linter {
 
   private async lintText(
     text: string,
-    filePath = 'unknown',
+    sourceId = 'unknown',
+    docType?: string,
     metadata?: Record<string, unknown>,
   ): Promise<LintResult> {
+    await this.tokensReady;
     await this.ruleRegistry.load();
     const enabled = this.ruleRegistry.getEnabledRules();
-    this.tokenTracker.configure(enabled);
+    await this.tokenTracker.configure(enabled);
     if (this.tokenTracker.hasUnusedTokenRules()) {
-      this.tokenTracker.trackUsage(text);
+      await this.tokenTracker.trackUsage(text);
     }
     const messages: LintMessage[] = [];
     const ruleDescriptions: Record<string, string> = {};
+    const ruleCategories: Record<string, string> = {};
     const disabledLines = getDisabledLines(text);
     const listeners = enabled.map(({ rule, options, severity }) => {
       ruleDescriptions[rule.name] = rule.meta.description;
+      if (rule.meta.category) {
+        ruleCategories[rule.name] = rule.meta.category;
+      }
       const themes =
         isRecord(options) && isStringArray(options.themes)
           ? options.themes
           : undefined;
       const tokens = mergeTokens(this.tokensByTheme, themes);
       const ctx: RuleContext = {
-        filePath,
+        sourceId,
         tokens,
         options,
         metadata,
@@ -150,17 +183,22 @@ export class Linter {
       };
       return rule.create(ctx);
     });
-    const ext = path.extname(filePath).toLowerCase();
-    const parser = parserRegistry[ext];
+    const type = docType ?? inferFileType(sourceId);
+    const parser = parserRegistry[type];
     if (parser) {
-      await parser(text, filePath, listeners, messages);
+      await parser(text, sourceId, listeners, messages);
     }
     const filtered = messages.filter((m) => !disabledLines.has(m.line));
-    return { filePath, messages: filtered, ruleDescriptions };
+    return {
+      sourceId,
+      messages: filtered,
+      ruleDescriptions,
+      ruleCategories,
+    };
   }
 }
 
-export { applyFixes } from './cache-manager.js';
+export { applyFixes } from './apply-fixes.js';
 
 function getDisabledLines(text: string): Set<number> {
   const disabled = new Set<number>();
@@ -195,4 +233,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
+
+function inferFileType(sourceId: string): string {
+  const ext = sourceId.split('.').pop()?.toLowerCase() ?? '';
+  const map: Record<string, string> = {
+    ts: 'ts',
+    tsx: 'ts',
+    mts: 'ts',
+    cts: 'ts',
+    js: 'ts',
+    jsx: 'ts',
+    mjs: 'ts',
+    cjs: 'ts',
+    css: 'css',
+    scss: 'css',
+    sass: 'css',
+    less: 'css',
+    vue: 'vue',
+    svelte: 'svelte',
+  };
+  return map[ext] ?? ext;
 }

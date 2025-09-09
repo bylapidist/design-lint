@@ -10,7 +10,7 @@ import { isStyleValue } from '../utils/style.js';
 
 export const opacityRule: RuleModule = {
   name: 'design-token/opacity',
-  meta: { description: 'enforce opacity tokens' },
+  meta: { description: 'enforce opacity tokens', category: 'design-token' },
   create(context) {
     const opacityTokens = context.tokens.opacity;
     if (

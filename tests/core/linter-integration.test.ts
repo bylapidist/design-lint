@@ -3,19 +3,19 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/core/file-source.ts';
+import { createNodeEnvironment } from '../../src/adapters/node/environment.ts';
 
 void test('Linter integrates registry, parser and trackers', async () => {
-  const linter = new Linter(
-    {
-      tokens: {},
-      rules: { 'design-token/colors': 'error' },
-    },
-    new FileSource(),
-  );
+  const config = {
+    tokens: {},
+    rules: { 'design-token/colors': 'error' },
+  };
+  const env = createNodeEnvironment(config);
+  const linter = new Linter(config, env);
   const dir = await fs.mkdtemp(path.join(process.cwd(), 'linter-int-'));
   const file = path.join(dir, 'file.css');
   await fs.writeFile(file, 'a{color:#fff;}');
-  const res = await linter.lintFile(file);
+  const { results } = await linter.lintTargets([file]);
+  const res = results[0];
   assert.equal(res.messages.length, 1);
 });

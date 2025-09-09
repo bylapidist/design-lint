@@ -9,7 +9,7 @@ import { isStyleValue } from '../utils/style.js';
 
 export const zIndexRule: RuleModule = {
   name: 'design-token/z-index',
-  meta: { description: 'enforce z-index tokens' },
+  meta: { description: 'enforce z-index tokens', category: 'design-token' },
   create(context) {
     const zTokens = context.tokens.zIndex;
     if (

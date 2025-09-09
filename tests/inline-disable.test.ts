@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/adapters/node/file-source.ts';
 
 void test('inline directives disable linting', async () => {
   const dir = makeTmpDir();
@@ -28,7 +28,8 @@ void test('inline directives disable linting', async () => {
     },
     new FileSource(),
   );
-  const res = await linter.lintFile(file);
+  const { results } = await linter.lintTargets([file]);
+  const res = results[0];
   const lines = res.messages.map((m) => m.line).sort();
   assert.deepEqual(lines, [1, 9]);
 });
@@ -47,7 +48,8 @@ void test('strings resembling directives do not disable next line', async () => 
     },
     new FileSource(),
   );
-  const res = await linter.lintFile(file);
+  const { results } = await linter.lintTargets([file]);
+  const res = results[0];
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].line, 2);
 });

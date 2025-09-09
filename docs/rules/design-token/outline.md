@@ -1,3 +1,8 @@
+---
+title: design-token/outline
+description: "Use outline tokens."
+---
+
 # design-token/outline
 
 ## Summary
@@ -40,3 +45,7 @@ If outline styles are not tokenized, disable this rule.
 ## Related Rules
 - [design-token/border-color](./border-color.md)
 - [design-token/border-width](./border-width.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

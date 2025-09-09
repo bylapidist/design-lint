@@ -9,7 +9,10 @@ import { isStyleValue } from '../utils/style.js';
 
 export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',
-  meta: { description: 'enforce letter-spacing tokens' },
+  meta: {
+    description: 'enforce letter-spacing tokens',
+    category: 'design-token',
+  },
   create(context) {
     const letterSpacings = context.tokens.letterSpacings;
     if (

@@ -10,6 +10,7 @@ export const componentUsageRule: RuleModule<ComponentUsageOptions> = {
   meta: {
     description:
       'disallow raw HTML elements when design system components exist',
+    category: 'component',
   },
   create(context) {
     const subs = context.options?.substitutions ?? {};

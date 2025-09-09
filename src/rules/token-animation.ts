@@ -8,7 +8,7 @@ import {
 
 export const animationRule: RuleModule = {
   name: 'design-token/animation',
-  meta: { description: 'enforce animation tokens' },
+  meta: { description: 'enforce animation tokens', category: 'design-token' },
   create(context) {
     const animationTokens = context.tokens.animations;
     if (

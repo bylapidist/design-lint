@@ -1,86 +1,109 @@
+---
+title: Configuration
+description: "Define how design-lint evaluates your project."
+sidebar_position: 3
+---
+
 # Configuration
 
-Design Lint reads options from `designlint.config.*` in your project root. JavaScript and TypeScript configs export an object or use `defineConfig`.
+This page explains every option in `designlint.config.*`. It targets developers adjusting the linter to their workflow.
+
+## Table of contents
+- [Basic config](#basic-config)
+- [Tokens](#tokens)
+- [Rules and severity](#rules-and-severity)
+- [Plugins](#plugins)
+- [Overrides](#overrides)
+- [JS and TS config files](#js-and-ts-config-files)
+- [Common patterns](#common-patterns)
+- [See also](#see-also)
+
+## Basic config
+Create a configuration file at the project root:
+
+```json
+{
+  "tokens": {},
+  "rules": {}
+}
+```
+
+The file may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`.
+
+### Top-level options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tokens` | object | `undefined` | Defines [design tokens](./glossary.md#design-tokens) available to rules. |
+| `rules` | object | `undefined` | Enables [rules](./rules/index.md) and sets their severity. |
+| `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
+| `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
+| `patterns` | string[] | `[]` | File patterns to lint when none are passed on the CLI. |
+| `concurrency` | number | `os.cpus()` | Maximum parallel workers. |
+| `wrapTokensWithVar` | boolean | `false` | Wrap token values with `var()` when autofixing CSS. |
+
+
+## Tokens
+Tokens describe the design system in a machine-readable form. You can inline tokens or reference separate JSON files. Example:
+
+```json
+{
+  "tokens": {
+    "colors": { "primary": "#ff0000" },
+    "spacing": { "sm": 4 }
+  }
+}
+```
+
+To group tokens by theme, provide an object keyed by theme name. Each theme contains the same token categories.
+
+## Rules and severity
+Enable a rule by adding it to the `rules` map with a severity:
+
+```json
+{
+  "rules": {
+    "design-token/colors": "error",
+    "design-system/component-usage": ["warn", { "substitutions": { "button": "DSButton" } }]
+  }
+}
+```
+
+Severity values: `"off"`, `"warn"`, `"error"`, or numeric `0`, `1`, `2`. Many rules accept options; see the [rule reference](./rules/index.md).
+
+## Plugins
+Plugins bundle custom rules or formatters. Install the package and list it in `plugins`:
+
+```json
+{
+  "plugins": ["@company/design-lint-plugin"]
+}
+```
+
+See the [plugins guide](./plugins.md) to author and publish your own.
+
+## Overrides
+Use overrides to apply different settings to specific files. Create separate configuration files in subdirectories or use a JavaScript config file to inspect file paths at runtime.
+
+## JS and TS config files
+Configuration can be written in JavaScript or TypeScript for dynamic setups:
 
 ```ts
 // designlint.config.ts
 import { defineConfig } from '@lapidist/design-lint';
 
 export default defineConfig({
-  tokens: {
-    colors: { primary: '#ff0000' },
-    spacing: { sm: 4, md: 8 }
-  },
-  rules: {
-    'design-token/colors': 'error'
-  }
+  tokens: { colors: { primary: '#ff0000' } },
+  rules: { 'design-token/colors': 'error' },
 });
 ```
 
-## Tokens
+## Common patterns
+- Share configs across repositories with npm packages.
+- Combine with framework presets; see [framework integrations](./frameworks.md).
+- Set `patterns` to lint only changed files in CI.
 
-Tokens describe the design system values available to rules. Supported groups include `colors`, `spacing`, `borderRadius`, `fontSizes`, `zIndex` and more.
-
-The `colors` group lists the palette available to your application. Rules like [`design-token/colors`](rules/design-token/colors.md) compare CSS color values against this palette to prevent unapproved shades.
-
-Spacing scales are represented by the `spacing` group. The [`design-token/spacing`](rules/design-token/spacing.md) rule checks margin and padding declarations so layouts stick to the scale.
-
-Use `borderRadius` to define consistent corner rounding for buttons, cards and other surfaces. [`design-token/border-radius`](rules/design-token/border-radius.md) warns when arbitrary radii are used.
-
-Layering concerns can be expressed with `zIndex` tokens. [`design-token/z-index`](rules/design-token/z-index.md) ensures components only use approved stacking levels.
-
-Tokens may be defined as key–value maps or as pattern arrays for matching CSS variables. Set `wrapTokensWithVar: true` when your tokens already map to custom properties.
-
-```json
-{
-  "wrapTokensWithVar": true,
-  "tokens": { "colors": { "primary": "--color-primary" } }
-}
-```
-
-## Rule configuration
-
-Each entry in the `rules` section begins with a severity: `'off'` (or `0`) disables a rule, `'warn'` (or `1`) reports a warning, and `'error'` (or `2`) fails the lint run.
-
-To configure rule-specific options, supply an array: `[severity, options]`.
-
-```js
-module.exports = {
-  rules: {
-    'design-token/spacing': ['error', { base: 4 }]
-  }
-};
-```
-
-### Design goals
-
-| Goal | Rule |
-| --- | --- |
-| Enforce brand palette | [`design-token/colors`](rules/design-token/colors.md) |
-| Maintain spacing scale | [`design-token/spacing`](rules/design-token/spacing.md) |
-| Restrict stacking levels | [`design-token/z-index`](rules/design-token/z-index.md) |
-| Standardize rounded corners | [`design-token/border-radius`](rules/design-token/border-radius.md) |
-
-Additional rules may be supplied by plugins; see [Plugins](plugins.md).
-
-## Plugins
-
-Plugins supply additional rule modules. See [Plugins](plugins.md) for details. List plugin packages under `plugins` and then reference their rules:
-
-```js
-module.exports = {
-  plugins: ['my-plugin'],
-  rules: { 'my-plugin/example': 'warn' }
-};
-```
-
-## Ignore patterns
-
-Ignore files via `.designlintignore` or the `ignoreFiles` array in the config. Patterns are evaluated after `.gitignore`.
-
-## Troubleshooting
-
-- A rule requiring tokens is enabled but tokens are missing → add the token group or disable the rule.
-- Configuration file not found → run `npx design-lint init` to generate one.
-
-See [examples](https://github.com/bylapidist/design-lint/tree/main/docs/examples) for sample configurations.
+## See also
+- [Rule reference](./rules/index.md)
+- [Plugins](./plugins.md)
+- [Troubleshooting](./troubleshooting.md)

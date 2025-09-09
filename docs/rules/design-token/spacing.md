@@ -1,3 +1,8 @@
+---
+title: design-token/spacing
+description: "Use spacing tokens."
+---
+
 # design-token/spacing
 
 ## Summary
@@ -46,3 +51,7 @@ If spacing values do not follow a scale, disable this rule.
 ## Related Rules
 - [design-token/colors](./colors.md)
 - [design-token/font-size](./font-size.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

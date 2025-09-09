@@ -1,3 +1,8 @@
+---
+title: design-system/no-inline-styles
+description: "Disallow inline style attributes in components."
+---
+
 # design-system/no-inline-styles
 
 ## Summary
@@ -51,3 +56,7 @@ If inline styles or custom class names are permitted, disable this rule.
 ## Related Rules
 - [design-system/component-usage](./component-usage.md)
 - [design-system/variant-prop](./variant-prop.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

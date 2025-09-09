@@ -4,11 +4,12 @@ import { once } from 'node:events';
 import { createRequire } from 'module';
 import chokidar from 'chokidar';
 import chalk from 'chalk';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
+import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
 import { loadConfig } from '../config/loader.js';
 import { Linter } from '../core/linter.js';
 import type { Config } from '../core/linter.js';
-import type { Cache } from '../core/cache.js';
+import { createNodeEnvironment } from '../adapters/node/environment.js';
+import type { CacheProvider } from '../core/cache-provider.js';
 import type { Ignore } from 'ignore';
 import {
   executeLint,
@@ -31,7 +32,7 @@ export interface WatchOptions {
   config: Config;
   linterRef: { current: Linter };
   refreshIgnore: () => Promise<void>;
-  cache?: Cache;
+  cache?: CacheProvider;
   cacheLocation?: string;
   state: WatchState;
   designIgnore: string;
@@ -49,6 +50,8 @@ export interface WatchServices extends ExecuteServices {
   gitIgnore: string;
   state: WatchState;
   getIg: () => Ignore;
+  cache?: CacheProvider;
+  cacheLocation?: string;
 }
 
 export async function watchMode(
@@ -175,14 +178,23 @@ export async function startWatch(ctx: WatchOptions) {
         : createRequire(import.meta.url);
       for (const p of pluginPaths) Reflect.deleteProperty(req.cache, p);
       config = await loadConfig(process.cwd(), options.config);
-      linterRef.current = new Linter(config);
-      await refreshIgnore();
-      cache?.clear();
+      if (cache) {
+        const keys = await cache.keys();
+        for (const k of keys) await cache.remove(k);
+      }
       if (cacheLocation) {
         try {
           fs.unlinkSync(cacheLocation);
         } catch {}
       }
+      const env = createNodeEnvironment(config, {
+        cacheLocation,
+        configPath: config.configPath,
+        patterns: config.patterns,
+      });
+      cache = env.cacheProvider;
+      linterRef.current = new Linter(config, env);
+      await refreshIgnore();
       const newPluginPaths = await linterRef.current.getPluginPaths();
       const toRemove = pluginPaths.filter((p) => !newPluginPaths.includes(p));
       if (toRemove.length) watcher.unwatch(toRemove);
@@ -200,8 +212,8 @@ export async function startWatch(ctx: WatchOptions) {
     }
   };
 
-  const handle = async (filePath: string) => {
-    const resolved = realpathIfExists(path.resolve(filePath));
+  const handle = async (sourceId: string) => {
+    const resolved = realpathIfExists(path.resolve(sourceId));
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;
     if (
@@ -217,9 +229,9 @@ export async function startWatch(ctx: WatchOptions) {
     }
   };
 
-  const handleUnlink = async (filePath: string) => {
-    const resolved = realpathIfExists(path.resolve(filePath));
-    cache?.removeKey(resolved);
+  const handleUnlink = async (sourceId: string) => {
+    const resolved = realpathIfExists(path.resolve(sourceId));
+    await cache?.remove(resolved);
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;
     if (

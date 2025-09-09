@@ -2,17 +2,27 @@ import fs from 'fs';
 import path from 'path';
 import ignore, { type Ignore } from 'ignore';
 import { getFormatter } from '../formatters/index.js';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
-import { loadCache, type Cache } from '../core/cache.js';
+import type { CacheProvider } from '../core/cache-provider.js';
 import type { Config, Linter } from '../core/linter.js';
 import type { LintResult } from '../core/types.js';
+import { createNodeEnvironment } from '../adapters/node/environment.js';
+
+const relFromCwd = (p: string) =>
+  path.relative(process.cwd(), p).split(path.sep).join('/');
+const realpathIfExists = (p: string) => {
+  try {
+    return fs.realpathSync.native(p);
+  } catch {
+    return p;
+  }
+};
 
 export interface Environment {
   formatter: (results: LintResult[], useColor?: boolean) => string;
   config: Config;
   linterRef: { current: Linter };
   pluginPaths: string[];
-  cache?: Cache;
+  cache?: CacheProvider;
   cacheLocation?: string;
   ignorePath?: string;
   designIgnore: string;
@@ -20,6 +30,11 @@ export interface Environment {
   refreshIgnore: () => Promise<void>;
   state: { pluginPaths: string[]; ignoreFilePaths: string[] };
   getIg: () => Ignore;
+  envOptions: {
+    cacheLocation?: string;
+    configPath?: string;
+    patterns?: string[];
+  };
 }
 
 export interface PrepareEnvironmentOptions {
@@ -29,6 +44,7 @@ export interface PrepareEnvironmentOptions {
   cache?: boolean;
   cacheLocation?: string;
   ignorePath?: string;
+  patterns?: string[];
 }
 
 export async function prepareEnvironment(
@@ -48,13 +64,19 @@ export async function prepareEnvironment(
   if (config.configPath) {
     config.configPath = realpathIfExists(config.configPath);
   }
-  const linterRef = { current: new Linter(config) };
-  const pluginPaths = await linterRef.current.getPluginPaths();
-
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
-  const cache = cacheLocation ? loadCache(cacheLocation) : undefined;
+  const env = createNodeEnvironment(config, {
+    cacheLocation,
+    configPath: config.configPath,
+    patterns: options.patterns,
+  });
+  const cache = env.cacheProvider;
+  const linterRef = {
+    current: new Linter(config, env),
+  };
+  const pluginPaths = await linterRef.current.getPluginPaths();
 
   let ignorePath: string | undefined;
   if (options.ignorePath) {
@@ -95,5 +117,10 @@ export async function prepareEnvironment(
     refreshIgnore,
     state,
     getIg: () => ig,
+    envOptions: {
+      cacheLocation,
+      configPath: config.configPath,
+      patterns: options.patterns,
+    },
   };
 }

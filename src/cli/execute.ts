@@ -2,7 +2,6 @@ import { performance } from 'node:perf_hooks';
 import chalk from 'chalk';
 import writeFileAtomic from 'write-file-atomic';
 import type { LintResult } from '../core/types.js';
-import type { Cache } from '../core/cache.js';
 import type { Linter } from '../core/linter.js';
 
 export interface ExecuteOptions {
@@ -17,11 +16,14 @@ export interface ExecuteOptions {
 export interface ExecuteServices {
   formatter: (results: LintResult[], useColor?: boolean) => string;
   linterRef: { current: Linter };
-  cache?: Cache;
-  cacheLocation?: string;
   ignorePath?: string;
   state: { pluginPaths: string[]; ignoreFilePaths: string[] };
   useColor: boolean;
+  envOptions?: {
+    cacheLocation?: string;
+    configPath?: string;
+    patterns?: string[];
+  };
 }
 
 export async function executeLint(
@@ -34,12 +36,10 @@ export async function executeLint(
     results,
     ignoreFiles = [],
     warning,
-  } = await services.linterRef.current.lintFiles(
+  } = await services.linterRef.current.lintTargets(
     targets,
     opts.fix,
-    services.cache,
     services.ignorePath ? [services.ignorePath] : [],
-    services.cacheLocation,
   );
   const duration = performance.now() - start;
   if (warning && !opts.quiet) console.warn(warning);

@@ -94,13 +94,13 @@ export async function run(argv = process.argv.slice(2)) {
 
   program.action(async (files: string[], options: CliOptions) => {
     if (options.color === false) useColor = false;
-    const targets = files.length ? files : ['.'];
+    const patterns = files.length ? files : ['.'];
     try {
-      const env = await prepareEnvironment(options);
+      const env = await prepareEnvironment({ ...options, patterns });
       const services = { ...env, useColor };
-      const { exitCode } = await executeLint(targets, options, services);
+      const { exitCode } = await executeLint(patterns, options, services);
       process.exitCode = exitCode;
-      if (options.watch) await watchMode(targets, options, services);
+      if (options.watch) await watchMode(patterns, options, services);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(useColor ? chalk.red(message) : message);

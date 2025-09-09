@@ -5,15 +5,16 @@ import { promises as fs } from 'fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { LintResult } from '../../src/core/types.ts';
+import { createFileDocument } from '../../src/adapters/node/file-document.ts';
 
 void test('CacheManager applies fixes when enabled', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cm-'));
   const file = path.join(dir, 'a.txt');
   await fs.writeFile(file, 'bad');
-  const lintFn = (text: string, filePath: string): Promise<LintResult> => {
+  const lintFn = (text: string, sourceId: string): Promise<LintResult> => {
     if (text === 'bad') {
       return Promise.resolve({
-        filePath,
+        sourceId,
         messages: [
           {
             ruleId: 'test',
@@ -26,10 +27,11 @@ void test('CacheManager applies fixes when enabled', async () => {
         ],
       });
     }
-    return Promise.resolve({ filePath, messages: [] });
+    return Promise.resolve({ sourceId, messages: [] });
   };
   const manager = new CacheManager(undefined, true);
-  await manager.processFile(file, lintFn);
+  const doc = createFileDocument(file);
+  await manager.processDocument(doc, lintFn);
   const updated = await fs.readFile(file, 'utf8');
   assert.equal(updated, 'good');
 });

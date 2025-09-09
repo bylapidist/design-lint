@@ -1,4 +1,4 @@
-import type { DesignTokens } from './types.js';
+import type { DesignTokens, VariableDefinition } from './types.js';
 import picomatch from 'picomatch';
 import leven from 'leven';
 
@@ -27,6 +27,7 @@ const TOKEN_GROUPS = [
   'lineHeights',
   'fontWeights',
   'letterSpacings',
+  'variables',
   'deprecations',
 ];
 
@@ -45,6 +46,21 @@ function normalizeSingle(tokens: DesignTokens, wrapVar: boolean): DesignTokens {
     }
     if (!isRecord(defs)) {
       normalized[group] = defs;
+      continue;
+    }
+    if (group === 'variables') {
+      const map: Record<string, VariableDefinition> = {};
+      for (const [name, value] of Object.entries(defs)) {
+        if (isRecord(value)) {
+          const v = value as unknown as VariableDefinition;
+          map[name] = {
+            id: v.id,
+            modes: v.modes ? { ...v.modes } : undefined,
+            aliasOf: v.aliasOf,
+          };
+        }
+      }
+      normalized[group] = map;
       continue;
     }
     const map: Record<string, unknown> = {};
@@ -90,6 +106,33 @@ export function mergeTokens(
         if (merged[group] === undefined) {
           merged[group] = defs;
         }
+        continue;
+      }
+      if (group === 'variables') {
+        const existing = merged[group];
+        const targetMap = (isRecord(existing) ? existing : {}) as Partial<
+          Record<string, VariableDefinition>
+        >;
+        for (const [name, value] of Object.entries(
+          defs as Record<string, VariableDefinition>,
+        )) {
+          const current = targetMap[name];
+          if (!current) {
+            targetMap[name] = {
+              id: value.id,
+              modes: value.modes ? { ...value.modes } : undefined,
+              aliasOf: value.aliasOf,
+            };
+          } else {
+            if (value.modes) {
+              current.modes = { ...(current.modes ?? {}), ...value.modes };
+            }
+            if (current.aliasOf === undefined && value.aliasOf !== undefined) {
+              current.aliasOf = value.aliasOf;
+            }
+          }
+        }
+        merged[group] = targetMap as Record<string, VariableDefinition>;
         continue;
       }
       const existing = merged[group];

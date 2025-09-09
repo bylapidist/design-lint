@@ -1,5 +1,5 @@
 import type { LintResult } from '../core/types.js';
-import { relFromCwd } from '../utils/paths.js';
+import { relFromCwd } from '../adapters/node/utils/paths.js';
 
 const codes = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,
@@ -13,7 +13,7 @@ export function stylish(results: LintResult[], useColor = true): string {
   let errorCount = 0;
   let warnCount = 0;
   for (const res of results) {
-    const filePath = relFromCwd(res.filePath);
+    const filePath = relFromCwd(res.sourceId);
     if (res.messages.length === 0) {
       const ok = useColor ? codes.green('[OK]') : '[OK]';
       lines.push(`${ok} ${filePath}`);
@@ -30,8 +30,9 @@ export function stylish(results: LintResult[], useColor = true): string {
           : codes.yellow(sevText)
         : sevText;
       const suggestion = msg.suggest ? ` Did you mean \`${msg.suggest}\`?` : '';
+      const category = res.ruleCategories?.[msg.ruleId];
       lines.push(
-        `  ${String(msg.line)}:${String(msg.column)}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}`,
+        `  ${String(msg.line)}:${String(msg.column)}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}${category ? ` (${category})` : ''}`,
       );
     }
   }

@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/adapters/node/file-source.ts';
 
 void test('returns default config when none found', async () => {
   const tmp = makeTmpDir();
@@ -210,7 +210,7 @@ void test("rule configured as 'off' is ignored", async () => {
     }),
   );
   const config = await loadConfig(tmp);
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const res = await linter.lintText('const c = "#fff";', 'file.ts');
   assert.equal(res.messages.length, 0);
 });
@@ -223,7 +223,7 @@ void test('throws on unknown rule name', async () => {
     JSON.stringify({ rules: { 'unknown/rule': 'error' } }),
   );
   const config = await loadConfig(tmp);
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   await assert.rejects(
     () => linter.lintText('const x = 1;', 'file.ts'),
     /Unknown rule\(s\): unknown\/rule/,

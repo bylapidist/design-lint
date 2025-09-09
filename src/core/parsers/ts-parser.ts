@@ -4,12 +4,12 @@ import type { RuleModule, LintMessage } from '../types.js';
 
 export function lintTS(
   text: string,
-  filePath: string,
+  sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
 ): void {
   const source = ts.createSourceFile(
-    filePath,
+    sourceId,
     text,
     ts.ScriptTarget.Latest,
     true,
