@@ -51,12 +51,14 @@ export interface LintMessage {
   column: number;
   fix?: Fix;
   suggest?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LintResult {
   sourceId: string;
   messages: LintMessage[];
   ruleDescriptions?: Record<string, string>;
+  ruleCategories?: Record<string, string>;
 }
 
 export interface RuleContext<TOptions = unknown> {
@@ -71,6 +73,7 @@ export interface RuleModule<TOptions = unknown> {
   name: string;
   meta: {
     description: string;
+    category?: string;
   };
   create(context: RuleContext<TOptions>): RuleListener;
 }

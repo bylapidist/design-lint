@@ -9,7 +9,7 @@ import { isStyleValue } from '../utils/style.js';
 
 export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',
-  meta: { description: 'enforce line-height tokens' },
+  meta: { description: 'enforce line-height tokens', category: 'design-token' },
   create(context) {
     const lineHeights = context.tokens.lineHeights;
     if (

@@ -11,7 +11,13 @@ import type { LintResult } from '../../src/core/types.ts';
 interface SarifLog {
   runs: {
     tool: {
-      driver: { rules: { id: string; shortDescription: { text: string } }[] };
+      driver: {
+        rules: {
+          id: string;
+          shortDescription: { text: string };
+          properties?: { category: string };
+        }[];
+      };
     };
     results: { ruleId: string; ruleIndex: number }[];
   }[];
@@ -54,6 +60,28 @@ void test('stylish formatter outputs suggestions', () => {
   ];
   const out = stylish(results, false);
   assert.ok(out.includes('Did you mean `--foo`?'));
+});
+
+void test('stylish formatter outputs categories and ignores metadata', () => {
+  const results: LintResult[] = [
+    {
+      sourceId: 'file.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'msg',
+          severity: 'error',
+          line: 1,
+          column: 1,
+          metadata: { foo: 'bar' },
+        },
+      ],
+      ruleCategories: { rule: 'design-token' },
+    },
+  ];
+  const out = stylish(results, false);
+  assert.ok(out.includes('design-token'));
+  assert.ok(!out.includes('foo'));
 });
 
 void test('stylish formatter outputs OK for files without messages', () => {
@@ -112,6 +140,29 @@ void test('json formatter outputs json', () => {
   const out = jsonFormatter(results);
   const parsed = JSON.parse(out) as { sourceId: string }[];
   assert.equal(parsed[0]?.sourceId, 'file.ts');
+});
+
+void test('json formatter serializes metadata and categories', () => {
+  const results: LintResult[] = [
+    {
+      sourceId: 'file.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'msg',
+          severity: 'error',
+          line: 1,
+          column: 1,
+          metadata: { foo: 'bar' },
+        },
+      ],
+      ruleCategories: { rule: 'design-token' },
+    },
+  ];
+  const out = jsonFormatter(results);
+  const parsed = JSON.parse(out) as LintResult[];
+  assert.equal(parsed[0]?.messages[0]?.metadata?.foo, 'bar');
+  assert.equal(parsed[0]?.ruleCategories?.rule, 'design-token');
 });
 
 void test('sarif formatter outputs rules and links results', () => {
@@ -186,6 +237,28 @@ void test('sarif formatter updates rule descriptions from later results', () => 
     run.tool.driver.rules[0].shortDescription.text,
     'rule description',
   );
+});
+
+void test('sarif formatter includes rule categories', () => {
+  const results: LintResult[] = [
+    {
+      sourceId: 'file.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'msg',
+          severity: 'error',
+          line: 1,
+          column: 1,
+        },
+      ],
+      ruleCategories: { rule: 'design-token' },
+    },
+  ];
+  const out = sarifFormatter(results);
+  const parsed: unknown = JSON.parse(out);
+  const run = (parsed as SarifLog).runs[0];
+  assert.equal(run.tool.driver.rules[0].properties?.category, 'design-token');
 });
 
 void test('getFormatter returns formatter for valid name', async () => {

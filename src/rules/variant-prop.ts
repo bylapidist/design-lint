@@ -11,6 +11,7 @@ export const variantPropRule: RuleModule<VariantPropOptions> = {
   meta: {
     description:
       'ensure specified components use allowed values for their variant prop',
+    category: 'component',
   },
   create(context) {
     const { components = {}, prop: propName = 'variant' } =

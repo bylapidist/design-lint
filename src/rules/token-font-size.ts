@@ -7,7 +7,7 @@ import {
 
 export const fontSizeRule: RuleModule = {
   name: 'design-token/font-size',
-  meta: { description: 'enforce font-size tokens' },
+  meta: { description: 'enforce font-size tokens', category: 'design-token' },
   create(context) {
     const fontSizes = context.tokens.fontSizes;
     if (

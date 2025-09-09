@@ -8,7 +8,7 @@ import {
 
 export const boxShadowRule: RuleModule = {
   name: 'design-token/box-shadow',
-  meta: { description: 'enforce box-shadow tokens' },
+  meta: { description: 'enforce box-shadow tokens', category: 'design-token' },
   create(context) {
     const shadowTokens = context.tokens.shadows;
     if (

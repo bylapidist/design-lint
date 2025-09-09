@@ -9,7 +9,7 @@ import { isStyleValue } from '../utils/style.js';
 
 export const fontWeightRule: RuleModule = {
   name: 'design-token/font-weight',
-  meta: { description: 'enforce font-weight tokens' },
+  meta: { description: 'enforce font-weight tokens', category: 'design-token' },
   create(context) {
     const fontWeights = context.tokens.fontWeights;
     if (

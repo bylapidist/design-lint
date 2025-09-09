@@ -7,7 +7,11 @@ interface SarifLog {
       driver: {
         name: string;
         informationUri: string;
-        rules: { id: string; shortDescription: { text: string } }[];
+        rules: {
+          id: string;
+          shortDescription: { text: string };
+          properties?: { category: string };
+        }[];
       };
     };
     results: Record<string, unknown>[];
@@ -36,6 +40,7 @@ export function sarifFormatter(
   };
   const ruleMap = new Map<string, number>();
   const descMap = new Map<string, string>();
+  const catMap = new Map<string, string>();
   for (const res of results) {
     if (res.ruleDescriptions) {
       for (const [id, desc] of Object.entries(res.ruleDescriptions)) {
@@ -47,6 +52,17 @@ export function sarifFormatter(
         }
       }
     }
+    if (res.ruleCategories) {
+      for (const [id, cat] of Object.entries(res.ruleCategories)) {
+        catMap.set(id, cat);
+        const existingIndex = ruleMap.get(id);
+        if (existingIndex !== undefined) {
+          sarif.runs[0].tool.driver.rules[existingIndex].properties = {
+            category: cat,
+          };
+        }
+      }
+    }
     for (const msg of res.messages) {
       const existingIndex = ruleMap.get(msg.ruleId);
       let ruleIndex: number;
@@ -55,12 +71,21 @@ export function sarifFormatter(
       } else {
         ruleIndex = sarif.runs[0].tool.driver.rules.length;
         ruleMap.set(msg.ruleId, ruleIndex);
-        sarif.runs[0].tool.driver.rules.push({
+        const rule: {
+          id: string;
+          shortDescription: { text: string };
+          properties?: { category: string };
+        } = {
           id: msg.ruleId,
           shortDescription: {
             text: descMap.get(msg.ruleId) ?? msg.message,
           },
-        });
+        };
+        const cat = catMap.get(msg.ruleId);
+        if (cat) {
+          rule.properties = { category: cat };
+        }
+        sarif.runs[0].tool.driver.rules.push(rule);
       }
       sarif.runs[0].results.push({
         ruleId: msg.ruleId,

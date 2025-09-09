@@ -30,8 +30,9 @@ export function stylish(results: LintResult[], useColor = true): string {
           : codes.yellow(sevText)
         : sevText;
       const suggestion = msg.suggest ? ` Did you mean \`${msg.suggest}\`?` : '';
+      const category = res.ruleCategories?.[msg.ruleId];
       lines.push(
-        `  ${String(msg.line)}:${String(msg.column)}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}`,
+        `  ${String(msg.line)}:${String(msg.column)}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}${category ? ` (${category})` : ''}`,
       );
     }
   }

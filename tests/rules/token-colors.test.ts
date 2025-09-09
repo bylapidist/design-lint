@@ -92,3 +92,18 @@ void test('design-token/colors reports template expression', async () => {
   );
   assert.equal(res.messages.length, 1);
 });
+
+void test('design-token/colors sets category', async () => {
+  const linter = new Linter(
+    {
+      tokens: { colors: { primary: '#ffffff' } },
+      rules: { 'design-token/colors': 'error' },
+    },
+    new FileSource(),
+  );
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "hwb(0, 0%, 0%)" }} />;',
+    'file.tsx',
+  );
+  assert.equal(res.ruleCategories?.['design-token/colors'], 'design-token');
+});

@@ -9,6 +9,7 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
   name: 'design-system/component-prefix',
   meta: {
     description: 'enforce a prefix for design system components',
+    category: 'component',
   },
   create(context) {
     const prefix = context.options?.prefix ?? 'DS';
