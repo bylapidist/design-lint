@@ -17,7 +17,7 @@ export const CacheService = {
     return new CacheManager(cache, fix);
   },
 
-  async save(manager: CacheManager, cacheLocation?: string): Promise<void> {
-    await manager.save(cacheLocation);
+  async save(manager: CacheManager): Promise<void> {
+    await manager.save();
   },
 } as const;

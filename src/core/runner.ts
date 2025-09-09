@@ -38,7 +38,6 @@ export class Runner {
     documents: LintDocument[],
     fix = false,
     cache?: CacheProvider,
-    cacheLocation?: string,
   ): Promise<{
     results: LintResult[];
     ignoreFiles: string[];
@@ -71,7 +70,7 @@ export class Runner {
         this.config.configPath ?? 'designlint.config',
       ),
     );
-    await CacheService.save(cacheManager, cacheLocation);
+    await CacheService.save(cacheManager);
     return { results, ignoreFiles };
   }
 }

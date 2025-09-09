@@ -38,8 +38,14 @@ export class Linter {
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
   private source: DocumentSource;
+  private cache?: CacheProvider;
 
-  constructor(config: Config, source: DocumentSource, loader?: PluginLoader) {
+  constructor(
+    config: Config,
+    source: DocumentSource,
+    loader?: PluginLoader,
+    cache?: CacheProvider,
+  ) {
     const normalized = normalizeTokens(
       config.tokens,
       config.wrapTokensWithVar ?? false,
@@ -49,20 +55,11 @@ export class Linter {
     this.ruleRegistry = new RuleRegistry(this.config, loader);
     this.tokenTracker = new TokenTracker(this.config.tokens);
     this.source = source;
+    this.cache = cache;
   }
 
-  async lintDocument(
-    doc: LintDocument,
-    fix = false,
-    cache?: CacheProvider,
-    cacheLocation?: string,
-  ): Promise<LintResult> {
-    const { results } = await this.lintDocuments(
-      [doc],
-      fix,
-      cache,
-      cacheLocation,
-    );
+  async lintDocument(doc: LintDocument, fix = false): Promise<LintResult> {
+    const { results } = await this.lintDocuments([doc], fix);
     const [res] = results;
     return res;
   }
@@ -70,8 +67,6 @@ export class Linter {
   async lintDocuments(
     documents: LintDocument[],
     fix = false,
-    cache?: CacheProvider,
-    cacheLocation?: string,
   ): Promise<{
     results: LintResult[];
     ignoreFiles: string[];
@@ -83,26 +78,22 @@ export class Linter {
       tokenTracker: this.tokenTracker,
       lintDocument: this.lintText.bind(this),
     });
-    return runner.run(documents, fix, cache, cacheLocation);
+    return runner.run(documents, fix, this.cache);
   }
 
   async lintFile(
     filePath: string,
     fix = false,
-    cache?: CacheProvider,
     _ignorePaths?: string[],
-    cacheLocation?: string,
   ): Promise<LintResult> {
     const [doc] = await this.source.scan([filePath], this.config, _ignorePaths);
-    return this.lintDocument(doc, fix, cache, cacheLocation);
+    return this.lintDocument(doc, fix);
   }
 
   async lintFiles(
     targets: string[],
     fix = false,
-    cache?: CacheProvider,
     additionalIgnorePaths: string[] = [],
-    cacheLocation?: string,
   ): Promise<{
     results: LintResult[];
     ignoreFiles: string[];
@@ -113,7 +104,7 @@ export class Linter {
       this.config,
       additionalIgnorePaths,
     );
-    return this.lintDocuments(documents, fix, cache, cacheLocation);
+    return this.lintDocuments(documents, fix);
   }
 
   getTokenCompletions(): Record<string, string[]> {

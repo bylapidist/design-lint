@@ -25,12 +25,12 @@ void test('CacheService.save delegates to CacheManager.save', async () => {
     constructor() {
       super(undefined, false);
     }
-    override save(loc?: string): Promise<void> {
-      if (loc === 'cache') this.saved = true;
+    override save(): Promise<void> {
+      this.saved = true;
       return Promise.resolve();
     }
   }
   const manager = new TestManager();
-  await CacheService.save(manager, 'cache');
+  await CacheService.save(manager);
   assert.ok(manager.saved);
 });

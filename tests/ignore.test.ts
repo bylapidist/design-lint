@@ -211,9 +211,7 @@ void test('additional ignore file is respected', async () => {
       },
       new FileSource(),
     );
-    const { results } = await linter.lintFiles(['.'], false, undefined, [
-      extra,
-    ]);
+    const { results } = await linter.lintFiles(['.'], false, [extra]);
     const files = results.map((r) => path.relative(dir, r.filePath)).sort();
     assert.deepEqual(files, ['src/keep.ts']);
   } finally {

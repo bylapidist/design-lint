@@ -51,17 +51,21 @@ export async function prepareEnvironment(
   if (config.configPath) {
     config.configPath = realpathIfExists(config.configPath);
   }
-  const linterRef = {
-    current: new Linter(config, new FileSource(), new NodePluginLoader()),
-  };
-  const pluginPaths = await linterRef.current.getPluginPaths();
-
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
   const cache = cacheLocation
     ? new NodeCacheProvider(cacheLocation)
     : undefined;
+  const linterRef = {
+    current: new Linter(
+      config,
+      new FileSource(),
+      new NodePluginLoader(),
+      cache,
+    ),
+  };
+  const pluginPaths = await linterRef.current.getPluginPaths();
 
   let ignorePath: string | undefined;
   if (options.ignorePath) {
