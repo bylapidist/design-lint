@@ -1,11 +1,11 @@
-import type { TokenProvider } from '../../core/environment.js';
+import type { VariableProvider } from '../../core/environment.js';
 import type { DesignTokens } from '../../core/types.js';
 import {
   normalizeTokens,
   type NormalizedTokens,
 } from '../../core/token-utils.js';
 
-export class NodeTokenProvider implements TokenProvider {
+export class NodeTokenProvider implements VariableProvider {
   private tokens?: DesignTokens | Record<string, DesignTokens>;
   private wrapVar: boolean;
   private normalized?: NormalizedTokens;
