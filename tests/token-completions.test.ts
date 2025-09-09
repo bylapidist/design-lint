@@ -7,6 +7,10 @@ void test('getTokenCompletions returns token names', () => {
   const linter = new Linter(
     {
       tokens: {
+        variables: {
+          primary: { id: '--color-primary', value: '#fff' },
+          accent: { id: '--color-accent', value: '#000' },
+        },
         spacing: ['--space-scale-100'],
         colors: {
           primary: 'var(--color-primary)',
@@ -19,6 +23,7 @@ void test('getTokenCompletions returns token names', () => {
     new FileSource(),
   );
   const comps = linter.getTokenCompletions();
+  assert.deepEqual(comps.variables, ['--color-primary', '--color-accent']);
   assert.deepEqual(comps.spacing, ['--space-scale-100']);
   assert.deepEqual(comps.colors, [
     '--color-primary',

@@ -95,6 +95,12 @@ function collectTokenValues(tokens?: DesignTokens): Set<string> {
   if (!tokens) return values;
   for (const [group, defs] of Object.entries(tokens)) {
     if (group === 'deprecations') continue;
+    if (group === 'variables' && isRecord(defs)) {
+      for (const v of Object.values(defs)) {
+        if (isRecord(v) && typeof v.id === 'string') values.add(v.id);
+      }
+      continue;
+    }
     if (Array.isArray(defs)) {
       for (const t of defs) {
         if (typeof t === 'string' && !t.includes('*')) values.add(t);

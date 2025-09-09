@@ -35,6 +35,8 @@ export interface DesignTokens {
   fontWeights?: Record<string, number | string> | (string | RegExp)[];
   /** Letter spacing tokens. */
   letterSpacings?: Record<string, number | string> | (string | RegExp)[];
+  /** Variable definitions. */
+  variables?: Record<string, { id: string; value: string | number }>;
   /** Deprecated tokens and their replacements. */
   deprecations?: Record<string, { replacement?: string }>;
   /** Allow additional custom token groups. */

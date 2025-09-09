@@ -27,6 +27,7 @@ const TOKEN_GROUPS = [
   'lineHeights',
   'fontWeights',
   'letterSpacings',
+  'variables',
   'deprecations',
 ];
 
