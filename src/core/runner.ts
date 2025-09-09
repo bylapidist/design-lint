@@ -1,7 +1,7 @@
 import pLimit from 'p-limit';
 import os from 'node:os';
 import type { Config } from './linter.js';
-import type { Cache } from './cache.js';
+import type { CacheProvider } from './cache-provider.js';
 import type { LintResult } from './types.js';
 import { CacheService } from './cache-service.js';
 import { TokenTracker } from './token-tracker.js';
@@ -37,7 +37,7 @@ export class Runner {
   async run(
     documents: LintDocument[],
     fix = false,
-    cache?: Cache,
+    cache?: CacheProvider,
     cacheLocation?: string,
   ): Promise<{
     results: LintResult[];
@@ -52,7 +52,7 @@ export class Runner {
         warning: 'No files matched the provided patterns.',
       };
     }
-    CacheService.prune(
+    await CacheService.prune(
       cache,
       documents.map((d) => d.id),
     );
@@ -71,7 +71,7 @@ export class Runner {
         this.config.configPath ?? 'designlint.config',
       ),
     );
-    CacheService.save(cacheManager, cacheLocation);
+    await CacheService.save(cacheManager, cacheLocation);
     return { results, ignoreFiles };
   }
 }

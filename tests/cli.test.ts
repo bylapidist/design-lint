@@ -1063,7 +1063,7 @@ void test('CLI cache updates after --fix run', async () => {
     rules: { 'design-system/deprecation': 'error' },
   };
   const linter = new Linter(config, new FileSource());
-  const cache = new Map<
+  const store = new Map<
     string,
     {
       mtime: number;
@@ -1071,6 +1071,32 @@ void test('CLI cache updates after --fix run', async () => {
       result: LintResult;
     }
   >();
+  const cache = {
+    get(key: string) {
+      return Promise.resolve(store.get(key));
+    },
+    set(
+      key: string,
+      entry: {
+        mtime: number;
+        size: number;
+        result: LintResult;
+      },
+    ) {
+      store.set(key, entry);
+      return Promise.resolve();
+    },
+    remove(key: string) {
+      store.delete(key);
+      return Promise.resolve();
+    },
+    keys() {
+      return Promise.resolve([...store.keys()]);
+    },
+    save() {
+      return Promise.resolve();
+    },
+  };
   const { results: res1 } = await linter.lintFiles([file], true, cache);
   const { results: res2 } = await linter.lintFiles([file], false, cache);
   assert.equal(res1[0].messages.length, 0);

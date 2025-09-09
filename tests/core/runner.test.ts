@@ -14,21 +14,23 @@ interface CacheEntry {
 class MemoryCache {
   store = new Map<string, CacheEntry>();
   saved = false;
-  keys() {
-    return [...this.store.keys()];
+  keys(): Promise<string[]> {
+    return Promise.resolve([...this.store.keys()]);
   }
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-  getKey<T>(k: string) {
-    return this.store.get(k) as T | undefined;
+  get(k: string): Promise<CacheEntry | undefined> {
+    return Promise.resolve(this.store.get(k));
   }
-  setKey(k: string, v: CacheEntry) {
+  set(k: string, v: CacheEntry): Promise<void> {
     this.store.set(k, v);
+    return Promise.resolve();
   }
-  removeKey(k: string) {
+  remove(k: string): Promise<void> {
     this.store.delete(k);
+    return Promise.resolve();
   }
-  save() {
+  save(): Promise<void> {
     this.saved = true;
+    return Promise.resolve();
   }
 }
 
@@ -52,7 +54,7 @@ void test('Runner prunes cache and saves results', async () => {
   const file = path.join(dir, 'test.css');
   await fs.writeFile(file, 'a{color:red}');
   const cache = new MemoryCache();
-  cache.setKey('ghost.css', { mtime: 0, size: 0, result: {} });
+  await cache.set('ghost.css', { mtime: 0, size: 0, result: {} });
   const runner = new Runner({
     config: { tokens: {} },
     tokenTracker: new TokenTracker({}),
@@ -60,7 +62,7 @@ void test('Runner prunes cache and saves results', async () => {
       Promise.resolve({ filePath, messages: [] }),
   });
   await runner.run([createFileDocument(file)], false, cache, 'cache');
-  assert.deepEqual(cache.keys(), [file]);
+  assert.deepEqual(await cache.keys(), [file]);
   assert.ok(cache.saved);
   await fs.rm(dir, { recursive: true, force: true });
 });

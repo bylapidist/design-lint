@@ -1,11 +1,11 @@
 import { stat, writeFile } from 'node:fs/promises';
-import type { Cache, CacheEntry } from './cache.js';
+import type { CacheProvider } from './cache-provider.js';
 import type { LintResult, LintMessage, Fix } from './types.js';
 import type { LintDocument } from './document-source.js';
 
 export class CacheManager {
   constructor(
-    private cache: Cache | undefined,
+    private cache: CacheProvider | undefined,
     private fix: boolean,
   ) {}
 
@@ -25,7 +25,7 @@ export class CacheManager {
       } catch {
         statResult = undefined;
       }
-      const cached = this.cache?.getKey<CacheEntry>(doc.id);
+      const cached = this.cache ? await this.cache.get(doc.id) : undefined;
       if (
         cached &&
         statResult &&
@@ -49,10 +49,10 @@ export class CacheManager {
           size = newStat.size;
         }
       }
-      this.cache?.setKey(doc.id, { mtime, size, result });
+      await this.cache?.set(doc.id, { mtime, size, result });
       return result;
     } catch (e: unknown) {
-      this.cache?.removeKey(doc.id);
+      await this.cache?.remove(doc.id);
       const message = e instanceof Error ? e.message : 'Failed to read file';
       const result: LintResult = {
         filePath: doc.id,
@@ -70,9 +70,9 @@ export class CacheManager {
     }
   }
 
-  save(cacheLocation?: string): void {
+  async save(cacheLocation?: string): Promise<void> {
     if (cacheLocation && this.cache) {
-      this.cache.save(true);
+      await this.cache.save();
     }
   }
 }

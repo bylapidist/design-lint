@@ -6,7 +6,7 @@ import type {
 } from './types.js';
 import { normalizeTokens, mergeTokens, extractVarName } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
-import type { Cache } from './cache.js';
+import type { CacheProvider } from './cache-provider.js';
 import { RuleRegistry } from './rule-registry.js';
 import type { PluginLoader } from './plugin-loader.js';
 import { TokenTracker } from './token-tracker.js';
@@ -60,7 +60,7 @@ export class Linter {
   async lintDocument(
     doc: LintDocument,
     fix = false,
-    cache?: Cache,
+    cache?: CacheProvider,
     cacheLocation?: string,
   ): Promise<LintResult> {
     const { results } = await this.lintDocuments(
@@ -76,7 +76,7 @@ export class Linter {
   async lintDocuments(
     documents: LintDocument[],
     fix = false,
-    cache?: Cache,
+    cache?: CacheProvider,
     cacheLocation?: string,
   ): Promise<{
     results: LintResult[];
@@ -95,7 +95,7 @@ export class Linter {
   async lintFile(
     filePath: string,
     fix = false,
-    cache?: Cache,
+    cache?: CacheProvider,
     _ignorePaths?: string[],
     cacheLocation?: string,
   ): Promise<LintResult> {
@@ -106,7 +106,7 @@ export class Linter {
   async lintFiles(
     targets: string[],
     fix = false,
-    cache?: Cache,
+    cache?: CacheProvider,
     additionalIgnorePaths: string[] = [],
     cacheLocation?: string,
   ): Promise<{
