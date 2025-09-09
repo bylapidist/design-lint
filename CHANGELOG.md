@@ -1,5 +1,36 @@
 # @lapidist/design-lint
 
+## 5.0.0
+
+### Major Changes
+
+- 34ab02c: refactor linter to accept environment object and delegate token normalization to token provider
+- 34ab02c: remove NodeEnvironment backward compatibility alias
+- 34ab02c: rename filePath to sourceId and remove deprecated alias
+
+### Minor Changes
+
+- 34ab02c: add environment and token provider interfaces
+- 34ab02c: add plugin loader abstraction and Node implementation
+- 34ab02c: add rule categories and message metadata support
+- 34ab02c: add core entry point and move node helpers under new node namespace
+- 34ab02c: expose `createLinter` for programmatic use and rename CLI environment targets to patterns
+- 34ab02c: add lintDocument and lintDocuments APIs and update cache processing
+- 34ab02c: refactor document source to return LintDocument instead of file paths
+- 34ab02c: add variables token group to track custom property values
+
+### Patch Changes
+
+- 34ab02c: add node token provider and update environment
+- 34ab02c: refactor caching to use pluggable CacheProvider interface
+- 34ab02c: initialize linter with file source, plugin loader, and optional cache provider
+- 34ab02c: move node-specific utilities to adapter directory
+- 34ab02c: refactor node adapters into adapters/node and add NodeEnvironment factory
+- 34ab02c: use document types for parser registry
+- 34ab02c: replace lintFiles with lintTargets
+- 34ab02c: refactor CLI environment setup to use createNodeEnvironment
+- 34ab02c: support variable modes and aliases in design tokens
+
 ## 4.10.0
 
 ### Minor Changes
