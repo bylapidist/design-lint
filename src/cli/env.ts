@@ -57,13 +57,13 @@ export async function prepareEnvironment(
   const cache = cacheLocation
     ? new NodeCacheProvider(cacheLocation)
     : undefined;
+  const linterEnv = {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    cacheProvider: cache,
+  };
   const linterRef = {
-    current: new Linter(
-      config,
-      new FileSource(),
-      new NodePluginLoader(),
-      cache,
-    ),
+    current: new Linter(config, linterEnv),
   };
   const pluginPaths = await linterRef.current.getPluginPaths();
 

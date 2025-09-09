@@ -4,14 +4,16 @@ import type {
   LintMessage,
   RuleContext,
 } from './types.js';
-import { normalizeTokens, mergeTokens, extractVarName } from './token-utils.js';
+import { mergeTokens, extractVarName } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
-import type { CacheProvider } from './cache-provider.js';
 import { RuleRegistry } from './rule-registry.js';
-import type { PluginLoader } from './plugin-loader.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
-import type { DocumentSource, LintDocument } from './environment.js';
+import type {
+  Environment,
+  LintDocument,
+  TokenProvider,
+} from './environment.js';
 import { parserRegistry } from './parser-registry.js';
 
 export interface Config {
@@ -37,25 +39,29 @@ export class Linter {
   private tokensByTheme: Record<string, DesignTokens> = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
-  private source: DocumentSource;
-  private cache?: CacheProvider;
+  private source: Environment['documentSource'];
+  private cache?: Environment['cacheProvider'];
+  private tokensReady: Promise<void>;
 
-  constructor(
-    config: Config,
-    source: DocumentSource,
-    loader?: PluginLoader,
-    cache?: CacheProvider,
-  ) {
-    const normalized = normalizeTokens(
-      config.tokens,
-      config.wrapTokensWithVar ?? false,
-    );
-    this.tokensByTheme = normalized.themes;
-    this.config = { ...config, tokens: normalized.merged };
-    this.ruleRegistry = new RuleRegistry(this.config, loader);
-    this.tokenTracker = new TokenTracker(this.config.tokens);
-    this.source = source;
-    this.cache = cache;
+  constructor(config: Config, env: Environment) {
+    const provider: TokenProvider = env.tokenProvider ?? {
+        load: () =>
+          Promise.resolve({
+            themes: (config.tokens
+              ? { default: config.tokens }
+              : {}) as Record<string, DesignTokens>,
+            merged: (config.tokens ?? {}) as DesignTokens,
+          }),
+      };
+    this.config = { ...config, tokens: {} };
+    this.ruleRegistry = new RuleRegistry(this.config, env.pluginLoader);
+    this.tokenTracker = new TokenTracker(provider);
+    this.source = env.documentSource;
+    this.cache = env.cacheProvider;
+    this.tokensReady = provider.load().then((t) => {
+      this.tokensByTheme = t.themes;
+      this.config.tokens = t.merged;
+    });
   }
 
   async lintDocument(doc: LintDocument, fix = false): Promise<LintResult> {
@@ -72,6 +78,7 @@ export class Linter {
     ignoreFiles: string[];
     warning?: string;
   }> {
+    await this.tokensReady;
     await this.ruleRegistry.load();
     const runner = new Runner({
       config: this.config,
@@ -144,11 +151,12 @@ export class Linter {
     docType?: string,
     metadata?: Record<string, unknown>,
   ): Promise<LintResult> {
+    await this.tokensReady;
     await this.ruleRegistry.load();
     const enabled = this.ruleRegistry.getEnabledRules();
-    this.tokenTracker.configure(enabled);
+    await this.tokenTracker.configure(enabled);
     if (this.tokenTracker.hasUnusedTokenRules()) {
-      this.tokenTracker.trackUsage(text);
+      await this.tokenTracker.trackUsage(text);
     }
     const messages: LintMessage[] = [];
     const ruleDescriptions: Record<string, string> = {};

@@ -1,5 +1,7 @@
 import type { Config } from './linter.js';
-import type { DesignTokens } from './types.js';
+import type { PluginLoader } from './plugin-loader.js';
+import type { CacheProvider } from './cache-provider.js';
+import type { NormalizedTokens } from './token-utils.js';
 
 export interface LintDocument {
   id: string;
@@ -17,18 +19,12 @@ export interface DocumentSource {
 }
 
 export interface TokenProvider {
-  load(): Promise<DesignTokens>;
-}
-
-export interface SourceAdapter {
-  scan(
-    targets: string[],
-    config: Config,
-    additionalIgnorePaths?: string[],
-  ): Promise<LintDocument[]>;
+  load(): Promise<NormalizedTokens>;
 }
 
 export interface Environment {
-  source: SourceAdapter;
+  documentSource: DocumentSource;
+  pluginLoader?: PluginLoader;
+  cacheProvider?: CacheProvider;
   tokenProvider?: TokenProvider;
 }

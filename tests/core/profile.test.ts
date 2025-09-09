@@ -6,6 +6,7 @@ import { makeTmpDir } from '../../src/utils/tmp.ts';
 import { Linter } from '../../src/core/linter.ts';
 import { FileSource } from '../../src/node/file-source.ts';
 import type { Config } from '../../src/core/linter.ts';
+import type { Environment } from '../../src/core/environment.ts';
 
 // Ensure FileSource.scan logs when profiling is enabled
 // This also covers the catch branch for missing files by passing a non-existent target
@@ -15,7 +16,13 @@ import type { Config } from '../../src/core/linter.ts';
 void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
-  const linter = new Linter({ tokens: {}, rules: {} }, new FileSource());
+  const env: Environment = {
+    documentSource: new FileSource(),
+    tokenProvider: {
+      load: () => Promise.resolve({ themes: { default: {} }, merged: {} }),
+    },
+  };
+  const linter = new Linter({ tokens: {}, rules: {} }, env);
   const cwd = process.cwd();
   process.chdir(dir);
   process.env.DESIGNLINT_PROFILE = '1';
@@ -42,7 +49,17 @@ void test('FileSource.scan collects files from directory targets', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const docs = await new FileSource().scan(['.'], config);
+    const env: Environment = {
+      documentSource: new FileSource(),
+      tokenProvider: {
+        load: () =>
+          Promise.resolve({
+            themes: { default: config.tokens ?? {} },
+            merged: config.tokens ?? {},
+          }),
+      },
+    };
+    const docs = await env.documentSource.scan(['.'], config);
     const rels = docs.map((d) => path.relative(dir, d.id));
     assert.deepEqual(rels, ['a.ts']);
   } finally {

@@ -179,12 +179,11 @@ export async function startWatch(ctx: WatchOptions) {
         : createRequire(import.meta.url);
       for (const p of pluginPaths) Reflect.deleteProperty(req.cache, p);
       config = await loadConfig(process.cwd(), options.config);
-      linterRef.current = new Linter(
-        config,
-        new FileSource(),
-        new NodePluginLoader(),
-        cache,
-      );
+      linterRef.current = new Linter(config, {
+        documentSource: new FileSource(),
+        pluginLoader: new NodePluginLoader(),
+        cacheProvider: cache,
+      });
       await refreshIgnore();
       if (cache) {
         const keys = await cache.keys();
