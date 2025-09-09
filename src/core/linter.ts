@@ -10,8 +10,9 @@ import type { Cache } from './cache.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
-import type { DocumentSource } from './document-source.js';
+import type { DocumentSource, LintDocument } from './document-source.js';
 import { FileSource } from './file-source.js';
+import { createFileDocument } from '../node/file-document.js';
 import { parserRegistry } from './parser-registry.js';
 import path from 'node:path';
 
@@ -52,22 +53,50 @@ export class Linter {
     this.source = source;
   }
 
-  async lintFile(
-    filePath: string,
+  async lintDocument(
+    doc: LintDocument,
     fix = false,
     cache?: Cache,
-    ignorePaths?: string[],
     cacheLocation?: string,
   ): Promise<LintResult> {
-    const { results } = await this.lintFiles(
-      [filePath],
+    const { results } = await this.lintDocuments(
+      [doc],
       fix,
       cache,
-      ignorePaths,
       cacheLocation,
     );
     const [res] = results;
     return res;
+  }
+
+  async lintDocuments(
+    documents: LintDocument[],
+    fix = false,
+    cache?: Cache,
+    cacheLocation?: string,
+  ): Promise<{
+    results: LintResult[];
+    ignoreFiles: string[];
+    warning?: string;
+  }> {
+    await this.ruleRegistry.load();
+    const runner = new Runner({
+      config: this.config,
+      tokenTracker: this.tokenTracker,
+      lintDocument: this.lintText.bind(this),
+    });
+    return runner.run(documents, fix, cache, cacheLocation);
+  }
+
+  async lintFile(
+    filePath: string,
+    fix = false,
+    cache?: Cache,
+    _ignorePaths?: string[],
+    cacheLocation?: string,
+  ): Promise<LintResult> {
+    const doc = createFileDocument(filePath);
+    return this.lintDocument(doc, fix, cache, cacheLocation);
   }
 
   async lintFiles(
@@ -81,20 +110,12 @@ export class Linter {
     ignoreFiles: string[];
     warning?: string;
   }> {
-    await this.ruleRegistry.load();
-    const runner = new Runner({
-      config: this.config,
-      tokenTracker: this.tokenTracker,
-      lintText: this.lintText.bind(this),
-      source: this.source,
-    });
-    return runner.run(
+    const documents = await this.source.scan(
       targets,
-      fix,
-      cache,
+      this.config,
       additionalIgnorePaths,
-      cacheLocation,
     );
+    return this.lintDocuments(documents, fix, cache, cacheLocation);
   }
 
   getTokenCompletions(): Record<string, string[]> {

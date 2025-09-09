@@ -4,23 +4,26 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { Linter } from '../src/core/linter.ts';
 import { FileSource } from '../src/core/file-source.ts';
+import { createFileDocument } from '../src/node/file-document.ts';
 import { loadConfig } from '../src/config/loader.ts';
 
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
-void test('lintFile delegates to lintFiles', async () => {
+void test('lintDocument matches lintFile wrapper', async () => {
   const config = await loadConfig(fixtureDir);
   const linter = new Linter(config, new FileSource());
   const file = path.join(fixtureDir, 'src', 'App.svelte');
-  const res1 = await linter.lintFile(file);
-  const { results: res2 } = await linter.lintFiles([file]);
-  assert.deepEqual(res1, res2[0]);
+  const doc = createFileDocument(file);
+  const res1 = await linter.lintDocument(doc);
+  const res2 = await linter.lintFile(file);
+  assert.deepEqual(res1, res2);
 });
 
-void test('lintFile reports unreadable file', async () => {
+void test('lintDocument reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
   const linter = new Linter(config, new FileSource());
   const file = path.join(fixtureDir, 'src', 'App.svelte');
+  const doc = createFileDocument(file);
   const original = fs.readFile;
   const stub = mock.method(
     fs,
@@ -34,7 +37,7 @@ void test('lintFile reports unreadable file', async () => {
     },
   );
   try {
-    const res = await linter.lintFile(file);
+    const res = await linter.lintDocument(doc);
     assert.equal(res.messages.length, 1);
     const msg = res.messages[0];
     assert.equal(msg.ruleId, 'parse-error');

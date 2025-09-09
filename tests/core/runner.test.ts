@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Runner } from '../../src/index.ts';
 import { TokenTracker } from '../../src/core/token-tracker.ts';
-import { FileSource } from '../../src/index.ts';
+import { createFileDocument } from '../../src/node/file-document.ts';
 
 interface CacheEntry {
   mtime: number;
@@ -39,10 +39,10 @@ void test('Runner handles non-positive concurrency values', async () => {
   const runner = new Runner({
     config: { concurrency: 0, tokens: {} },
     tokenTracker: new TokenTracker({}),
-    lintText: (text, filePath) => Promise.resolve({ filePath, messages: [] }),
-    source: new FileSource(),
+    lintDocument: (text, filePath) =>
+      Promise.resolve({ filePath, messages: [] }),
   });
-  const res = await runner.run([file]);
+  const res = await runner.run([createFileDocument(file)]);
   assert.equal(res.results[0]?.filePath, file);
   await fs.rm(dir, { recursive: true, force: true });
 });
@@ -56,10 +56,10 @@ void test('Runner prunes cache and saves results', async () => {
   const runner = new Runner({
     config: { tokens: {} },
     tokenTracker: new TokenTracker({}),
-    lintText: (text, filePath) => Promise.resolve({ filePath, messages: [] }),
-    source: new FileSource(),
+    lintDocument: (text, filePath) =>
+      Promise.resolve({ filePath, messages: [] }),
   });
-  await runner.run([file], false, cache, [], 'cache');
+  await runner.run([createFileDocument(file)], false, cache, 'cache');
   assert.deepEqual(cache.keys(), [file]);
   assert.ok(cache.saved);
   await fs.rm(dir, { recursive: true, force: true });

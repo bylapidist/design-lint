@@ -3,54 +3,45 @@ import os from 'node:os';
 import type { Config } from './linter.js';
 import type { Cache } from './cache.js';
 import type { LintResult } from './types.js';
-import type { DocumentSource } from './document-source.js';
 import { CacheService } from './cache-service.js';
 import { TokenTracker } from './token-tracker.js';
+import type { LintDocument } from './document-source.js';
 
 export interface RunnerOptions {
   config: Config;
   tokenTracker: TokenTracker;
-  lintText: (
+  lintDocument: (
     text: string,
     filePath: string,
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
-  source: DocumentSource;
 }
 
 export class Runner {
   private config: Config;
   private tokenTracker: TokenTracker;
-  private lintText: (
+  private lintDocumentFn: (
     text: string,
     filePath: string,
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
-  private source: DocumentSource;
 
   constructor(options: RunnerOptions) {
     this.config = options.config;
     this.tokenTracker = options.tokenTracker;
-    this.lintText = options.lintText;
-    this.source = options.source;
+    this.lintDocumentFn = options.lintDocument;
   }
 
   async run(
-    targets: string[],
+    documents: LintDocument[],
     fix = false,
     cache?: Cache,
-    additionalIgnorePaths: string[] = [],
     cacheLocation?: string,
   ): Promise<{
     results: LintResult[];
     ignoreFiles: string[];
     warning?: string;
   }> {
-    const documents = await this.source.scan(
-      targets,
-      this.config,
-      additionalIgnorePaths,
-    );
     const ignoreFiles: string[] = [];
     if (documents.length === 0) {
       return {
@@ -70,7 +61,7 @@ export class Runner {
     const limit = pLimit(concurrency);
     const cacheManager = CacheService.createManager(cache, fix);
     const tasks = documents.map((doc) =>
-      limit(() => cacheManager.processFile(doc, this.lintText)),
+      limit(() => cacheManager.processDocument(doc, this.lintDocumentFn)),
     );
     const results = await Promise.all(tasks);
     results.push(
