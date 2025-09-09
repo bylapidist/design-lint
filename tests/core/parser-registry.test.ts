@@ -46,6 +46,7 @@ for (const c of cases) {
     assert.ok(parser, 'parser exists');
     const messages: LintMessage[] = [];
     const ctx: RuleContext = {
+      sourceId: c.filePath,
       filePath: c.filePath,
       tokens: {},
       options: undefined,

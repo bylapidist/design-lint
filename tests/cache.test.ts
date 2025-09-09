@@ -11,7 +11,11 @@ void test('NodeCacheProvider loads and saves entries via flat-cache', async () =
   const file = path.join(dir, 'cache.json');
 
   let cache = new NodeCacheProvider(file);
-  const result: LintResult = { filePath: 'foo', messages: [] };
+  const result: LintResult = {
+    sourceId: 'foo',
+    filePath: 'foo',
+    messages: [],
+  };
   const entry = { mtime: 1, result };
   await cache.set('foo', entry);
   await cache.save();

@@ -11,10 +11,11 @@ void test('CacheManager applies fixes when enabled', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cm-'));
   const file = path.join(dir, 'a.txt');
   await fs.writeFile(file, 'bad');
-  const lintFn = (text: string, filePath: string): Promise<LintResult> => {
+  const lintFn = (text: string, sourceId: string): Promise<LintResult> => {
     if (text === 'bad') {
       return Promise.resolve({
-        filePath,
+        sourceId,
+        filePath: sourceId,
         messages: [
           {
             ruleId: 'test',
@@ -27,7 +28,7 @@ void test('CacheManager applies fixes when enabled', async () => {
         ],
       });
     }
-    return Promise.resolve({ filePath, messages: [] });
+    return Promise.resolve({ sourceId, filePath: sourceId, messages: [] });
   };
   const manager = new CacheManager(undefined, true);
   const doc = createFileDocument(file);

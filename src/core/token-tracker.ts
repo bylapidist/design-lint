@@ -87,6 +87,7 @@ export class TokenTracker {
       );
       if (unused.length) {
         results.push({
+          sourceId: configPath,
           filePath: configPath,
           messages: unused.map((t) => ({
             ruleId,

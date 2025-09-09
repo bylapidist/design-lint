@@ -20,6 +20,7 @@ interface SarifLog {
 void test('stylish formatter outputs text', () => {
   const results: LintResult[] = [
     {
+      sourceId: 'file.ts',
       filePath: 'file.ts',
       messages: [
         {
@@ -39,6 +40,7 @@ void test('stylish formatter outputs text', () => {
 void test('stylish formatter outputs suggestions', () => {
   const results: LintResult[] = [
     {
+      sourceId: 'file.ts',
       filePath: 'file.ts',
       messages: [
         {
@@ -58,8 +60,8 @@ void test('stylish formatter outputs suggestions', () => {
 
 void test('stylish formatter outputs OK for files without messages', () => {
   const results: LintResult[] = [
-    { filePath: 'a.ts', messages: [] },
-    { filePath: 'b.ts', messages: [] },
+    { sourceId: 'a.ts', filePath: 'a.ts', messages: [] },
+    { sourceId: 'b.ts', filePath: 'b.ts', messages: [] },
   ];
   const out = stylish(results, false);
   assert.equal(out, '[OK] a.ts\n[OK] b.ts');
@@ -67,7 +69,9 @@ void test('stylish formatter outputs OK for files without messages', () => {
 
 void test('stylish formatter outputs relative paths', () => {
   const abs = join(process.cwd(), 'c.ts');
-  const results: LintResult[] = [{ filePath: abs, messages: [] }];
+  const results: LintResult[] = [
+    { sourceId: abs, filePath: abs, messages: [] },
+  ];
   const out = stylish(results, false);
   assert.equal(out, '[OK] c.ts');
 });
@@ -75,6 +79,7 @@ void test('stylish formatter outputs relative paths', () => {
 void test('stylish formatter does not insert blank line before summary', () => {
   const results: LintResult[] = [
     {
+      sourceId: 'a.ts',
       filePath: 'a.ts',
       messages: [
         {
@@ -97,6 +102,7 @@ void test('stylish formatter does not insert blank line before summary', () => {
 void test('json formatter outputs json', () => {
   const results: LintResult[] = [
     {
+      sourceId: 'file.ts',
       filePath: 'file.ts',
       messages: [
         {
@@ -110,13 +116,15 @@ void test('json formatter outputs json', () => {
     },
   ];
   const out = jsonFormatter(results);
-  const parsed = JSON.parse(out) as { filePath: string }[];
+  const parsed = JSON.parse(out) as { sourceId: string; filePath?: string }[];
+  assert.equal(parsed[0]?.sourceId, 'file.ts');
   assert.equal(parsed[0]?.filePath, 'file.ts');
 });
 
 void test('sarif formatter outputs rules and links results', () => {
   const results: LintResult[] = [
     {
+      sourceId: 'file.ts',
       filePath: 'file.ts',
       messages: [
         {
@@ -153,6 +161,7 @@ void test('sarif formatter outputs rules and links results', () => {
 void test('sarif formatter updates rule descriptions from later results', () => {
   const results: LintResult[] = [
     {
+      sourceId: 'a.ts',
       filePath: 'a.ts',
       messages: [
         {
@@ -165,6 +174,7 @@ void test('sarif formatter updates rule descriptions from later results', () => 
       ],
     },
     {
+      sourceId: 'b.ts',
       filePath: 'b.ts',
       messages: [
         {
@@ -199,7 +209,7 @@ void test('getFormatter resolves formatter relative to cwd', async () => {
   process.chdir(fixtureDir);
   try {
     const formatter = await getFormatter('./custom-formatter.ts');
-    const out = formatter([{ filePath: 'a', messages: [] }]);
+    const out = formatter([{ sourceId: 'a', filePath: 'a', messages: [] }]);
     assert.equal(out, 'custom:1');
   } finally {
     process.chdir(prev);

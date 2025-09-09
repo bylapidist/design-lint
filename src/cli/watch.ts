@@ -212,8 +212,8 @@ export async function startWatch(ctx: WatchOptions) {
     }
   };
 
-  const handle = async (filePath: string) => {
-    const resolved = realpathIfExists(path.resolve(filePath));
+  const handle = async (sourceId: string) => {
+    const resolved = realpathIfExists(path.resolve(sourceId));
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;
     if (
@@ -229,8 +229,8 @@ export async function startWatch(ctx: WatchOptions) {
     }
   };
 
-  const handleUnlink = async (filePath: string) => {
-    const resolved = realpathIfExists(path.resolve(filePath));
+  const handleUnlink = async (sourceId: string) => {
+    const resolved = realpathIfExists(path.resolve(sourceId));
     await cache?.remove(resolved);
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;

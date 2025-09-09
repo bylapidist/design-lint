@@ -5,7 +5,7 @@ import type { parse as svelteParse } from 'svelte/compiler';
 
 export async function lintSvelte(
   text: string,
-  filePath: string,
+  sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
 ): Promise<void> {
@@ -108,7 +108,7 @@ export async function lintSvelte(
   for (const scriptContent of scriptBlocks) {
     const combined = `${scriptContent}\nfunction __render(){ return (${templateTsx}); }`;
     const source = ts.createSourceFile(
-      filePath,
+      sourceId,
       combined,
       ts.ScriptTarget.Latest,
       true,

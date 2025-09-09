@@ -73,7 +73,8 @@ for (const { name, files } of fixtures) {
     );
     assert.notEqual(result.status, 0);
     interface Result {
-      filePath: string;
+      sourceId: string;
+      filePath?: string;
       messages: { ruleId: string }[];
     }
     const parsed = JSON.parse(result.stdout) as unknown;
@@ -81,10 +82,13 @@ for (const { name, files } of fixtures) {
     const results = parsed as Result[];
     const byFile = Object.fromEntries(
       results.map((r) => [
-        path.relative(fixture, r.filePath),
+        path.relative(fixture, r.sourceId),
         new Set(r.messages.map((m) => m.ruleId)),
       ]),
     );
+    for (const r of results) {
+      assert.equal(r.filePath, r.sourceId);
+    }
     assert.deepEqual(Object.keys(byFile).sort(), files.sort());
     const ruleSet = new Set(
       results.flatMap((r) => r.messages.map((m) => m.ruleId)),

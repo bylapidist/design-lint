@@ -23,13 +23,17 @@ void test('CLI loads nearest config in nested project', () => {
   );
   assert.notEqual(res.status, 0);
   interface Result {
-    filePath: string;
+    sourceId: string;
+    filePath?: string;
     messages: { ruleId: string }[];
   }
   const parsed = JSON.parse(res.stdout) as unknown;
   assert(Array.isArray(parsed));
   const results = parsed as Result[];
-  const files = results.map((r) => path.relative(appDir, r.filePath)).sort();
+  const files = results.map((r) => path.relative(appDir, r.sourceId)).sort();
+  for (const r of results) {
+    assert.equal(r.filePath, r.sourceId);
+  }
   assert.deepEqual(files, ['src/App.module.css', 'src/App.tsx']);
   for (const r of results) {
     for (const m of r.messages) {

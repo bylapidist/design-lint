@@ -29,7 +29,9 @@ void test('lintFiles ignores common directories by default', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath));
+    const files = results.map((r) => path.relative(dir, r.sourceId));
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['src/file.ts']);
   } finally {
     process.chdir(cwd);
@@ -54,7 +56,9 @@ void test('lintFiles respects .gitignore via globby', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['src/keep.ts']);
   } finally {
     process.chdir(cwd);
@@ -83,7 +87,9 @@ void test('.designlintignore can unignore paths', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['node_modules/pkg/index.ts', 'src/file.ts']);
   } finally {
     process.chdir(cwd);
@@ -108,7 +114,9 @@ void test('.designlintignore overrides .gitignore', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['src/file.ts']);
   } finally {
     process.chdir(cwd);
@@ -136,7 +144,9 @@ void test('.designlintignore supports negative patterns', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['src/file.ts']);
   } finally {
     process.chdir(cwd);
@@ -161,7 +171,9 @@ void test('.designlintignore supports Windows paths', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['src/keep.ts']);
   } finally {
     process.chdir(cwd);
@@ -186,7 +198,9 @@ void test('config ignoreFiles are respected', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['src/keep.ts']);
   } finally {
     process.chdir(cwd);
@@ -212,7 +226,9 @@ void test('additional ignore file is respected', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.'], false, [extra]);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['src/keep.ts']);
   } finally {
     process.chdir(cwd);
@@ -237,7 +253,9 @@ void test('lintFiles respects nested .gitignore', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['nested/keep.ts']);
   } finally {
     process.chdir(cwd);
@@ -263,7 +281,9 @@ void test('nested .designlintignore overrides parent patterns', async () => {
       new FileSource(),
     );
     const { results } = await linter.lintFiles(['.']);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    for (const r of results) assert.equal(r.filePath, r.sourceId);
     assert.deepEqual(files, ['src/keep.ts', 'src/skip.ts']);
   } finally {
     process.chdir(cwd);

@@ -54,7 +54,9 @@ export interface LintMessage {
 }
 
 export interface LintResult {
-  filePath: string;
+  sourceId: string;
+  /** @deprecated use sourceId instead */
+  filePath?: string;
   messages: LintMessage[];
   ruleDescriptions?: Record<string, string>;
 }
@@ -64,7 +66,9 @@ export interface RuleContext<TOptions = unknown> {
   tokens: DesignTokens;
   options?: TOptions;
   metadata?: Record<string, unknown>;
-  filePath: string;
+  sourceId: string;
+  /** @deprecated use sourceId instead */
+  filePath?: string;
 }
 
 export interface RuleModule<TOptions = unknown> {

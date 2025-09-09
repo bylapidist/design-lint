@@ -137,7 +137,7 @@ Executes linting tasks with concurrency control.
   - `options` – object containing:
     - `config: Config`
     - `tokenTracker: TokenTracker`
-    - `lintText: (text: string, filePath: string, metadata?: Record<string, unknown>) => Promise<LintResult>`
+    - `lintText: (text: string, sourceId: string, metadata?: Record<string, unknown>) => Promise<LintResult>`
     - `source: DocumentSource`
 
 #### `run(documents, fix?, cache?)`

@@ -18,7 +18,11 @@ void test('lintFiles expands glob patterns with globby', async () => {
     const { results, warning } = await linter.lintFiles([
       '**/*.module.{css,scss}',
     ]);
-    const files = results.map((r) => path.relative(dir, r.filePath)).sort();
+    const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
+    for (const r of results) {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      assert.equal(r.filePath, r.sourceId);
+    }
     assert.deepEqual(files, ['src/a.module.css', 'src/b.module.scss']);
     assert.equal(warning, undefined);
   } finally {

@@ -90,11 +90,11 @@ export class Linter {
   }
 
   async lintFile(
-    filePath: string,
+    sourceId: string,
     fix = false,
     _ignorePaths?: string[],
   ): Promise<LintResult> {
-    const [doc] = await this.source.scan([filePath], this.config, _ignorePaths);
+    const [doc] = await this.source.scan([sourceId], this.config, _ignorePaths);
     return this.lintDocument(doc, fix);
   }
 
@@ -148,7 +148,7 @@ export class Linter {
 
   private async lintText(
     text: string,
-    filePath = 'unknown',
+    sourceId = 'unknown',
     docType?: string,
     metadata?: Record<string, unknown>,
   ): Promise<LintResult> {
@@ -170,7 +170,8 @@ export class Linter {
           : undefined;
       const tokens = mergeTokens(this.tokensByTheme, themes);
       const ctx: RuleContext = {
-        filePath,
+        sourceId,
+        filePath: sourceId,
         tokens,
         options,
         metadata,
@@ -178,13 +179,18 @@ export class Linter {
       };
       return rule.create(ctx);
     });
-    const type = docType ?? inferFileType(filePath);
+    const type = docType ?? inferFileType(sourceId);
     const parser = parserRegistry[type];
     if (parser) {
-      await parser(text, filePath, listeners, messages);
+      await parser(text, sourceId, listeners, messages);
     }
     const filtered = messages.filter((m) => !disabledLines.has(m.line));
-    return { filePath, messages: filtered, ruleDescriptions };
+    return {
+      sourceId,
+      filePath: sourceId,
+      messages: filtered,
+      ruleDescriptions,
+    };
   }
 }
 
@@ -225,8 +231,8 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((v) => typeof v === 'string');
 }
 
-function inferFileType(filePath: string): string {
-  const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+function inferFileType(sourceId: string): string {
+  const ext = sourceId.split('.').pop()?.toLowerCase() ?? '';
   const map: Record<string, string> = {
     ts: 'ts',
     tsx: 'ts',
