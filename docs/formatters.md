@@ -36,7 +36,7 @@ npx design-lint src --format json
 }
 ```
 
-> **Tip:** Combine the `json` formatter with `--output-file` to generate artifacts in CI.
+> **Tip:** Combine the `json` formatter with `--output` to generate artifacts in CI.
 
 ## Writing a custom formatter
 A formatter exports a default function receiving lint results and returning a string.

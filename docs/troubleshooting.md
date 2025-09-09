@@ -24,7 +24,7 @@ This guide helps you resolve common issues when running design-lint.
 
 **Cause:** Token file path is wrong or the file contains invalid JSON.
 
-**Resolution:** Verify token paths and run with `--debug` to inspect loaded tokens. See [configuration](./configuration.md#tokens).
+**Resolution:** Verify token paths and inspect loaded tokens. See [configuration](./configuration.md#tokens).
 
 ## Config file not found
 **Symptom:** `Error: Config file not found`.
@@ -59,7 +59,7 @@ This guide helps you resolve common issues when running design-lint.
 
 **Cause:** Unhandled exception in a rule or formatter.
 
-**Resolution:** Re-run with `--debug` to capture stack traces and file an issue with a minimal reproduction.
+**Resolution:** Re-run the command to capture stack traces and file an issue with a minimal reproduction.
 
 ## CI job fails intermittently
 **Symptom:** Linting passes locally but fails in CI.
