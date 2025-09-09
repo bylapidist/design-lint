@@ -24,8 +24,8 @@ This guide explains how to read the project changelog and version numbers. It ta
 Commit messages use the [Conventional Commits](https://www.conventionalcommits.org/) format to generate changelog entries automatically. Example: `feat(rules): add opacity rule`.
 
 ## Changesets
-Changesets describe pending releases. Each changeset file indicates the semver bump and a summary of the change. During release, the changelog is updated based on these files. See [AGENTS.md](../AGENTS.md) for the expected format.
+Changesets describe pending releases. Each changeset file indicates the semver bump and a summary of the change. During release, the changelog is updated based on these files. See [AGENTS.md](https://github.com/bylapidist/design-lint/blob/main/AGENTS.md) for the expected format.
 
 ## See also
-- [CHANGELOG](../CHANGELOG.md)
-- [Contributing](../CONTRIBUTING.md)
+- [CHANGELOG](https://github.com/bylapidist/design-lint/blob/main/CHANGELOG.md)
+- [Contributing](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md)
