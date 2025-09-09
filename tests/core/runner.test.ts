@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Runner } from '../../src/index.ts';
 import { TokenTracker } from '../../src/core/token-tracker.ts';
-import { createFileDocument } from '../../src/node/file-document.ts';
+import { createFileDocument } from '../../src/adapters/node/file-document.ts';
 
 interface CacheEntry {
   mtime: number;

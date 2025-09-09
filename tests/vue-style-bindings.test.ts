@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/node/file-source.ts';
+import { FileSource } from '../src/adapters/node/file-source.ts';
 import { loadConfig } from '../src/config/loader.ts';
 
 const fixtureDir = path.join(__dirname, 'fixtures', 'vue');

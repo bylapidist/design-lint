@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/node/file-source.ts';
+import { FileSource } from '../../src/adapters/node/file-source.ts';
 import type { Environment } from '../../src/core/environment.ts';
 
 async function tempFile(content: string): Promise<string> {
@@ -19,7 +19,8 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
   const env: Environment = {
     documentSource: new FileSource(),
     tokenProvider: {
-      load: () => Promise.resolve({ themes: { default: tokens }, merged: tokens }),
+      load: () =>
+        Promise.resolve({ themes: { default: tokens }, merged: tokens }),
     },
   };
   const linter = new Linter(
@@ -44,7 +45,8 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
   const env: Environment = {
     documentSource: new FileSource(),
     tokenProvider: {
-      load: () => Promise.resolve({ themes: { default: tokens }, merged: tokens }),
+      load: () =>
+        Promise.resolve({ themes: { default: tokens }, merged: tokens }),
     },
   };
   const linter = new Linter(
@@ -67,7 +69,8 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
   const env: Environment = {
     documentSource: new FileSource(),
     tokenProvider: {
-      load: () => Promise.resolve({ themes: { default: tokens }, merged: tokens }),
+      load: () =>
+        Promise.resolve({ themes: { default: tokens }, merged: tokens }),
     },
   };
   const linter = new Linter(
@@ -92,7 +95,8 @@ void test('design-system/no-unused-tokens matches hex case-insensitively', async
   const env: Environment = {
     documentSource: new FileSource(),
     tokenProvider: {
-      load: () => Promise.resolve({ themes: { default: tokens }, merged: tokens }),
+      load: () =>
+        Promise.resolve({ themes: { default: tokens }, merged: tokens }),
     },
   };
   const linter = new Linter(

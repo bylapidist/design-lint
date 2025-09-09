@@ -2,10 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
-import { realpathIfExists, relFromCwd } from '../utils/paths.js';
-import type { PluginModule } from '../core/types.js';
-import type { PluginLoader, LoadedPlugin } from '../core/plugin-loader.js';
-import { createEngineError } from '../core/plugin-manager.js';
+import { realpathIfExists, relFromCwd } from '../../utils/paths.js';
+import type { PluginModule } from '../../core/types.js';
+import type { PluginLoader, LoadedPlugin } from '../../core/plugin-loader.js';
+import { createEngineError } from '../../core/plugin-manager.js';
 
 export class NodePluginLoader implements PluginLoader {
   async load(p: string, configPath?: string): Promise<LoadedPlugin> {

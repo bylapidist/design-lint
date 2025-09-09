@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { NodeCacheProvider } from '../src/node/node-cache-provider.ts';
+import { NodeCacheProvider } from '../src/adapters/node/node-cache-provider.ts';
 import type { LintResult } from '../src/core/types.ts';
 
 void test('NodeCacheProvider loads and saves entries via flat-cache', async () => {

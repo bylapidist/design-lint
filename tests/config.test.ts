@@ -5,7 +5,7 @@ import { makeTmpDir } from '../src/utils/tmp.ts';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/node/file-source.ts';
+import { FileSource } from '../src/adapters/node/file-source.ts';
 
 void test('returns default config when none found', async () => {
   const tmp = makeTmpDir();
