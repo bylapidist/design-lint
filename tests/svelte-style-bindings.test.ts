@@ -9,8 +9,12 @@ const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
 async function lint(file: string) {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, new FileSource());
-  return linter.lintFile(path.join(fixtureDir, 'src', file), false);
+  const linter = new Linter(config, { documentSource: new FileSource() });
+  const { results } = await linter.lintTargets(
+    [path.join(fixtureDir, 'src', file)],
+    false,
+  );
+  return results[0];
 }
 
 void test('style bindings report spacing and color violations', async () => {

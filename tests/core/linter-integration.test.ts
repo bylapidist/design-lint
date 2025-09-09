@@ -15,6 +15,7 @@ void test('Linter integrates registry, parser and trackers', async () => {
   const dir = await fs.mkdtemp(path.join(process.cwd(), 'linter-int-'));
   const file = path.join(dir, 'file.css');
   await fs.writeFile(file, 'a{color:#fff;}');
-  const res = await linter.lintFile(file);
+  const { results } = await linter.lintTargets([file]);
+  const res = results[0];
   assert.equal(res.messages.length, 1);
 });

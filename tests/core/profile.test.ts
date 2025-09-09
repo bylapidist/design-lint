@@ -28,7 +28,7 @@ void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   };
   try {
     // Include a missing file to hit the catch branch
-    await linter.lintFiles(['file.ts', 'missing.ts']);
+    await linter.lintTargets(['file.ts', 'missing.ts']);
   } finally {
     console.log = origLog;
     delete process.env.DESIGNLINT_PROFILE;
@@ -45,8 +45,8 @@ void test('FileSource.scan collects files from directory targets', async () => {
   process.chdir(dir);
   try {
     const env = createNodeEnvironment(config);
-    const docs = await env.documentSource.scan(['.'], config);
-    const rels = docs.map((d) => path.relative(dir, d.id));
+    const { documents } = await env.documentSource.scan(['.'], config);
+    const rels = documents.map((d) => path.relative(dir, d.id));
     assert.deepEqual(rels, ['a.ts']);
   } finally {
     process.chdir(cwd);

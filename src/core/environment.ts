@@ -15,7 +15,11 @@ export interface DocumentSource {
     targets: string[],
     config: Config,
     additionalIgnorePaths?: string[],
-  ): Promise<LintDocument[]>;
+  ): Promise<{
+    documents: LintDocument[];
+    ignoreFiles: string[];
+    warning?: string;
+  }>;
 }
 
 export interface TokenProvider {
