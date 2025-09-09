@@ -89,30 +89,31 @@ export class Linter {
     return runner.run(documents, fix, this.cache);
   }
 
-  async lintFile(
-    sourceId: string,
-    fix = false,
-    _ignorePaths?: string[],
-  ): Promise<LintResult> {
-    const [doc] = await this.source.scan([sourceId], this.config, _ignorePaths);
-    return this.lintDocument(doc, fix);
-  }
-
-  async lintFiles(
+  async lintTargets(
     targets: string[],
     fix = false,
-    additionalIgnorePaths: string[] = [],
+    ignore: string[] = [],
   ): Promise<{
     results: LintResult[];
     ignoreFiles: string[];
     warning?: string;
   }> {
-    const documents = await this.source.scan(
-      targets,
-      this.config,
-      additionalIgnorePaths,
-    );
-    return this.lintDocuments(documents, fix);
+    const {
+      documents,
+      ignoreFiles: scanIgnores,
+      warning: scanWarning,
+    } = await this.source.scan(targets, this.config, ignore);
+    const {
+      results,
+      ignoreFiles: runIgnores,
+      warning: runWarning,
+    } = await this.lintDocuments(documents, fix);
+    const ignoreFiles = Array.from(new Set([...scanIgnores, ...runIgnores]));
+    return {
+      results,
+      ignoreFiles,
+      warning: scanWarning ?? runWarning,
+    };
   }
 
   getTokenCompletions(): Record<string, string[]> {

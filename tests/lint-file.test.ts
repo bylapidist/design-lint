@@ -9,19 +9,20 @@ import { loadConfig } from '../src/config/loader.ts';
 
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
-void test('lintDocument matches lintFile wrapper', async () => {
+void test('lintDocument matches lintTargets result', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const file = path.join(fixtureDir, 'src', 'App.svelte');
   const doc = createFileDocument(file);
   const res1 = await linter.lintDocument(doc);
-  const res2 = await linter.lintFile(file);
+  const { results } = await linter.lintTargets([file]);
+  const [res2] = results;
   assert.deepEqual(res1, res2);
 });
 
 void test('lintDocument reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const file = path.join(fixtureDir, 'src', 'App.svelte');
   const doc = createFileDocument(file);
   const original = fs.readFile;
@@ -47,9 +48,9 @@ void test('lintDocument reports unreadable file', async () => {
   }
 });
 
-void test('lintFiles reports unreadable file', async () => {
+void test('lintTargets reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const file = path.join(fixtureDir, 'src', 'App.svelte');
   const original = fs.readFile;
   const stub = mock.method(
@@ -64,7 +65,7 @@ void test('lintFiles reports unreadable file', async () => {
     },
   );
   try {
-    const { results } = await linter.lintFiles([file]);
+    const { results } = await linter.lintTargets([file]);
     const res = results[0];
     assert.equal(res.messages.length, 1);
     const msg = res.messages[0];

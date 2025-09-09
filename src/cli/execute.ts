@@ -36,7 +36,7 @@ export async function executeLint(
     results,
     ignoreFiles = [],
     warning,
-  } = await services.linterRef.current.lintFiles(
+  } = await services.linterRef.current.lintTargets(
     targets,
     opts.fix,
     services.ignorePath ? [services.ignorePath] : [],

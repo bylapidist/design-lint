@@ -29,12 +29,23 @@ export class FileSource implements DocumentSource {
         absolute: true,
       })
     ).map(realpathIfExists);
+    const ignoreFiles = [
+      ...(
+        await globby(['**/.gitignore', '**/.designlintignore'], {
+          gitignore: false,
+          dot: true,
+          absolute: true,
+        })
+      ).map(realpathIfExists),
+      ...additionalIgnorePaths.map(realpathIfExists),
+    ];
+    const deduped = Array.from(new Set(ignoreFiles));
     const duration = performance.now() - start;
     if (process.env.DESIGNLINT_PROFILE) {
       console.log(
         `Scanned ${String(files.length)} files in ${duration.toFixed(2)}ms`,
       );
     }
-    return files.map(createFileDocument);
+    return { documents: files.map(createFileDocument), ignoreFiles: deduped };
   }
 }

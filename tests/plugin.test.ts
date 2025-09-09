@@ -15,8 +15,10 @@ void test('external plugin rules execute', async () => {
       plugins: [pluginPath],
       rules: { 'plugin/test': 'error' },
     },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
@@ -26,7 +28,10 @@ void test('external plugin rules execute', async () => {
 void test('plugins resolve relative to config file', async () => {
   const dir = path.join(__dirname, 'fixtures', 'plugin-relative');
   const config = await loadConfig(dir);
-  const linter = new Linter(config, new FileSource(), new NodePluginLoader());
+  const linter = new Linter(config, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+  });
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'plugin/test');
@@ -39,8 +44,10 @@ void test('loads ESM plugin modules', async () => {
       plugins: [pluginPath],
       rules: { 'plugin/esm': 'error' },
     },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
@@ -51,8 +58,10 @@ void test('throws for invalid plugin modules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'invalid-plugin.ts');
   const linter = new Linter(
     { plugins: [pluginPath] },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
@@ -64,8 +73,10 @@ void test('throws for invalid plugin rules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'invalid-rule-plugin.ts');
   const linter = new Linter(
     { plugins: [pluginPath] },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
@@ -77,8 +88,10 @@ void test('throws when plugin module missing', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'missing-plugin.js');
   const linter = new Linter(
     { plugins: [pluginPath] },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
@@ -104,8 +117,10 @@ void test('throws when two plugins define the same rule name', async () => {
   const pluginB = path.join(__dirname, 'fixtures', 'duplicate-rule-plugin.ts');
   const linter = new Linter(
     { plugins: [pluginA, pluginB] },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
@@ -122,8 +137,10 @@ void test('getPluginPaths returns resolved plugin paths', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
   const linter = new Linter(
     { plugins: [pluginPath] },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   await linter.lintText('const a = 1;', 'file.ts');
   const paths = await linter.getPluginPaths();
@@ -148,8 +165,7 @@ void test('supports custom plugin loaders', async () => {
   }
   const linter = new Linter(
     { plugins: ['mock'], rules: { 'mock/rule': 'error' } },
-    new FileSource(),
-    new MockLoader(),
+    { documentSource: new FileSource(), pluginLoader: new MockLoader() },
   );
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);

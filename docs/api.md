@@ -26,7 +26,7 @@ async function main() {
   const linter = new Linter(config, new FileSource());
 
   // 3. Lint files and optionally apply automatic fixes
-  const { results } = await linter.lintFiles(['src/**/*.{ts,tsx}'], true);
+  const { results } = await linter.lintTargets(['src/**/*.{ts,tsx}'], true);
 
   // 4. Format and display results
   const formatter = await getFormatter('stylish');
@@ -83,23 +83,14 @@ Lints files using built-in and plugin-provided rules.
   - `cacheProvider?: CacheProvider` – optional cache provider.
 - **Returns** `Linter` instance.
 
-#### `lintFiles(targets, fix?, additionalIgnorePaths?)`
+#### `lintTargets(targets, fix?, ignore?)`
 
 - **Parameters**
   - `targets: string[]` – file paths or glob patterns to lint.
   - `fix = false` – whether to apply automatic fixes.
-  - `additionalIgnorePaths: string[] = []` – extra ignore globs.
+  - `ignore?: string[]` – extra ignore file paths.
 - **Returns** `Promise<{ results: LintResult[]; ignoreFiles: string[]; warning?: string; }>`
 - **Throws** if reading or parsing files fails.
-
-#### `lintFile(path, fix?, ignorePaths?)`
-
-- **Parameters**
-  - `path: string` – path to a single file.
-  - `fix = false` – whether to apply automatic fixes.
-  - `ignorePaths: string[] = []` – extra ignore globs.
-- **Returns** `Promise<LintResult>`
-- **Throws** if the file cannot be processed.
 
 #### `getTokenCompletions()`
 

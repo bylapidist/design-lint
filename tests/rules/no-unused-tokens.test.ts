@@ -30,7 +30,7 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
     },
     env,
   );
-  const { results } = await linter.lintFiles([file]);
+  const { results } = await linter.lintTargets([file]);
   const msg = results
     .flatMap((r) => r.messages)
     .find((m) => m.ruleId === 'design-system/no-unused-tokens');
@@ -56,7 +56,7 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
     },
     env,
   );
-  const { results } = await linter.lintFiles([file]);
+  const { results } = await linter.lintTargets([file]);
   const has = results.some((r) =>
     r.messages.some((m) => m.ruleId === 'design-system/no-unused-tokens'),
   );
@@ -82,7 +82,7 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
     },
     env,
   );
-  const { results } = await linter.lintFiles([file]);
+  const { results } = await linter.lintTargets([file]);
   const has = results.some((r) =>
     r.messages.some((m) => m.ruleId === 'design-system/no-unused-tokens'),
   );
@@ -106,7 +106,7 @@ void test('design-system/no-unused-tokens matches hex case-insensitively', async
     },
     env,
   );
-  const { results } = await linter.lintFiles([file]);
+  const { results } = await linter.lintTargets([file]);
   const has = results.some((r) =>
     r.messages.some((m) => m.ruleId === 'design-system/no-unused-tokens'),
   );

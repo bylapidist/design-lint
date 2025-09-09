@@ -40,7 +40,7 @@ void test('CLI passes targets to environment factory', async () => {
       config: { tokens: {}, rules: {} },
       linterRef: {
         current: {
-          lintFiles: () => Promise.resolve({ results: [], ignoreFiles: [] }),
+          lintTargets: () => Promise.resolve({ results: [], ignoreFiles: [] }),
           getPluginPaths: () => Promise.resolve([]),
         } as unknown as Linter,
       },
@@ -1122,9 +1122,12 @@ void test('CLI cache updates after --fix run', async () => {
       return Promise.resolve();
     },
   };
-  const linter = new Linter(config, new FileSource(), undefined, cache);
-  const { results: res1 } = await linter.lintFiles([file], true);
-  const { results: res2 } = await linter.lintFiles([file], false);
+  const linter = new Linter(config, {
+    documentSource: new FileSource(),
+    cacheProvider: cache,
+  });
+  const { results: res1 } = await linter.lintTargets([file], true);
+  const { results: res2 } = await linter.lintTargets([file], false);
   assert.equal(res1[0].messages.length, 0);
   assert.strictEqual(res1[0], res2[0]);
 });

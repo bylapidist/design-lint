@@ -28,7 +28,8 @@ void test('inline directives disable linting', async () => {
     },
     new FileSource(),
   );
-  const res = await linter.lintFile(file);
+  const { results } = await linter.lintTargets([file]);
+  const res = results[0];
   const lines = res.messages.map((m) => m.line).sort();
   assert.deepEqual(lines, [1, 9]);
 });
@@ -47,7 +48,8 @@ void test('strings resembling directives do not disable next line', async () => 
     },
     new FileSource(),
   );
-  const res = await linter.lintFile(file);
+  const { results } = await linter.lintTargets([file]);
+  const res = results[0];
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].line, 2);
 });

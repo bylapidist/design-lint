@@ -9,11 +9,11 @@ const fixtureDir = path.join(__dirname, 'fixtures', 'tagged-template');
 
 void test('reports CSS in tagged template literals', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, new FileSource());
+  const linter = new Linter(config, { documentSource: new FileSource() });
   const file = path.join(fixtureDir, 'src', 'styled.ts');
   const {
     results: [res],
-  } = await linter.lintFiles([file]);
+  } = await linter.lintTargets([file]);
   const colorMessages = res.messages.filter(
     (m) => m.ruleId === 'design-token/colors',
   );
