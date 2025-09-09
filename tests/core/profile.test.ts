@@ -4,9 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../../src/utils/tmp.ts';
 import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/adapters/node/file-source.ts';
+import { NodeEnvironment } from '../../src/adapters/node/environment.ts';
 import type { Config } from '../../src/core/linter.ts';
-import type { Environment } from '../../src/core/environment.ts';
 
 // Ensure FileSource.scan logs when profiling is enabled
 // This also covers the catch branch for missing files by passing a non-existent target
@@ -16,13 +15,9 @@ import type { Environment } from '../../src/core/environment.ts';
 void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
-  const env: Environment = {
-    documentSource: new FileSource(),
-    tokenProvider: {
-      load: () => Promise.resolve({ themes: { default: {} }, merged: {} }),
-    },
-  };
-  const linter = new Linter({ tokens: {}, rules: {} }, env);
+  const config = { tokens: {}, rules: {} };
+  const env = NodeEnvironment(config);
+  const linter = new Linter(config, env);
   const cwd = process.cwd();
   process.chdir(dir);
   process.env.DESIGNLINT_PROFILE = '1';
@@ -49,16 +44,7 @@ void test('FileSource.scan collects files from directory targets', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const env: Environment = {
-      documentSource: new FileSource(),
-      tokenProvider: {
-        load: () =>
-          Promise.resolve({
-            themes: { default: config.tokens ?? {} },
-            merged: config.tokens ?? {},
-          }),
-      },
-    };
+    const env = NodeEnvironment(config);
     const docs = await env.documentSource.scan(['.'], config);
     const rels = docs.map((d) => path.relative(dir, d.id));
     assert.deepEqual(rels, ['a.ts']);

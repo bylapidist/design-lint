@@ -3,7 +3,7 @@ import type { Config } from '../../core/linter.js';
 import { FileSource } from './file-source.js';
 import { NodePluginLoader } from './plugin-loader.js';
 import { NodeCacheProvider } from './node-cache-provider.js';
-import { ConfigTokenProvider } from '../../config/config-token-provider.js';
+import { NodeTokenProvider } from './token-provider.js';
 
 export interface NodeEnvironmentOptions {
   cacheLocation?: string;
@@ -20,6 +20,9 @@ export function NodeEnvironment(
     cacheProvider: cacheLocation
       ? new NodeCacheProvider(cacheLocation)
       : undefined,
-    tokenProvider: new ConfigTokenProvider(config),
+    tokenProvider: new NodeTokenProvider(
+      config.tokens,
+      config.wrapTokensWithVar,
+    ),
   };
 }
