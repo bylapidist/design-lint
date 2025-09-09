@@ -4,7 +4,7 @@ import { cosmiconfig } from 'cosmiconfig';
 import { TypeScriptLoader } from 'cosmiconfig-typescript-loader';
 import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
-import { realpathIfExists } from '../utils/paths.js';
+import { realpathIfExists } from '../adapters/node/utils/paths.js';
 
 /**
  * Resolve and load configuration for the linter.

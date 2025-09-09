@@ -1,6 +1,6 @@
 import { globby } from 'globby';
 import { performance } from 'node:perf_hooks';
-import { realpathIfExists } from '../../utils/paths.js';
+import { realpathIfExists } from './utils/paths.js';
 import { getIgnorePatterns } from '../../core/ignore.js';
 import type { Config } from '../../core/linter.js';
 import type { DocumentSource } from '../../core/environment.js';

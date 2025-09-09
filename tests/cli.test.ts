@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import { readWhenReady } from './helpers/fs.ts';
 import { Linter } from '../src/index.ts';
 import { FileSource } from '../src/index.ts';

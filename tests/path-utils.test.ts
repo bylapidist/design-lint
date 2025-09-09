@@ -7,8 +7,8 @@ import {
   relFrom,
   relFromCwd,
   realpathIfExists,
-} from '../src/utils/paths.ts';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+} from '../src/adapters/node/utils/paths.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 
 void test('toPosix converts separators', () => {
   const input = path.join('a', 'b', 'c');

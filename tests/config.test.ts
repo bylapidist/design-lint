@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
 import { Linter } from '../src/core/linter.ts';

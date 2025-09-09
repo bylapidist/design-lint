@@ -4,7 +4,7 @@ import { once } from 'node:events';
 import { createRequire } from 'module';
 import chokidar from 'chokidar';
 import chalk from 'chalk';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
+import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
 import { loadConfig } from '../config/loader.js';
 import { Linter } from '../core/linter.js';
 import type { Config } from '../core/linter.js';
