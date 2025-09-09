@@ -1,91 +1,60 @@
-# Framework integrations
+---
+title: Framework Integrations
+description: "Use design-lint with popular frontend frameworks."
+sidebar_position: 7
+---
 
-Design Lint works with many frontend stacks.
+# Framework Integrations
 
-## React / Vite
-Lint component files and styles:
+This guide targets front-end developers integrating design-lint into specific ecosystems.
+
+## Table of contents
+- [React](#react)
+- [Next.js](#nextjs)
+- [Vue](#vue)
+- [Svelte](#svelte)
+- [Other environments](#other-environments)
+- [See also](#see-also)
+
+## React
+Lint React components and CSS-in-JS files:
 
 ```bash
-npx design-lint src
+npx design-lint "src/**/*.{ts,tsx,css}"
+```
+
+```json
+// designlint.config.json
+{
+  "rules": { "design-system/component-usage": "error" }
+}
 ```
 
 ## Next.js
-Run in `next lint` or a separate script:
+Run design-lint alongside `next lint` or as a separate script. The example below enforces token usage in pages and components:
 
 ```bash
 npx design-lint pages components
 ```
 
+## Vue
+`.vue` single‑file components are parsed so template, script, and style blocks are checked automatically.
+
+```bash
+npx design-lint "src/**/*.vue"
+```
+
 ## Svelte
-Svelte components are parsed so `style:` directives and `<style>` blocks are checked automatically.
+Svelte components include `<script>` and `<style>` sections. design-lint understands both:
 
 ```bash
 npx design-lint src/routes
 ```
 
-## Vue
-`.vue` single‑file components are supported including SCSS, Sass and Less `<style>` blocks.
+## Other environments
+Angular, Astro, and static HTML files work out of the box as long as file extensions are provided. Adjust glob patterns accordingly.
 
-```bash
-npx design-lint src/components
-```
-
-## Angular
-Component templates (`.html`) and styles (`.scss`/`.css`) live alongside TypeScript files. Inline `template` and `styles` fields on `@Component` are checked automatically.
-
-```bash
-npx design-lint "src/**/*.component.{ts,html,scss}"
-```
-
-```json
-{
-  "scripts": {
-    "lint:design": "design-lint \"src/**/*.component.{ts,html,scss}\""
-  }
-}
-```
-
-## Astro
-`.astro` files mix markup and scripts. `<style>` tags and inline styles are linted without extra setup.
-
-```bash
-npx design-lint src/pages src/components
-```
-
-```json
-{
-  "scripts": {
-    "lint:design": "design-lint src/pages src/components"
-  }
-}
-```
-
-## HTML
-Static HTML files with inline `<style>` blocks or `style` attributes can be linted directly.
-
-```bash
-npx design-lint "public/**/*.html"
-```
-
-```json
-{
-  "scripts": {
-    "lint:design": "design-lint \"public/**/*.html\""
-  }
-}
-```
-
-Other frameworks using standard file extensions work without extra configuration.
-
-## ESLint and Stylelint
-Design Lint focuses on design token usage and component conventions, so keep existing linters for syntax rules. Run them side by side:
-
-```json
-{
-  "scripts": {
-    "lint": "eslint . && stylelint \"**/*.css\" && design-lint src"
-  }
-}
-```
-
-When migrating, disable overlapping token or naming checks in ESLint or Stylelint to avoid duplicate warnings, and share ignore files to skip build outputs.
+## See also
+- [Rules](./rules/index.md)
+- [Plugins](./plugins.md)
+- [Configuration](./configuration.md)

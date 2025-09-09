@@ -1,3 +1,8 @@
+---
+title: design-token/colors
+description: "Require color tokens instead of hard-coded values."
+---
+
 # design-token/colors
 
 ## Summary
@@ -49,3 +54,7 @@ If raw color values are allowed in your project, disable this rule.
 ## Related Rules
 - [design-token/spacing](./spacing.md)
 - [design-token/font-size](./font-size.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

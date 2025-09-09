@@ -1,3 +1,8 @@
+---
+title: design-token/font-weight
+description: "Use font weight tokens."
+---
+
 # design-token/font-weight
 
 ## Summary
@@ -41,3 +46,7 @@ If arbitrary font weights are allowed, disable this rule.
 ## Related Rules
 - [design-token/font-family](./font-family.md)
 - [design-token/font-size](./font-size.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

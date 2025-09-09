@@ -1,3 +1,8 @@
+---
+title: design-system/variant-prop
+description: "Validate variant prop values against allowed tokens."
+---
+
 # design-system/variant-prop
 
 ## Summary
@@ -60,3 +65,7 @@ If components freely accept any variant values, disable this rule.
 ## Related Rules
 - [design-system/component-usage](./component-usage.md)
 - [design-system/component-prefix](./component-prefix.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

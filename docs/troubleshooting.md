@@ -1,113 +1,82 @@
-# Troubleshooting
+---
+title: Troubleshooting and FAQ
+description: "Diagnose and solve common design-lint problems."
+sidebar_position: 12
+---
+
+# Troubleshooting and FAQ
+
+This guide helps you resolve common issues when running design-lint.
+
+## Table of contents
+- [Design tokens not recognized](#design-tokens-not-recognized)
+- [Config file not found](#config-file-not-found)
+- [Unknown rule](#unknown-rule)
+- [Plugin failed to load](#plugin-failed-to-load)
+- [Parser error](#parser-error)
+- [CLI crashes](#cli-crashes)
+- [CI job fails intermittently](#ci-job-fails-intermittently)
+- [FAQ](#faq)
+- [See also](#see-also)
+
+## Design tokens not recognized
+**Symptom:** Tokens defined in config are ignored.
+
+**Cause:** Token file path is wrong or the file contains invalid JSON.
+
+**Resolution:** Verify token paths and run with `--debug` to inspect loaded tokens. See [configuration](./configuration.md#tokens).
 
 ## Config file not found
+**Symptom:** `Error: Config file not found`.
 
-### Symptom
-`Error: Config file not found` when running the CLI.
+**Cause:** No configuration file or incorrect path.
 
-### Cause
-No configuration file is present or the provided path is incorrect.
-
-### Resolution
-Run `npx design-lint init` to generate a configuration file. Use `--config` to specify a path.
-
-### Related docs
-- [Configuration](./configuration.md)
+**Resolution:** Run `npx design-lint init` or pass `--config` with the correct path.
 
 ## Unknown rule
+**Symptom:** `Unknown rule "..."`.
 
-### Symptom
-`Unknown rule "..."`
+**Cause:** Rule name misspelled or plugin missing.
 
-### Cause
-The rule is misspelled or the plugin providing it is not installed.
-
-### Resolution
-Ensure the rule name is correct and the plugin providing it is installed.
-
-### Related docs
-- [Rule reference](./rules/index.md)
-- [Plugins](./plugins.md)
+**Resolution:** Check spelling and ensure the plugin is installed and listed in `plugins`.
 
 ## Plugin failed to load
+**Symptom:** `Error: Failed to load plugin`.
 
-### Symptom
-`Error: Failed to load plugin "..."`
+**Cause:** Node.js cannot resolve the module or it exports the wrong shape.
 
-### Cause
-Node.js cannot resolve the plugin module or it does not export a `rules` array.
-
-### Resolution
-Verify the package name and that the plugin exports a `rules` array.
-
-### Related docs
-- [Plugins](./plugins.md)
+**Resolution:** Ensure the package is resolvable and exports an object with a `rules` array.
 
 ## Parser error
+**Symptom:** `ParserError` or similar message.
 
-### Symptom
-`ParserError` or similar message.
+**Cause:** File extension or `lang` attribute does not match the contents.
 
-### Cause
-The file could not be parsed due to an incorrect extension or mismatched `lang` attribute.
+**Resolution:** Confirm file types and language blocks are correct.
 
-### Resolution
-Verify the file extension and that any `lang` attributes match the content.
+## CLI crashes
+**Symptom:** The process exits unexpectedly.
 
-### Related docs
+**Cause:** Unhandled exception in a rule or formatter.
+
+**Resolution:** Re-run with `--debug` to capture stack traces and file an issue with a minimal reproduction.
+
+## CI job fails intermittently
+**Symptom:** Linting passes locally but fails in CI.
+
+**Cause:** Missing cache, differing Node versions, or nondeterministic rules.
+
+**Resolution:** Cache `node_modules`, pin Node to v22, and review custom rules for nondeterminism.
+
+## FAQ
+- **How do I disable a rule for a single line?**
+  ```js
+  // design-lint-disable-next-line design-token/colors
+  const color = '#fff';
+  ```
+- **How do I share configurations across repos?** Publish a package containing your `designlint.config` and reference it via `extends` or `plugins`.
+
+## See also
 - [Usage](./usage.md)
-
-## Formatter failure
-
-### Symptom
-`Error: Formatter threw an exception` or the CLI exits after selecting a custom formatter.
-
-### Cause
-The formatter failed to export a default function or raised a runtime error.
-
-### Resolution
-Ensure the formatter exports a default function that returns a string and handles all results.
-
-### Related docs
-- [Formatters](./formatters.md)
-
-## Outdated Node version
-
-### Symptom
-`Error: Node.js 18 is not supported` or unexpected syntax errors.
-
-### Cause
-Design Lint requires Node.js 22 or later.
-
-### Resolution
-Upgrade to Node.js 22 or later.
-
-### Related docs
-- [README](https://github.com/bylapidist/design-lint/blob/main/README.md)
-
-## Performance bottleneck
-
-### Symptom
-Linting takes an excessively long time or maxes out CPU usage.
-
-### Cause
-Large projects are scanned without caching or rules with high complexity.
-
-### Resolution
-Enable caching with `--cache`, limit the files to lint, or review custom rules for performance issues.
-
-### Related docs
-- [Usage](./usage.md)
-- [Architecture](./architecture.md)
-
-## Keyword index
-
-| Error message | Section |
-| ------------- | ------- |
-| `Config file not found` | [Config file not found](#config-file-not-found) |
-| `Unknown rule` | [Unknown rule](#unknown-rule) |
-| `Failed to load plugin` | [Plugin failed to load](#plugin-failed-to-load) |
-| `ParserError` | [Parser error](#parser-error) |
-| `Formatter threw an exception` | [Formatter failure](#formatter-failure) |
-| `Node.js 18 is not supported` | [Outdated Node version](#outdated-node-version) |
-| `Linting is slow` | [Performance bottleneck](#performance-bottleneck) |
+- [Configuration](./configuration.md)
+- [Plugins](./plugins.md)

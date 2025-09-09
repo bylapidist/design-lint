@@ -1,3 +1,8 @@
+---
+title: design-token/duration
+description: "Use duration tokens for transitions and animations."
+---
+
 # design-token/duration
 
 ## Summary
@@ -44,3 +49,7 @@ If timing durations are not standardized, disable this rule.
 ## Related Rules
 - [design-token/animation](./animation.md)
 - [design-token/opacity](./opacity.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

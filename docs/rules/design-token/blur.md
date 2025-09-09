@@ -1,3 +1,8 @@
+---
+title: design-token/blur
+description: "Ensure blur values use blur tokens."
+---
+
 # design-token/blur
 
 ## Summary
@@ -40,3 +45,7 @@ If enforcing blur tokens is unnecessary, disable this rule.
 ## Related Rules
 - [design-token/colors](./colors.md)
 - [design-token/spacing](./spacing.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

@@ -1,3 +1,8 @@
+---
+title: design-token/font-size
+description: "Use font size tokens."
+---
+
 # design-token/font-size
 
 ## Summary
@@ -44,3 +49,7 @@ If font sizes are not managed via tokens, disable this rule.
 ## Related Rules
 - [design-token/font-family](./font-family.md)
 - [design-token/line-height](./line-height.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

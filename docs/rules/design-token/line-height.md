@@ -1,3 +1,8 @@
+---
+title: design-token/line-height
+description: "Use line height tokens."
+---
+
 # design-token/line-height
 
 ## Summary
@@ -43,3 +48,7 @@ If line heights are not standardized, disable this rule.
 ## Related Rules
 - [design-token/font-size](./font-size.md)
 - [design-token/letter-spacing](./letter-spacing.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

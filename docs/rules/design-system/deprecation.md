@@ -1,3 +1,8 @@
+---
+title: design-system/deprecation
+description: "Warn when using deprecated design system parts."
+---
+
 # design-system/deprecation
 
 ## Summary
@@ -49,3 +54,7 @@ If you do not track deprecated tokens or components, disable this rule.
 - [design-system/component-prefix](./component-prefix.md)
 - [design-system/component-usage](./component-usage.md)
 
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)

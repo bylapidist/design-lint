@@ -1,3 +1,8 @@
+---
+title: design-token/letter-spacing
+description: "Use letter spacing tokens."
+---
+
 # design-token/letter-spacing
 
 ## Summary
@@ -43,3 +48,7 @@ If letter spacing is not standardized, disable this rule.
 ## Related Rules
 - [design-token/font-size](./font-size.md)
 - [design-token/line-height](./line-height.md)
+
+## See also
+- [Configuration](../../configuration.md)
+- [Rule index](../index.md)
