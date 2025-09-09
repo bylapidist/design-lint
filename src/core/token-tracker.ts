@@ -1,4 +1,4 @@
-import type { DesignTokens, LintResult } from './types.js';
+import type { LegacyDesignTokens, LintResult } from './types.js';
 import type { TokenProvider } from './environment.js';
 
 type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';
@@ -102,7 +102,7 @@ export class TokenTracker {
   }
 }
 
-function collectTokenValues(tokens?: DesignTokens): Set<string> {
+function collectTokenValues(tokens?: LegacyDesignTokens): Set<string> {
   const values = new Set<string>();
   if (!tokens) return values;
   for (const [group, defs] of Object.entries(tokens)) {

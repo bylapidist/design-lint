@@ -1,17 +1,17 @@
 import type { VariableProvider } from '../../core/environment.js';
-import type { DesignTokens } from '../../core/types.js';
+import type { LegacyDesignTokens } from '../../core/types.js';
 import {
   normalizeTokens,
   type NormalizedTokens,
 } from '../../core/token-utils.js';
 
 export class NodeTokenProvider implements VariableProvider {
-  private tokens?: DesignTokens | Record<string, DesignTokens>;
+  private tokens?: LegacyDesignTokens | Record<string, LegacyDesignTokens>;
   private wrapVar: boolean;
   private normalized?: NormalizedTokens;
 
   constructor(
-    tokens?: DesignTokens | Record<string, DesignTokens>,
+    tokens?: LegacyDesignTokens | Record<string, LegacyDesignTokens>,
     wrapTokensWithVar = false,
   ) {
     this.tokens = tokens;

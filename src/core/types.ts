@@ -6,7 +6,38 @@ export interface VariableDefinition {
   aliasOf?: string;
 }
 
-export interface DesignTokens {
+/**
+ * W3C Design Tokens Format token node.
+ */
+export interface Token {
+  $value: unknown;
+  $type?: string;
+  $description?: string;
+  $extensions?: Record<string, unknown>;
+  $deprecated?: boolean | string;
+}
+
+/**
+ * W3C Design Tokens Format group node.
+ */
+export type TokenGroup = {
+  $type?: string;
+  $description?: string;
+  $extensions?: Record<string, unknown>;
+  $deprecated?: boolean | string;
+} & {
+  [name: string]: TokenGroup | Token | undefined;
+};
+
+/**
+ * W3C Design Tokens tree.
+ */
+export type DesignTokens = TokenGroup;
+
+/**
+ * Legacy token configuration model.
+ */
+export interface LegacyDesignTokens {
   /** Color tokens. */
   colors?: Record<string, string> | (string | RegExp)[];
   /** Spacing scale tokens. */
@@ -69,7 +100,7 @@ export interface LintResult {
 
 export interface RuleContext<TOptions = unknown> {
   report: (msg: Omit<LintMessage, 'ruleId' | 'severity'>) => void;
-  tokens: DesignTokens;
+  tokens: LegacyDesignTokens;
   options?: TOptions;
   metadata?: Record<string, unknown>;
   sourceId: string;

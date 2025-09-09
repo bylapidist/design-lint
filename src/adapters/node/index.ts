@@ -3,3 +3,4 @@ export { createFileDocument } from './file-document.js';
 export { NodePluginLoader } from './plugin-loader.js';
 export { NodeCacheProvider } from './node-cache-provider.js';
 export { createNodeEnvironment } from './environment.js';
+export { parseDesignTokensFile } from './token-parser.js';

@@ -1,6 +1,6 @@
 import type {
   LintResult,
-  DesignTokens,
+  LegacyDesignTokens,
   LintMessage,
   RuleContext,
 } from './types.js';
@@ -17,7 +17,7 @@ import type {
 import { parserRegistry } from './parser-registry.js';
 
 export interface Config {
-  tokens?: DesignTokens | Record<string, DesignTokens>;
+  tokens?: LegacyDesignTokens | Record<string, LegacyDesignTokens>;
   rules?: Record<string, unknown>;
   ignoreFiles?: string[];
   plugins?: string[];
@@ -28,7 +28,7 @@ export interface Config {
 }
 
 interface ResolvedConfig extends Omit<Config, 'tokens'> {
-  tokens: DesignTokens;
+  tokens: LegacyDesignTokens;
 }
 
 /**
@@ -36,7 +36,7 @@ interface ResolvedConfig extends Omit<Config, 'tokens'> {
  */
 export class Linter {
   private config: ResolvedConfig;
-  private tokensByTheme: Record<string, DesignTokens> = {};
+  private tokensByTheme: Record<string, LegacyDesignTokens> = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
   private source: Environment['documentSource'];
@@ -49,9 +49,9 @@ export class Linter {
         Promise.resolve({
           themes: (config.tokens ? { default: config.tokens } : {}) as Record<
             string,
-            DesignTokens
+            LegacyDesignTokens
           >,
-          merged: (config.tokens ?? {}) as DesignTokens,
+          merged: (config.tokens ?? {}) as LegacyDesignTokens,
         }),
     };
     this.config = { ...config, tokens: {} };

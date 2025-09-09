@@ -16,6 +16,9 @@ export type {
   RuleContext,
   RuleListener,
   DesignTokens,
+  Token,
+  TokenGroup,
+  LegacyDesignTokens,
   PluginModule,
   CSSDeclaration,
   Fix,
@@ -26,6 +29,9 @@ export {
   extractVarName,
   mergeTokens,
   normalizeTokens,
+  flattenDesignTokens,
   type TokenPattern,
   type NormalizedTokens,
+  type FlattenedToken,
 } from './token-utils.js';
+export { parseDesignTokens } from './token-parser.js';

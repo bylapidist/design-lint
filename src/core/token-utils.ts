@@ -1,12 +1,18 @@
-import type { DesignTokens, VariableDefinition } from './types.js';
+import type {
+  LegacyDesignTokens,
+  VariableDefinition,
+  DesignTokens,
+  Token,
+  TokenGroup,
+} from './types.js';
 import picomatch from 'picomatch';
 import leven from 'leven';
 
 export type TokenPattern = string | RegExp;
 
 export interface NormalizedTokens {
-  themes: Record<string, DesignTokens>;
-  merged: DesignTokens;
+  themes: Record<string, LegacyDesignTokens>;
+  merged: LegacyDesignTokens;
 }
 
 const TOKEN_GROUPS = [
@@ -32,13 +38,16 @@ const TOKEN_GROUPS = [
 ];
 
 function isMultiTheme(
-  tokens: DesignTokens | Record<string, DesignTokens>,
-): tokens is Record<string, DesignTokens> {
+  tokens: LegacyDesignTokens | Record<string, LegacyDesignTokens>,
+): tokens is Record<string, LegacyDesignTokens> {
   return Object.keys(tokens).some((k) => !TOKEN_GROUPS.includes(k));
 }
 
-function normalizeSingle(tokens: DesignTokens, wrapVar: boolean): DesignTokens {
-  const normalized: DesignTokens = {};
+function normalizeSingle(
+  tokens: LegacyDesignTokens,
+  wrapVar: boolean,
+): LegacyDesignTokens {
+  const normalized: LegacyDesignTokens = {};
   for (const [group, defs] of Object.entries(tokens)) {
     if (Array.isArray(defs)) {
       normalized[group] = defs;
@@ -83,10 +92,10 @@ function normalizeSingle(tokens: DesignTokens, wrapVar: boolean): DesignTokens {
 }
 
 export function mergeTokens(
-  tokensByTheme: Record<string, DesignTokens>,
+  tokensByTheme: Record<string, LegacyDesignTokens>,
   themes?: string[],
-): DesignTokens {
-  const merged: DesignTokens = {};
+): LegacyDesignTokens {
+  const merged: LegacyDesignTokens = {};
   const selected = themes ?? Object.keys(tokensByTheme);
   for (const theme of selected) {
     const source = tokensByTheme[theme];
@@ -149,10 +158,10 @@ export function mergeTokens(
 }
 
 export function normalizeTokens(
-  tokens: DesignTokens | Record<string, DesignTokens> | undefined,
+  tokens: LegacyDesignTokens | Record<string, LegacyDesignTokens> | undefined,
   wrapVar = false,
 ): NormalizedTokens {
-  const themes: Record<string, DesignTokens> = {};
+  const themes: Record<string, LegacyDesignTokens> = {};
   if (!tokens) return { themes, merged: {} };
   if (isMultiTheme(tokens)) {
     for (const [theme, defs] of Object.entries(tokens)) {
@@ -194,6 +203,49 @@ export function closestToken(
     }
   }
   return best;
+}
+
+export interface FlattenedToken {
+  path: string;
+  token: Token;
+}
+
+export function flattenDesignTokens(tokens: DesignTokens): FlattenedToken[] {
+  const result: FlattenedToken[] = [];
+  function walk(
+    group: TokenGroup,
+    prefix: string[],
+    inheritedType?: string,
+    inheritedDeprecated?: boolean | string,
+  ): void {
+    const currentType = group.$type ?? inheritedType;
+    const currentDeprecated = group.$deprecated ?? inheritedDeprecated;
+    for (const name of Object.keys(group)) {
+      if (name.startsWith('$')) continue;
+      const node = (group as Record<string, TokenGroup | Token | undefined>)[
+        name
+      ];
+      if (node === undefined) continue;
+      const path = [...prefix, name];
+      if (isToken(node)) {
+        const token: Token = {
+          ...node,
+          $type: node.$type ?? currentType,
+        };
+        const tokenDeprecated = token.$deprecated ?? currentDeprecated;
+        if (tokenDeprecated !== undefined) token.$deprecated = tokenDeprecated;
+        result.push({ path: path.join('.'), token });
+      } else {
+        walk(node, path, currentType, currentDeprecated);
+      }
+    }
+  }
+  walk(tokens, [], undefined, undefined);
+  return result;
+}
+
+function isToken(node: Token | TokenGroup): node is Token {
+  return '$value' in node;
 }
 
 export function extractVarName(value: string): string | null {

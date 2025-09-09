@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { TokenTracker } from '../../src/core/token-tracker.ts';
-import type { DesignTokens } from '../../src/core/types.ts';
+import type { LegacyDesignTokens } from '../../src/core/types.ts';
 import type { TokenProvider } from '../../src/core/environment.ts';
 
-function makeProvider(tokens: DesignTokens): TokenProvider {
+function makeProvider(tokens: LegacyDesignTokens): TokenProvider {
   return {
     load: () =>
       Promise.resolve({ themes: { default: tokens }, merged: tokens }),
@@ -12,7 +12,7 @@ function makeProvider(tokens: DesignTokens): TokenProvider {
 }
 
 void test('TokenTracker reports unused tokens', async () => {
-  const tokens: DesignTokens = {
+  const tokens: LegacyDesignTokens = {
     colors: { red: 'var(--red)' },
     spacing: ['4px'],
   };
@@ -31,7 +31,7 @@ void test('TokenTracker reports unused tokens', async () => {
 });
 
 void test('cssVar classifier tracks custom property usage', async () => {
-  const tokens: DesignTokens = {
+  const tokens: LegacyDesignTokens = {
     colors: { used: 'var(--used)', unused: 'var(--unused)' },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -49,7 +49,7 @@ void test('cssVar classifier tracks custom property usage', async () => {
 });
 
 void test('hexColor classifier is case-insensitive', async () => {
-  const tokens: DesignTokens = {
+  const tokens: LegacyDesignTokens = {
     colors: { brand: '#ABCDEF', other: '#123456' },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -67,7 +67,7 @@ void test('hexColor classifier is case-insensitive', async () => {
 });
 
 void test('numeric classifier matches number tokens', async () => {
-  const tokens: DesignTokens = {
+  const tokens: LegacyDesignTokens = {
     spacing: ['4px', '8px'],
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -85,7 +85,7 @@ void test('numeric classifier matches number tokens', async () => {
 });
 
 void test('string classifier matches plain string tokens', async () => {
-  const tokens: DesignTokens = {
+  const tokens: LegacyDesignTokens = {
     colors: { used: 'red', unused: 'blue' },
   };
   const tracker = new TokenTracker(makeProvider(tokens));

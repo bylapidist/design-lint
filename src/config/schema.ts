@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Config } from '../core/linter.js';
-import type { DesignTokens } from '../core/types.js';
+import type { LegacyDesignTokens } from '../core/types.js';
 
 const severitySchema = z.union([
   z.literal('error'),
@@ -25,7 +25,7 @@ const tokenGroup = <T extends z.ZodType>(
 ): z.ZodType<Record<string, z.infer<T>> | (string | RegExp)[]> =>
   z.union([z.record(z.string(), schema), tokenPatternArray]);
 
-const baseTokensSchema: z.ZodType<DesignTokens> = z
+const baseTokensSchema: z.ZodType<LegacyDesignTokens> = z
   .object({
     colors: tokenGroup(z.string()).optional(),
     spacing: tokenGroup(z.number()).optional(),
@@ -50,8 +50,9 @@ const baseTokensSchema: z.ZodType<DesignTokens> = z
   })
   .catchall(z.unknown());
 
-const tokensSchema: z.ZodType<DesignTokens | Record<string, DesignTokens>> =
-  z.union([baseTokensSchema, z.record(z.string(), baseTokensSchema)]);
+const tokensSchema: z.ZodType<
+  LegacyDesignTokens | Record<string, LegacyDesignTokens>
+> = z.union([baseTokensSchema, z.record(z.string(), baseTokensSchema)]);
 
 export const configSchema: z.ZodType<Config> = z
   .object({
