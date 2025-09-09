@@ -31,7 +31,7 @@ void test('CacheManager applies fixes when enabled', async () => {
   };
   const manager = new CacheManager(undefined, true);
   const doc = createFileDocument(file);
-  await manager.processFile(doc, lintFn);
+  await manager.processDocument(doc, lintFn);
   const updated = await fs.readFile(file, 'utf8');
   assert.equal(updated, 'good');
 });

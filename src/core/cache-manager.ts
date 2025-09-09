@@ -9,7 +9,7 @@ export class CacheManager {
     private fix: boolean,
   ) {}
 
-  async processFile(
+  async processDocument(
     doc: LintDocument,
     lintFn: (
       text: string,
