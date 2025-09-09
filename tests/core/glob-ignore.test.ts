@@ -17,8 +17,8 @@ void test('FileSource.scan applies nested ignore files for glob targets', async 
   process.chdir(dir);
   try {
     const config: Config = { tokens: {}, rules: {} };
-    const files = await new FileSource().scan(['**/*.ts'], config);
-    const rels = files.map((f) => path.relative(dir, f)).sort();
+    const docs = await new FileSource().scan(['**/*.ts'], config);
+    const rels = docs.map((d) => path.relative(dir, d.id)).sort();
     assert.deepEqual(rels, ['src/keep.ts']);
   } finally {
     process.chdir(cwd);

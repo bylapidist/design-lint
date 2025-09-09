@@ -1,6 +1,7 @@
-import { stat, readFile, writeFile } from 'node:fs/promises';
+import { stat, writeFile } from 'node:fs/promises';
 import type { Cache, CacheEntry } from './cache.js';
 import type { LintResult, LintMessage, Fix } from './types.js';
+import type { LintDocument } from './document-source.js';
 
 export class CacheManager {
   constructor(
@@ -9,7 +10,7 @@ export class CacheManager {
   ) {}
 
   async processFile(
-    filePath: string,
+    doc: LintDocument,
     lintFn: (
       text: string,
       filePath: string,
@@ -17,37 +18,43 @@ export class CacheManager {
     ) => Promise<LintResult>,
   ): Promise<LintResult> {
     try {
-      const statResult = await stat(filePath);
-      const cached = this.cache?.getKey<CacheEntry>(filePath);
+      let statResult;
+      try {
+        statResult = await stat(doc.id);
+      } catch {
+        statResult = undefined;
+      }
+      const cached = this.cache?.getKey<CacheEntry>(doc.id);
       if (
         cached &&
+        statResult &&
         cached.mtime === statResult.mtimeMs &&
         cached.size === statResult.size &&
         !this.fix
       ) {
         return cached.result;
       }
-      const text = await readFile(filePath, 'utf8');
-      let result = await lintFn(text, filePath);
-      let mtime = statResult.mtimeMs;
-      let size = statResult.size;
-      if (this.fix) {
+      const text = await doc.getText();
+      let result = await lintFn(text, doc.id, doc.metadata);
+      let mtime = statResult?.mtimeMs ?? Date.now();
+      let size = statResult?.size ?? text.length;
+      if (this.fix && statResult) {
         const output = applyFixes(text, result.messages);
         if (output !== text) {
-          await writeFile(filePath, output, 'utf8');
-          result = await lintFn(output, filePath);
-          const newStat = await stat(filePath);
+          await writeFile(doc.id, output, 'utf8');
+          result = await lintFn(output, doc.id, doc.metadata);
+          const newStat = await stat(doc.id);
           mtime = newStat.mtimeMs;
           size = newStat.size;
         }
       }
-      this.cache?.setKey(filePath, { mtime, size, result });
+      this.cache?.setKey(doc.id, { mtime, size, result });
       return result;
     } catch (e: unknown) {
-      this.cache?.removeKey(filePath);
+      this.cache?.removeKey(doc.id);
       const message = e instanceof Error ? e.message : 'Failed to read file';
       const result: LintResult = {
-        filePath,
+        filePath: doc.id,
         messages: [
           {
             ruleId: 'parse-error',

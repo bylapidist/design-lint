@@ -5,6 +5,7 @@ import { promises as fs } from 'fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { LintResult } from '../../src/core/types.ts';
+import { createFileDocument } from '../../src/node/file-document.ts';
 
 void test('CacheManager applies fixes when enabled', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cm-'));
@@ -29,7 +30,8 @@ void test('CacheManager applies fixes when enabled', async () => {
     return Promise.resolve({ filePath, messages: [] });
   };
   const manager = new CacheManager(undefined, true);
-  await manager.processFile(file, lintFn);
+  const doc = createFileDocument(file);
+  await manager.processFile(doc, lintFn);
   const updated = await fs.readFile(file, 'utf8');
   assert.equal(updated, 'good');
 });

@@ -42,8 +42,8 @@ void test('FileSource.scan collects files from directory targets', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const files = await new FileSource().scan(['.'], config);
-    const rels = files.map((f) => path.relative(dir, f));
+    const docs = await new FileSource().scan(['.'], config);
+    const rels = docs.map((d) => path.relative(dir, d.id));
     assert.deepEqual(rels, ['a.ts']);
   } finally {
     process.chdir(cwd);

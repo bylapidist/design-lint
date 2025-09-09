@@ -46,28 +46,31 @@ export class Runner {
     ignoreFiles: string[];
     warning?: string;
   }> {
-    const files = await this.source.scan(
+    const documents = await this.source.scan(
       targets,
       this.config,
       additionalIgnorePaths,
     );
     const ignoreFiles: string[] = [];
-    if (files.length === 0) {
+    if (documents.length === 0) {
       return {
         results: [],
         ignoreFiles,
         warning: 'No files matched the provided patterns.',
       };
     }
-    CacheService.prune(cache, files);
+    CacheService.prune(
+      cache,
+      documents.map((d) => d.id),
+    );
     const concurrency = Math.max(
       1,
       Math.floor(this.config.concurrency ?? os.cpus().length),
     );
     const limit = pLimit(concurrency);
     const cacheManager = CacheService.createManager(cache, fix);
-    const tasks = files.map((filePath) =>
-      limit(() => cacheManager.processFile(filePath, this.lintText)),
+    const tasks = documents.map((doc) =>
+      limit(() => cacheManager.processFile(doc, this.lintText)),
     );
     const results = await Promise.all(tasks);
     results.push(
