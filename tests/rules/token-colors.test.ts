@@ -107,3 +107,30 @@ void test('design-token/colors sets category', async () => {
   );
   assert.equal(res.ruleCategories?.['design-token/colors'], 'design-token');
 });
+
+void test('design-token/colors allows variables with modes and aliases', async () => {
+  const linter = new Linter(
+    {
+      tokens: {
+        colors: ['--color-primary', '--color-secondary'],
+        variables: {
+          primary: {
+            id: '--color-primary',
+            modes: { light: '#fff', dark: '#000' },
+          },
+          secondary: {
+            id: '--color-secondary',
+            aliasOf: '--color-primary',
+          },
+        },
+      },
+      rules: { 'design-token/colors': 'error' },
+    },
+    new FileSource(),
+  );
+  const res = await linter.lintText(
+    '.a{color:var(--color-secondary);}',
+    'a.css',
+  );
+  assert.equal(res.messages.length, 0);
+});

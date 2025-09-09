@@ -8,8 +8,8 @@ void test('getTokenCompletions returns token names', () => {
     {
       tokens: {
         variables: {
-          primary: { id: '--color-primary', value: '#fff' },
-          accent: { id: '--color-accent', value: '#000' },
+          primary: { id: '--color-primary', modes: { base: '#fff' } },
+          accent: { id: '--color-accent', modes: { base: '#000' } },
         },
         spacing: ['--space-scale-100'],
         colors: {

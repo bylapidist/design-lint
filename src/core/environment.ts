@@ -26,6 +26,8 @@ export interface TokenProvider {
   load(): Promise<NormalizedTokens>;
 }
 
+export type VariableProvider = TokenProvider;
+
 export interface Environment {
   documentSource: DocumentSource;
   pluginLoader?: PluginLoader;

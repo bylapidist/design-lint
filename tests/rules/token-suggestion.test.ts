@@ -6,7 +6,19 @@ import { FileSource } from '../../src/adapters/node/file-source.ts';
 void test('suggests closest token name', async () => {
   const linter = new Linter(
     {
-      tokens: { spacing: ['--space-scale-100', '--space-scale-200'] },
+      tokens: {
+        spacing: ['--space-scale-100', '--space-scale-200'],
+        variables: {
+          spacing100: {
+            id: '--space-scale-100',
+            modes: { base: 1 },
+          },
+          spacing200: {
+            id: '--space-scale-200',
+            aliasOf: '--space-scale-100',
+          },
+        },
+      },
       rules: { 'design-token/spacing': 'error' },
     },
     new FileSource(),

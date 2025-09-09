@@ -1,5 +1,11 @@
 import type ts from 'typescript';
 
+export interface VariableDefinition {
+  id: string;
+  modes?: Record<string, string | number>;
+  aliasOf?: string;
+}
+
 export interface DesignTokens {
   /** Color tokens. */
   colors?: Record<string, string> | (string | RegExp)[];
@@ -36,7 +42,7 @@ export interface DesignTokens {
   /** Letter spacing tokens. */
   letterSpacings?: Record<string, number | string> | (string | RegExp)[];
   /** Variable definitions. */
-  variables?: Record<string, { id: string; value: string | number }>;
+  variables?: Record<string, VariableDefinition>;
   /** Deprecated tokens and their replacements. */
   deprecations?: Record<string, { replacement?: string }>;
   /** Allow additional custom token groups. */

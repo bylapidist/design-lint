@@ -19,11 +19,19 @@ void test('normalizeTokens merges tokens across themes', () => {
   const tokens = {
     base: {
       colors: { primary: '#000' },
-      variables: { primary: { id: '--color-primary', value: '#000' } },
+      variables: {
+        primary: { id: '--color-primary', modes: { base: '#000' } },
+      },
     },
     light: {
       colors: { secondary: '#fff' },
-      variables: { secondary: { id: '--color-secondary', value: '#fff' } },
+      variables: {
+        secondary: {
+          id: '--color-secondary',
+          modes: { base: '#fff' },
+          aliasOf: '--color-primary',
+        },
+      },
     },
   };
   const normalized = normalizeTokens(tokens);
@@ -33,11 +41,17 @@ void test('normalizeTokens merges tokens across themes', () => {
   assert.equal(normalized.merged.colors.secondary, '#fff');
   assert.equal(normalized.themes.base.variables.primary.id, '--color-primary');
   assert.equal(
-    normalized.themes.light.variables.secondary.id,
-    '--color-secondary',
+    normalized.themes.light.variables.secondary.aliasOf,
+    '--color-primary',
   );
   assert.equal(normalized.merged.variables.primary.id, '--color-primary');
   assert.equal(normalized.merged.variables.secondary.id, '--color-secondary');
+  assert.equal(
+    normalized.merged.variables.secondary.aliasOf,
+    '--color-primary',
+  );
+  assert.equal(normalized.merged.variables.primary.modes?.base, '#000');
+  assert.equal(normalized.merged.variables.secondary.modes?.base, '#fff');
 });
 
 void test('matchToken handles regexp and glob patterns and missing matches', () => {
