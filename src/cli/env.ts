@@ -4,11 +4,9 @@ import ignore, { type Ignore } from 'ignore';
 import { getFormatter } from '../formatters/index.js';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import type { CacheProvider } from '../core/cache-provider.js';
-import { NodeCacheProvider } from '../node/node-cache-provider.js';
-import { FileSource } from '../node/file-source.js';
 import type { Config, Linter } from '../core/linter.js';
 import type { LintResult } from '../core/types.js';
-import { NodePluginLoader } from '../node/plugin-loader.js';
+import { NodeEnvironment } from '../adapters/node/environment.js';
 
 export interface Environment {
   formatter: (results: LintResult[], useColor?: boolean) => string;
@@ -54,16 +52,10 @@ export async function prepareEnvironment(
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
-  const cache = cacheLocation
-    ? new NodeCacheProvider(cacheLocation)
-    : undefined;
-  const linterEnv = {
-    documentSource: new FileSource(),
-    pluginLoader: new NodePluginLoader(),
-    cacheProvider: cache,
-  };
+  const env = NodeEnvironment(config, { cacheLocation });
+  const cache = env.cacheProvider;
   const linterRef = {
-    current: new Linter(config, linterEnv),
+    current: new Linter(config, env),
   };
   const pluginPaths = await linterRef.current.getPluginPaths();
 

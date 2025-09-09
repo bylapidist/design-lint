@@ -8,8 +8,7 @@ import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import { loadConfig } from '../config/loader.js';
 import { Linter } from '../core/linter.js';
 import type { Config } from '../core/linter.js';
-import { FileSource } from '../node/file-source.js';
-import { NodePluginLoader } from '../node/plugin-loader.js';
+import { NodeEnvironment } from '../adapters/node/environment.js';
 import type { CacheProvider } from '../core/cache-provider.js';
 import type { Ignore } from 'ignore';
 import {
@@ -179,12 +178,6 @@ export async function startWatch(ctx: WatchOptions) {
         : createRequire(import.meta.url);
       for (const p of pluginPaths) Reflect.deleteProperty(req.cache, p);
       config = await loadConfig(process.cwd(), options.config);
-      linterRef.current = new Linter(config, {
-        documentSource: new FileSource(),
-        pluginLoader: new NodePluginLoader(),
-        cacheProvider: cache,
-      });
-      await refreshIgnore();
       if (cache) {
         const keys = await cache.keys();
         for (const k of keys) await cache.remove(k);
@@ -194,6 +187,10 @@ export async function startWatch(ctx: WatchOptions) {
           fs.unlinkSync(cacheLocation);
         } catch {}
       }
+      const env = NodeEnvironment(config, { cacheLocation });
+      cache = env.cacheProvider;
+      linterRef.current = new Linter(config, env);
+      await refreshIgnore();
       const newPluginPaths = await linterRef.current.getPluginPaths();
       const toRemove = pluginPaths.filter((p) => !newPluginPaths.includes(p));
       if (toRemove.length) watcher.unwatch(toRemove);

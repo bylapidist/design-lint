@@ -10,7 +10,7 @@ Starting with document discovery, a `DocumentSource` enumerates raw content from
 
 ### DocumentSource
 
-Provides documents from an environment and defines how they are refreshed. The Node adapter [`FileSource`](https://github.com/bylapidist/design-lint/blob/main/src/node/file-source.ts) reads from the filesystem. Future integrations could stream documents from IDEs, design tools or remote APIs.
+Provides documents from an environment and defines how they are refreshed. The Node adapter [`FileSource`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/file-source.ts) reads from the filesystem. Future integrations could stream documents from IDEs, design tools or remote APIs.
 
 ### Parser adapters
 
@@ -26,11 +26,11 @@ Streams lint results through built-in or custom formatters. See [`src/formatters
 
 ### PluginLoader
 
-Resolves and loads configuration packages, rules and formatters. The Node adapter [`PluginLoader`](https://github.com/bylapidist/design-lint/blob/main/src/node/plugin-loader.ts) uses Node's module resolution, with room for runtimes like Deno or Bun.
+Resolves and loads configuration packages, rules and formatters. The Node adapter [`PluginLoader`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/plugin-loader.ts) uses Node's module resolution, with room for runtimes like Deno or Bun.
 
 ### CacheProvider
 
-Stores metadata and parsed documents across runs. The Node implementation [`NodeCacheProvider`](https://github.com/bylapidist/design-lint/blob/main/src/node/node-cache-provider.ts) caches to disk; alternative providers could target cloud storage or in-memory caches.
+Stores metadata and parsed documents across runs. The Node implementation [`NodeCacheProvider`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk; alternative providers could target cloud storage or in-memory caches.
 
 ## Performance considerations
 

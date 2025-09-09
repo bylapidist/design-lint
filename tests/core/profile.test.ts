@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../../src/utils/tmp.ts';
 import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/node/file-source.ts';
+import { FileSource } from '../../src/adapters/node/file-source.ts';
 import type { Config } from '../../src/core/linter.ts';
 import type { Environment } from '../../src/core/environment.ts';
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parserRegistry } from '../../src/core/parser-registry.ts';
-import { createFileDocument } from '../../src/node/file-document.ts';
+import { createFileDocument } from '../../src/adapters/node/file-document.ts';
 import type {
   RuleModule,
   RuleContext,

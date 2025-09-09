@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/node/file-source.ts';
+import { FileSource } from '../../src/adapters/node/file-source.ts';
 
 void test('suggests closest token name', async () => {
   const linter = new Linter(
