@@ -2,6 +2,9 @@
 
 Design Lint exposes a small set of functions and classes for programmatic use in Node.js or browser environments.
 
+The framework ships a "core" build with no Node-specific helpers that can be imported via `@lapidist/design-lint/core`.
+Environment-specific utilities like `FileSource` or `NodePluginLoader` live under `@lapidist/design-lint/node`.
+
 ## Programmatic overview
 
 A typical control flow when using the library directly:
@@ -71,11 +74,12 @@ Helper to define a configuration object with type checking.
 
 Lints files using built-in and plugin-provided rules.
 
-#### `new Linter(config, source?)`
+#### `new Linter(config, source, loader?)`
 
 - **Parameters**
   - `config: Config` – resolved configuration.
-  - `source: DocumentSource = new FileSource()` – document source used to resolve lint targets.
+  - `source: DocumentSource` – document source used to resolve lint targets.
+  - `loader?: PluginLoader` – optional plugin loader.
 - **Returns** `Linter` instance.
 
 #### `lintFiles(targets, fix?, cache?, additionalIgnorePaths?, cacheLocation?)`

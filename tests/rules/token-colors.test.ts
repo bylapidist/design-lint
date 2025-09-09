@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
-import { FileSource } from '../../src/core/file-source.ts';
+import { FileSource } from '../../src/node/file-source.ts';
 
 void test('design-token/colors reports disallowed hwb', async () => {
   const linter = new Linter(

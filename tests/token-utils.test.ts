@@ -7,7 +7,7 @@ import {
   extractVarName,
 } from '../src/core/token-utils.ts';
 import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/core/file-source.ts';
+import { FileSource } from '../src/node/file-source.ts';
 
 void test('normalizeTokens wraps values with var when enabled', () => {
   const tokens = { colors: { primary: '--color-primary' } };
