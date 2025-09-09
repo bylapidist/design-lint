@@ -12,18 +12,19 @@ A typical control flow when using the library directly:
 ```ts
 import {
   loadConfig,
-  Linter,
-  FileSource,
+  createLinter,
   getFormatter,
   applyFixes,
+  createNodeEnvironment,
 } from '@lapidist/design-lint';
 
 async function main() {
   // 1. Load configuration from the current working directory
   const config = await loadConfig(process.cwd());
 
-  // 2. Create a linter instance
-  const linter = new Linter(config, new FileSource());
+  // 2. Create an environment and linter instance
+  const env = createNodeEnvironment(config);
+  const linter = createLinter(config, env);
 
   // 3. Lint files and optionally apply automatic fixes
   const { results } = await linter.lintTargets(['src/**/*.{ts,tsx}'], true);
