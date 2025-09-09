@@ -4,7 +4,6 @@ export { Runner } from './runner.js';
 export type {
   Environment,
   TokenProvider,
-  SourceAdapter,
   DocumentSource,
   LintDocument,
 } from './environment.js';

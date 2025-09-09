@@ -40,7 +40,7 @@ void test('Runner handles non-positive concurrency values', async () => {
   await fs.writeFile(file, 'a{color:red}');
   const runner = new Runner({
     config: { concurrency: 0, tokens: {} },
-    tokenTracker: new TokenTracker({}),
+    tokenTracker: new TokenTracker(),
     lintDocument: (text, filePath) =>
       Promise.resolve({ filePath, messages: [] }),
   });
@@ -57,7 +57,7 @@ void test('Runner prunes cache and saves results', async () => {
   await cache.set('ghost.css', { mtime: 0, size: 0, result: {} });
   const runner = new Runner({
     config: { tokens: {} },
-    tokenTracker: new TokenTracker({}),
+    tokenTracker: new TokenTracker(),
     lintDocument: (text, filePath) =>
       Promise.resolve({ filePath, messages: [] }),
   });
