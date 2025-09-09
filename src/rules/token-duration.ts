@@ -10,7 +10,7 @@ import { isStyleValue } from '../utils/style.js';
 
 export const durationRule: RuleModule = {
   name: 'design-token/duration',
-  meta: { description: 'enforce duration tokens' },
+  meta: { description: 'enforce duration tokens', category: 'design-token' },
   create(context) {
     const durationTokens = context.tokens.durations;
     if (

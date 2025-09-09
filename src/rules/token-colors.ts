@@ -45,7 +45,7 @@ interface ColorRuleOptions {
 
 export const colorsRule: RuleModule<ColorRuleOptions> = {
   name: 'design-token/colors',
-  meta: { description: 'disallow raw colors' },
+  meta: { description: 'disallow raw colors', category: 'design-token' },
   create(context) {
     const colorTokens = context.tokens.colors;
     if (

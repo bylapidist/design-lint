@@ -4,7 +4,10 @@ import { isInNonStyleJsx } from '../utils/jsx.js';
 
 export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',
-  meta: { description: 'flag deprecated tokens or components' },
+  meta: {
+    description: 'flag deprecated tokens or components',
+    category: 'design-token',
+  },
   create(context) {
     const deprecations = context.tokens.deprecations;
     if (!deprecations || Object.keys(deprecations).length === 0) {

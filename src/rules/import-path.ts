@@ -11,6 +11,7 @@ export const importPathRule: RuleModule<ImportPathOptions> = {
   meta: {
     description:
       'ensure design system components are imported from configured packages',
+    category: 'component',
   },
   create(context) {
     const opts: ImportPathOptions = context.options ?? {};

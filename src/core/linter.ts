@@ -162,9 +162,13 @@ export class Linter {
     }
     const messages: LintMessage[] = [];
     const ruleDescriptions: Record<string, string> = {};
+    const ruleCategories: Record<string, string> = {};
     const disabledLines = getDisabledLines(text);
     const listeners = enabled.map(({ rule, options, severity }) => {
       ruleDescriptions[rule.name] = rule.meta.description;
+      if (rule.meta.category) {
+        ruleCategories[rule.name] = rule.meta.category;
+      }
       const themes =
         isRecord(options) && isStringArray(options.themes)
           ? options.themes
@@ -189,6 +193,7 @@ export class Linter {
       sourceId,
       messages: filtered,
       ruleDescriptions,
+      ruleCategories,
     };
   }
 }

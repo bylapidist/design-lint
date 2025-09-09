@@ -8,7 +8,7 @@ import {
 
 export const outlineRule: RuleModule = {
   name: 'design-token/outline',
-  meta: { description: 'enforce outline tokens' },
+  meta: { description: 'enforce outline tokens', category: 'design-token' },
   create(context) {
     const outlineTokens = context.tokens.outlines;
     if (

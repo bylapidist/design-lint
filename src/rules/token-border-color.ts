@@ -39,7 +39,10 @@ function detectFormat(value: string): ColorFormat | null {
 
 export const borderColorRule: RuleModule = {
   name: 'design-token/border-color',
-  meta: { description: 'enforce border-color tokens' },
+  meta: {
+    description: 'enforce border-color tokens',
+    category: 'design-token',
+  },
   create(context) {
     const borderColorTokens = context.tokens.borderColors;
     if (

@@ -14,7 +14,10 @@ interface BorderRadiusOptions {
 
 export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
   name: 'design-token/border-radius',
-  meta: { description: 'enforce border-radius tokens' },
+  meta: {
+    description: 'enforce border-radius tokens',
+    category: 'design-token',
+  },
   create(context) {
     const radiiTokens = context.tokens.borderRadius;
     if (

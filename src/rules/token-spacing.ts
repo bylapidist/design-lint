@@ -15,7 +15,7 @@ interface SpacingOptions {
 
 export const spacingRule: RuleModule<SpacingOptions> = {
   name: 'design-token/spacing',
-  meta: { description: 'enforce spacing scale' },
+  meta: { description: 'enforce spacing scale', category: 'design-token' },
   create(context) {
     const spacingTokens = context.tokens.spacing;
     if (

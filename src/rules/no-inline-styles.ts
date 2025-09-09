@@ -11,6 +11,7 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
   meta: {
     description:
       'disallow inline style or className attributes on design system components',
+    category: 'component',
   },
   create(context) {
     const ignoreClassName = context.options?.ignoreClassName ?? false;
