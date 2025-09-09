@@ -96,7 +96,7 @@ export async function run(argv = process.argv.slice(2)) {
     if (options.color === false) useColor = false;
     const targets = files.length ? files : ['.'];
     try {
-      const env = await prepareEnvironment(options);
+      const env = await prepareEnvironment({ ...options, patterns: targets });
       const services = { ...env, useColor };
       const { exitCode } = await executeLint(targets, options, services);
       process.exitCode = exitCode;

@@ -5,13 +5,15 @@ import { NodePluginLoader } from './plugin-loader.js';
 import { NodeCacheProvider } from './node-cache-provider.js';
 import { NodeTokenProvider } from './token-provider.js';
 
-export interface NodeEnvironmentOptions {
+export interface CreateNodeEnvironmentOptions {
   cacheLocation?: string;
+  configPath?: string;
+  patterns?: string[];
 }
 
-export function NodeEnvironment(
+export function createNodeEnvironment(
   config: Config,
-  options: NodeEnvironmentOptions = {},
+  options: CreateNodeEnvironmentOptions = {},
 ): Environment {
   const { cacheLocation } = options;
   return {
@@ -26,3 +28,6 @@ export function NodeEnvironment(
     ),
   };
 }
+
+// Backward compatibility for previous name
+export const NodeEnvironment = createNodeEnvironment;

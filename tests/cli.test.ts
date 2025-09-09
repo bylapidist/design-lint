@@ -8,6 +8,7 @@ import { readWhenReady } from './helpers/fs.ts';
 import { Linter } from '../src/index.ts';
 import { FileSource } from '../src/index.ts';
 import type { LintResult } from '../src/core/types.ts';
+import ignore from 'ignore';
 
 const tsxLoader = require.resolve('tsx/esm');
 const WATCH_TIMEOUT = 2000;
@@ -28,6 +29,31 @@ void test('CLI aborts on unsupported Node versions', async () => {
   assert.equal(process.exitCode, 1);
   process.exitCode = originalExit ?? 0;
   assert.match(out, /Node\.js v21\.0\.0 is not supported/);
+});
+
+void test('CLI passes targets to environment factory', async () => {
+  const { run } = await import('../src/cli/index.ts');
+  const envMod = await import('../src/cli/env.ts');
+  const mock = test.mock.method(envMod, 'prepareEnvironment', () =>
+    Promise.resolve({
+      formatter: () => '',
+      config: { tokens: {}, rules: {} },
+      linterRef: {
+        current: {
+          lintFiles: () => Promise.resolve({ results: [], ignoreFiles: [] }),
+          getPluginPaths: () => Promise.resolve([]),
+        } as unknown as Linter,
+      },
+      pluginPaths: [],
+      designIgnore: '',
+      gitIgnore: '',
+      refreshIgnore: () => Promise.resolve(),
+      state: { pluginPaths: [], ignoreFilePaths: [] },
+      getIg: () => ignore(),
+    }),
+  );
+  await run(['a.ts']);
+  assert.deepEqual(mock.mock.calls[0].arguments[0].patterns, ['a.ts']);
 });
 
 void test('CLI runs when executed via a symlink', () => {

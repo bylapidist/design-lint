@@ -6,7 +6,7 @@ import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import type { CacheProvider } from '../core/cache-provider.js';
 import type { Config, Linter } from '../core/linter.js';
 import type { LintResult } from '../core/types.js';
-import { NodeEnvironment } from '../adapters/node/environment.js';
+import { createNodeEnvironment } from '../adapters/node/environment.js';
 
 export interface Environment {
   formatter: (results: LintResult[], useColor?: boolean) => string;
@@ -21,6 +21,11 @@ export interface Environment {
   refreshIgnore: () => Promise<void>;
   state: { pluginPaths: string[]; ignoreFilePaths: string[] };
   getIg: () => Ignore;
+  envOptions: {
+    cacheLocation?: string;
+    configPath?: string;
+    patterns?: string[];
+  };
 }
 
 export interface PrepareEnvironmentOptions {
@@ -30,6 +35,7 @@ export interface PrepareEnvironmentOptions {
   cache?: boolean;
   cacheLocation?: string;
   ignorePath?: string;
+  patterns?: string[];
 }
 
 export async function prepareEnvironment(
@@ -52,7 +58,11 @@ export async function prepareEnvironment(
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
-  const env = NodeEnvironment(config, { cacheLocation });
+  const env = createNodeEnvironment(config, {
+    cacheLocation,
+    configPath: config.configPath,
+    patterns: options.patterns,
+  });
   const cache = env.cacheProvider;
   const linterRef = {
     current: new Linter(config, env),
@@ -98,5 +108,10 @@ export async function prepareEnvironment(
     refreshIgnore,
     state,
     getIg: () => ig,
+    envOptions: {
+      cacheLocation,
+      configPath: config.configPath,
+      patterns: options.patterns,
+    },
   };
 }

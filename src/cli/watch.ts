@@ -8,7 +8,7 @@ import { relFromCwd, realpathIfExists } from '../utils/paths.js';
 import { loadConfig } from '../config/loader.js';
 import { Linter } from '../core/linter.js';
 import type { Config } from '../core/linter.js';
-import { NodeEnvironment } from '../adapters/node/environment.js';
+import { createNodeEnvironment } from '../adapters/node/environment.js';
 import type { CacheProvider } from '../core/cache-provider.js';
 import type { Ignore } from 'ignore';
 import {
@@ -187,7 +187,11 @@ export async function startWatch(ctx: WatchOptions) {
           fs.unlinkSync(cacheLocation);
         } catch {}
       }
-      const env = NodeEnvironment(config, { cacheLocation });
+      const env = createNodeEnvironment(config, {
+        cacheLocation,
+        configPath: config.configPath,
+        patterns: config.patterns,
+      });
       cache = env.cacheProvider;
       linterRef.current = new Linter(config, env);
       await refreshIgnore();

@@ -19,6 +19,11 @@ export interface ExecuteServices {
   ignorePath?: string;
   state: { pluginPaths: string[]; ignoreFilePaths: string[] };
   useColor: boolean;
+  envOptions?: {
+    cacheLocation?: string;
+    configPath?: string;
+    patterns?: string[];
+  };
 }
 
 export async function executeLint(
