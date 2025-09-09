@@ -5,7 +5,7 @@ import type { CacheProvider } from './cache-provider.js';
 import type { LintResult } from './types.js';
 import { CacheService } from './cache-service.js';
 import { TokenTracker } from './token-tracker.js';
-import type { LintDocument } from './document-source.js';
+import type { LintDocument } from './environment.js';
 
 export interface RunnerOptions {
   config: Config;

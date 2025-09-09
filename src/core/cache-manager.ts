@@ -1,7 +1,7 @@
 import { stat, writeFile } from 'node:fs/promises';
 import type { CacheProvider } from './cache-provider.js';
 import type { LintResult } from './types.js';
-import type { LintDocument } from './document-source.js';
+import type { LintDocument } from './environment.js';
 import { applyFixes } from './apply-fixes.js';
 
 export class CacheManager {
