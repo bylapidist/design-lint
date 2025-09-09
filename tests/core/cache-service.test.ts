@@ -3,27 +3,34 @@ import assert from 'node:assert/strict';
 import { CacheService } from '../../src/core/cache-service.ts';
 import { CacheManager } from '../../src/core/cache-manager.ts';
 
-void test('CacheService.prune removes cache entries not in file list', () => {
+void test('CacheService.prune removes cache entries not in file list', async () => {
   const removed: string[] = [];
-  const cache: { keys: () => string[]; removeKey: (k: string) => void } = {
-    keys: () => ['a.ts', 'b.ts'],
-    removeKey: (k: string) => removed.push(k),
+  const cache: {
+    keys: () => Promise<string[]>;
+    remove: (k: string) => Promise<void>;
+  } = {
+    keys: () => Promise.resolve(['a.ts', 'b.ts']),
+    remove: (k: string) => {
+      removed.push(k);
+      return Promise.resolve();
+    },
   };
-  CacheService.prune(cache, ['a.ts']);
+  await CacheService.prune(cache, ['a.ts']);
   assert.deepEqual(removed, ['b.ts']);
 });
 
-void test('CacheService.save delegates to CacheManager.save', () => {
+void test('CacheService.save delegates to CacheManager.save', async () => {
   class TestManager extends CacheManager {
     saved = false;
     constructor() {
       super(undefined, false);
     }
-    override save(loc?: string): void {
+    override save(loc?: string): Promise<void> {
       if (loc === 'cache') this.saved = true;
+      return Promise.resolve();
     }
   }
   const manager = new TestManager();
-  CacheService.save(manager, 'cache');
+  await CacheService.save(manager, 'cache');
   assert.ok(manager.saved);
 });

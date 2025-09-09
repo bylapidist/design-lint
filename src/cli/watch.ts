@@ -9,7 +9,7 @@ import { loadConfig } from '../config/loader.js';
 import { Linter } from '../core/linter.js';
 import type { Config } from '../core/linter.js';
 import { NodePluginLoader } from '../node/plugin-loader.js';
-import type { Cache } from '../core/cache.js';
+import type { CacheProvider } from '../core/cache-provider.js';
 import type { Ignore } from 'ignore';
 import {
   executeLint,
@@ -32,7 +32,7 @@ export interface WatchOptions {
   config: Config;
   linterRef: { current: Linter };
   refreshIgnore: () => Promise<void>;
-  cache?: Cache;
+  cache?: CacheProvider;
   cacheLocation?: string;
   state: WatchState;
   designIgnore: string;
@@ -178,7 +178,10 @@ export async function startWatch(ctx: WatchOptions) {
       config = await loadConfig(process.cwd(), options.config);
       linterRef.current = new Linter(config, undefined, new NodePluginLoader());
       await refreshIgnore();
-      cache?.clear();
+      if (cache) {
+        const keys = await cache.keys();
+        for (const k of keys) await cache.remove(k);
+      }
       if (cacheLocation) {
         try {
           fs.unlinkSync(cacheLocation);
@@ -220,7 +223,7 @@ export async function startWatch(ctx: WatchOptions) {
 
   const handleUnlink = async (filePath: string) => {
     const resolved = realpathIfExists(path.resolve(filePath));
-    cache?.removeKey(resolved);
+    await cache?.remove(resolved);
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;
     if (

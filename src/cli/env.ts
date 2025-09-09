@@ -3,7 +3,8 @@ import path from 'path';
 import ignore, { type Ignore } from 'ignore';
 import { getFormatter } from '../formatters/index.js';
 import { relFromCwd, realpathIfExists } from '../utils/paths.js';
-import { loadCache, type Cache } from '../core/cache.js';
+import type { CacheProvider } from '../core/cache-provider.js';
+import { NodeCacheProvider } from '../node/node-cache-provider.js';
 import type { Config, Linter } from '../core/linter.js';
 import type { LintResult } from '../core/types.js';
 import { NodePluginLoader } from '../node/plugin-loader.js';
@@ -13,7 +14,7 @@ export interface Environment {
   config: Config;
   linterRef: { current: Linter };
   pluginPaths: string[];
-  cache?: Cache;
+  cache?: CacheProvider;
   cacheLocation?: string;
   ignorePath?: string;
   designIgnore: string;
@@ -57,7 +58,9 @@ export async function prepareEnvironment(
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
-  const cache = cacheLocation ? loadCache(cacheLocation) : undefined;
+  const cache = cacheLocation
+    ? new NodeCacheProvider(cacheLocation)
+    : undefined;
 
   let ignorePath: string | undefined;
   if (options.ignorePath) {

@@ -3,30 +3,30 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { loadCache } from '../src/core/cache.ts';
+import { NodeCacheProvider } from '../src/node/node-cache-provider.ts';
 import type { LintResult } from '../src/core/types.ts';
 
-void test('loadCache loads and saves entries via flat-cache', async () => {
+void test('NodeCacheProvider loads and saves entries via flat-cache', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-test-'));
   const file = path.join(dir, 'cache.json');
 
-  let cache = loadCache(file);
+  let cache = new NodeCacheProvider(file);
   const result: LintResult = { filePath: 'foo', messages: [] };
   const entry = { mtime: 1, result };
-  cache.setKey('foo', entry);
-  cache.save(true);
+  await cache.set('foo', entry);
+  await cache.save();
 
-  cache = loadCache(file);
-  assert.deepEqual(cache.getKey('foo'), entry);
+  cache = new NodeCacheProvider(file);
+  assert.deepEqual(await cache.get('foo'), entry);
 });
 
-void test('cache uses provided file location', async () => {
+void test('NodeCacheProvider uses provided file location', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-test-'));
   const file = path.join(dir, 'cache.json');
 
-  const cache = loadCache(file);
+  const cache = new NodeCacheProvider(file);
   assert.equal(cache.cacheFilePath, path.resolve(file));
-  cache.save(true);
+  await cache.save();
 
   const exists = await fs
     .access(file)
