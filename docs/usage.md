@@ -82,12 +82,10 @@ npx design-lint src/button.tsx styles/*.css
 
 ## Exit codes
 - `0` – no lint errors
-- `1` – lint errors found
-- `2` – configuration or runtime error
+- `1` – lint errors or runtime/configuration error
 
 ## Troubleshooting
 If the CLI fails or reports unexpected results:
-- Increase verbosity with `--debug`
 - Verify the [configuration](./configuration.md)
 - Consult the [troubleshooting guide](./troubleshooting.md)
 
