@@ -6,6 +6,10 @@ Design Lint orchestrates a source-agnostic pipeline that turns any input into li
 
 Starting with document discovery, a `DocumentSource` enumerates raw content from the environment. Node's implementation scans the filesystem but other sources—such as network APIs or editor buffers—could plug in. The parser layer normalises the document into abstract syntax trees (ASTs) using language-specific adapters: CSS uses PostCSS, JavaScript and TypeScript rely on the TypeScript compiler, and Vue/Svelte single-file components compile before analysis. The **rule engine** traverses the ASTs and records messages, optionally providing fixes. Finally, the **formatter pipeline** transforms collected results into human- or machine-readable output.
 
+## Environment model
+
+Design Lint isolates platform-specific concerns behind an `Environment` object. It bundles the `DocumentSource`, optional `PluginLoader`, `CacheProvider`, and `TokenProvider` that let the linter interact with different runtimes. The default Node environment wires in file system, module resolution, disk caching, and token loading adapters, but other environments can supply their own components. This adapter pattern keeps the core engine agnostic and allows integrations for editors, build tools, or cloud services.
+
 ## Core modules
 
 ### DocumentSource
@@ -31,6 +35,10 @@ Resolves and loads configuration packages, rules and formatters. The Node adapte
 ### CacheProvider
 
 Stores metadata and parsed documents across runs. The Node implementation [`NodeCacheProvider`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk; alternative providers could target cloud storage or in-memory caches.
+
+### TokenProvider
+
+Supplies design tokens to rules. The Node adapter [`NodeTokenProvider`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/token-provider.ts) normalizes tokens from configuration, optionally wrapping values with `var()`. Other environments could stream tokens from design systems or APIs.
 
 ## Performance considerations
 

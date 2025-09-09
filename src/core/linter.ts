@@ -45,14 +45,15 @@ export class Linter {
 
   constructor(config: Config, env: Environment) {
     const provider: TokenProvider = env.tokenProvider ?? {
-        load: () =>
-          Promise.resolve({
-            themes: (config.tokens
-              ? { default: config.tokens }
-              : {}) as Record<string, DesignTokens>,
-            merged: (config.tokens ?? {}) as DesignTokens,
-          }),
-      };
+      load: () =>
+        Promise.resolve({
+          themes: (config.tokens ? { default: config.tokens } : {}) as Record<
+            string,
+            DesignTokens
+          >,
+          merged: (config.tokens ?? {}) as DesignTokens,
+        }),
+    };
     this.config = { ...config, tokens: {} };
     this.ruleRegistry = new RuleRegistry(this.config, env.pluginLoader);
     this.tokenTracker = new TokenTracker(provider);
