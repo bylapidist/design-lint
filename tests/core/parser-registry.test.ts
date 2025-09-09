@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parserRegistry } from '../../src/core/parser-registry.ts';
+import { createFileDocument } from '../../src/node/file-document.ts';
 import type {
   RuleModule,
   RuleContext,
@@ -26,23 +27,22 @@ const rule: RuleModule = {
 };
 
 const cases = [
-  { ext: '.css', filePath: 'a.css', text: 'a{color:red;}' },
-  { ext: '.ts', filePath: 'a.ts', text: 'css`color:red;`' },
+  { filePath: 'a.css', text: 'a{color:red;}' },
+  { filePath: 'a.ts', text: 'css`color:red;`' },
   {
-    ext: '.vue',
     filePath: 'a.vue',
     text: '<template></template><style>a{color:red;}</style>',
   },
   {
-    ext: '.svelte',
     filePath: 'a.svelte',
     text: '<div class="a"></div><style>.a{color:red;}</style>',
   },
 ];
 
 for (const c of cases) {
-  void test(`parser ${c.ext} dispatches CSS declarations`, async () => {
-    const parser = parserRegistry[c.ext];
+  void test(`parser ${c.filePath} dispatches CSS declarations`, async () => {
+    const doc = createFileDocument(c.filePath);
+    const parser = parserRegistry[doc.type];
     assert.ok(parser, 'parser exists');
     const messages: LintMessage[] = [];
     const ctx: RuleContext = {

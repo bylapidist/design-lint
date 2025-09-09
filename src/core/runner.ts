@@ -13,6 +13,7 @@ export interface RunnerOptions {
   lintDocument: (
     text: string,
     filePath: string,
+    docType: string,
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
 }
@@ -23,6 +24,7 @@ export class Runner {
   private lintDocumentFn: (
     text: string,
     filePath: string,
+    docType: string,
     metadata?: Record<string, unknown>,
   ) => Promise<LintResult>;
 

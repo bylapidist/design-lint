@@ -14,7 +14,6 @@ import type { DocumentSource, LintDocument } from './document-source.js';
 import { FileSource } from './file-source.js';
 import { createFileDocument } from '../node/file-document.js';
 import { parserRegistry } from './parser-registry.js';
-import path from 'node:path';
 
 export interface Config {
   tokens?: DesignTokens | Record<string, DesignTokens>;
@@ -144,6 +143,7 @@ export class Linter {
   private async lintText(
     text: string,
     filePath = 'unknown',
+    docType = '',
     metadata?: Record<string, unknown>,
   ): Promise<LintResult> {
     await this.ruleRegistry.load();
@@ -171,8 +171,8 @@ export class Linter {
       };
       return rule.create(ctx);
     });
-    const ext = path.extname(filePath).toLowerCase();
-    const parser = parserRegistry[ext];
+    const type = docType || createFileDocument(filePath).type;
+    const parser = parserRegistry[type];
     if (parser) {
       await parser(text, filePath, listeners, messages);
     }

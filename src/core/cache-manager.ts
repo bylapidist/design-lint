@@ -14,6 +14,7 @@ export class CacheManager {
     lintFn: (
       text: string,
       filePath: string,
+      docType: string,
       metadata?: Record<string, unknown>,
     ) => Promise<LintResult>,
   ): Promise<LintResult> {
@@ -35,14 +36,14 @@ export class CacheManager {
         return cached.result;
       }
       const text = await doc.getText();
-      let result = await lintFn(text, doc.id, doc.metadata);
+      let result = await lintFn(text, doc.id, doc.type, doc.metadata);
       let mtime = statResult?.mtimeMs ?? Date.now();
       let size = statResult?.size ?? text.length;
       if (this.fix && statResult) {
         const output = applyFixes(text, result.messages);
         if (output !== text) {
           await writeFile(doc.id, output, 'utf8');
-          result = await lintFn(output, doc.id, doc.metadata);
+          result = await lintFn(output, doc.id, doc.type, doc.metadata);
           const newStat = await stat(doc.id);
           mtime = newStat.mtimeMs;
           size = newStat.size;
