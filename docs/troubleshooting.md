@@ -74,7 +74,7 @@ This guide helps you resolve common issues when running design-lint.
   // design-lint-disable-next-line design-token/colors
   const color = '#fff';
   ```
-- **How do I share configurations across repos?** Publish a package containing your `designlint.config` and reference it via `extends` or `plugins`.
+ - **How do I share configurations across repos?** Publish an npm package that exports a configuration object and import it from `designlint.config.js` or `designlint.config.ts`.
 
 ## See also
 - [Usage](./usage.md)
