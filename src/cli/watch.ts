@@ -51,6 +51,8 @@ export interface WatchServices extends ExecuteServices {
   gitIgnore: string;
   state: WatchState;
   getIg: () => Ignore;
+  cache?: CacheProvider;
+  cacheLocation?: string;
 }
 
 export async function watchMode(
@@ -181,6 +183,7 @@ export async function startWatch(ctx: WatchOptions) {
         config,
         new FileSource(),
         new NodePluginLoader(),
+        cache,
       );
       await refreshIgnore();
       if (cache) {

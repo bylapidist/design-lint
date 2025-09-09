@@ -1062,7 +1062,6 @@ void test('CLI cache updates after --fix run', async () => {
     tokens: { deprecations: { old: { replacement: 'new' } } },
     rules: { 'design-system/deprecation': 'error' },
   };
-  const linter = new Linter(config, new FileSource());
   const store = new Map<
     string,
     {
@@ -1097,8 +1096,9 @@ void test('CLI cache updates after --fix run', async () => {
       return Promise.resolve();
     },
   };
-  const { results: res1 } = await linter.lintFiles([file], true, cache);
-  const { results: res2 } = await linter.lintFiles([file], false, cache);
+  const linter = new Linter(config, new FileSource(), undefined, cache);
+  const { results: res1 } = await linter.lintFiles([file], true);
+  const { results: res2 } = await linter.lintFiles([file], false);
   assert.equal(res1[0].messages.length, 0);
   assert.strictEqual(res1[0], res2[0]);
 });

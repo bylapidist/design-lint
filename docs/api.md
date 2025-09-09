@@ -74,30 +74,30 @@ Helper to define a configuration object with type checking.
 
 Lints files using built-in and plugin-provided rules.
 
-#### `new Linter(config, source, loader?)`
+#### `new Linter(config, source, loader?, cacheProvider?)`
 
 - **Parameters**
   - `config: Config` – resolved configuration.
   - `source: DocumentSource` – document source used to resolve lint targets.
   - `loader?: PluginLoader` – optional plugin loader.
+  - `cacheProvider?: CacheProvider` – optional cache provider.
 - **Returns** `Linter` instance.
 
-#### `lintFiles(targets, fix?, cache?, additionalIgnorePaths?, cacheLocation?)`
+#### `lintFiles(targets, fix?, additionalIgnorePaths?)`
 
 - **Parameters**
   - `targets: string[]` – file paths or glob patterns to lint.
   - `fix = false` – whether to apply automatic fixes.
-  - `cache?: Cache` – optional file cache.
   - `additionalIgnorePaths: string[] = []` – extra ignore globs.
-  - `cacheLocation?: string` – path where cache data is stored.
 - **Returns** `Promise<{ results: LintResult[]; ignoreFiles: string[]; warning?: string; }>`
 - **Throws** if reading or parsing files fails.
 
-#### `lintFile(path, fix?, cache?, ignorePaths?, cacheLocation?)`
+#### `lintFile(path, fix?, ignorePaths?)`
 
 - **Parameters**
   - `path: string` – path to a single file.
-  - Other parameters mirror `lintFiles`.
+  - `fix = false` – whether to apply automatic fixes.
+  - `ignorePaths: string[] = []` – extra ignore globs.
 - **Returns** `Promise<LintResult>`
 - **Throws** if the file cannot be processed.
 
@@ -140,14 +140,12 @@ Executes linting tasks with concurrency control.
     - `lintText: (text: string, filePath: string, metadata?: Record<string, unknown>) => Promise<LintResult>`
     - `source: DocumentSource`
 
-#### `run(targets, fix?, cache?, additionalIgnorePaths?, cacheLocation?)`
+#### `run(documents, fix?, cache?)`
 
 - **Parameters**
-  - `targets: string[]`
+  - `documents: LintDocument[]`
   - `fix = false`
-  - `cache?: Cache`
-  - `additionalIgnorePaths: string[] = []`
-  - `cacheLocation?: string`
+  - `cache?: CacheProvider`
 - **Returns** `Promise<{ results: LintResult[]; ignoreFiles: string[]; warning?: string; }>`
 
 ### `builtInRules`

@@ -71,8 +71,8 @@ export class CacheManager {
     }
   }
 
-  async save(cacheLocation?: string): Promise<void> {
-    if (cacheLocation && this.cache) {
+  async save(): Promise<void> {
+    if (this.cache) {
       await this.cache.save();
     }
   }
