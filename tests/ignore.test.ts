@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeTmpDir } from '../src/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 

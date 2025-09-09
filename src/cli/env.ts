@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import ignore, { type Ignore } from 'ignore';
 import { getFormatter } from '../formatters/index.js';
-import { relFromCwd, realpathIfExists } from '../utils/paths.js';
+import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
 import type { CacheProvider } from '../core/cache-provider.js';
 import type { Config, Linter } from '../core/linter.js';
 import type { LintResult } from '../core/types.js';
