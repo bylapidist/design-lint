@@ -11,7 +11,7 @@ import { RuleRegistry } from './rule-registry.js';
 import type { PluginLoader } from './plugin-loader.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
-import type { DocumentSource, LintDocument } from './document-source.js';
+import type { DocumentSource, LintDocument } from './environment.js';
 import { parserRegistry } from './parser-registry.js';
 
 export interface Config {
