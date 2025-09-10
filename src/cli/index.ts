@@ -80,9 +80,18 @@ function createProgram(version: string) {
     .option('--theme <name>', 'Theme name to export')
     .option('--out <file>', 'Write tokens to file')
     .option('--config <path>', 'Path to configuration file')
-    .action(async (opts: { theme?: string; out?: string; config?: string }) => {
-      await exportTokens(opts);
-    });
+    .action(
+      async (
+        opts: { theme?: string; out?: string; config?: string },
+        cmd: Command,
+      ) => {
+        const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+        await exportTokens({
+          ...opts,
+          config: opts.config ?? parent.config,
+        });
+      },
+    );
   return program;
 }
 

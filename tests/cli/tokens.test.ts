@@ -59,3 +59,37 @@ void test('tokens command exports resolved tokens with extensions', () => {
   });
   assert.equal(out.default['color.blue'].$value, '#ff0000');
 });
+
+void test('tokens command reads config from outside cwd', () => {
+  const dir = makeTmpDir();
+  const tokensPath = path.join(dir, 'base.tokens.json');
+  const tokens = { color: { red: { $type: 'color', $value: '#ff0000' } } };
+  fs.writeFileSync(tokensPath, JSON.stringify(tokens));
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ tokens: { default: './base.tokens.json' }, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const outPath = path.join(dir, 'out.json');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      'tokens',
+      '--out',
+      outPath,
+      '--config',
+      configPath,
+    ],
+    { cwd: process.cwd(), encoding: 'utf8' },
+  );
+  assert.equal(res.status, 0);
+  const out = JSON.parse(fs.readFileSync(outPath, 'utf8')) as Record<
+    string,
+    Record<string, { $value: unknown }>
+  >;
+  assert.equal(out.default['color.red'].$value, '#ff0000');
+});
