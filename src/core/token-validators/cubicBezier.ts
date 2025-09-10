@@ -1,5 +1,5 @@
 import type { Token } from '../types.js';
-import { expectAlias } from '../parser/normalize.js';
+import { validateAliases } from '../parser/alias.js';
 
 export function validateCubicBezier(
   value: unknown,
@@ -14,7 +14,9 @@ export function validateCubicBezier(
           throw new Error(`Token ${path} has invalid cubicBezier value`);
         }
       } else if (typeof v === 'string') {
-        expectAlias(v, `${path}[${String(i)}]`, 'number', tokenMap);
+        validateAliases(v, `${path}[${String(i)}]`, 'number', tokenMap, {
+          require: true,
+        });
       } else {
         throw new Error(`Token ${path} has invalid cubicBezier value`);
       }
@@ -22,7 +24,7 @@ export function validateCubicBezier(
     return;
   }
   if (typeof value === 'string') {
-    expectAlias(value, path, 'cubicBezier', tokenMap);
+    validateAliases(value, path, 'cubicBezier', tokenMap, { require: true });
     return;
   }
   throw new Error(`Token ${path} has invalid cubicBezier value`);

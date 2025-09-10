@@ -1,5 +1,5 @@
 import type { Token } from '../types.js';
-import { expectAlias } from '../parser/normalize.js';
+import { validateAliases } from '../parser/alias.js';
 import { isArray, isRecord } from './utils.js';
 import { validateColor } from './color.js';
 
@@ -27,7 +27,15 @@ export function validateGradient(
     if (typeof pos === 'number') {
       // allow any number; clamping is handled by consumers
     } else if (typeof pos === 'string') {
-      expectAlias(pos, `${path}[${String(i)}].position`, 'number', tokenMap);
+      validateAliases(
+        pos,
+        `${path}[${String(i)}].position`,
+        'number',
+        tokenMap,
+        {
+          require: true,
+        },
+      );
     } else {
       throw new Error(`Token ${path} has invalid gradient value`);
     }

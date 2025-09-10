@@ -1,5 +1,5 @@
 import type { Token } from '../types.js';
-import { expectAlias } from '../parser/normalize.js';
+import { validateAliases } from '../parser/alias.js';
 
 export function validateNumber(
   value: unknown,
@@ -8,7 +8,7 @@ export function validateNumber(
 ): void {
   if (typeof value === 'number') return;
   if (typeof value === 'string') {
-    expectAlias(value, path, 'number', tokenMap);
+    validateAliases(value, path, 'number', tokenMap, { require: true });
     return;
   }
   throw new Error(`Token ${path} has invalid number value`);

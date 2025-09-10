@@ -1,5 +1,5 @@
 import type { Token } from '../types.js';
-import { expectAlias } from '../parser/normalize.js';
+import { validateAliases } from '../parser/alias.js';
 import { isRecord } from './utils.js';
 
 const DURATION_UNITS = new Set(['ms', 's']);
@@ -18,7 +18,7 @@ export function validateDuration(
     return;
   }
   if (typeof value === 'string') {
-    expectAlias(value, path, 'duration', tokenMap);
+    validateAliases(value, path, 'duration', tokenMap, { require: true });
     return;
   }
   throw new Error(`Token ${path} has invalid duration value`);

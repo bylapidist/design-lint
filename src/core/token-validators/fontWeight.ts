@@ -1,5 +1,5 @@
 import type { Token } from '../types.js';
-import { expectAlias, isAlias } from '../parser/normalize.js';
+import { validateAliases } from '../parser/alias.js';
 
 const FONT_WEIGHT_KEYWORDS = new Set([
   'thin',
@@ -34,10 +34,7 @@ export function validateFontWeight(
     return;
   }
   if (typeof value === 'string') {
-    if (isAlias(value)) {
-      expectAlias(value, path, 'fontWeight', tokenMap);
-      return;
-    }
+    if (validateAliases(value, path, 'fontWeight', tokenMap).length) return;
     if (FONT_WEIGHT_KEYWORDS.has(value)) return;
   }
   throw new Error(`Token ${path} has invalid fontWeight value`);

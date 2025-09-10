@@ -1,5 +1,5 @@
 import type { Token } from '../types.js';
-import { expectAlias } from '../parser/normalize.js';
+import { validateAliases } from '../parser/alias.js';
 import { isRecord } from './utils.js';
 
 const DIMENSION_UNITS = new Set(['px', 'rem']);
@@ -18,7 +18,7 @@ export function validateDimension(
     return;
   }
   if (typeof value === 'string') {
-    expectAlias(value, path, 'dimension', tokenMap);
+    validateAliases(value, path, 'dimension', tokenMap, { require: true });
     return;
   }
   throw new Error(`Token ${path} has invalid dimension value`);

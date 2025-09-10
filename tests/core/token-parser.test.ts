@@ -383,6 +383,50 @@ void test('parseDesignTokens rejects shadow tokens with unknown properties', () 
   assert.throws(() => parseDesignTokens(tokens), /invalid shadow value/i);
 });
 
+void test('parseDesignTokens validates aliases within shadow tokens', () => {
+  const tokens: DesignTokens = {
+    color: { base: { $value: '#000', $type: 'color' } },
+    size: { sm: { $value: { value: 1, unit: 'px' }, $type: 'dimension' } },
+    shadow: {
+      $type: 'shadow',
+      ref: {
+        $value: [
+          {
+            color: 'rgba({color.base}, 0.5)',
+            offsetX: 'calc({size.sm} * 2)',
+            offsetY: { value: 0, unit: 'px' },
+            blur: { value: 0, unit: 'px' },
+          },
+        ],
+      },
+    },
+  };
+  const result = parseDesignTokens(tokens);
+  assert.equal(
+    result.find((t) => t.path === 'shadow.ref')?.token.$type,
+    'shadow',
+  );
+});
+
+void test('parseDesignTokens rejects unknown aliases within shadow tokens', () => {
+  const tokens = {
+    shadow: {
+      $type: 'shadow',
+      bad: {
+        $value: [
+          {
+            color: 'rgba({color.missing}, 0.5)',
+            offsetX: { value: 0, unit: 'px' },
+            offsetY: { value: 0, unit: 'px' },
+            blur: { value: 0, unit: 'px' },
+          },
+        ],
+      },
+    },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /unknown token/i);
+});
+
 void test('parseDesignTokens validates strokeStyle composite tokens', () => {
   const tokens: DesignTokens = {
     stroke: {
@@ -463,6 +507,41 @@ void test('parseDesignTokens rejects gradient tokens with unknown properties', (
     },
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(tokens), /invalid gradient value/i);
+});
+
+void test('parseDesignTokens validates aliases within gradient stops', () => {
+  const tokens: DesignTokens = {
+    color: { red: { $value: '#f00', $type: 'color' } },
+    number: { half: { $value: 0.5, $type: 'number' } },
+    gradient: {
+      $type: 'gradient',
+      good: {
+        $value: [
+          {
+            color: 'rgba({color.red}, 1)',
+            position: 'calc({number.half} * 100)',
+          },
+        ],
+      },
+    },
+  };
+  const result = parseDesignTokens(tokens);
+  assert.equal(
+    result.find((t) => t.path === 'gradient.good')?.token.$type,
+    'gradient',
+  );
+});
+
+void test('parseDesignTokens rejects unknown aliases within gradient stops', () => {
+  const tokens = {
+    gradient: {
+      $type: 'gradient',
+      bad: {
+        $value: [{ color: 'rgba({color.missing}, 1)', position: 0 }],
+      },
+    },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /unknown token/i);
 });
 
 void test('parseDesignTokens validates typography composite tokens', () => {

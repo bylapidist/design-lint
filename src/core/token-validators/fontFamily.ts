@@ -1,5 +1,5 @@
 import type { Token } from '../types.js';
-import { expectAlias, isAlias } from '../parser/normalize.js';
+import { validateAliases } from '../parser/alias.js';
 
 export function validateFontFamily(
   value: unknown,
@@ -7,7 +7,7 @@ export function validateFontFamily(
   tokenMap: Map<string, Token>,
 ): void {
   if (typeof value === 'string') {
-    if (isAlias(value)) expectAlias(value, path, 'fontFamily', tokenMap);
+    validateAliases(value, path, 'fontFamily', tokenMap);
     return;
   }
   if (Array.isArray(value) && value.every((v) => typeof v === 'string')) return;
