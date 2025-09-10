@@ -51,12 +51,26 @@ export class Linter {
   private tokensReady: Promise<void>;
 
   constructor(config: Config, env: Environment) {
+    const inlineTokens = config.tokens;
     const provider: TokenProvider = env.tokenProvider ?? {
-      load: () => Promise.resolve({}),
+      load: () => {
+        if (inlineTokens) {
+          try {
+            flattenTokens({ default: inlineTokens as DesignTokens });
+            return Promise.resolve({
+              default: inlineTokens as DesignTokens,
+            });
+          } catch {
+            return Promise.resolve({});
+          }
+        }
+        return Promise.resolve({});
+      },
     };
+    const tokensConfig = inlineTokens ?? {};
     this.config = {
       ...config,
-      tokens: config.tokens ?? {},
+      tokens: tokensConfig,
     };
     this.ruleRegistry = new RuleRegistry(this.config, env.pluginLoader);
     this.tokenTracker = new TokenTracker(provider);
@@ -180,10 +194,15 @@ export class Linter {
         options,
         metadata,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
-        getFlattenedTokens: (type: string, theme?: string) =>
-          flattenTokens(this.tokensByTheme, theme).filter(
-            ({ token }) => token.$type === type,
-          ),
+        getFlattenedTokens: (type: string, theme?: string) => {
+          try {
+            return flattenTokens(this.tokensByTheme, theme).filter(
+              ({ token }) => token.$type === type,
+            );
+          } catch {
+            return [];
+          }
+        },
       };
       return rule.create(ctx);
     });

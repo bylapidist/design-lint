@@ -19,11 +19,13 @@ export async function exportTokens(options: TokensCommandOptions) {
       | undefined,
   );
   const themes = options.theme ? [options.theme] : Object.keys(tokensByTheme);
-  const output: Record<string, Record<string, unknown>> = Object.create(null);
+  const output: Record<string, Record<string, unknown>> = Object.create(
+    null,
+  ) as Record<string, Record<string, unknown>>;
 
   for (const theme of themes) {
     const flat = getFlattenedTokens(tokensByTheme, theme);
-    output[theme] = Object.create(null);
+    output[theme] = Object.create(null) as Record<string, unknown>;
     for (const { path: p, token } of flat) {
       output[theme][p] = token;
     }
