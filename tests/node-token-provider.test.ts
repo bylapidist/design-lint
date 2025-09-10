@@ -1,0 +1,23 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+
+import { NodeTokenProvider } from '../src/adapters/node/token-provider.ts';
+
+const tokens = {
+  color: {
+    primary: { $type: 'color', $value: '#fff' },
+  },
+};
+
+void test('wraps tokens in default theme when no theme map is provided', async () => {
+  const provider = new NodeTokenProvider(tokens);
+  const result = await provider.load();
+  assert.deepEqual(result.default, tokens);
+});
+
+void test('accepts explicit theme records without modification', async () => {
+  const themes = { light: tokens, dark: tokens };
+  const provider = new NodeTokenProvider(themes);
+  const result = await provider.load();
+  assert.deepEqual(result, themes);
+});
