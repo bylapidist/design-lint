@@ -37,3 +37,5 @@ This repository requires Node.js >= 22 and follows strict [Semantic Versioning](
 
 - Use `npm run format` to automatically format files when needed.
 - Run `npm run build` when modifying source files to ensure the TypeScript build succeeds.
+- Do not use `eslint ignore` or disable rules with `eslint-disable` comments; all code must satisfy ESLint rules without overrides.
+- Use clean TypeScript types and avoid type casting or assertions such as `as any`.
