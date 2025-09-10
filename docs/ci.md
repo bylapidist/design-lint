@@ -1,6 +1,6 @@
 ---
 title: Continuous Integration
-description: "Run design-lint in CI pipelines to prevent regressions."
+description: 'Run design-lint in CI pipelines to prevent regressions.'
 sidebar_position: 10
 ---
 
@@ -9,6 +9,7 @@ sidebar_position: 10
 This guide targets CI engineers integrating design-lint into automated workflows.
 
 ## Table of contents
+
 - [GitHub Actions](#github-actions)
 - [GitLab CI](#gitlab-ci)
 - [CircleCI](#circleci)
@@ -17,6 +18,7 @@ This guide targets CI engineers integrating design-lint into automated workflows
 - [See also](#see-also)
 
 ## GitHub Actions
+
 ```yaml
 # .github/workflows/lint.yml
 name: Lint
@@ -38,12 +40,13 @@ jobs:
 ```
 
 ## GitLab CI
+
 ```yaml
 # .gitlab-ci.yml
 lint:
   image: node:22
   cache:
-    key: "$CI_COMMIT_REF_SLUG"
+    key: '$CI_COMMIT_REF_SLUG'
     paths:
       - node_modules/
   script:
@@ -55,6 +58,7 @@ lint:
 ```
 
 ## CircleCI
+
 ```yaml
 # .circleci/config.yml
 version: 2.1
@@ -73,6 +77,7 @@ workflows:
 ```
 
 ## Generic pipeline
+
 Any CI system that can run shell commands can execute design-lint:
 
 ```bash
@@ -81,8 +86,10 @@ npx design-lint "src/**/*" --format json --output lint.json
 ```
 
 ## Handling failures
+
 Use `--max-warnings` to fail the build when warnings exceed a threshold. Cache `node_modules` or the `.designlintcache` directory to speed up runs. See [formatters](./formatters.md) for report formats and [usage](./usage.md) for CLI flags.
 
 ## See also
+
 - [Formatters](./formatters.md)
 - [Usage guide](./usage.md)

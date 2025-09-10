@@ -1,6 +1,6 @@
 ---
 title: Example Projects
-description: "Cloneable projects demonstrating design-lint in different scenarios."
+description: 'Cloneable projects demonstrating design-lint in different scenarios.'
 sidebar_position: 11
 ---
 
@@ -15,5 +15,6 @@ Explore these hands-on examples to see design-lint in action.
 - [Plugin](./plugin/README.md) – scaffold for authoring a new rule plugin.
 
 ## See also
+
 - [Getting Started](../usage.md)
 - [Configuration](../configuration.md)

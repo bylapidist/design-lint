@@ -3,4 +3,3 @@
 ---
 
 fix getTokenCompletions to list token paths by theme
-

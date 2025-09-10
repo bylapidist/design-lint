@@ -1,6 +1,6 @@
 ---
 title: Custom Formatter Example
-description: "Create and use a custom formatter."
+description: 'Create and use a custom formatter.'
 ---
 
 # Custom Formatter Example
@@ -8,6 +8,7 @@ description: "Create and use a custom formatter."
 Outputs only file names that contain lint errors.
 
 ## Steps
+
 1. Create `formatter.js`:
    ```js
    export default function formatter(results) {
@@ -20,4 +21,5 @@ Outputs only file names that contain lint errors.
    ```
 
 ## Next steps
+
 See [formatters](../../formatters.md) for more information.

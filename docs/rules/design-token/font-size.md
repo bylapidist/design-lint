@@ -1,14 +1,16 @@
 ---
 title: design-token/font-size
-description: "Use font size tokens."
+description: 'Use font size tokens.'
 ---
 
 # design-token/font-size
 
 ## Summary
+
 Ensures `font-size` declarations use values from your `fontSizes` tokens.
 
 ## Configuration
+
 Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
 
 ```json
@@ -26,6 +28,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 Font-size tokens use the `dimension` type with explicit units.
 
 ## Options
+
 No additional options.
 
 This rule is not auto-fixable.
@@ -35,23 +38,32 @@ This rule is not auto-fixable.
 ### Invalid
 
 ```css
-.title { font-size: 18px; }
+.title {
+  font-size: 18px;
+}
 ```
 
 ### Valid
 
 ```css
-.title { font-size: 1rem; }
-.title { font-size: 20px; }
+.title {
+  font-size: 1rem;
+}
+.title {
+  font-size: 20px;
+}
 ```
 
 ## When Not To Use
+
 If font sizes are not managed via tokens, disable this rule.
 
 ## Related Rules
+
 - [design-token/font-family](./font-family.md)
 - [design-token/line-height](./line-height.md)
 
 ## See also
+
 - [Configuration](../../configuration.md)
 - [Rule index](../index.md)

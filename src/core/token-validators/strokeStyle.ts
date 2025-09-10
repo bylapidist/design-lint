@@ -31,10 +31,7 @@ export function validateStrokeStyle(value: unknown, path: string): void {
       throw new Error(`Token ${path} has invalid strokeStyle value`);
     }
     for (let i = 0; i < value.dashArray.length; i++) {
-      validateDimension(
-        value.dashArray[i],
-        `${path}.dashArray[${String(i)}]`,
-      );
+      validateDimension(value.dashArray[i], `${path}.dashArray[${String(i)}]`);
     }
     if (
       typeof value.lineCap !== 'string' ||

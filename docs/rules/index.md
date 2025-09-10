@@ -1,6 +1,6 @@
 ---
 title: Rule Reference
-description: "Complete list of design-lint rules grouped by category."
+description: 'Complete list of design-lint rules grouped by category.'
 sidebar_position: 4
 ---
 
@@ -9,6 +9,7 @@ sidebar_position: 4
 Rules enforce your design system. This reference targets developers configuring rule behaviour or writing custom rules.
 
 ## Table of contents
+
 - [Token Validation](#token-validation)
 - [Component Usage](#component-usage)
 - [Styling](#styling)
@@ -17,6 +18,7 @@ Rules enforce your design system. This reference targets developers configuring 
 - [See also](#see-also)
 
 ## Token Validation
+
 Validate usage of design tokens in code and style sheets.
 
 - [design-token/animation](./design-token/animation.md)
@@ -38,6 +40,7 @@ Validate usage of design tokens in code and style sheets.
 - [design-token/z-index](./design-token/z-index.md)
 
 ## Component Usage
+
 Ensure components follow naming and usage conventions.
 
 - [design-system/component-prefix](./design-system/component-prefix.md)
@@ -47,19 +50,23 @@ Ensure components follow naming and usage conventions.
 - [design-system/variant-prop](./design-system/variant-prop.md)
 
 ## Styling
+
 Rules that govern styles inside components.
 
 - [design-system/no-inline-styles](./design-system/no-inline-styles.md)
 
 ## Misc
+
 Additional checks for maintainability.
 
 - [design-system/deprecation](./design-system/deprecation.md)
 - [design-system/no-unused-tokens](./design-system/no-unused-tokens.md)
 
 ## Adding or deprecating rules
+
 To propose a new rule or retire an existing one, open an issue or pull request following the guidelines in [CONTRIBUTING.md](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md). Include rationale, examples, and implementation notes. Deprecated rules should remain in the documentation until removed in a major release.
 
 ## See also
+
 - [Configuration](../configuration.md)
 - [Plugins](../plugins.md)

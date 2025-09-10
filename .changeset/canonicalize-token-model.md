@@ -1,5 +1,5 @@
 ---
-"@lapidist/design-lint": minor
+'@lapidist/design-lint': minor
 ---
 
 align token utilities with W3C Design Tokens format and support root $schema

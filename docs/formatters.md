@@ -1,6 +1,6 @@
 ---
 title: Formatters
-description: "Control how design-lint reports results or write your own formatter."
+description: 'Control how design-lint reports results or write your own formatter.'
 sidebar_position: 5
 ---
 
@@ -9,6 +9,7 @@ sidebar_position: 5
 Formatters shape the output produced by design-lint. This page targets developers choosing report styles or authoring custom formatters.
 
 ## Table of contents
+
 - [Built-in formatters](#built-in-formatters)
 - [Selecting a formatter](#selecting-a-formatter)
 - [Writing a custom formatter](#writing-a-custom-formatter)
@@ -17,13 +18,14 @@ Formatters shape the output produced by design-lint. This page targets developer
 
 ## Built-in formatters
 
-| Name | Description |
-| --- | --- |
+| Name      | Description                                                |
+| --------- | ---------------------------------------------------------- |
 | `stylish` | Human-friendly terminal output with colours and a summary. |
-| `json` | Machine-readable output for scripts or dashboards. |
-| `sarif` | Emits SARIF 2.1.0 for services like GitHub code scanning. |
+| `json`    | Machine-readable output for scripts or dashboards.         |
+| `sarif`   | Emits SARIF 2.1.0 for services like GitHub code scanning.  |
 
 ## Selecting a formatter
+
 Choose a formatter via the CLI or configuration file.
 
 ```bash
@@ -39,6 +41,7 @@ npx design-lint src --format json
 > **Tip:** Combine the `json` formatter with `--output` to generate artifacts in CI.
 
 ## Writing a custom formatter
+
 A formatter exports a default function receiving lint results and returning a string.
 
 ```js
@@ -57,6 +60,7 @@ npx design-lint src --format ./formatter.js
 For a reusable package, publish the formatter to npm and reference it by name. See the [plugins guide](./plugins.md#formatters-as-plugins) for packaging tips.
 
 ## Using formatters in CI
+
 Formatters determine how results are captured by CI systems:
 
 - `stylish` prints directly to the log.
@@ -66,5 +70,6 @@ Formatters determine how results are captured by CI systems:
 Store the report as an artifact for later inspection or feed it into additional tooling.
 
 ## See also
+
 - [Plugins](./plugins.md)
 - [CI integration](./ci.md)

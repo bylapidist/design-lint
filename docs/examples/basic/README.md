@@ -1,6 +1,6 @@
 ---
 title: Basic Example
-description: "Minimal project linted with design-lint."
+description: 'Minimal project linted with design-lint.'
 ---
 
 # Basic Example
@@ -8,6 +8,7 @@ description: "Minimal project linted with design-lint."
 This example introduces design-lint with a single token and rule.
 
 ## Steps
+
 1. Install dependencies:
    ```bash
    npm install --save-dev @lapidist/design-lint
@@ -18,10 +19,13 @@ This example introduces design-lint with a single token and rule.
    ```
 
 ## Key files
+
 - `designlint.config.json` – defines `primary` and `secondary` color tokens and enables the `design-token/colors` rule.
 
 ## Expected output
+
 When a file uses `#ff0000`, the linter reports an error suggesting the `primary` token.
 
 ## Next steps
+
 Read the [Getting Started guide](../../usage.md) for more details.

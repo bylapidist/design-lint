@@ -1,6 +1,6 @@
 ---
 title: Vue Example
-description: "Lint Vue single-file components."
+description: 'Lint Vue single-file components.'
 ---
 
 # Vue Example
@@ -8,6 +8,7 @@ description: "Lint Vue single-file components."
 Shows how to lint `.vue` files with design-lint.
 
 ## Steps
+
 1. Install dependencies:
    ```bash
    npm install --save-dev @lapidist/design-lint
@@ -18,4 +19,5 @@ Shows how to lint `.vue` files with design-lint.
    ```
 
 ## Next steps
+
 See [framework integrations](../../frameworks.md#vue) for configuration tips.

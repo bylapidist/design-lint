@@ -1,6 +1,6 @@
 ---
 title: React Example
-description: "Integrate design-lint with a React project."
+description: 'Integrate design-lint with a React project.'
 ---
 
 # React Example
@@ -8,6 +8,7 @@ description: "Integrate design-lint with a React project."
 Demonstrates linting React components.
 
 ## Steps
+
 1. Install dependencies:
    ```bash
    npm install --save-dev @lapidist/design-lint
@@ -24,4 +25,5 @@ Demonstrates linting React components.
    ```
 
 ## Next steps
+
 See [framework integrations](../../frameworks.md#react) for more guidance.

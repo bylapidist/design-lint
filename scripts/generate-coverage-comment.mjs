@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 
 async function main() {
   const coverage = JSON.parse(
-    await readFile('coverage/coverage-summary.json', 'utf8')
+    await readFile('coverage/coverage-summary.json', 'utf8'),
   );
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   const thresholds = pkg.c8 ?? {};
@@ -10,7 +10,7 @@ async function main() {
     ['Statements', coverage.total.statements, thresholds.statements],
     ['Branches', coverage.total.branches, thresholds.branches],
     ['Functions', coverage.total.functions, thresholds.functions],
-    ['Lines', coverage.total.lines, thresholds.lines]
+    ['Lines', coverage.total.lines, thresholds.lines],
   ];
   const rows = metrics
     .map(([name, data, threshold]) => {
@@ -26,7 +26,10 @@ async function main() {
     })
     .join('\n');
   const table = `| Metric | Coverage | Threshold | Status |\n| --- | --- | --- | --- |\n${rows}\n`;
-  await writeFile('coverage/coverage-comment.md', `### Coverage Summary\n\n${table}`);
+  await writeFile(
+    'coverage/coverage-comment.md',
+    `### Coverage Summary\n\n${table}`,
+  );
 }
 
 main().catch((err) => {
