@@ -3,6 +3,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
+import { TokenParseError } from '../adapters/node/token-parser.js';
 import { prepareEnvironment, type PrepareEnvironmentOptions } from './env.js';
 import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
@@ -134,8 +135,13 @@ export async function run(argv = process.argv.slice(2)) {
       process.exitCode = exitCode;
       if (options.watch) await watchMode(patterns, options, services);
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(useColor ? chalk.red(message) : message);
+      if (err instanceof TokenParseError) {
+        const out = err.format();
+        console.error(useColor ? chalk.red(out) : out);
+      } else {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(useColor ? chalk.red(message) : message);
+      }
       process.exitCode = 1;
     }
   });

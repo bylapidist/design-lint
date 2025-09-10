@@ -8,7 +8,10 @@ import {
   registerTokenTransform,
   type TokenTransform,
 } from '../../src/core/parser/index.ts';
-import { parseDesignTokensFile } from '../../src/adapters/node/token-parser.ts';
+import {
+  parseDesignTokensFile,
+  TokenParseError,
+} from '../../src/adapters/node/token-parser.ts';
 import type { DesignTokens } from '../../src/core/types.js';
 
 void test('parseDesignTokens flattens tokens with paths in declaration order', () => {
@@ -140,7 +143,14 @@ void test('parseDesignTokensFile reports location on parse error', async () => {
 
   await assert.rejects(
     () => parseDesignTokensFile(file),
-    (err: Error) => err.message.includes(file) && /\(1:\d+\)/.test(err.message),
+    (err: unknown) => {
+      assert.ok(err instanceof TokenParseError);
+      assert.equal(err.filePath, file);
+      assert.ok(err.line >= 1);
+      assert.ok(err.column >= 1);
+      assert.ok(err.format().includes('^'));
+      return true;
+    },
   );
 });
 
