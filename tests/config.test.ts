@@ -251,6 +251,38 @@ void test('loads config with multi-theme tokens', async () => {
   assert.equal(light?.colors?.primary, '#fff');
 });
 
+void test('loads config with spec token tree', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {
+        color: { brand: { primary: { $type: 'color', $value: '#000' } } },
+      },
+    }),
+  );
+  const loaded = await loadConfig(tmp);
+  const tokens = loaded.tokens as {
+    color: { brand: { primary: { $value: string } } };
+  };
+  assert.equal(tokens.color.brand.primary.$value, '#000');
+});
+
+void test('allows theme token file paths', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'designlint.config.json'),
+    JSON.stringify({ tokens: { light: './light.tokens.json' } }),
+  );
+  fs.writeFileSync(
+    path.join(tmp, 'light.tokens.json'),
+    JSON.stringify({ color: { brand: { primary: { $value: '#000' } } } }),
+  );
+  const loaded = await loadConfig(tmp);
+  const tokens = loaded.tokens as Record<string, unknown>;
+  assert.equal(tokens.light, './light.tokens.json');
+});
+
 void test('surfaces errors thrown by ts config', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');

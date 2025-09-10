@@ -3,6 +3,7 @@ import type {
   LegacyDesignTokens,
   LintMessage,
   RuleContext,
+  DesignTokens,
 } from './types.js';
 import { mergeTokens, extractVarName } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
@@ -17,7 +18,11 @@ import type {
 import { parserRegistry } from './parser-registry.js';
 
 export interface Config {
-  tokens?: LegacyDesignTokens | Record<string, LegacyDesignTokens>;
+  tokens?:
+    | LegacyDesignTokens
+    | Record<string, LegacyDesignTokens>
+    | DesignTokens
+    | Record<string, DesignTokens | string>;
   rules?: Record<string, unknown>;
   ignoreFiles?: string[];
   plugins?: string[];

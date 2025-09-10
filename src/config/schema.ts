@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Config } from '../core/linter.js';
-import type { LegacyDesignTokens } from '../core/types.js';
+import type { DesignTokens, LegacyDesignTokens } from '../core/types.js';
 
 const severitySchema = z.union([
   z.literal('error'),
@@ -16,43 +16,20 @@ const ruleSettingSchema = z.union([
   z.tuple([severitySchema, z.unknown()]),
 ]);
 
-const numberOrString = z.union([z.number(), z.string()]);
-
-const tokenPatternArray = z.array(z.union([z.string(), z.instanceof(RegExp)]));
-
-const tokenGroup = <T extends z.ZodType>(
-  schema: T,
-): z.ZodType<Record<string, z.infer<T>> | (string | RegExp)[]> =>
-  z.union([z.record(z.string(), schema), tokenPatternArray]);
-
-const baseTokensSchema: z.ZodType<LegacyDesignTokens> = z
-  .object({
-    colors: tokenGroup(z.string()).optional(),
-    spacing: tokenGroup(z.number()).optional(),
-    zIndex: tokenGroup(z.number()).optional(),
-    borderRadius: tokenGroup(numberOrString).optional(),
-    borderWidths: tokenGroup(numberOrString).optional(),
-    shadows: tokenGroup(z.string()).optional(),
-    durations: tokenGroup(numberOrString).optional(),
-    animations: tokenGroup(z.string()).optional(),
-    blurs: tokenGroup(numberOrString).optional(),
-    borderColors: tokenGroup(z.string()).optional(),
-    opacity: tokenGroup(numberOrString).optional(),
-    outlines: tokenGroup(z.string()).optional(),
-    fontSizes: tokenGroup(numberOrString).optional(),
-    fonts: tokenGroup(z.string()).optional(),
-    lineHeights: tokenGroup(numberOrString).optional(),
-    fontWeights: tokenGroup(numberOrString).optional(),
-    letterSpacings: tokenGroup(numberOrString).optional(),
-    deprecations: z
-      .record(z.string(), z.object({ replacement: z.string().optional() }))
-      .optional(),
-  })
-  .catchall(z.unknown());
+const designTokensSchema = z.record(
+  z.string(),
+  z.unknown(),
+) as unknown as z.ZodType<DesignTokens>;
 
 const tokensSchema: z.ZodType<
-  LegacyDesignTokens | Record<string, LegacyDesignTokens>
-> = z.union([baseTokensSchema, z.record(z.string(), baseTokensSchema)]);
+  | DesignTokens
+  | Record<string, DesignTokens | string>
+  | LegacyDesignTokens
+  | Record<string, LegacyDesignTokens | string>
+> = z.union([
+  designTokensSchema,
+  z.record(z.string(), z.union([designTokensSchema, z.string()])),
+]);
 
 export const configSchema: z.ZodType<Config> = z
   .object({
