@@ -71,3 +71,15 @@ void test('getFlattenedTokens resolves aliases', () => {
     { path: 'palette.primary', token: { $value: '#f00', $type: 'color' } },
   ]);
 });
+
+void test('getFlattenedTokens handles primitive token values', () => {
+  const tokens = {
+    default: {
+      colors: { primary: '#fff' },
+      deprecations: { old: { replacement: 'new' } },
+    },
+  } as unknown as Record<string, DesignTokens>;
+  assert.doesNotThrow(() => {
+    getFlattenedTokens(tokens, 'default');
+  });
+});

@@ -49,12 +49,12 @@ const FONT_WEIGHT_KEYWORDS = new Set([
 const DIMENSION_UNITS = new Set(['px', 'rem']);
 const DURATION_UNITS = new Set(['ms', 's']);
 
-function isToken(node: Token | TokenGroup): node is Token {
-  return '$value' in node;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isToken(node: unknown): node is Token {
+  return isRecord(node) && '$value' in node;
 }
 
 function isAlias(value: unknown): string | null {
@@ -497,6 +497,7 @@ function validateToken(
 
 export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
   const result: FlattenedToken[] = [];
+  const loose = new Set<Token>();
   const seenPaths = new Map<string, string>();
 
   function walk(
@@ -541,9 +542,7 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
       }
       seenNames.set(lower, name);
 
-      const node = (group as Record<string, TokenGroup | Token | undefined>)[
-        name
-      ];
+      const node = (group as Record<string, unknown>)[name];
       if (node === undefined) continue;
       const pathParts = [...prefix, name];
       const pathId = pathParts.join('.');
@@ -559,17 +558,29 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
       }
       seenPaths.set(lowerPath, pathId);
 
-      if (isToken(node)) {
-        const token: Token = { ...node, $type: node.$type ?? currentType };
-        const tokenDeprecated = token.$deprecated ?? currentDeprecated;
-        if (tokenDeprecated !== undefined) token.$deprecated = tokenDeprecated;
-        result.push({ path: pathId, token });
-      } else {
-        const childKeys = Object.keys(node).filter((k) => !GROUP_PROPS.has(k));
-        if ('$type' in node && childKeys.length === 0) {
-          throw new Error(`Token ${pathId} is missing $value`);
+      if (isRecord(node)) {
+        if (isToken(node)) {
+          const token: Token = { ...node, $type: node.$type ?? currentType };
+          const tokenDeprecated = token.$deprecated ?? currentDeprecated;
+          if (tokenDeprecated !== undefined)
+            token.$deprecated = tokenDeprecated;
+          result.push({ path: pathId, token });
+        } else {
+          const childKeys = Object.keys(node).filter(
+            (k) => !GROUP_PROPS.has(k),
+          );
+          if ('$type' in node && childKeys.length === 0) {
+            throw new Error(`Token ${pathId} is missing $value`);
+          }
+          walk(node as TokenGroup, pathParts, currentType, currentDeprecated);
         }
-        walk(node, pathParts, currentType, currentDeprecated);
+      } else {
+        const token: Token = { $value: node, $type: currentType };
+        if (currentDeprecated !== undefined) {
+          token.$deprecated = currentDeprecated;
+        }
+        result.push({ path: pathId, token });
+        loose.add(token);
       }
     }
   }
@@ -577,6 +588,7 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
   walk(tokens, [], undefined, undefined);
   const tokenMap = new Map(result.map((t) => [t.path, t.token]));
   for (const { path, token } of result) {
+    if (loose.has(token)) continue;
     validateToken(path, token, tokenMap);
   }
   return result;
