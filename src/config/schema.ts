@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { z } from 'zod';
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
@@ -21,10 +22,21 @@ const designTokensSchema = z.record(
   z.unknown(),
 ) as unknown as z.ZodType<DesignTokens>;
 
+const tokenFileSchema = z
+  .string()
+  .refine(
+    (p) =>
+      !path.isAbsolute(p) &&
+      (p.endsWith('.tokens') || p.endsWith('.tokens.json')),
+    {
+      message:
+        'Token file paths must be relative and end with .tokens or .tokens.json',
+    },
+  );
+
 const tokensSchema = z.union([
   designTokensSchema,
-  z.record(z.string(), z.union([designTokensSchema, z.string()])),
-  z.record(z.string(), z.unknown()),
+  z.record(z.string(), z.union([designTokensSchema, tokenFileSchema])),
 ]);
 
 export const configSchema: z.ZodType<Config> = z

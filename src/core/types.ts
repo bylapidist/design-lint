@@ -1,5 +1,4 @@
 import type ts from 'typescript';
-import type { FlattenedToken, TokenPattern } from './token-utils.js';
 
 export interface VariableDefinition {
   id: string;
@@ -31,9 +30,19 @@ export type TokenGroup = {
 };
 
 /**
+ * Root token group with optional $schema.
+ */
+export type RootTokenGroup = TokenGroup & { $schema?: string };
+
+/**
  * W3C Design Tokens tree.
  */
-export type DesignTokens = TokenGroup;
+export type DesignTokens = RootTokenGroup;
+
+export interface FlattenedToken {
+  path: string;
+  token: Token;
+}
 
 export interface LintMessage {
   ruleId: string;
@@ -55,15 +64,11 @@ export interface LintResult {
 
 export interface RuleContext<TOptions = unknown> {
   report: (msg: Omit<LintMessage, 'ruleId' | 'severity'>) => void;
-  getFlattenedTokens: (type: string, theme?: string) => FlattenedToken[];
+  getFlattenedTokens: (type?: string, theme?: string) => FlattenedToken[];
   options?: TOptions;
   metadata?: Record<string, unknown>;
   sourceId: string;
 }
-
-export type LegacyRuleContext<TOptions = unknown> = RuleContext<TOptions> & {
-  tokens: Record<string, Record<string, unknown> | TokenPattern[] | undefined>;
-};
 
 export interface RuleModule<
   TOptions = unknown,

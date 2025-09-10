@@ -38,15 +38,15 @@ my-plugin/
 ```
 
 ### 2. Implement rules
-Rules receive a `LegacyRuleContext` which exposes `getFlattenedTokens` for accessing
+Rules receive a `RuleContext` which exposes `getFlattenedTokens` for accessing
 design tokens by type. The helper returns an array of flattened tokens for the
 current theme.
 
 ```ts
 // index.ts
-import type { RuleModule, LegacyRuleContext } from '@lapidist/design-lint';
+import type { RuleModule } from '@lapidist/design-lint';
 
-const noRawColors: RuleModule<unknown, LegacyRuleContext> = {
+const noRawColors: RuleModule<unknown> = {
   name: 'acme/no-raw-colors',
   meta: { description: 'disallow hex colors' },
   create(ctx) {

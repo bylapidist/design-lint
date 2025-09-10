@@ -1,5 +1,9 @@
-import type { DesignTokens, Token, TokenGroup } from './types.js';
-import type { FlattenedToken } from './token-utils.js';
+import type {
+  DesignTokens,
+  Token,
+  TokenGroup,
+  FlattenedToken,
+} from './types.js';
 
 const GROUP_PROPS = new Set([
   '$type',
@@ -42,6 +46,8 @@ const FONT_WEIGHT_KEYWORDS = new Set([
   'extra-black',
   'ultra-black',
 ]);
+const DIMENSION_UNITS = new Set(['px', 'rem']);
+const DURATION_UNITS = new Set(['ms', 's']);
 
 function isToken(node: Token | TokenGroup): node is Token {
   return '$value' in node;
@@ -164,7 +170,8 @@ function validateDimension(
   if (
     isRecord(value) &&
     typeof value.value === 'number' &&
-    typeof value.unit === 'string'
+    typeof value.unit === 'string' &&
+    DIMENSION_UNITS.has(value.unit)
   ) {
     return;
   }
@@ -224,6 +231,26 @@ function validateFontWeight(
   throw new Error(`Token ${path} has invalid fontWeight value`);
 }
 
+function validateDuration(
+  value: unknown,
+  path: string,
+  tokenMap: Map<string, Token>,
+): void {
+  if (
+    isRecord(value) &&
+    typeof value.value === 'number' &&
+    typeof value.unit === 'string' &&
+    DURATION_UNITS.has(value.unit)
+  ) {
+    return;
+  }
+  if (typeof value === 'string') {
+    expectAlias(value, path, 'duration', tokenMap);
+    return;
+  }
+  throw new Error(`Token ${path} has invalid duration value`);
+}
+
 function validateShadow(
   value: unknown,
   path: string,
@@ -238,12 +265,27 @@ function validateShadow(
     if (!isRecord(item)) {
       throw new Error(`Token ${path} has invalid shadow value`);
     }
+    const allowed = new Set([
+      'color',
+      'offsetX',
+      'offsetY',
+      'blur',
+      'spread',
+      'inset',
+    ]);
+    for (const key of Object.keys(item)) {
+      if (!allowed.has(key)) {
+        throw new Error(`Token ${path} has invalid shadow value`);
+      }
+    }
     const base = `${path}[${String(i)}]`;
     validateColor(item.color, `${base}.color`, tokenMap);
     validateDimension(item.offsetX, `${base}.offsetX`, tokenMap);
     validateDimension(item.offsetY, `${base}.offsetY`, tokenMap);
     validateDimension(item.blur, `${base}.blur`, tokenMap);
-    validateDimension(item.spread, `${base}.spread`, tokenMap);
+    if (item.spread !== undefined) {
+      validateDimension(item.spread, `${base}.spread`, tokenMap);
+    }
     if ('inset' in item && typeof item.inset !== 'boolean') {
       throw new Error(`Token ${path} has invalid shadow value`);
     }
@@ -262,6 +304,12 @@ function validateStrokeStyle(
     return;
   }
   if (isRecord(value)) {
+    const allowed = new Set(['dashArray', 'lineCap']);
+    for (const key of Object.keys(value)) {
+      if (!allowed.has(key)) {
+        throw new Error(`Token ${path} has invalid strokeStyle value`);
+      }
+    }
     if (!Array.isArray(value.dashArray) || value.dashArray.length === 0) {
       throw new Error(`Token ${path} has invalid strokeStyle value`);
     }
@@ -297,6 +345,12 @@ function validateGradient(
     if (!isRecord(stop)) {
       throw new Error(`Token ${path} has invalid gradient value`);
     }
+    const allowed = new Set(['color', 'position']);
+    for (const key of Object.keys(stop)) {
+      if (!allowed.has(key)) {
+        throw new Error(`Token ${path} has invalid gradient value`);
+      }
+    }
     validateColor(stop.color, `${path}[${String(i)}].color`, tokenMap);
     const pos = stop.position;
     if (typeof pos === 'number') {
@@ -317,6 +371,17 @@ function validateTypography(
   if (!isRecord(value)) {
     throw new Error(`Token ${path} has invalid typography value`);
   }
+  const allowed = new Set([
+    'fontFamily',
+    'fontSize',
+    'fontWeight',
+    'lineHeight',
+  ]);
+  for (const key of Object.keys(value)) {
+    if (!allowed.has(key)) {
+      throw new Error(`Token ${path} has invalid typography value`);
+    }
+  }
   const { fontFamily, fontSize, fontWeight, lineHeight } = value;
   if (
     fontFamily === undefined ||
@@ -330,6 +395,33 @@ function validateTypography(
   validateDimension(fontSize, `${path}.fontSize`, tokenMap);
   validateFontWeight(fontWeight, `${path}.fontWeight`, tokenMap);
   validateNumber(lineHeight, `${path}.lineHeight`, tokenMap);
+}
+
+function validateCubicBezier(
+  value: unknown,
+  path: string,
+  tokenMap: Map<string, Token>,
+): void {
+  if (Array.isArray(value) && value.length === 4) {
+    for (let i = 0; i < 4; i++) {
+      const v: unknown = value[i];
+      if (typeof v === 'number') {
+        if (v < 0 || v > 1) {
+          throw new Error(`Token ${path} has invalid cubicBezier value`);
+        }
+      } else if (typeof v === 'string') {
+        expectAlias(v, `${path}[${String(i)}]`, 'number', tokenMap);
+      } else {
+        throw new Error(`Token ${path} has invalid cubicBezier value`);
+      }
+    }
+    return;
+  }
+  if (typeof value === 'string') {
+    expectAlias(value, path, 'cubicBezier', tokenMap);
+    return;
+  }
+  throw new Error(`Token ${path} has invalid cubicBezier value`);
 }
 
 function validateToken(
@@ -358,6 +450,7 @@ function validateToken(
           `Token ${path} has mismatched $type ${token.$type}; expected ${aliasType}`,
         );
       }
+      token.$value = target.$value;
     }
   }
 
@@ -380,6 +473,12 @@ function validateToken(
       break;
     case 'fontWeight':
       validateFontWeight(token.$value, path, tokenMap);
+      break;
+    case 'duration':
+      validateDuration(token.$value, path, tokenMap);
+      break;
+    case 'cubicBezier':
+      validateCubicBezier(token.$value, path, tokenMap);
       break;
     case 'shadow':
       validateShadow(token.$value, path, tokenMap);
@@ -408,6 +507,16 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
   ): void {
     const pathLabel = prefix.length ? prefix.join('.') : '(root)';
     validateMetadata(group, pathLabel);
+    if (prefix.length === 0) {
+      if (
+        '$schema' in group &&
+        typeof (group as { $schema?: unknown }).$schema !== 'string'
+      ) {
+        throw new Error('Root group has invalid $schema');
+      }
+    } else if ('$schema' in group) {
+      throw new Error('$schema is only allowed on the root group');
+    }
     const currentType = group.$type ?? inheritedType;
     const currentDeprecated = group.$deprecated ?? inheritedDeprecated;
     const seenNames = new Map<string, string>();

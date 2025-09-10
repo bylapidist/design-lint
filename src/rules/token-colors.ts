@@ -2,7 +2,7 @@ import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
 type ColorFormat =
@@ -38,10 +38,7 @@ interface ColorRuleOptions {
   allow?: ColorFormat[];
 }
 
-export const colorsRule: RuleModule<
-  ColorRuleOptions,
-  LegacyRuleContext<ColorRuleOptions>
-> = {
+export const colorsRule: RuleModule<ColorRuleOptions> = {
   name: 'design-token/colors',
   meta: { description: 'disallow raw colors', category: 'design-token' },
   create(context) {

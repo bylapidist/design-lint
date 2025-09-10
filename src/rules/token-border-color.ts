@@ -1,7 +1,7 @@
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 
 type ColorFormat =
   | 'hex'
@@ -32,7 +32,7 @@ function detectFormat(value: string): ColorFormat | null {
   return null;
 }
 
-export const borderColorRule: RuleModule<unknown, LegacyRuleContext> = {
+export const borderColorRule: RuleModule = {
   name: 'design-token/border-color',
   meta: {
     description: 'enforce border-color tokens',

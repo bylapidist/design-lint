@@ -11,7 +11,9 @@ void test('lintTargets uses patterns option to include custom extensions', async
   const file = path.join(tmp, 'bad.foo');
   fs.writeFileSync(file, "const color = '#ffffff';");
   const baseConfig = {
-    tokens: { colors: { primary: '#000000' } },
+    tokens: {
+      color: { $type: 'color', primary: { $value: '#000000' } },
+    },
     rules: { 'design-token/colors': 'error' },
   };
   const defaultLinter = new Linter(baseConfig, new FileSource());

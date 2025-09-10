@@ -9,17 +9,17 @@ const tokens = {
     $type: 'shadow',
     sm: {
       $value: {
-        offsetX: '0px',
-        offsetY: '1px',
-        blur: '2px',
+        offsetX: { value: 0, unit: 'px' },
+        offsetY: { value: 1, unit: 'px' },
+        blur: { value: 2, unit: 'px' },
         color: 'rgba(0,0,0,0.1)',
       },
     },
     lg: {
       $value: {
-        offsetX: '0px',
-        offsetY: '2px',
-        blur: '4px',
+        offsetX: { value: 0, unit: 'px' },
+        offsetY: { value: 2, unit: 'px' },
+        blur: { value: 4, unit: 'px' },
         color: 'rgba(0,0,0,0.2)',
       },
     },

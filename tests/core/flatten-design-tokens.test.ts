@@ -16,7 +16,7 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
     size: {
       spacing: {
         $type: 'dimension',
-        small: { $value: 4 },
+        small: { $value: { value: 4, unit: 'px' } },
       },
     },
   };
@@ -31,7 +31,10 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
       path: 'colors.nested.green',
       token: { $value: '#00ff00', $type: 'color' },
     },
-    { path: 'size.spacing.small', token: { $value: 4, $type: 'dimension' } },
+    {
+      path: 'size.spacing.small',
+      token: { $value: { value: 4, unit: 'px' }, $type: 'dimension' },
+    },
   ]);
 });
 

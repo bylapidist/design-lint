@@ -6,7 +6,7 @@ sidebar_position: 1
 
 # @lapidist/design-lint
 
-@lapidist/design-lint keeps code and style sheets aligned with your design system. It understands design tokens, knows about modern frameworks, and runs wherever Node.js \>=22 is available.
+@lapidist/design-lint keeps code and style sheets aligned with your design system. It understands design tokens, knows about modern frameworks, and runs wherever Node.js \>=22 is available. The project exclusively supports the [W3C Design Tokens format](./glossary.md#design-tokens), making it a reference implementation of the standard.
 
 ## Table of contents
 - [Why design-lint?](#why-design-lint)

@@ -1,14 +1,10 @@
 import type {
   LintResult,
   LintMessage,
-  LegacyRuleContext,
+  RuleContext,
   DesignTokens,
 } from './types.js';
-import {
-  extractVarName,
-  getFlattenedTokens as flattenTokens,
-  type TokenPattern,
-} from './token-utils.js';
+import { getFlattenedTokens as flattenTokens } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
@@ -133,27 +129,11 @@ export class Linter {
   }
 
   getTokenCompletions(): Record<string, string[]> {
-    const tokens = this.config.tokens;
     const completions: Record<string, string[]> = {};
-    for (const [group, defs] of Object.entries(tokens)) {
-      if (group === 'variables' && isRecord(defs)) {
-        const names: string[] = [];
-        for (const v of Object.values(defs)) {
-          if (isRecord(v) && typeof v.id === 'string') names.push(v.id);
-        }
-        if (names.length) completions[group] = names;
-        continue;
-      }
-      if (Array.isArray(defs)) {
-        const names = defs.filter((t): t is string => typeof t === 'string');
-        if (names.length) completions[group] = names;
-      } else if (isRecord(defs)) {
-        const names: string[] = [];
-        for (const val of Object.values(defs)) {
-          const v = typeof val === 'string' ? extractVarName(val) : null;
-          if (v) names.push(v);
-        }
-        if (names.length) completions[group] = names;
+    for (const theme of Object.keys(this.tokensByTheme)) {
+      const flat = flattenTokens(this.tokensByTheme, theme);
+      if (flat.length) {
+        completions[theme] = flat.map((t) => t.path);
       }
     }
     return completions;
@@ -185,20 +165,17 @@ export class Linter {
       if (rule.meta.category) {
         ruleCategories[rule.name] = rule.meta.category;
       }
-      const ctx: LegacyRuleContext = {
+      const ctx: RuleContext = {
         sourceId,
-        tokens: this.config.tokens as Record<
-          string,
-          Record<string, unknown> | TokenPattern[] | undefined
-        >,
         options,
         metadata,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
-        getFlattenedTokens: (type: string, theme?: string) => {
+        getFlattenedTokens: (type?: string, theme?: string) => {
           try {
-            return flattenTokens(this.tokensByTheme, theme).filter(
-              ({ token }) => token.$type === type,
-            );
+            const tokens = flattenTokens(this.tokensByTheme, theme);
+            return type
+              ? tokens.filter(({ token }) => token.$type === type)
+              : tokens;
           } catch {
             return [];
           }
@@ -248,10 +225,6 @@ function getDisabledLines(text: string): Set<number> {
     if (block) disabled.add(i + 1);
   }
   return disabled;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 function inferFileType(sourceId: string): string {

@@ -13,7 +13,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 
 ```json
 {
-  "tokens": { "colors": { "primary": "#ff0000" } },
+  "tokens": { "color": { "primary": { "$type": "color", "$value": "#ff0000" } } },
   "rules": {
     "design-token/colors": ["error", { "allow": ["named"] }]
   }

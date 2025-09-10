@@ -13,12 +13,20 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 
 ```json
 {
-  "tokens": { "spacing": { "sm": 4, "md": 8 } },
+  "tokens": {
+    "spacing": {
+      "$type": "dimension",
+      "sm": { "$value": { "value": 4, "unit": "px" } },
+      "md": { "$value": { "value": 8, "unit": "px" } }
+    }
+  },
   "rules": {
     "design-token/spacing": ["error", { "base": 4, "units": ["rem", "vw"] }]
   }
 }
 ```
+
+Spacing tokens use the `dimension` type.
 
 ## Options
 - `base` (`number`): values must be multiples of this number. Defaults to `4`.

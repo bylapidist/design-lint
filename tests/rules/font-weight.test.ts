@@ -8,7 +8,7 @@ const tokens = {
   fontWeights: {
     $type: 'fontWeight',
     regular: { $value: 400 },
-    bold: { $value: '700' },
+    bold: { $value: 700 },
   },
 };
 

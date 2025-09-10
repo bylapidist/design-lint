@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import type { DesignTokens } from '../../core/types.js';
-import type { FlattenedToken } from '../../core/token-utils.js';
+import type { DesignTokens, FlattenedToken } from '../../core/types.js';
 import { parseDesignTokens } from '../../core/token-parser.js';
 
 function assertSupportedFile(filePath: string): void {

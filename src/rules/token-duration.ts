@@ -1,24 +1,23 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const durationRule: RuleModule<unknown, LegacyRuleContext> = {
+export const durationRule: RuleModule = {
   name: 'design-token/duration',
   meta: { description: 'enforce duration tokens', category: 'design-token' },
   create(context) {
     const durationTokens = context.getFlattenedTokens('duration');
     const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        const v = val.trim();
-        const match = /^(-?\d*\.?\d+)(ms|s)$/.exec(v);
-        if (match) {
-          const num = parseFloat(match[1]);
-          return match[2] === 's' ? num * 1000 : num;
-        }
-        const num = Number(v);
-        if (!isNaN(num)) return num;
+      if (
+        typeof val === 'object' &&
+        val !== null &&
+        typeof (val as { value?: unknown }).value === 'number' &&
+        typeof (val as { unit?: unknown }).unit === 'string'
+      ) {
+        const unit = (val as { unit: string }).unit;
+        const num = (val as { value: number }).value;
+        return unit === 's' ? num * 1000 : unit === 'ms' ? num : null;
       }
       return null;
     };

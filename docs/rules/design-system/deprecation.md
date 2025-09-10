@@ -6,7 +6,7 @@ description: "Warn when using deprecated design system parts."
 # design-system/deprecation
 
 ## Summary
-Flags deprecated tokens or components defined in `tokens.deprecations`. If a replacement is provided, running the linter with `--fix` will automatically substitute the new value.
+Flags tokens marked with `$deprecated`. If a deprecation message references another token using alias syntax, running the linter with `--fix` will substitute the suggested token.
 
 ## Configuration
 Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
@@ -14,7 +14,14 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 ```json
 {
   "tokens": {
-    "deprecations": { "old": { "replacement": "new" } }
+    "color": {
+      "old": {
+        "$type": "color",
+        "$value": "#000",
+        "$deprecated": "Use {color.new}"
+      },
+      "new": { "$type": "color", "$value": "#fff" }
+    }
   },
   "rules": { "design-system/deprecation": "error" }
 }
@@ -30,25 +37,25 @@ No additional options.
 ### Invalid
 
 ```css
-.button { color: old; }
+.button { color: colors.old; }
 ```
 
-```tsx
-<button>Click</button>
+```ts
+const color = "colors.old";
 ```
 
 ### Valid
 
 ```css
-.button { color: new; }
+.button { color: colors.new; }
 ```
 
-```tsx
-<NewButton>Click</NewButton>
+```ts
+const color = "colors.new";
 ```
 
 ## When Not To Use
-If you do not track deprecated tokens or components, disable this rule.
+If you do not track deprecated tokens, disable this rule.
 
 ## Related Rules
 - [design-system/component-prefix](./component-prefix.md)

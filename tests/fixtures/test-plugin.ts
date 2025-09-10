@@ -1,11 +1,7 @@
 import ts from 'typescript';
-import type {
-  PluginModule,
-  RuleModule,
-  LegacyRuleContext,
-} from '../../src/core/types.ts';
+import type { PluginModule, RuleModule } from '../../src/core/types.ts';
 
-const rule: RuleModule<unknown, LegacyRuleContext> = {
+const rule: RuleModule<unknown> = {
   name: 'plugin/test',
   meta: { description: 'test rule' },
   create(context) {

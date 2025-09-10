@@ -7,8 +7,8 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 const tokens = {
   fontSizes: {
     $type: 'dimension',
-    sm: { $value: '16px' },
-    md: { $value: '32px' },
+    sm: { $value: { value: 16, unit: 'px' } },
+    md: { $value: { value: 32, unit: 'px' } },
   },
 };
 

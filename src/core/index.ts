@@ -14,7 +14,6 @@ export type {
   LintMessage,
   RuleModule,
   RuleContext,
-  LegacyRuleContext,
   RuleListener,
   DesignTokens,
   Token,
@@ -22,6 +21,7 @@ export type {
   PluginModule,
   CSSDeclaration,
   Fix,
+  FlattenedToken,
 } from './types.js';
 export {
   matchToken,
@@ -30,6 +30,5 @@ export {
   flattenDesignTokens,
   getFlattenedTokens,
   type TokenPattern,
-  type FlattenedToken,
 } from './token-utils.js';
 export { parseDesignTokens } from './token-parser.js';

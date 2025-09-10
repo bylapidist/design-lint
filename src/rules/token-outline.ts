@@ -1,7 +1,7 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 
-export const outlineRule: RuleModule<unknown, LegacyRuleContext> = {
+export const outlineRule: RuleModule = {
   name: 'design-token/outline',
   meta: { description: 'enforce outline tokens', category: 'design-token' },
   create(context) {

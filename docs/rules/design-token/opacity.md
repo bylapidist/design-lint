@@ -14,7 +14,11 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
-    "opacity": { "low": 0.2, "high": 0.8 }
+    "opacity": {
+      "$type": "number",
+      "low": { "$value": 0.2 },
+      "high": { "$value": 0.8 }
+    }
   },
   "rules": { "design-token/opacity": "error" }
 }

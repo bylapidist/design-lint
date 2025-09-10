@@ -1,7 +1,7 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 
-export const animationRule: RuleModule<unknown, LegacyRuleContext> = {
+export const animationRule: RuleModule = {
   name: 'design-token/animation',
   meta: { description: 'enforce animation tokens', category: 'design-token' },
   create(context) {

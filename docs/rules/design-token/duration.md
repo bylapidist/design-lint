@@ -14,13 +14,17 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
-    "durations": { "short": "100ms", "long": 250 }
+    "durations": {
+      "$type": "duration",
+      "short": { "$value": { "value": 100, "unit": "ms" } },
+      "long": { "$value": { "value": 0.25, "unit": "s" } }
+    }
   },
   "rules": { "design-token/duration": "error" }
 }
 ```
 
-Duration tokens may be numbers (milliseconds) or strings with `ms` or `s` units. String values are normalized for comparison.
+Duration tokens use objects with a numeric `value` and a `unit` of `ms` or `s`.
 
 ## Options
 No additional options.

@@ -1,6 +1,6 @@
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 
-export const fontFamilyRule: RuleModule<unknown, LegacyRuleContext> = {
+export const fontFamilyRule: RuleModule = {
   name: 'design-token/font-family',
   meta: { description: 'enforce font-family tokens', category: 'design-token' },
   create(context) {

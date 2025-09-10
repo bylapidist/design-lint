@@ -13,7 +13,14 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 
 ```json
 {
-  "tokens": { "fontWeights": { "regular": 400, "bold": "700", "emphasis": "bold" } },
+  "tokens": {
+    "fontWeights": {
+      "$type": "fontWeight",
+      "regular": { "$value": 400 },
+      "bold": { "$value": 700 },
+      "emphasis": { "$value": "bold" }
+    }
+  },
   "rules": { "design-token/font-weight": "error" }
 }
 ```

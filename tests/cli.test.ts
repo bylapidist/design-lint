@@ -255,7 +255,7 @@ void test('CLI exits 0 when warnings equal --max-warnings', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'warn' },
     }),
   );
@@ -285,7 +285,7 @@ void test('CLI exits 1 when warnings exceed --max-warnings', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'warn' },
     }),
   );
@@ -391,7 +391,7 @@ void test('CLI --fix applies fixes', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -461,7 +461,7 @@ void test('CLI writes report to file with --output', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -588,7 +588,7 @@ void test('CLI outputs SARIF reports', () => {
     fs.writeFileSync(
       path.join(dir, 'designlint.config.json'),
       JSON.stringify({
-        tokens: { deprecations: { old: { replacement: 'new' } } },
+        tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
         rules: { 'design-system/deprecation': 'error' },
       }),
     );
@@ -686,7 +686,7 @@ void test('CLI ignores common directories by default', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -730,7 +730,7 @@ void test('.designlintignore can unignore paths via CLI', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -781,7 +781,7 @@ void test('CLI skips directories listed in .designlintignore', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -821,7 +821,7 @@ void test('CLI --ignore-path excludes files', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -942,7 +942,7 @@ void test('CLI --report outputs JSON log', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -981,7 +981,7 @@ void test('CLI re-runs on file change in watch mode', async () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1085,7 +1085,7 @@ void test('CLI cache updates after --fix run', async () => {
   const file = path.join(dir, 'file.ts');
   fs.writeFileSync(file, 'const a = "old";');
   const config = {
-    tokens: { deprecations: { old: { replacement: 'new' } } },
+    tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
     rules: { 'design-system/deprecation': 'error' },
   };
   const store = new Map<
@@ -1298,7 +1298,7 @@ void test('CLI re-runs with updated config in watch mode', async () => {
   fs.writeFileSync(
     configPath,
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: {},
     }),
   );
@@ -1331,7 +1331,9 @@ void test('CLI re-runs with updated config in watch mode', async () => {
         fs.writeFileSync(
           configPath,
           JSON.stringify({
-            tokens: { deprecations: { old: { replacement: 'new' } } },
+            tokens: {
+              old: { $type: 'color', $value: '#000', $deprecated: true },
+            },
             rules: { 'design-system/deprecation': 'error' },
           }),
         );
@@ -1620,7 +1622,7 @@ void test('CLI reloads when nested ignore file changes in watch mode', async () 
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1675,7 +1677,7 @@ void test('CLI updates ignore list when .gitignore changes in watch mode', async
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1731,7 +1733,7 @@ void test('CLI continues watching after deleting ignore files in watch mode', as
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1792,7 +1794,7 @@ void test('CLI clears cache when a watched file is deleted', async () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1849,7 +1851,7 @@ void test('CLI continues linting after deleting a watched file', async () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { deprecations: { old: { replacement: 'new' } } },
+      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
