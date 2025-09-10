@@ -23,7 +23,7 @@ Given this configuration:
   "tokens": {
     "color": {
       "primary": { "$type": "color", "$value": "#000000" },
-      "unused": { "$type": "color", "$value": "#ff0000" }
+      "unused": { "$type": "color", "$value": "{color.primary}" }
     }
   },
   "rules": { "design-system/no-unused-tokens": "warn" }

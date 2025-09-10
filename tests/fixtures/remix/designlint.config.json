@@ -1,15 +1,17 @@
 {
   "tokens": {
-    "color": { "$type": "color", "primary": { "$value": "#000000" } },
+    "color": {
+      "primary": { "$type": "color", "$value": "#000000" }
+    },
     "spacing": {
-      "$type": "dimension",
-      "sm": { "$value": { "value": 4, "unit": "px" } }
+      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } }
     },
     "fontSizes": {
-      "$type": "dimension",
-      "sm": { "$value": { "value": 12, "unit": "px" } }
+      "sm": { "$type": "dimension", "$value": { "value": 12, "unit": "px" } }
     },
-    "fonts": { "$type": "fontFamily", "sans": { "$value": "Arial" } },
+    "fonts": {
+      "sans": { "$type": "fontFamily", "$value": "Arial" }
+    },
     "old-token": {
       "$type": "color",
       "$value": "#000000",

@@ -15,9 +15,8 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "borderRadius": {
-      "$type": "dimension",
-      "sm": { "$value": { "value": 2, "unit": "px" } },
-      "lg": { "$value": { "value": 8, "unit": "px" } }
+      "sm": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+      "lg": { "$type": "dimension", "$value": "{borderRadius.sm}" }
     }
   },
   "rules": { "design-token/border-radius": "error" }

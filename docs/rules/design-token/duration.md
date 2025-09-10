@@ -15,9 +15,8 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "durations": {
-      "$type": "duration",
-      "short": { "$value": { "value": 100, "unit": "ms" } },
-      "long": { "$value": { "value": 0.25, "unit": "s" } }
+      "short": { "$type": "duration", "$value": { "value": 100, "unit": "ms" } },
+      "long": { "$type": "duration", "$value": "{durations.short}" }
     }
   },
   "rules": { "design-token/duration": "error" }

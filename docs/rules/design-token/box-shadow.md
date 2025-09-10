@@ -15,15 +15,16 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "shadows": {
-      "$type": "shadow",
       "sm": {
+        "$type": "shadow",
         "$value": {
           "offsetX": { "value": 0, "unit": "px" },
           "offsetY": { "value": 1, "unit": "px" },
           "blur": { "value": 2, "unit": "px" },
           "color": "rgba(0,0,0,0.1)"
         }
-      }
+      },
+      "md": { "$type": "shadow", "$value": "{shadows.sm}" }
     }
   },
   "rules": { "design-token/box-shadow": "error" }

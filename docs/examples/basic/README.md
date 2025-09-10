@@ -18,7 +18,7 @@ This example introduces design-lint with a single token and rule.
    ```
 
 ## Key files
-- `designlint.config.json` – defines a `primary` color token and enables the `design-token/colors` rule.
+- `designlint.config.json` – defines `primary` and `secondary` color tokens and enables the `design-token/colors` rule.
 
 ## Expected output
 When a file uses `#ff0000`, the linter reports an error suggesting the `primary` token.

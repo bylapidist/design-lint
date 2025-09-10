@@ -15,9 +15,8 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "lineHeights": {
-      "$type": "number",
-      "base": { "$value": 1.5 },
-      "tight": { "$value": 2 }
+      "base": { "$type": "number", "$value": 1.5 },
+      "tight": { "$type": "number", "$value": "{lineHeights.base}" }
     }
   },
   "rules": { "design-token/line-height": "error" }
