@@ -9,7 +9,10 @@ import {
 } from '@humanwhocodes/momoa';
 import yamlToMomoa from 'yaml-to-momoa';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
-import { parseDesignTokens } from '../../core/parser/index.js';
+import {
+  parseDesignTokens,
+  type ParseDesignTokensOptions,
+} from '../../core/parser/index.js';
 
 function assertSupportedFile(filePath: string): void {
   if (
@@ -61,8 +64,15 @@ function parseTokensContent(
       return node.type === 'Identifier' ? node.name : node.value;
     }
 
+    function isObjectNode(value: ValueNode): value is ValueNode & {
+      type: 'Object';
+      members: MemberNode[];
+    } {
+      return value.type === 'Object';
+    }
+
     function walk(value: ValueNode, prefix: string[]): void {
-      if (value.type !== 'Object') return;
+      if (!isObjectNode(value)) return;
       const members = value.members;
       const hasValue = members.some((m) => getName(m.name) === '$value');
       if (hasValue) {
@@ -129,20 +139,22 @@ function parseTokensContent(
 
 export async function parseDesignTokensFile(
   filePath: string,
+  options?: ParseDesignTokensOptions,
 ): Promise<FlattenedToken[]> {
   assertSupportedFile(filePath);
   const content = await readFile(filePath, 'utf8');
   const { tokens, getTokenLocation } = parseTokensContent(filePath, content);
-  return parseDesignTokens(tokens, getTokenLocation);
+  return parseDesignTokens(tokens, getTokenLocation, options);
 }
 
 export async function readDesignTokensFile(
   filePath: string,
+  options?: ParseDesignTokensOptions,
 ): Promise<DesignTokens> {
   assertSupportedFile(filePath);
   const content = await readFile(filePath, 'utf8');
   const { tokens, getTokenLocation } = parseTokensContent(filePath, content);
   // Validate the structure but discard the result.
-  parseDesignTokens(tokens, getTokenLocation);
+  parseDesignTokens(tokens, getTokenLocation, options);
   return tokens;
 }
