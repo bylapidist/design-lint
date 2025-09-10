@@ -14,6 +14,33 @@ import {
   type ParseDesignTokensOptions,
 } from '../../core/parser/index.js';
 
+export class TokenParseError extends Error {
+  filePath: string;
+  line: number;
+  column: number;
+  lineText: string;
+
+  constructor(
+    filePath: string,
+    line: number,
+    column: number,
+    message: string,
+    lineText: string,
+  ) {
+    super(message);
+    this.filePath = filePath;
+    this.line = line;
+    this.column = column;
+    this.lineText = lineText;
+  }
+
+  format(): string {
+    const loc = `${this.filePath}:${String(this.line)}:${String(this.column)}`;
+    const caret = ' '.repeat(Math.max(0, this.column - 1)) + '^';
+    return `${loc}: ${this.message}\n${this.lineText}\n${caret}`;
+  }
+}
+
 function assertSupportedFile(filePath: string): void {
   if (
     !(
@@ -128,12 +155,11 @@ function parseTokensContent(
       column = error.column;
     }
     const message = error instanceof Error ? error.message : String(error);
-    if (line !== undefined && column !== undefined) {
-      throw new Error(
-        `Error parsing ${filePath} (${String(line)}:${String(column)}): ${message}`,
-      );
-    }
-    throw new Error(`Error parsing ${filePath}: ${message}`);
+    const lines = content.split(/\r?\n/);
+    const lineNum = line ?? 1;
+    const colNum = column ?? 1;
+    const lineText = lines[lineNum - 1] ?? '';
+    throw new TokenParseError(filePath, lineNum, colNum, message, lineText);
   }
 }
 

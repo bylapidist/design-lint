@@ -5,7 +5,10 @@ import { TypeScriptLoader } from 'cosmiconfig-typescript-loader';
 import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
-import { readDesignTokensFile } from '../adapters/node/token-parser.js';
+import {
+  readDesignTokensFile,
+  TokenParseError,
+} from '../adapters/node/token-parser.js';
 import { parseDesignTokens } from '../core/parser/index.js';
 import type { DesignTokens } from '../core/types.js';
 
@@ -90,6 +93,7 @@ export async function loadConfig(
         try {
           themes[theme] = await readDesignTokensFile(filePath);
         } catch (err) {
+          if (err instanceof TokenParseError) throw err;
           const message = err instanceof Error ? err.message : String(err);
           throw new Error(
             `Failed to read tokens for theme "${theme}": ${message}`,
@@ -104,6 +108,7 @@ export async function loadConfig(
         try {
           parseDesignTokens(t);
         } catch (err) {
+          if (err instanceof TokenParseError) throw err;
           const message = err instanceof Error ? err.message : String(err);
           throw new Error(
             `Failed to parse tokens for theme "${theme}": ${message}`,
@@ -115,6 +120,7 @@ export async function loadConfig(
       try {
         parseDesignTokens(themes);
       } catch (err) {
+        if (err instanceof TokenParseError) throw err;
         throw err instanceof Error ? err : new Error(String(err));
       }
       config.tokens = themes;

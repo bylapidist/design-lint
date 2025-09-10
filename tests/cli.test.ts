@@ -435,6 +435,35 @@ void test('CLI surfaces config load errors', () => {
   assert.ok(res.stderr.trim().length > 0);
 });
 
+void test('CLI surfaces token parsing diagnostics', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: { default: './bad.tokens.json' }, rules: {} }),
+  );
+  fs.writeFileSync(
+    path.join(dir, 'bad.tokens.json'),
+    '{ "color": { $type: "color", }',
+  );
+  fs.writeFileSync(path.join(dir, 'file.ts'), '');
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      'file.ts',
+      '--config',
+      'designlint.config.json',
+    ],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /bad\.tokens\.json:1:/);
+  assert.match(res.stderr, /\^/);
+});
+
 void test('CLI surfaces output write errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
