@@ -19,6 +19,16 @@ module.exports = [
       ...tsPlugin.configs['strict-type-checked'].rules,
       ...tsPlugin.configs['stylistic-type-checked'].rules,
       '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/consistent-type-assertions': [
+        'error',
+        { assertionStyle: 'never' },
+      ],
+    },
+  },
+  {
+    files: ['tests/**/*.ts', 'tests/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': 'off',
     },
   },
 ];

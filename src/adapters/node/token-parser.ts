@@ -13,7 +13,8 @@ export async function parseDesignTokensFile(
 ): Promise<FlattenedToken[]> {
   assertSupportedFile(filePath);
   const content = await readFile(filePath, 'utf8');
-  const json = JSON.parse(content) as DesignTokens;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const json: DesignTokens = JSON.parse(content);
   return parseDesignTokens(json);
 }
 
@@ -22,7 +23,8 @@ export async function readDesignTokensFile(
 ): Promise<DesignTokens> {
   assertSupportedFile(filePath);
   const content = await readFile(filePath, 'utf8');
-  const json = JSON.parse(content) as DesignTokens;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const json: DesignTokens = JSON.parse(content);
   // Validate the structure but discard the result.
   parseDesignTokens(json);
   return json;

@@ -17,13 +17,11 @@ export const spacingRule: RuleModule<SpacingOptions> = {
     for (const { path, token } of spacingTokens) {
       if (!path.startsWith('spacing.')) continue;
       const val = token.$value;
-      if (
-        val &&
-        typeof val === 'object' &&
-        'value' in (val as Record<string, unknown>) &&
-        typeof (val as { value?: unknown }).value === 'number'
-      ) {
-        allowed.add((val as { value: number }).value);
+      if (val && typeof val === 'object') {
+        const num: unknown = Reflect.get(val, 'value');
+        if (typeof num === 'number') {
+          allowed.add(num);
+        }
       }
     }
     if (allowed.size === 0) {

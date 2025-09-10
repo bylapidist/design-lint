@@ -16,6 +16,10 @@ import type {
 } from './environment.js';
 import { parserRegistry } from './parser-registry.js';
 
+function isDesignTokens(val: unknown): val is DesignTokens {
+  return typeof val === 'object' && val !== null;
+}
+
 export interface Config {
   tokens?:
     | DesignTokens
@@ -50,11 +54,9 @@ export class Linter {
     const inlineTokens = config.tokens;
     const provider: TokenProvider = env.tokenProvider ?? {
       load: () => {
-        if (inlineTokens) {
-          flattenTokens({ default: inlineTokens as DesignTokens });
-          return Promise.resolve({
-            default: inlineTokens as DesignTokens,
-          });
+        if (inlineTokens && isDesignTokens(inlineTokens)) {
+          flattenTokens({ default: inlineTokens });
+          return Promise.resolve({ default: inlineTokens });
         }
         return Promise.resolve({});
       },

@@ -167,15 +167,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isDimension(value: unknown): value is { value: number; unit: string } {
   return (
     isRecord(value) &&
-    typeof (value as { value?: unknown }).value === 'number' &&
-    typeof (value as { unit?: unknown }).unit === 'string'
+    typeof Reflect.get(value, 'value') === 'number' &&
+    typeof Reflect.get(value, 'unit') === 'string'
   );
 }
 
 function isDuration(value: unknown): value is { value: number; unit: string } {
   return (
     isRecord(value) &&
-    typeof (value as { value?: unknown }).value === 'number' &&
-    typeof (value as { unit?: unknown }).unit === 'string'
+    typeof Reflect.get(value, 'value') === 'number' &&
+    typeof Reflect.get(value, 'unit') === 'string'
   );
 }

@@ -2,6 +2,7 @@ import ts from 'typescript';
 
 export function isInNonStyleJsx(node: ts.Node): boolean {
   let curr: ts.Node | undefined = node.parent;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (curr) {
     if (ts.isJsxAttribute(curr)) {
       return curr.name.getText() !== 'style';
@@ -9,6 +10,7 @@ export function isInNonStyleJsx(node: ts.Node): boolean {
     if (ts.isPropertyAssignment(curr)) {
       if (curr.name.getText() === 'style') return false;
       let p: ts.Node | undefined = curr.parent;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       while (p) {
         if (ts.isPropertyAssignment(p) && p.name.getText() === 'style') {
           return false;
@@ -32,7 +34,7 @@ export function isInNonStyleJsx(node: ts.Node): boolean {
           }
           break;
         }
-        p = p.parent as ts.Node | undefined;
+        p = p.parent;
       }
     }
     if (
@@ -42,7 +44,7 @@ export function isInNonStyleJsx(node: ts.Node): boolean {
     ) {
       return true;
     }
-    curr = curr.parent as ts.Node | undefined;
+    curr = curr.parent;
   }
   return false;
 }
