@@ -6,7 +6,7 @@ import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
 import { readDesignTokensFile } from '../adapters/node/token-parser.js';
-import { parseDesignTokens } from '../core/token-parser.js';
+import { parseDesignTokens } from '../core/parser/index.js';
 import type { DesignTokens } from '../core/types.js';
 
 /**
