@@ -44,7 +44,7 @@ Run with `--fix` to automatically replace deprecated tokens or components and ti
 Lint JavaScript, TypeScript, CSS, SCSS, Sass and Less, including inline styles and tagged template literals.
 
 ### Extensible
-Extend behaviour with custom rules, formatters and plugins for your design system.
+Extend behaviour with custom rules, formatters, and token transforms for your design system.
 
 | Advantage | @lapidist/design-lint | Generic linters |
 | --- | --- | --- |

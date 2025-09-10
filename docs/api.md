@@ -59,6 +59,15 @@ Key methods:
 - `defineConfig(config)` – provide type checking for config files.
 - `getFormatter(name)` – load a formatter by name or path.
 - `applyFixes(text, messages)` – apply non-overlapping fixes.
+- `registerTokenTransform(transform)` – convert design tokens before validation;
+  returns an unregister function.
+
+### Token transforms
+Design token objects may originate from sources like Figma or Tokens Studio.
+Use `registerTokenTransform()` to supply converters that adapt these formats
+to the [W3C Design Tokens specification](./glossary.md#design-tokens).
+Transforms run before token normalization and validation.
+`parseDesignTokens()` also accepts a `transforms` array for per-call transforms.
 
 ## Types
 design-lint ships with TypeScript definitions for `Config`, `LintResult`, `RuleModule`, and more:
