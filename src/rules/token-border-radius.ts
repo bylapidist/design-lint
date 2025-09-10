@@ -19,15 +19,7 @@ export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
     for (const { path, token } of radiusTokens) {
       if (!path.startsWith('radius.')) continue;
       const val = token.$value;
-      if (typeof val === 'number') {
-        allowed.add(val);
-      } else if (typeof val === 'string') {
-        const parsed = valueParser.unit(val);
-        if (parsed) {
-          const num = parseFloat(parsed.number);
-          if (!isNaN(num)) allowed.add(num);
-        }
-      } else if (
+      if (
         val &&
         typeof val === 'object' &&
         'value' in (val as Record<string, unknown>) &&

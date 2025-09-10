@@ -7,30 +7,26 @@ export const lineHeightRule: RuleModule = {
   meta: { description: 'enforce line-height tokens', category: 'design-token' },
   create(context) {
     const lineHeights = context.getFlattenedTokens('number');
-    const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        const v = val.trim();
-        const unitMatch = /^(\d*\.?\d+)(px|rem|em)%?$/.exec(v);
-        if (unitMatch) {
-          const [, num, unit] = unitMatch;
-          const n = parseFloat(num);
-          const factor =
-            unit === 'px' ? 1 : unit === 'rem' || unit === 'em' ? 16 : 1;
-          return n * factor;
-        }
-        const pctMatch = /^(\d*\.?\d+)%$/.exec(v);
-        if (pctMatch) return parseFloat(pctMatch[1]) / 100;
-        const num = Number(v);
-        if (!isNaN(num)) return num;
+    const parse = (val: string): number | null => {
+      const v = val.trim();
+      const unitMatch = /^(\d*\.?\d+)(px|rem|em)%?$/.exec(v);
+      if (unitMatch) {
+        const [, num, unit] = unitMatch;
+        const n = parseFloat(num);
+        const factor =
+          unit === 'px' ? 1 : unit === 'rem' || unit === 'em' ? 16 : 1;
+        return n * factor;
       }
-      return null;
+      const pctMatch = /^(\d*\.?\d+)%$/.exec(v);
+      if (pctMatch) return parseFloat(pctMatch[1]) / 100;
+      const num = Number(v);
+      return isNaN(num) ? null : num;
     };
     const allowed = new Set<number>();
     for (const { path, token } of lineHeights) {
       if (!path.startsWith('lineHeights.')) continue;
-      const num = parse(token.$value);
-      if (num !== null) allowed.add(num);
+      const val = token.$value;
+      if (typeof val === 'number') allowed.add(val);
     }
     if (allowed.size === 0) {
       context.report({

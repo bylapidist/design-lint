@@ -6,7 +6,6 @@ export const fontSizeRule: RuleModule = {
   create(context) {
     const fontSizes = context.getFlattenedTokens('dimension');
     const parseSize = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
       if (
         isRecord(val) &&
         typeof val.value === 'number' &&

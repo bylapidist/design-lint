@@ -17,15 +17,7 @@ export const spacingRule: RuleModule<SpacingOptions> = {
     for (const { path, token } of spacingTokens) {
       if (!path.startsWith('spacing.')) continue;
       const val = token.$value;
-      if (typeof val === 'number') {
-        allowed.add(val);
-      } else if (typeof val === 'string') {
-        const parsed = valueParser.unit(val.trim());
-        if (parsed) {
-          const num = parseFloat(parsed.number);
-          if (!isNaN(num)) allowed.add(num);
-        }
-      } else if (
+      if (
         val &&
         typeof val === 'object' &&
         'value' in (val as Record<string, unknown>) &&

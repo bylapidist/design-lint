@@ -11,7 +11,6 @@ export const letterSpacingRule: RuleModule = {
   create(context) {
     const letterSpacings = context.getFlattenedTokens('dimension');
     const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
       if (
         isRecord(val) &&
         typeof val.value === 'number' &&
@@ -40,9 +39,7 @@ export const letterSpacingRule: RuleModule = {
       const val = token.$value;
       const num = parse(val);
       if (num !== null) numeric.add(num);
-      if (typeof val === 'string' || typeof val === 'number') {
-        values.add(String(val).trim());
-      } else if (
+      if (
         isRecord(val) &&
         typeof val.value === 'number' &&
         typeof val.unit === 'string'

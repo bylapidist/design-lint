@@ -51,14 +51,10 @@ export class Linter {
     const provider: TokenProvider = env.tokenProvider ?? {
       load: () => {
         if (inlineTokens) {
-          try {
-            flattenTokens({ default: inlineTokens as DesignTokens });
-            return Promise.resolve({
-              default: inlineTokens as DesignTokens,
-            });
-          } catch {
-            return Promise.resolve({});
-          }
+          flattenTokens({ default: inlineTokens as DesignTokens });
+          return Promise.resolve({
+            default: inlineTokens as DesignTokens,
+          });
         }
         return Promise.resolve({});
       },
@@ -171,14 +167,10 @@ export class Linter {
         metadata,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
         getFlattenedTokens: (type?: string, theme?: string) => {
-          try {
-            const tokens = flattenTokens(this.tokensByTheme, theme);
-            return type
-              ? tokens.filter(({ token }) => token.$type === type)
-              : tokens;
-          } catch {
-            return [];
-          }
+          const tokens = flattenTokens(this.tokensByTheme, theme);
+          return type
+            ? tokens.filter(({ token }) => token.$type === type)
+            : tokens;
         },
       };
       return rule.create(ctx);

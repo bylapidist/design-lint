@@ -10,8 +10,7 @@ export const zIndexRule: RuleModule = {
     for (const { path, token } of zTokens) {
       if (!path.startsWith('zIndex.')) continue;
       const val = token.$value;
-      const num = typeof val === 'number' ? val : Number(val);
-      if (!Number.isNaN(num)) allowed.add(num);
+      if (typeof val === 'number') allowed.add(val);
     }
     if (allowed.size === 0) {
       context.report({
