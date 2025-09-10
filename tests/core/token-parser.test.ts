@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseDesignTokens } from '../../src/core/token-parser.ts';
+import { parseDesignTokens } from '../../src/core/parser/index.ts';
 import { parseDesignTokensFile } from '../../src/adapters/node/token-parser.ts';
 import type { DesignTokens } from '../../src/core/types.js';
 

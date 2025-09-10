@@ -1,27 +1,5 @@
-import type {
-  DesignTokens,
-  Token,
-  TokenGroup,
-  FlattenedToken,
-} from './types.js';
-
-const GROUP_PROPS = new Set([
-  '$type',
-  '$description',
-  '$extensions',
-  '$deprecated',
-  '$schema',
-  '$metadata',
-]);
-const LEGACY_PROPS = new Set([
-  'type',
-  'value',
-  'description',
-  'extensions',
-  'deprecated',
-]);
-const INVALID_NAME_CHARS = /[{}\.]/;
-const ALIAS_PATTERN = /^\{([^}]+)\}$/;
+import type { Token, FlattenedToken } from '../types.js';
+import { expectAlias, isAlias } from './normalize.js';
 
 const STROKE_STYLE_KEYWORDS = new Set([
   'solid',
@@ -61,22 +39,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isToken(node: unknown): node is Token {
-  return isRecord(node) && '$value' in node;
-}
-
-function isTokenGroup(node: unknown): node is TokenGroup {
-  return isRecord(node) && !isToken(node);
-}
-
-function isAlias(value: unknown): string | null {
-  if (typeof value === 'string') {
-    const m = ALIAS_PATTERN.exec(value);
-    return m ? m[1] : null;
-  }
-  return null;
-}
-
 function validateExtensions(value: unknown, path: string): void {
   if (value === undefined) return;
   if (!isRecord(value)) {
@@ -106,69 +68,13 @@ function validateMetadata(
   validateDeprecated(node.$deprecated, path);
 }
 
-function resolveAlias(
-  targetPath: string,
-  tokenMap: Map<string, Token>,
-  stack: string[],
-): Token {
-  if (stack.includes(targetPath)) {
-    throw new Error(
-      `Circular alias reference: ${[...stack, targetPath].join(' -> ')}`,
-    );
-  }
-  const target = tokenMap.get(targetPath);
-  if (!target) {
-    const source = stack[0];
-    throw new Error(`Token ${source} references unknown token: ${targetPath}`);
-  }
-  const next =
-    typeof target.$value === 'string'
-      ? ALIAS_PATTERN.exec(target.$value)
-      : null;
-  if (next) {
-    return resolveAlias(next[1], tokenMap, [...stack, targetPath]);
-  }
-  if (!target.$type) {
-    const source = stack[0];
-    throw new Error(
-      `Token ${source} references token without $type: ${targetPath}`,
-    );
-  }
-  if (target.$value === undefined) {
-    const source = stack[0];
-    throw new Error(
-      `Token ${source} references token without $value: ${targetPath}`,
-    );
-  }
-  return target;
-}
-
-function expectAlias(
-  value: string,
-  path: string,
-  expected: string,
-  tokenMap: Map<string, Token>,
-): void {
-  const targetPath = isAlias(value);
-  if (!targetPath) {
-    throw new Error(`Token ${path} has invalid ${expected} reference`);
-  }
-  const target = resolveAlias(targetPath, tokenMap, [path]);
-  if (target.$type !== expected) {
-    throw new Error(
-      `Token ${path} references token of type ${String(target.$type)}; expected ${expected}`,
-    );
-  }
-}
-
 function validateColor(
   value: unknown,
   path: string,
   tokenMap: Map<string, Token>,
 ): void {
   if (typeof value === 'string') {
-    const m = ALIAS_PATTERN.exec(value);
-    if (m) expectAlias(value, path, 'color', tokenMap);
+    if (isAlias(value)) expectAlias(value, path, 'color', tokenMap);
     return;
   }
   throw new Error(`Token ${path} has invalid color value`);
@@ -213,8 +119,7 @@ function validateFontFamily(
   tokenMap: Map<string, Token>,
 ): void {
   if (typeof value === 'string') {
-    const m = ALIAS_PATTERN.exec(value);
-    if (m) expectAlias(value, path, 'fontFamily', tokenMap);
+    if (isAlias(value)) expectAlias(value, path, 'fontFamily', tokenMap);
     return;
   }
   if (Array.isArray(value) && value.every((v) => typeof v === 'string')) return;
@@ -233,8 +138,7 @@ function validateFontWeight(
     return;
   }
   if (typeof value === 'string') {
-    const m = ALIAS_PATTERN.exec(value);
-    if (m) {
+    if (isAlias(value)) {
       expectAlias(value, path, 'fontWeight', tokenMap);
       return;
     }
@@ -445,31 +349,9 @@ function validateToken(
   if (token.$value === undefined) {
     throw new Error(`Token ${path} is missing $value`);
   }
-  if (typeof token.$value === 'string') {
-    const match = ALIAS_PATTERN.exec(token.$value);
-    if (match) {
-      const target = resolveAlias(match[1], tokenMap, [path]);
-      const aliasType = target.$type;
-      if (!aliasType) {
-        throw new Error(
-          `Token ${path} references token without $type: ${match[1]}`,
-        );
-      }
-      if (!token.$type) {
-        token.$type = aliasType;
-      } else if (token.$type !== aliasType) {
-        throw new Error(
-          `Token ${path} has mismatched $type ${token.$type}; expected ${aliasType}`,
-        );
-      }
-      token.$value = target.$value;
-    }
-  }
-
   if (!token.$type) {
     throw new Error(`Token ${path} is missing $type`);
   }
-
   switch (token.$type) {
     case 'color':
       validateColor(token.$value, path, tokenMap);
@@ -507,103 +389,9 @@ function validateToken(
   }
 }
 
-export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
-  const result: FlattenedToken[] = [];
-  const seenPaths = new Map<string, string>();
-
-  function walk(
-    group: TokenGroup,
-    prefix: string[],
-    inheritedType?: string,
-    inheritedDeprecated?: boolean | string,
-  ): void {
-    const pathLabel = prefix.length ? prefix.join('.') : '(root)';
-    validateMetadata(group, pathLabel);
-    if (prefix.length === 0) {
-      if (
-        '$schema' in group &&
-        typeof Reflect.get(group, '$schema') !== 'string'
-      ) {
-        throw new Error('Root group has invalid $schema');
-      }
-    } else if ('$schema' in group) {
-      throw new Error('$schema is only allowed on the root group');
-    }
-    const currentType = group.$type ?? inheritedType;
-    const currentDeprecated = group.$deprecated ?? inheritedDeprecated;
-    const seenNames = new Map<string, string>();
-
-    for (const name of Object.keys(group)) {
-      if (GROUP_PROPS.has(name)) continue;
-      if (name.startsWith('$')) {
-        throw new Error(`Invalid token or group name: ${name}`);
-      }
-      if (INVALID_NAME_CHARS.test(name)) {
-        throw new Error(`Invalid token or group name: ${name}`);
-      }
-      const lower = name.toLowerCase();
-      const existing = seenNames.get(lower);
-      if (existing) {
-        if (existing === name) {
-          throw new Error(`Duplicate token name: ${name}`);
-        }
-        throw new Error(
-          `Duplicate token name differing only by case: ${existing} vs ${name}`,
-        );
-      }
-      seenNames.set(lower, name);
-
-      const node = group[name];
-      if (node === undefined) continue;
-      const pathParts = [...prefix, name];
-      const pathId = pathParts.join('.');
-      const lowerPath = pathId.toLowerCase();
-      const existingPath = seenPaths.get(lowerPath);
-      if (existingPath) {
-        if (existingPath === pathId) {
-          throw new Error(`Duplicate token path: ${pathId}`);
-        }
-        throw new Error(
-          `Duplicate token path differing only by case: ${existingPath} vs ${pathId}`,
-        );
-      }
-      seenPaths.set(lowerPath, pathId);
-
-      if (isRecord(node)) {
-        if (isToken(node)) {
-          const token: Token = { ...node, $type: node.$type ?? currentType };
-          const tokenDeprecated = token.$deprecated ?? currentDeprecated;
-          if (tokenDeprecated !== undefined)
-            token.$deprecated = tokenDeprecated;
-          result.push({ path: pathId, token });
-        } else if (isTokenGroup(node)) {
-          for (const key of Object.keys(node)) {
-            if (LEGACY_PROPS.has(key)) {
-              throw new Error(
-                `Token ${pathId} uses legacy property ${key}; expected $${key}`,
-              );
-            }
-          }
-          const childKeys = Object.keys(node).filter(
-            (k) => !GROUP_PROPS.has(k),
-          );
-          if ('$type' in node && childKeys.length === 0) {
-            throw new Error(`Token ${pathId} is missing $value`);
-          }
-          walk(node, pathParts, currentType, currentDeprecated);
-        } else {
-          throw new Error(`Token ${pathId} must be an object with $value`);
-        }
-      } else {
-        throw new Error(`Token ${pathId} must be an object with $value`);
-      }
-    }
-  }
-
-  walk(tokens, [], undefined, undefined);
-  const tokenMap = new Map(result.map((t) => [t.path, t.token]));
-  for (const { path, token } of result) {
+export function validateTokens(tokens: FlattenedToken[]): void {
+  const tokenMap = new Map(tokens.map((t) => [t.path, t.token]));
+  for (const { path, token } of tokens) {
     validateToken(path, token, tokenMap);
   }
-  return result;
 }
