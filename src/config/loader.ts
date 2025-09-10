@@ -84,10 +84,19 @@ export async function loadConfig(
   }
   const config = parsed.data;
   const legacyKeys = new Set(LEGACY_TOKEN_GROUPS);
+  const isLegacyGroup = (group: unknown): boolean => {
+    if (typeof group !== 'object' || group === null) return true;
+    return Object.values(group as Record<string, unknown>).some(
+      (child) =>
+        typeof child !== 'object' ||
+        child === null ||
+        !('$value' in (child as Record<string, unknown>)),
+    );
+  };
   const isLegacy = (val: unknown): val is Record<string, unknown> =>
     typeof val === 'object' &&
     val !== null &&
-    Object.keys(val).some((k) => legacyKeys.has(k));
+    Object.entries(val).some(([k, v]) => legacyKeys.has(k) && isLegacyGroup(v));
   if (config.tokens && typeof config.tokens === 'object') {
     if (isLegacy(config.tokens)) {
       console.warn(
