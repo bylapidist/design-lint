@@ -3,7 +3,7 @@ import path from 'node:path';
 import { evaluate, parse as parseJson } from '@humanwhocodes/momoa';
 import yamlToMomoa from 'yaml-to-momoa';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
-import { parseDesignTokens } from '../../core/token-parser.js';
+import { parseDesignTokens } from '../../core/parser/index.js';
 
 function assertSupportedFile(filePath: string): void {
   if (
@@ -26,6 +26,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function hasBody(value: unknown): value is { body: unknown } {
+  return isObject(value) && 'body' in value;
+}
+
 function parseTokensContent(filePath: string, content: string): DesignTokens {
   const ext = path.extname(filePath).toLowerCase();
   try {
@@ -33,6 +37,11 @@ function parseTokensContent(filePath: string, content: string): DesignTokens {
       ext === '.yaml' || ext === '.yml'
         ? yamlToMomoa(content)
         : parseJson(content, { mode: 'json', ranges: true });
+    if (!hasBody(doc)) {
+      throw new Error(
+        `Error parsing ${filePath}: root value must be an object`,
+      );
+    }
     const result = evaluate(doc.body);
     if (!isDesignTokens(result)) {
       throw new Error(

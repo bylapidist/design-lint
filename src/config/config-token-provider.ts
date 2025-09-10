@@ -1,6 +1,6 @@
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
-import { parseDesignTokens } from '../core/token-parser.js';
+import { parseDesignTokens } from '../core/parser/index.js';
 
 export class ConfigTokenProvider {
   private config: Config;
