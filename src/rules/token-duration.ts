@@ -9,15 +9,12 @@ export const durationRule: RuleModule = {
   create(context) {
     const durationTokens = context.getFlattenedTokens('duration');
     const parse = (val: unknown): number | null => {
-      if (
-        typeof val === 'object' &&
-        val !== null &&
-        typeof (val as { value?: unknown }).value === 'number' &&
-        typeof (val as { unit?: unknown }).unit === 'string'
-      ) {
-        const unit = (val as { unit: string }).unit;
-        const num = (val as { value: number }).value;
-        return unit === 's' ? num * 1000 : unit === 'ms' ? num : null;
+      if (typeof val === 'object' && val !== null) {
+        const unit: unknown = Reflect.get(val, 'unit');
+        const num: unknown = Reflect.get(val, 'value');
+        if (typeof unit === 'string' && typeof num === 'number') {
+          return unit === 's' ? num * 1000 : unit === 'ms' ? num : null;
+        }
       }
       return null;
     };

@@ -83,50 +83,57 @@ export async function loadConfig(
   const config = parsed.data;
   if (config.tokens && typeof config.tokens === 'object') {
     const baseDir = config.configPath ? path.dirname(config.configPath) : cwd;
-    const themes = config.tokens as Record<string, unknown>;
-    for (const [theme, val] of Object.entries(themes)) {
+    const themes: Record<string, unknown> = {};
+    for (const [theme, val] of Object.entries(config.tokens)) {
       if (typeof val === 'string') {
         const filePath = path.resolve(baseDir, val);
         try {
           themes[theme] = await readDesignTokensFile(filePath);
         } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
           throw new Error(
-            `Failed to read tokens for theme "${theme}": ${(err as Error).message}`,
+            `Failed to read tokens for theme "${theme}": ${message}`,
           );
         }
+      } else {
+        themes[theme] = val;
       }
     }
-    if (isThemeRecord(themes as Record<string, DesignTokens>)) {
-      for (const [theme, t] of Object.entries(
-        themes as Record<string, DesignTokens>,
-      )) {
+    if (isThemeRecord(themes)) {
+      for (const [theme, t] of Object.entries(themes)) {
         try {
           parseDesignTokens(t);
         } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
           throw new Error(
-            `Failed to parse tokens for theme "${theme}": ${(err as Error).message}`,
+            `Failed to parse tokens for theme "${theme}": ${message}`,
           );
         }
       }
-    } else {
+      config.tokens = themes;
+    } else if (isDesignTokens(themes)) {
       try {
-        parseDesignTokens(themes as unknown as DesignTokens);
+        parseDesignTokens(themes);
       } catch (err) {
         throw err instanceof Error ? err : new Error(String(err));
       }
+      config.tokens = themes;
     }
   }
   return config;
 }
 
-function isThemeRecord(
-  val: DesignTokens | Record<string, DesignTokens>,
-): val is Record<string, DesignTokens> {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isDesignTokens(value: unknown): value is DesignTokens {
+  return isRecord(value);
+}
+
+function isThemeRecord(val: unknown): val is Record<string, DesignTokens> {
+  if (!isRecord(val)) return false;
   return Object.values(val).every(
-    (v) =>
-      v &&
-      typeof v === 'object' &&
-      !('$value' in (v as Record<string, unknown>)) &&
-      !('value' in (v as Record<string, unknown>)),
+    (v) => isDesignTokens(v) && !('$value' in v) && !('value' in v),
   );
 }

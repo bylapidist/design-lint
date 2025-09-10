@@ -11,10 +11,10 @@ export const opacityRule: RuleModule = {
     const allowed = new Set(
       opacityTokens
         .filter(
-          ({ path, token }) =>
-            path.startsWith('opacity.') && typeof token.$value === 'number',
+          (t): t is { path: string; token: { $value: number } } =>
+            t.path.startsWith('opacity.') && typeof t.token.$value === 'number',
         )
-        .map(({ token }) => token.$value as number),
+        .map((t) => t.token.$value),
     );
     if (allowed.size === 0) {
       context.report({

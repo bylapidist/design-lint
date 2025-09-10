@@ -20,10 +20,11 @@ export function detectInitFormat(initFormat?: string): string {
       if (fs.existsSync(pkgPath)) {
         try {
           const pkgText = fs.readFileSync(pkgPath, 'utf8');
-          const pkg = JSON.parse(pkgText) as unknown as {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const pkg: {
             dependencies?: Record<string, unknown>;
             devDependencies?: Record<string, unknown>;
-          };
+          } = JSON.parse(pkgText);
           if (pkg.dependencies?.typescript || pkg.devDependencies?.typescript) {
             format = 'ts';
           }

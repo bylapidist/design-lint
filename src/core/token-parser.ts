@@ -64,6 +64,10 @@ function isToken(node: unknown): node is Token {
   return isRecord(node) && '$value' in node;
 }
 
+function isTokenGroup(node: unknown): node is TokenGroup {
+  return isRecord(node) && !isToken(node);
+}
+
 function isAlias(value: unknown): string | null {
   if (typeof value === 'string') {
     const m = ALIAS_PATTERN.exec(value);
@@ -263,7 +267,7 @@ function validateShadow(
   path: string,
   tokenMap: Map<string, Token>,
 ): void {
-  const items = Array.isArray(value) ? (value as unknown[]) : [value];
+  const items = Array.isArray(value) ? value : [value];
   if (!Array.isArray(items)) {
     throw new Error(`Token ${path} has invalid shadow value`);
   }
@@ -346,7 +350,7 @@ function validateGradient(
   if (!Array.isArray(value) || value.length === 0) {
     throw new Error(`Token ${path} has invalid gradient value`);
   }
-  const stops = value as unknown[];
+  const stops = value;
   for (let i = 0; i < stops.length; i++) {
     const stop: unknown = stops[i];
     if (!isRecord(stop)) {
@@ -517,7 +521,7 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
     if (prefix.length === 0) {
       if (
         '$schema' in group &&
-        typeof (group as { $schema?: unknown }).$schema !== 'string'
+        typeof Reflect.get(group, '$schema') !== 'string'
       ) {
         throw new Error('Root group has invalid $schema');
       }
@@ -548,7 +552,7 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
       }
       seenNames.set(lower, name);
 
-      const node = (group as Record<string, unknown>)[name];
+      const node = group[name];
       if (node === undefined) continue;
       const pathParts = [...prefix, name];
       const pathId = pathParts.join('.');
@@ -571,7 +575,7 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
           if (tokenDeprecated !== undefined)
             token.$deprecated = tokenDeprecated;
           result.push({ path: pathId, token });
-        } else {
+        } else if (isTokenGroup(node)) {
           for (const key of Object.keys(node)) {
             if (LEGACY_PROPS.has(key)) {
               throw new Error(
@@ -585,7 +589,9 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
           if ('$type' in node && childKeys.length === 0) {
             throw new Error(`Token ${pathId} is missing $value`);
           }
-          walk(node as TokenGroup, pathParts, currentType, currentDeprecated);
+          walk(node, pathParts, currentType, currentDeprecated);
+        } else {
+          throw new Error(`Token ${pathId} must be an object with $value`);
         }
       } else {
         throw new Error(`Token ${pathId} must be an object with $value`);

@@ -31,7 +31,7 @@ export async function getFormatter(name: string): Promise<Formatter> {
                 name,
                 pathToFileURL(path.join(process.cwd(), 'index.js')).href,
               );
-        const mod = (await import(resolved)) as unknown;
+        const mod: unknown = await import(resolved);
         const formatter = resolveFormatter(mod);
         if (!formatter) {
           throw new Error();

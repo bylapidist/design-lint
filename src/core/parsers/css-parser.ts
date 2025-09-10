@@ -1,12 +1,7 @@
-import postcss, { type Parser, type Root } from 'postcss';
-import { parse as scssParseRaw } from 'postcss-scss';
-import postcssLess from 'postcss-less';
+import postcss, { type Root } from 'postcss';
+import { parse as scssParse } from 'postcss-scss';
+import lessSyntax from 'postcss-less';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
-
-const scssParse: Parser<Root> = scssParseRaw as unknown as Parser<Root>;
-const lessParse: Parser<Root> = (
-  postcssLess as unknown as { parse: Parser<Root> }
-).parse;
 
 export function parseCSS(
   text: string,
@@ -15,11 +10,14 @@ export function parseCSS(
 ): CSSDeclaration[] {
   const decls: CSSDeclaration[] = [];
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const root: Root =
       lang === 'scss' || lang === 'sass'
-        ? scssParse(text)
+        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          scssParse(text)
         : lang === 'less'
-          ? lessParse(text)
+          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+            lessSyntax.parse(text)
           : postcss.parse(text);
     root.walkDecls((d) => {
       decls.push({

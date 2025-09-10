@@ -1,15 +1,18 @@
 import type { VariableProvider } from '../../core/environment.js';
 import type { DesignTokens } from '../../core/types.js';
+import type { Config } from '../../core/linter.js';
 
 export class NodeTokenProvider implements VariableProvider {
   private tokens: Record<string, DesignTokens>;
 
-  constructor(tokens?: DesignTokens | Record<string, DesignTokens>) {
-    this.tokens = tokens
-      ? isThemeRecord(tokens)
-        ? tokens
-        : { default: tokens }
-      : {};
+  constructor(tokens?: Config['tokens']) {
+    if (tokens && isThemeRecord(tokens)) {
+      this.tokens = tokens;
+    } else if (tokens && isDesignTokens(tokens)) {
+      this.tokens = { default: tokens };
+    } else {
+      this.tokens = {};
+    }
   }
 
   load(): Promise<Record<string, DesignTokens>> {
@@ -25,24 +28,22 @@ export class NodeTokenProvider implements VariableProvider {
   }
 }
 
-function isThemeRecord(
-  val: DesignTokens | Record<string, DesignTokens>,
-): val is Record<string, DesignTokens> {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isDesignTokens(value: unknown): value is DesignTokens {
+  return isRecord(value);
+}
+
+function isThemeRecord(val: unknown): val is Record<string, DesignTokens> {
+  if (!isRecord(val)) return false;
   return Object.entries(val).every(([themeName, theme]) => {
-    if (themeName.startsWith('$')) {
-      return true;
-    }
-
-    if (!theme || typeof theme !== 'object') {
-      return false;
-    }
-
-    return Object.entries(theme as Record<string, unknown>).every(
+    if (themeName.startsWith('$')) return true;
+    if (!isDesignTokens(theme)) return false;
+    return Object.entries(theme).every(
       ([key, child]) =>
-        key.startsWith('$') ||
-        (child &&
-          typeof child === 'object' &&
-          !('$value' in (child as Record<string, unknown>))),
+        key.startsWith('$') || (isRecord(child) && !('$value' in child)),
     );
   });
 }

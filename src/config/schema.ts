@@ -34,9 +34,9 @@ function isTokenGroup(value: unknown): boolean {
   return true;
 }
 
-const designTokensSchema = z.unknown().refine(isTokenGroup, {
+const designTokensSchema = z.custom<DesignTokens>(isTokenGroup, {
   message: 'Tokens must be W3C Design Tokens objects',
-}) as unknown as z.ZodType<DesignTokens>;
+});
 
 const tokenFileSchema = z
   .string()

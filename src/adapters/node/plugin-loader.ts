@@ -50,13 +50,26 @@ export class NodePluginLoader implements PluginLoader {
       }
     }
     const plugin = resolvePlugin(mod);
-    return { path: resolved, plugin: plugin as PluginModule };
+    return { path: resolved, plugin };
   }
 }
 
-function resolvePlugin(mod: unknown): unknown {
-  if (isRecord(mod)) return mod.default ?? mod.plugin ?? mod;
-  return mod;
+function resolvePlugin(mod: unknown): PluginModule {
+  if (isRecord(mod)) {
+    const candidate = mod.default ?? mod.plugin ?? mod;
+    if (isPluginModule(candidate)) {
+      return candidate;
+    }
+  }
+  throw createEngineError({
+    message: 'Invalid plugin module',
+    context: 'Plugin',
+    remediation: 'Ensure the plugin exports a rules array.',
+  });
+}
+
+function isPluginModule(value: unknown): value is PluginModule {
+  return isRecord(value) && Array.isArray(value.rules);
 }
 
 function getErrorCode(e: unknown): string | undefined {
