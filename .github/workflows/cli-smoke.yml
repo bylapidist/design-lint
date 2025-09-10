@@ -187,7 +187,10 @@ jobs:
             "tokens": {
               "default": {
                 "spacing": {
-                  "scale-100": { "$type": "dimension", "$value": "4px" }
+                  "scale-100": {
+                    "$type": "dimension",
+                    "$value": { "value": 4, "unit": "px" }
+                  }
                 }
               }
             },
