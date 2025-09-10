@@ -1,4 +1,3 @@
-import type { Token } from '../types.js';
 import { isRecord } from './utils.js';
 import { validateDimension } from './dimension.js';
 
@@ -14,11 +13,7 @@ const STROKE_STYLE_KEYWORDS = new Set([
 ]);
 const STROKE_LINECAPS = new Set(['round', 'butt', 'square']);
 
-export function validateStrokeStyle(
-  value: unknown,
-  path: string,
-  tokenMap: Map<string, Token>,
-): void {
+export function validateStrokeStyle(value: unknown, path: string): void {
   if (typeof value === 'string') {
     if (!STROKE_STYLE_KEYWORDS.has(value)) {
       throw new Error(`Token ${path} has invalid strokeStyle value`);
@@ -39,7 +34,6 @@ export function validateStrokeStyle(
       validateDimension(
         value.dashArray[i],
         `${path}.dashArray[${String(i)}]`,
-        tokenMap,
       );
     }
     if (

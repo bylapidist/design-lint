@@ -1,15 +1,10 @@
-import type { Token } from '../types.js';
 import { isRecord } from './utils.js';
 import { validateFontFamily } from './fontFamily.js';
 import { validateDimension } from './dimension.js';
 import { validateFontWeight } from './fontWeight.js';
 import { validateNumber } from './number.js';
 
-export function validateTypography(
-  value: unknown,
-  path: string,
-  tokenMap: Map<string, Token>,
-): void {
+export function validateTypography(value: unknown, path: string): void {
   if (!isRecord(value)) {
     throw new Error(`Token ${path} has invalid typography value`);
   }
@@ -33,8 +28,8 @@ export function validateTypography(
   ) {
     throw new Error(`Token ${path} has invalid typography value`);
   }
-  validateFontFamily(fontFamily, `${path}.fontFamily`, tokenMap);
-  validateDimension(fontSize, `${path}.fontSize`, tokenMap);
-  validateFontWeight(fontWeight, `${path}.fontWeight`, tokenMap);
-  validateNumber(lineHeight, `${path}.lineHeight`, tokenMap);
+  validateFontFamily(fontFamily, `${path}.fontFamily`);
+  validateDimension(fontSize, `${path}.fontSize`);
+  validateFontWeight(fontWeight, `${path}.fontWeight`);
+  validateNumber(lineHeight, `${path}.lineHeight`);
 }

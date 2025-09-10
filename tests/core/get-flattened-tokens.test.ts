@@ -77,7 +77,7 @@ void test('getFlattenedTokens resolves aliases', () => {
     },
     {
       path: 'palette.primary',
-      token: { $value: '#f00', $type: 'color' },
+      token: { $value: '#f00', $type: 'color', aliasOf: ['palette.base'] },
       loc: { line: 1, column: 1 },
     },
   ]);

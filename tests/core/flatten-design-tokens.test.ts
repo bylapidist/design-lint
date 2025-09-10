@@ -89,7 +89,7 @@ void test('flattenDesignTokens resolves alias references', () => {
     },
     {
       path: 'color.primary',
-      token: { $value: '#fff', $type: 'color' },
+      token: { $value: '#fff', $type: 'color', aliasOf: ['color.base'] },
       loc: { line: 1, column: 1 },
     },
   ]);
