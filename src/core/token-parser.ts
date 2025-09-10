@@ -338,6 +338,9 @@ function validateToken(
   tokenMap: Map<string, Token>,
 ): void {
   validateMetadata(token, path);
+  if (token.$value === undefined) {
+    throw new Error(`Token ${path} is missing $value`);
+  }
   if (typeof token.$value === 'string') {
     const match = ALIAS_PATTERN.exec(token.$value);
     if (match) {
@@ -453,6 +456,10 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
         if (tokenDeprecated !== undefined) token.$deprecated = tokenDeprecated;
         result.push({ path: pathId, token });
       } else {
+        const childKeys = Object.keys(node).filter((k) => !GROUP_PROPS.has(k));
+        if ('$type' in node && childKeys.length === 0) {
+          throw new Error(`Token ${pathId} is missing $value`);
+        }
         walk(node, pathParts, currentType, currentDeprecated);
       }
     }

@@ -80,6 +80,20 @@ void test('parseDesignTokens rejects tokens missing explicit type', () => {
   assert.throws(() => parseDesignTokens(tokens), /missing \$type/i);
 });
 
+void test('parseDesignTokens rejects tokens missing $value', () => {
+  const tokens = {
+    color: { blue: { $type: 'color' } },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /missing \$value/i);
+});
+
+void test('parseDesignTokens rejects tokens with mismatched $type and value', () => {
+  const tokens = {
+    color: { $type: 'color', bad: { $value: 123 as unknown as string } },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
+});
+
 void test('parseDesignTokens resolves alias token types', () => {
   const tokens: DesignTokens = {
     color: {
