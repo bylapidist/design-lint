@@ -16,14 +16,7 @@ export const borderWidthRule: RuleModule<BorderWidthOptions> = {
   create(context) {
     const widthTokens = context.getFlattenedTokens('dimension');
     const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
       if (isRecord(val) && typeof val.value === 'number') return val.value;
-      if (typeof val === 'string') {
-        const parsed = valueParser.unit(val);
-        if (parsed) return parseFloat(parsed.number);
-        const num = Number(val);
-        if (!isNaN(num)) return num;
-      }
       return null;
     };
     const allowed = new Set<number>();
