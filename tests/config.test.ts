@@ -340,6 +340,24 @@ void test('loads tokens from theme file paths', async () => {
   assert.equal(light.color.brand.primary.$value, '#000');
 });
 
+void test('loads tokens from YAML theme file paths', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'designlint.config.json'),
+    JSON.stringify({ tokens: { light: './light.tokens.yaml' } }),
+  );
+  fs.writeFileSync(
+    path.join(tmp, 'light.tokens.yaml'),
+    "color:\n  $type: color\n  brand:\n    primary:\n      $value: '#000'\n",
+  );
+  const loaded = await loadConfig(tmp);
+  const tokens = loaded.tokens as Record<string, unknown>;
+  const light = tokens.light as {
+    color: { brand: { primary: { $value: string } } };
+  };
+  assert.equal(light.color.brand.primary.$value, '#000');
+});
+
 void test('resolves token file paths relative to config', async () => {
   const tmp = makeTmpDir();
   const cfgDir = path.join(tmp, 'cfg');

@@ -29,6 +29,30 @@ void test('TokenTracker reports unused tokens', async () => {
   assert.equal(reports[0].messages[0].message.includes('4px'), true);
 });
 
+void test('TokenTracker skips metadata themes when collecting tokens', async () => {
+  const tokens: DesignTokens = {
+    color: { blue: { $value: '#00f', $type: 'color' } },
+  };
+  const provider: TokenProvider = {
+    load: () =>
+      Promise.resolve({
+        default: tokens,
+        $metadata: { foo: true },
+      }),
+  };
+  const tracker = new TokenTracker(provider);
+  await tracker.configure([
+    {
+      rule: { name: 'design-system/no-unused-tokens' },
+      options: {},
+      severity: 'error',
+    },
+  ]);
+  const reports = tracker.generateReports('config');
+  assert.equal(reports.length, 1);
+  assert.equal(reports[0].messages[0].message.includes('#00f'), true);
+});
+
 void test('cssVar classifier tracks custom property usage', async () => {
   const tokens: DesignTokens = {
     color: {

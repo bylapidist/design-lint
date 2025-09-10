@@ -43,10 +43,13 @@ const tokenFileSchema = z
   .refine(
     (p) =>
       !path.isAbsolute(p) &&
-      (p.endsWith('.tokens') || p.endsWith('.tokens.json')),
+      (p.endsWith('.tokens') ||
+        p.endsWith('.tokens.json') ||
+        p.endsWith('.tokens.yaml') ||
+        p.endsWith('.tokens.yml')),
     {
       message:
-        'Token file paths must be relative and end with .tokens or .tokens.json',
+        'Token file paths must be relative and end with .tokens, .tokens.json, .tokens.yaml, or .tokens.yml',
     },
   );
 

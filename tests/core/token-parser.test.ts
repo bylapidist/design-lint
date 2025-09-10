@@ -77,6 +77,19 @@ void test('parseDesignTokens rejects $schema in nested groups', () => {
   assert.throws(() => parseDesignTokens(tokens), /\$schema is only allowed/);
 });
 
+void test('parseDesignTokens allows $metadata fields', () => {
+  const tokens: DesignTokens = {
+    $metadata: { version: 1 },
+    color: {
+      $type: 'color',
+      $metadata: { note: 'ok' },
+      blue: { $value: '#00f' },
+    },
+  };
+  const result = parseDesignTokens(tokens);
+  assert.equal(result[0].path, 'color.blue');
+});
+
 void test('parseDesignTokens rejects names starting with $', () => {
   const tokens = {
     $bad: { $value: 1 },

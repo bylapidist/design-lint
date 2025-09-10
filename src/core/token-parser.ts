@@ -11,6 +11,7 @@ const GROUP_PROPS = new Set([
   '$extensions',
   '$deprecated',
   '$schema',
+  '$metadata',
 ]);
 const LEGACY_PROPS = new Set([
   'type',

@@ -114,6 +114,7 @@ function collectTokenValues(
   const values = new Map<string, FlattenedToken>();
   if (!tokensByTheme) return values;
   for (const theme of Object.keys(tokensByTheme)) {
+    if (theme.startsWith('$')) continue;
     for (const flat of getFlattenedTokens(tokensByTheme, theme)) {
       const val = flat.token.$value;
       if (typeof val === 'string') {
