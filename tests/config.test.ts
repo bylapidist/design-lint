@@ -49,6 +49,26 @@ void test('throws on malformed JS config', async () => {
   await assert.rejects(loadConfig(tmp), /Transform failed/);
 });
 
+void test('rejects bare string token values', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(configPath, JSON.stringify({ tokens: { color: '#000' } }));
+  await assert.rejects(
+    loadConfig(tmp),
+    /Tokens must be W3C Design Tokens objects/,
+  );
+});
+
+void test('propagates token parsing errors', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ tokens: { color: { primary: { $type: 'color' } } } }),
+  );
+  await assert.rejects(loadConfig(tmp), /missing \$value/i);
+});
+
 void test('throws when specified config file is missing', async () => {
   const tmp = makeTmpDir();
   await assert.rejects(

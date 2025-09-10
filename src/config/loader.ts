@@ -87,15 +87,33 @@ export async function loadConfig(
     for (const [theme, val] of Object.entries(themes)) {
       if (typeof val === 'string') {
         const filePath = path.resolve(baseDir, val);
-        themes[theme] = await readDesignTokensFile(filePath);
+        try {
+          themes[theme] = await readDesignTokensFile(filePath);
+        } catch (err) {
+          throw new Error(
+            `Failed to read tokens for theme "${theme}": ${(err as Error).message}`,
+          );
+        }
       }
     }
     if (isThemeRecord(themes as Record<string, DesignTokens>)) {
-      for (const t of Object.values(themes)) {
-        parseDesignTokens(t as DesignTokens);
+      for (const [theme, t] of Object.entries(
+        themes as Record<string, DesignTokens>,
+      )) {
+        try {
+          parseDesignTokens(t);
+        } catch (err) {
+          throw new Error(
+            `Failed to parse tokens for theme "${theme}": ${(err as Error).message}`,
+          );
+        }
       }
     } else {
-      parseDesignTokens(themes as unknown as DesignTokens);
+      try {
+        parseDesignTokens(themes as unknown as DesignTokens);
+      } catch (err) {
+        throw err instanceof Error ? err : new Error(String(err));
+      }
     }
   }
   return config;
