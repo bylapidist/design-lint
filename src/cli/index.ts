@@ -7,6 +7,7 @@ import { prepareEnvironment, type PrepareEnvironmentOptions } from './env.js';
 import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
 import { initConfig } from './init-config.js';
+import { exportTokens } from './tokens.js';
 
 type CliOptions = ExecuteOptions &
   PrepareEnvironmentOptions & {
@@ -71,6 +72,16 @@ function createProgram(version: string) {
     )
     .action((opts: { initFormat?: string }) => {
       initConfig(opts.initFormat);
+    });
+
+  program
+    .command('tokens')
+    .description('Export flattened design tokens as JSON')
+    .option('--theme <name>', 'Theme name to export')
+    .option('--out <file>', 'Write tokens to file')
+    .option('--config <path>', 'Path to configuration file')
+    .action(async (opts: { theme?: string; out?: string; config?: string }) => {
+      await exportTokens(opts);
     });
   return program;
 }

@@ -64,6 +64,15 @@ Many rules support auto-fix. Use the `--fix` flag to update files in place:
 npx design-lint "src/**/*" --fix
 ```
 
+## Export resolved tokens
+Use the `tokens` subcommand to write flattened tokens to a file or stdout. Alias references are resolved and metadata like `$extensions` is preserved:
+
+```bash
+npx design-lint tokens --out tokens.json
+```
+
+Use `--theme` to export tokens for a specific theme.
+
 ## Watch mode and caching
 Use `--watch` to rerun the linter when files change. design-lint caches results to speed up subsequent runs. Cache data lives in `.designlintcache` and is safe to commit to CI caches.
 
