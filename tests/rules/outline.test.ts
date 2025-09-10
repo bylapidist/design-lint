@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
+import { registerTokenValidator } from '../../src/core/token-validators/index.ts';
+
+registerTokenValidator('string', () => {});
 
 const tokens = {
   outlines: { $type: 'string', focus: { $value: '2px solid #000' } },
