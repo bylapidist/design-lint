@@ -1,9 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { flattenDesignTokens } from '../../src/core/token-utils.ts';
+import { registerTokenValidator } from '../../src/core/token-validators/index.ts';
 import type { DesignTokens } from '../../src/core/types.ts';
 
 void test('flattenDesignTokens collects token paths and inherits types', () => {
+  registerTokenValidator('special', (value) => {
+    if (typeof value !== 'string') {
+      throw new Error('invalid');
+    }
+  });
   const tokens: DesignTokens = {
     colors: {
       $type: 'color',
