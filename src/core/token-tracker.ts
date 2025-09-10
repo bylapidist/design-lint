@@ -1,10 +1,6 @@
-import type { LintResult, DesignTokens } from './types.js';
+import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
-import {
-  getFlattenedTokens,
-  extractVarName,
-  type FlattenedToken,
-} from './token-utils.js';
+import { getFlattenedTokens, extractVarName } from './token-utils.js';
 
 type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';
 
@@ -130,6 +126,16 @@ function collectTokenValues(
       if (typeof val === 'number') {
         const key = String(val);
         if (!values.has(key)) values.set(key, flat);
+        continue;
+      }
+      if (isDimension(val)) {
+        const key = `${String(val.value)}${val.unit}`;
+        if (!values.has(key)) values.set(key, flat);
+        continue;
+      }
+      if (isDuration(val)) {
+        const key = `${String(val.value)}${val.unit}`;
+        if (!values.has(key)) values.set(key, flat);
       }
     }
   }
@@ -156,4 +162,20 @@ function isUnusedTokenRule(e: {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function isDimension(value: unknown): value is { value: number; unit: string } {
+  return (
+    isRecord(value) &&
+    typeof (value as { value?: unknown }).value === 'number' &&
+    typeof (value as { unit?: unknown }).unit === 'string'
+  );
+}
+
+function isDuration(value: unknown): value is { value: number; unit: string } {
+  return (
+    isRecord(value) &&
+    typeof (value as { value?: unknown }).value === 'number' &&
+    typeof (value as { unit?: unknown }).unit === 'string'
+  );
 }

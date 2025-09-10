@@ -7,8 +7,8 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 const tokens = {
   borderWidths: {
     $type: 'dimension',
-    sm: { $value: '1px' },
-    md: { $value: '2px' },
+    sm: { $value: { value: 1, unit: 'px' } },
+    md: { $value: { value: 2, unit: 'px' } },
   },
 };
 

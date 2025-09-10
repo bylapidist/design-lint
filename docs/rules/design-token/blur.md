@@ -14,7 +14,10 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
-    "blurs": { "sm": "4px" }
+    "blurs": {
+      "$type": "dimension",
+      "sm": { "$value": { "value": 4, "unit": "px" } }
+    }
   },
   "rules": { "design-token/blur": "error" }
 }

@@ -1,9 +1,9 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const opacityRule: RuleModule<unknown, LegacyRuleContext> = {
+export const opacityRule: RuleModule = {
   name: 'design-token/opacity',
   meta: { description: 'enforce opacity tokens', category: 'design-token' },
   create(context) {

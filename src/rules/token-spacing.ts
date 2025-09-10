@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
 interface SpacingOptions {
@@ -8,10 +8,7 @@ interface SpacingOptions {
   units?: string[];
 }
 
-export const spacingRule: RuleModule<
-  SpacingOptions,
-  LegacyRuleContext<SpacingOptions>
-> = {
+export const spacingRule: RuleModule<SpacingOptions> = {
   name: 'design-token/spacing',
   meta: { description: 'enforce spacing scale', category: 'design-token' },
   create(context) {

@@ -1,20 +1,18 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 
 interface BlurRuleOptions {
   units?: string[];
 }
 
-export const blurRule: RuleModule<
-  BlurRuleOptions,
-  LegacyRuleContext<BlurRuleOptions>
-> = {
+export const blurRule: RuleModule<BlurRuleOptions> = {
   name: 'design-token/blur',
   meta: { description: 'enforce blur tokens', category: 'design-token' },
   create(context) {
     const blurTokens = context.getFlattenedTokens('dimension');
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;
+      if (isRecord(val) && typeof val.value === 'number') return val.value;
       if (typeof val === 'string') {
         const parsed = valueParser.unit(val);
         if (parsed) return parseFloat(parsed.number);
@@ -71,3 +69,7 @@ export const blurRule: RuleModule<
     };
   },
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

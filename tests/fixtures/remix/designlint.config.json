@@ -1,13 +1,27 @@
 {
   "tokens": {
-    "colors": { "primary": "#000000" },
-    "spacing": { "sm": 4 },
-    "fontSizes": { "sm": 12 },
-    "fonts": { "sans": "Arial" },
-    "deprecations": {
-      "old-token": { "replacement": "new-token" },
-      "OldComponent": { "replacement": "NewComponent" }
-    }
+    "color": { "$type": "color", "primary": { "$value": "#000000" } },
+    "spacing": {
+      "$type": "dimension",
+      "sm": { "$value": { "value": 4, "unit": "px" } }
+    },
+    "fontSizes": {
+      "$type": "dimension",
+      "sm": { "$value": { "value": 12, "unit": "px" } }
+    },
+    "fonts": { "$type": "fontFamily", "sans": { "$value": "Arial" } },
+    "old-token": {
+      "$type": "color",
+      "$value": "#000000",
+      "$deprecated": "Use {new-token}"
+    },
+    "new-token": { "$type": "color", "$value": "#ffffff" },
+    "OldComponent": {
+      "$type": "color",
+      "$value": "#000000",
+      "$deprecated": "Use {NewComponent}"
+    },
+    "NewComponent": { "$type": "color", "$value": "#ffffff" }
   },
   "rules": {
     "design-token/colors": "error",

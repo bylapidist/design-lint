@@ -1,7 +1,7 @@
 import ts from 'typescript';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
-export const zIndexRule: RuleModule<unknown, LegacyRuleContext> = {
+export const zIndexRule: RuleModule = {
   name: 'design-token/z-index',
   meta: { description: 'enforce z-index tokens', category: 'design-token' },
   create(context) {

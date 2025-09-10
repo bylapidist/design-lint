@@ -1,7 +1,7 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 
-export const boxShadowRule: RuleModule<unknown, LegacyRuleContext> = {
+export const boxShadowRule: RuleModule = {
   name: 'design-token/box-shadow',
   meta: { description: 'enforce box-shadow tokens', category: 'design-token' },
   create(context) {
@@ -9,30 +9,30 @@ export const boxShadowRule: RuleModule<unknown, LegacyRuleContext> = {
     const normalize = (val: string): string =>
       valueParser.stringify(valueParser(val).nodes).trim();
     const allowed = new Set<string>();
+    const parseDim = (v: unknown): string | null => {
+      if (typeof v === 'string') return v;
+      if (
+        isRecord(v) &&
+        typeof v.value === 'number' &&
+        typeof v.unit === 'string'
+      ) {
+        return `${String(v.value)}${v.unit}`;
+      }
+      return null;
+    };
     const toString = (val: unknown): string | null => {
       const items = Array.isArray(val) ? val : [val];
       const parts: string[] = [];
       for (const item of items) {
-        if (!item || typeof item !== 'object') return null;
-        const { offsetX, offsetY, blur, spread, color, inset } = item as Record<
-          string,
-          unknown
-        >;
-        if (
-          typeof offsetX !== 'string' ||
-          typeof offsetY !== 'string' ||
-          typeof blur !== 'string' ||
-          typeof color !== 'string'
-        )
-          return null;
-        const seg = [
-          inset === true ? 'inset' : null,
-          offsetX,
-          offsetY,
-          blur,
-          typeof spread === 'string' ? spread : null,
-          color,
-        ]
+        if (!isRecord(item)) return null;
+        const { offsetX, offsetY, blur, spread, color, inset } = item;
+        if (typeof color !== 'string') return null;
+        const ox = parseDim(offsetX);
+        const oy = parseDim(offsetY);
+        const bl = parseDim(blur);
+        const sp = spread === undefined ? null : parseDim(spread);
+        if (!ox || !oy || !bl) return null;
+        const seg = [inset === true ? 'inset' : null, ox, oy, bl, sp, color]
           .filter((p): p is string => !!p)
           .join(' ');
         parts.push(seg);
@@ -89,3 +89,7 @@ export const boxShadowRule: RuleModule<unknown, LegacyRuleContext> = {
     };
   },
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

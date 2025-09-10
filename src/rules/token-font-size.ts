@@ -1,12 +1,20 @@
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 
-export const fontSizeRule: RuleModule<unknown, LegacyRuleContext> = {
+export const fontSizeRule: RuleModule = {
   name: 'design-token/font-size',
   meta: { description: 'enforce font-size tokens', category: 'design-token' },
   create(context) {
     const fontSizes = context.getFlattenedTokens('dimension');
     const parseSize = (val: unknown): number | null => {
       if (typeof val === 'number') return val;
+      if (
+        isRecord(val) &&
+        typeof val.value === 'number' &&
+        typeof val.unit === 'string'
+      ) {
+        const factor = val.unit === 'px' ? 1 : 16;
+        return val.value * factor;
+      }
       if (typeof val === 'string') {
         const match = /^(\d*\.?\d+)(px|rem|em)$/.exec(val.trim());
         if (match) {
@@ -49,3 +57,7 @@ export const fontSizeRule: RuleModule<unknown, LegacyRuleContext> = {
     };
   },
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

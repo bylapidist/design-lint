@@ -13,7 +13,13 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 
 ```json
 {
-  "tokens": { "zIndex": { "modal": 1000, "dropdown": 2000 } },
+  "tokens": {
+    "zIndex": {
+      "$type": "number",
+      "modal": { "$value": 1000 },
+      "dropdown": { "$value": 2000 }
+    }
+  },
   "rules": { "design-token/z-index": "error" }
 }
 ```

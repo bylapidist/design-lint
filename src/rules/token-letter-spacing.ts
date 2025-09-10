@@ -1,8 +1,8 @@
 import ts from 'typescript';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const letterSpacingRule: RuleModule<unknown, LegacyRuleContext> = {
+export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',
   meta: {
     description: 'enforce letter-spacing tokens',
@@ -12,6 +12,14 @@ export const letterSpacingRule: RuleModule<unknown, LegacyRuleContext> = {
     const letterSpacings = context.getFlattenedTokens('dimension');
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;
+      if (
+        isRecord(val) &&
+        typeof val.value === 'number' &&
+        typeof val.unit === 'string'
+      ) {
+        const factor = val.unit === 'px' ? 1 : 16;
+        return val.value * factor;
+      }
       if (typeof val === 'string') {
         const v = val.trim();
         if (v === '0') return 0;
@@ -34,6 +42,12 @@ export const letterSpacingRule: RuleModule<unknown, LegacyRuleContext> = {
       if (num !== null) numeric.add(num);
       if (typeof val === 'string' || typeof val === 'number') {
         values.add(String(val).trim());
+      } else if (
+        isRecord(val) &&
+        typeof val.value === 'number' &&
+        typeof val.unit === 'string'
+      ) {
+        values.add(`${String(val.value)}${val.unit}`);
       }
     }
     if (numeric.size === 0 && values.size === 0) {
@@ -86,3 +100,7 @@ export const letterSpacingRule: RuleModule<unknown, LegacyRuleContext> = {
     };
   },
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

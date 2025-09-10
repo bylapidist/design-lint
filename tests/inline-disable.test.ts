@@ -6,6 +6,11 @@ import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import { Linter } from '../src/core/linter.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 
+const tokens = {
+  old: { $type: 'color', $value: '#000', $deprecated: 'Use {new}' },
+  new: { $type: 'color', $value: '#fff' },
+};
+
 void test('inline directives disable linting', async () => {
   const dir = makeTmpDir();
   const file = path.join(dir, 'file.ts');
@@ -22,10 +27,7 @@ void test('inline directives disable linting', async () => {
       "const f = 'old';\n",
   );
   const linter = new Linter(
-    {
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    },
+    { tokens, rules: { 'design-system/deprecation': 'error' } },
     new FileSource(),
   );
   const { results } = await linter.lintTargets([file]);
@@ -42,10 +44,7 @@ void test('strings resembling directives do not disable next line', async () => 
     "const a = 'design-lint-disable-next-line';\n" + "const b = 'old';\n",
   );
   const linter = new Linter(
-    {
-      tokens: { deprecations: { old: { replacement: 'new' } } },
-      rules: { 'design-system/deprecation': 'error' },
-    },
+    { tokens, rules: { 'design-system/deprecation': 'error' } },
     new FileSource(),
   );
   const { results } = await linter.lintTargets([file]);

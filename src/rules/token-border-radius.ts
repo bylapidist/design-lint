@@ -1,16 +1,13 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
 interface BorderRadiusOptions {
   units?: string[];
 }
 
-export const borderRadiusRule: RuleModule<
-  BorderRadiusOptions,
-  LegacyRuleContext<BorderRadiusOptions>
-> = {
+export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
   name: 'design-token/border-radius',
   meta: {
     description: 'enforce border-radius tokens',

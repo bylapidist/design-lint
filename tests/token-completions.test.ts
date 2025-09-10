@@ -1,33 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../src/core/linter.ts';
-import { FileSource } from '../src/adapters/node/file-source.ts';
+import { Linter } from '../src/core/linter.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
 
-void test('getTokenCompletions returns token names', () => {
+void test('getTokenCompletions returns token paths by theme', async () => {
   const linter = new Linter(
     {
       tokens: {
-        variables: {
-          primary: { id: '--color-primary', modes: { base: '#fff' } },
-          accent: { id: '--color-accent', modes: { base: '#000' } },
+        light: {
+          color: {
+            primary: { $type: 'color', $value: '#f00' },
+          },
         },
-        spacing: ['--space-scale-100'],
-        colors: {
-          primary: 'var(--color-primary)',
-          secondary: '#fff',
-          accent: 'var(--color-accent, #000)',
-          spaced: 'var(  --color-spaced  )',
+        dark: {
+          color: {
+            primary: { $type: 'color', $value: '#0f0' },
+          },
         },
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource() },
   );
-  const comps = linter.getTokenCompletions();
-  assert.deepEqual(comps.variables, ['--color-primary', '--color-accent']);
-  assert.deepEqual(comps.spacing, ['--space-scale-100']);
-  assert.deepEqual(comps.colors, [
-    '--color-primary',
-    '--color-accent',
-    '--color-spaced',
-  ]);
+  await Promise.resolve();
+  assert.deepEqual(linter.getTokenCompletions(), {
+    light: ['color.primary'],
+    dark: ['color.primary'],
+  });
 });

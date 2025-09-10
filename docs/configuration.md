@@ -73,7 +73,14 @@ To group tokens by theme, supply an object keyed by theme name. Each theme may c
 }
 ```
 
-Legacy `colors`, `spacing`, and similar groups are automatically migrated to this format with a warning.
+Token files should use the `.tokens` or `.tokens.json` extension and are typically served with the `application/design-tokens+json` MIME type.
+
+Design token files are validated strictly:
+
+- Token and group names may not include `{`, `}`, or `.` and names differing only by case are rejected.
+- `$extensions` keys must contain at least one dot to avoid collisions.
+- Alias references must resolve to tokens of the same `$type` and cyclic or unknown aliases raise errors.
+- Composite token objects such as `shadow`, `strokeStyle`, `gradient`, and `typography` may only include the fields defined by the specification.
 
 ## Rules and severity
 Enable a rule by adding it to the `rules` map with a severity:

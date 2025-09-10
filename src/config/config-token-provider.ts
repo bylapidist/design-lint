@@ -1,5 +1,6 @@
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
+import { parseDesignTokens } from '../core/token-parser.js';
 
 export class ConfigTokenProvider {
   private config: Config;
@@ -15,8 +16,12 @@ export class ConfigTokenProvider {
       | undefined;
     if (!tokens) return Promise.resolve({});
     if (isThemeRecord(tokens)) {
+      for (const t of Object.values(tokens)) {
+        parseDesignTokens(t);
+      }
       return Promise.resolve(tokens);
     }
+    parseDesignTokens(tokens);
     return Promise.resolve({ default: tokens });
   }
 }

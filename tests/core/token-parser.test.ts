@@ -38,6 +38,15 @@ void test('parseDesignTokens rejects duplicate names differing only by case', ()
   assert.throws(() => parseDesignTokens(tokens), /differing only by case/i);
 });
 
+void test('parseDesignTokens rejects duplicate paths differing only by case', () => {
+  const tokens = {
+    color: { $type: 'color', blue: { $value: '#00f' } },
+    Color: { $type: 'color', Blue: { $value: '#00f' } },
+  } as unknown as DesignTokens;
+
+  assert.throws(() => parseDesignTokens(tokens), /differing only by case/i);
+});
+
 void test('parseDesignTokens rejects token names with forbidden characters', () => {
   const tokens = {
     'bad.name': { $value: 1 },
@@ -47,6 +56,25 @@ void test('parseDesignTokens rejects token names with forbidden characters', () 
     () => parseDesignTokens(tokens),
     /invalid token or group name/i,
   );
+});
+
+void test('parseDesignTokens allows $schema at the root', () => {
+  const tokens: DesignTokens = {
+    $schema: 'https://design-tokens.github.io/schema.json',
+    color: { $type: 'color', blue: { $value: '#00f' } },
+  };
+  const result = parseDesignTokens(tokens);
+  assert.equal(result[0].path, 'color.blue');
+});
+
+void test('parseDesignTokens rejects $schema in nested groups', () => {
+  const tokens = {
+    palette: {
+      $schema: 'foo',
+      primary: { $value: '#fff', $type: 'color' },
+    },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /\$schema is only allowed/);
 });
 
 void test('parseDesignTokens rejects names starting with $', () => {
@@ -94,6 +122,16 @@ void test('parseDesignTokens rejects tokens with mismatched $type and value', ()
   assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
 });
 
+void test('parseDesignTokens rejects aliases with mismatched types', () => {
+  const tokens = {
+    color: { base: { $value: '#00f', $type: 'color' } },
+    size: { sm: { $value: { value: 4, unit: 'px' }, $type: 'dimension' } },
+    alias: { wrong: { $type: 'color', $value: '{size.sm}' } },
+  } as unknown as DesignTokens;
+
+  assert.throws(() => parseDesignTokens(tokens), /mismatched \$type/i);
+});
+
 void test('parseDesignTokens resolves alias token types', () => {
   const tokens: DesignTokens = {
     color: {
@@ -119,6 +157,43 @@ void test('parseDesignTokens validates dimension tokens', () => {
     size: { $type: 'dimension', sm: { $value: { value: 0 } } },
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(invalid), /invalid dimension value/i);
+
+  const badUnit = {
+    size: { $type: 'dimension', sm: { $value: { value: 1, unit: 'em' } } },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(badUnit), /invalid dimension value/i);
+});
+
+void test('parseDesignTokens validates duration tokens', () => {
+  const tokens = {
+    durations: {
+      $type: 'duration',
+      fast: { $value: { value: 100, unit: 'ms' } },
+    },
+  } as unknown as DesignTokens;
+  const result = parseDesignTokens(tokens);
+  assert.equal(result[0].token.$type, 'duration');
+
+  const invalid = {
+    durations: {
+      $type: 'duration',
+      bad: { $value: { value: 1, unit: 'min' } },
+    },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(invalid), /invalid duration value/i);
+});
+
+void test('parseDesignTokens validates cubicBezier tokens', () => {
+  const tokens: DesignTokens = {
+    easing: { $type: 'cubicBezier', ease: { $value: [0.25, 0.1, 0.25, 1] } },
+  } as unknown as DesignTokens;
+  const result = parseDesignTokens(tokens);
+  assert.equal(result[0].token.$type, 'cubicBezier');
+
+  const invalid = {
+    easing: { $type: 'cubicBezier', bad: { $value: [0, 0, 1] } },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(invalid), /invalid cubicBezier value/i);
 });
 void test('parseDesignTokens inherits types from parent groups', () => {
   const tokens: DesignTokens = {
@@ -235,6 +310,25 @@ void test('parseDesignTokens validates shadow composite tokens', () => {
   assert.throws(() => parseDesignTokens(invalid), /invalid dimension value/i);
 });
 
+void test('parseDesignTokens rejects shadow tokens with unknown properties', () => {
+  const tokens = {
+    shadow: {
+      $type: 'shadow',
+      bad: {
+        $value: {
+          color: '#000',
+          offsetX: { value: 1, unit: 'px' },
+          offsetY: { value: 1, unit: 'px' },
+          blur: { value: 1, unit: 'px' },
+          foo: 1,
+        },
+      },
+    },
+  } as unknown as DesignTokens;
+
+  assert.throws(() => parseDesignTokens(tokens), /invalid shadow value/i);
+});
+
 void test('parseDesignTokens validates strokeStyle composite tokens', () => {
   const tokens: DesignTokens = {
     stroke: {
@@ -261,6 +355,23 @@ void test('parseDesignTokens validates strokeStyle composite tokens', () => {
     },
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(invalid), /invalid strokeStyle value/i);
+});
+
+void test('parseDesignTokens rejects strokeStyle tokens with unknown properties', () => {
+  const tokens = {
+    stroke: {
+      $type: 'strokeStyle',
+      bad: {
+        $value: {
+          dashArray: [{ value: 1, unit: 'px' }],
+          lineCap: 'round',
+          foo: 1,
+        },
+      },
+    },
+  } as unknown as DesignTokens;
+
+  assert.throws(() => parseDesignTokens(tokens), /invalid strokeStyle value/i);
 });
 
 void test('parseDesignTokens validates gradient composite tokens', () => {
@@ -290,6 +401,16 @@ void test('parseDesignTokens validates gradient composite tokens', () => {
   assert.throws(() => parseDesignTokens(invalid), /invalid gradient value/i);
 });
 
+void test('parseDesignTokens rejects gradient tokens with unknown properties', () => {
+  const tokens = {
+    gradient: {
+      $type: 'gradient',
+      bad: { $value: [{ color: '#000', position: 0, foo: 1 }] },
+    },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /invalid gradient value/i);
+});
+
 void test('parseDesignTokens validates typography composite tokens', () => {
   const tokens: DesignTokens = {
     typography: {
@@ -317,6 +438,24 @@ void test('parseDesignTokens validates typography composite tokens', () => {
     },
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(invalid), /invalid typography value/i);
+});
+
+void test('parseDesignTokens rejects typography tokens with unknown properties', () => {
+  const tokens = {
+    typography: {
+      $type: 'typography',
+      bad: {
+        $value: {
+          fontFamily: 'Arial',
+          fontSize: { value: 16, unit: 'px' },
+          fontWeight: 400,
+          lineHeight: 1.5,
+          foo: 1,
+        },
+      },
+    },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /invalid typography value/i);
 });
 
 void test('parseDesignTokens preserves $extensions and $deprecated metadata', () => {

@@ -4,11 +4,11 @@ import { parserRegistry } from '../../src/core/parser-registry.ts';
 import { createFileDocument } from '../../src/adapters/node/file-document.ts';
 import type {
   RuleModule,
-  LegacyRuleContext,
+  RuleContext,
   LintMessage,
 } from '../../src/core/types.ts';
 
-const rule: RuleModule<unknown, LegacyRuleContext> = {
+const rule: RuleModule = {
   name: 'test',
   meta: { description: 'test rule' },
   create(ctx) {
@@ -45,9 +45,8 @@ for (const c of cases) {
     const parser = parserRegistry[doc.type];
     assert.ok(parser, 'parser exists');
     const messages: LintMessage[] = [];
-    const ctx: LegacyRuleContext = {
+    const ctx: RuleContext = {
       sourceId: c.sourceId,
-      tokens: {},
       options: undefined,
       report: (m) =>
         messages.push({ ...m, severity: 'error', ruleId: rule.name }),

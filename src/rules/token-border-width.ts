@@ -1,16 +1,13 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
 interface BorderWidthOptions {
   units?: string[];
 }
 
-export const borderWidthRule: RuleModule<
-  BorderWidthOptions,
-  LegacyRuleContext<BorderWidthOptions>
-> = {
+export const borderWidthRule: RuleModule<BorderWidthOptions> = {
   name: 'design-token/border-width',
   meta: {
     description: 'enforce border-width tokens',
@@ -20,6 +17,7 @@ export const borderWidthRule: RuleModule<
     const widthTokens = context.getFlattenedTokens('dimension');
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;
+      if (isRecord(val) && typeof val.value === 'number') return val.value;
       if (typeof val === 'string') {
         const parsed = valueParser.unit(val);
         if (parsed) return parseFloat(parsed.number);
@@ -136,3 +134,7 @@ export const borderWidthRule: RuleModule<
 };
 
 export default borderWidthRule;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

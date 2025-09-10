@@ -7,8 +7,8 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 const tokens = {
   durations: {
     $type: 'duration',
-    fast: { $value: '200ms' },
-    slow: { $value: '400ms' },
+    fast: { $value: { value: 200, unit: 'ms' } },
+    slow: { $value: { value: 400, unit: 'ms' } },
   },
 };
 

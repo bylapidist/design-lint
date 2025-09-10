@@ -13,7 +13,7 @@ function makeProvider(tokens: DesignTokens): TokenProvider {
 void test('TokenTracker reports unused tokens', async () => {
   const tokens: DesignTokens = {
     color: { red: { $value: 'var(--red)', $type: 'color' } },
-    spacing: { four: { $value: '4px', $type: 'dimension' } },
+    spacing: { four: { $value: { value: 4, unit: 'px' }, $type: 'dimension' } },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
   await tracker.configure([
@@ -74,8 +74,8 @@ void test('hexColor classifier is case-insensitive', async () => {
 void test('numeric classifier matches number tokens', async () => {
   const tokens: DesignTokens = {
     spacing: {
-      four: { $value: '4px', $type: 'dimension' },
-      eight: { $value: '8px', $type: 'dimension' },
+      four: { $value: { value: 4, unit: 'px' }, $type: 'dimension' },
+      eight: { $value: { value: 8, unit: 'px' }, $type: 'dimension' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));

@@ -1,8 +1,8 @@
 import ts from 'typescript';
-import type { RuleModule, LegacyRuleContext } from '../core/types.js';
+import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const lineHeightRule: RuleModule<unknown, LegacyRuleContext> = {
+export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',
   meta: { description: 'enforce line-height tokens', category: 'design-token' },
   create(context) {

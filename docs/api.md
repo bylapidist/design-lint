@@ -52,7 +52,7 @@ const { results } = await linter.lintTargets(['src/**/*.ts']);
 Key methods:
 - `lintTargets(targets, fix?)` – lint files or globs.
 - `lintText(text, id, metadata?)` – lint a string.
-- `getTokenCompletions()` – list available tokens.
+- `getTokenCompletions()` – list available token paths grouped by theme.
 
 ## Helper functions
 - `loadConfig(cwd, path?)` – resolve configuration.
