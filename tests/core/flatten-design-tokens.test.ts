@@ -5,7 +5,7 @@ import type { DesignTokens } from '../../src/core/types.ts';
 import { registerTokenValidator } from '../../src/core/token-validators/index.ts';
 
 void test('flattenDesignTokens collects token paths and inherits types', () => {
-  registerTokenValidator('special', () => {});
+  registerTokenValidator('special', () => undefined);
   const tokens: DesignTokens = {
     colors: {
       $type: 'color',
