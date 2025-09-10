@@ -162,13 +162,6 @@ void test('parseDesignTokens rejects legacy shorthand token values', () => {
   );
 });
 
-void test('parseDesignTokens rejects legacy token properties', () => {
-  const tokens = {
-    color: { blue: { value: '#00f', type: 'color' } },
-  } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /legacy property/i);
-});
-
 void test('parseDesignTokens rejects tokens with mismatched $type and value', () => {
   const tokens = {
     color: { $type: 'color', bad: { $value: 123 as unknown as string } },
@@ -555,4 +548,38 @@ void test('parseDesignTokens rejects invalid $deprecated values', () => {
     },
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(tokens), /invalid \$deprecated/i);
+});
+
+void test('parseDesignTokens transforms Tokens Studio format', () => {
+  const tokens = {
+    color: {
+      blue: { value: '#00f', type: 'color' },
+    },
+  } as unknown as DesignTokens;
+  const result = parseDesignTokens(tokens);
+  assert.equal(result[0].path, 'color.blue');
+  assert.deepEqual(result[0].token, { $value: '#00f', $type: 'color' });
+});
+
+void test('parseDesignTokens transforms Figma variables format', () => {
+  const tokens = {
+    collections: [
+      {
+        name: 'colors',
+        modes: [{ modeId: 'light', name: 'Light' }],
+        variables: [
+          {
+            name: 'color/blue',
+            type: 'COLOR',
+            valuesByMode: {
+              light: { r: 0, g: 0, b: 1, a: 1 },
+            },
+          },
+        ],
+      },
+    ],
+  } as unknown as DesignTokens;
+  const result = parseDesignTokens(tokens);
+  assert.equal(result[0].path, 'color.blue');
+  assert.deepEqual(result[0].token, { $value: '#0000ff', $type: 'color' });
 });

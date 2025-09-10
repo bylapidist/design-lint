@@ -18,7 +18,7 @@ Key concepts used throughout the documentation.
 - [See also](#see-also)
 
 ## Design tokens
-Named values such as colours, spacing, or typography that describe your design system. design-lint uses the [W3C Design Tokens Community Group format](https://design-tokens.github.io/community-group/technical-reports/format/) for all token files.
+Named values such as colours, spacing, or typography that describe your design system. design-lint uses the [W3C Design Tokens Community Group format](https://design-tokens.github.io/community-group/technical-reports/format/) for all token files and can convert Figma and Tokens Studio exports to that format automatically.
 
 ## Rule
 A check that validates code against the design system. Rules may be built-in or provided by plugins.

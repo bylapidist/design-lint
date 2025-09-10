@@ -1,12 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import {
-  evaluate,
-  parse as parseJson,
-  type MemberNode,
-  type ValueNode,
-  type DocumentNode,
-} from '@humanwhocodes/momoa';
+import { evaluate, parse as parseJson } from '@humanwhocodes/momoa';
 import yamlToMomoa from 'yaml-to-momoa';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
 import { parseDesignTokens } from '../../core/parser/index.js';
@@ -45,7 +39,7 @@ function parseTokensContent(
 } {
   const ext = path.extname(filePath).toLowerCase();
   try {
-    const doc: DocumentNode =
+    const doc =
       ext === '.yaml' || ext === '.yml'
         ? yamlToMomoa(content)
         : parseJson(content, { mode: 'json', ranges: true });
@@ -57,22 +51,34 @@ function parseTokensContent(
 
     const locations = new Map<string, { line: number; column: number }>();
 
-    function getName(node: MemberNode['name']): string {
-      return node.type === 'Identifier' ? node.name : node.value;
+    function getName(node: unknown): string {
+      if (isObject(node) && typeof node.type === 'string') {
+        if (node.type === 'Identifier' && typeof node.name === 'string') {
+          return node.name;
+        }
+        if (typeof node.value === 'string') {
+          return node.value;
+        }
+      }
+      return '';
     }
 
-    function walk(value: ValueNode, prefix: string[]): void {
-      if (value.type !== 'Object') return;
-      const members = value.members;
-      const hasValue = members.some((m) => getName(m.name) === '$value');
-      if (hasValue) {
-        const pathId = prefix.join('.');
-        locations.set(pathId, {
-          line: value.loc.start.line,
-          column: value.loc.start.column,
-        });
+    function walk(value: unknown, prefix: string[]): void {
+      if (!isObject(value) || value.type !== 'Object') return;
+      const members = Array.isArray(value.members) ? value.members : [];
+      const hasValue = members.some((m) => {
+        if (!isObject(m)) return false;
+        return getName(m.name) === '$value';
+      });
+      if (hasValue && isObject(value.loc) && isObject(value.loc.start)) {
+        const line = value.loc.start.line;
+        const column = value.loc.start.column;
+        if (typeof line === 'number' && typeof column === 'number') {
+          locations.set(prefix.join('.'), { line, column });
+        }
       }
       for (const m of members) {
+        if (!isObject(m)) continue;
         const name = getName(m.name);
         if (name.startsWith('$')) continue;
         walk(m.value, [...prefix, name]);

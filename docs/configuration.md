@@ -34,7 +34,7 @@ The file may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `tokens` | object | `undefined` | A [W3C Design Tokens](./glossary.md#design-tokens) tree or a map of themes. Theme values may be inline token objects or paths to `.tokens` files. |
+| `tokens` | object | `undefined` | A design tokens tree (W3C, Figma, or Tokens Studio) or a map of themes. Theme values may be inline token objects or paths to `.tokens` files. |
 | `rules` | object | `undefined` | Enables [rules](./rules/index.md) and sets their severity. |
 | `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
 | `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
@@ -44,7 +44,7 @@ The file may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`.
 
 
 ## Tokens
-Tokens describe the design system in a machine-readable form. Provide a W3C Design Tokens object directly or supply a map of theme names.
+Tokens describe the design system in a machine-readable form. Provide a W3C Design Tokens object directly, pass Figma or Tokens Studio exports, or supply a map of theme names.
 
 Inline example:
 
