@@ -556,3 +556,18 @@ void test('parseDesignTokens rejects invalid $deprecated values', () => {
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(tokens), /invalid \$deprecated/i);
 });
+
+void test('parseDesignTokens rejects malformed color values', () => {
+  const tokens: DesignTokens = {
+    color: { $type: 'color', bad: { $value: '#zzzzzz' } },
+  };
+  assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
+});
+
+void test('parseDesignTokens normalizes colors to rgb when configured', () => {
+  const tokens: DesignTokens = {
+    color: { $type: 'color', green: { $value: 'hsl(120, 100%, 50%)' } },
+  };
+  const result = parseDesignTokens(tokens, undefined, { colorSpace: 'rgb' });
+  assert.equal(result[0].token.$value, 'rgb(0, 255, 0)');
+});

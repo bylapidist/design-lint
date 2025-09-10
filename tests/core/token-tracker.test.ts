@@ -12,7 +12,7 @@ function makeProvider(tokens: DesignTokens): TokenProvider {
 
 void test('TokenTracker reports unused tokens', async () => {
   const tokens: DesignTokens = {
-    color: { red: { $value: 'var(--red)', $type: 'color' } },
+    color: { red: { $value: '#ff0000', $type: 'color' } },
     spacing: { four: { $value: { value: 4, unit: 'px' }, $type: 'dimension' } },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -23,7 +23,7 @@ void test('TokenTracker reports unused tokens', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('const c = "var(--red)";');
+  await tracker.trackUsage('const c = "#ff0000";');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   assert.equal(reports[0].messages[0].message.includes('4px'), true);
@@ -53,11 +53,11 @@ void test('TokenTracker skips metadata themes when collecting tokens', async () 
   assert.equal(reports[0].messages[0].message.includes('#00f'), true);
 });
 
-void test('cssVar classifier tracks custom property usage', async () => {
+void test('hexColor classifier tracks custom property usage', async () => {
   const tokens: DesignTokens = {
     color: {
-      used: { $value: 'var(--used)', $type: 'color' },
-      unused: { $value: 'var(--unused)', $type: 'color' },
+      used: { $value: '#111111', $type: 'color' },
+      unused: { $value: '#222222', $type: 'color' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -68,10 +68,10 @@ void test('cssVar classifier tracks custom property usage', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: var(--used);');
+  await tracker.trackUsage('color: #111111;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('--unused'), true);
+  assert.equal(reports[0].messages[0].message.includes('#222222'), true);
 });
 
 void test('hexColor classifier is case-insensitive', async () => {
