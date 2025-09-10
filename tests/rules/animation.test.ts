@@ -5,7 +5,7 @@ import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 import { registerTokenValidator } from '../../src/core/token-validators/index.ts';
 
-registerTokenValidator('string', () => {});
+registerTokenValidator('string', () => undefined);
 
 const tokens = {
   animations: {

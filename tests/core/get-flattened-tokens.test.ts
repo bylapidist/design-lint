@@ -29,6 +29,7 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
     {
       path: 'palette.primary',
       token: { $value: '#fff', $type: 'color', $deprecated: 'use new palette' },
+      loc: { line: 1, column: 1 },
     },
     {
       path: 'palette.secondary',
@@ -38,6 +39,7 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
         $deprecated: 'use new palette',
         $extensions: { 'vendor.example': { note: true } },
       },
+      loc: { line: 1, column: 1 },
     },
   ]);
 });
@@ -51,6 +53,7 @@ void test('getFlattenedTokens defaults to the "default" theme', () => {
     {
       path: 'palette.primary',
       token: { $value: '#fff', $type: 'color' },
+      loc: { line: 1, column: 1 },
     },
   ]);
 });
@@ -67,8 +70,16 @@ void test('getFlattenedTokens resolves aliases', () => {
   };
   const flat = getFlattenedTokens(tokens, 'default');
   assert.deepEqual(flat, [
-    { path: 'palette.base', token: { $value: '#f00', $type: 'color' } },
-    { path: 'palette.primary', token: { $value: '#f00', $type: 'color' } },
+    {
+      path: 'palette.base',
+      token: { $value: '#f00', $type: 'color' },
+      loc: { line: 1, column: 1 },
+    },
+    {
+      path: 'palette.primary',
+      token: { $value: '#f00', $type: 'color' },
+      loc: { line: 1, column: 1 },
+    },
   ]);
 });
 

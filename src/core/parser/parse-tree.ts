@@ -5,6 +5,14 @@ import type {
   FlattenedToken,
 } from '../types.js';
 
+const tokenLocations = new Map<string, { line: number; column: number }>();
+
+export function getTokenLocation(
+  path: string,
+): { line: number; column: number } | undefined {
+  return tokenLocations.get(path);
+}
+
 const GROUP_PROPS = new Set([
   '$type',
   '$description',
@@ -63,7 +71,11 @@ function validateMetadata(
   validateDeprecated(node.$deprecated, path);
 }
 
-export function buildParseTree(tokens: DesignTokens): FlattenedToken[] {
+export function buildParseTree(
+  tokens: DesignTokens,
+  getLoc?: (path: string) => { line: number; column: number },
+): FlattenedToken[] {
+  tokenLocations.clear();
   const result: FlattenedToken[] = [];
   const seenPaths = new Map<string, string>();
 
@@ -131,7 +143,9 @@ export function buildParseTree(tokens: DesignTokens): FlattenedToken[] {
           const tokenDeprecated = token.$deprecated ?? currentDeprecated;
           if (tokenDeprecated !== undefined)
             token.$deprecated = tokenDeprecated;
-          result.push({ path: pathId, token });
+          const loc = getLoc ? getLoc(pathId) : { line: 1, column: 1 };
+          tokenLocations.set(pathId, loc);
+          result.push({ path: pathId, token, loc });
         } else if (isTokenGroup(node)) {
           for (const key of Object.keys(node)) {
             if (LEGACY_PROPS.has(key)) {

@@ -1,6 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { evaluate, parse as parseJson } from '@humanwhocodes/momoa';
+import {
+  evaluate,
+  parse as parseJson,
+  type MemberNode,
+  type ValueNode,
+  type DocumentNode,
+} from '@humanwhocodes/momoa';
 import yamlToMomoa from 'yaml-to-momoa';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
 import { parseDesignTokens } from '../../core/parser/index.js';
@@ -30,10 +36,16 @@ function hasBody(value: unknown): value is { body: unknown } {
   return isObject(value) && 'body' in value;
 }
 
-function parseTokensContent(filePath: string, content: string): DesignTokens {
+function parseTokensContent(
+  filePath: string,
+  content: string,
+): {
+  tokens: DesignTokens;
+  getTokenLocation: (path: string) => { line: number; column: number };
+} {
   const ext = path.extname(filePath).toLowerCase();
   try {
-    const doc =
+    const doc: DocumentNode =
       ext === '.yaml' || ext === '.yml'
         ? yamlToMomoa(content)
         : parseJson(content, { mode: 'json', ranges: true });
@@ -42,13 +54,43 @@ function parseTokensContent(filePath: string, content: string): DesignTokens {
         `Error parsing ${filePath}: root value must be an object`,
       );
     }
+
+    const locations = new Map<string, { line: number; column: number }>();
+
+    function getName(node: MemberNode['name']): string {
+      return node.type === 'Identifier' ? node.name : node.value;
+    }
+
+    function walk(value: ValueNode, prefix: string[]): void {
+      if (value.type !== 'Object') return;
+      const members = value.members;
+      const hasValue = members.some((m) => getName(m.name) === '$value');
+      if (hasValue) {
+        const pathId = prefix.join('.');
+        locations.set(pathId, {
+          line: value.loc.start.line,
+          column: value.loc.start.column,
+        });
+      }
+      for (const m of members) {
+        const name = getName(m.name);
+        if (name.startsWith('$')) continue;
+        walk(m.value, [...prefix, name]);
+      }
+    }
+
+    walk(doc.body, []);
+
     const result = evaluate(doc.body);
     if (!isDesignTokens(result)) {
       throw new Error(
         `Error parsing ${filePath}: root value must be an object`,
       );
     }
-    return result;
+    return {
+      tokens: result,
+      getTokenLocation: (path) => locations.get(path) ?? { line: 1, column: 1 },
+    };
   } catch (error: unknown) {
     let line: number | undefined;
     let column: number | undefined;
@@ -90,8 +132,8 @@ export async function parseDesignTokensFile(
 ): Promise<FlattenedToken[]> {
   assertSupportedFile(filePath);
   const content = await readFile(filePath, 'utf8');
-  const json = parseTokensContent(filePath, content);
-  return parseDesignTokens(json);
+  const { tokens, getTokenLocation } = parseTokensContent(filePath, content);
+  return parseDesignTokens(tokens, getTokenLocation);
 }
 
 export async function readDesignTokensFile(
@@ -99,8 +141,8 @@ export async function readDesignTokensFile(
 ): Promise<DesignTokens> {
   assertSupportedFile(filePath);
   const content = await readFile(filePath, 'utf8');
-  const json = parseTokensContent(filePath, content);
+  const { tokens, getTokenLocation } = parseTokensContent(filePath, content);
   // Validate the structure but discard the result.
-  parseDesignTokens(json);
-  return json;
+  parseDesignTokens(tokens, getTokenLocation);
+  return tokens;
 }

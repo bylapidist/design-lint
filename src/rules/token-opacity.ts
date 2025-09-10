@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, FlattenedToken } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
 export const opacityRule: RuleModule = {
@@ -11,7 +11,7 @@ export const opacityRule: RuleModule = {
     const allowed = new Set(
       opacityTokens
         .filter(
-          (t): t is { path: string; token: { $value: number } } =>
+          (t): t is FlattenedToken & { token: { $value: number } } =>
             t.path.startsWith('opacity.') && typeof t.token.$value === 'number',
         )
         .map((t) => t.token.$value),

@@ -5,7 +5,7 @@ import type { DesignTokens } from '../../src/core/types.ts';
 import { registerTokenValidator } from '../../src/core/token-validators/index.ts';
 
 void test('flattenDesignTokens collects token paths and inherits types', () => {
-  registerTokenValidator('special', () => {});
+  registerTokenValidator('special', () => undefined);
   const tokens: DesignTokens = {
     colors: {
       $type: 'color',
@@ -24,18 +24,25 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
   };
   const flat = flattenDesignTokens(tokens);
   assert.deepEqual(flat, [
-    { path: 'colors.red', token: { $value: '#ff0000', $type: 'color' } },
+    {
+      path: 'colors.red',
+      token: { $value: '#ff0000', $type: 'color' },
+      loc: { line: 1, column: 1 },
+    },
     {
       path: 'colors.accent',
       token: { $value: '#00ff00', $type: 'special' },
+      loc: { line: 1, column: 1 },
     },
     {
       path: 'colors.nested.green',
       token: { $value: '#00ff00', $type: 'color' },
+      loc: { line: 1, column: 1 },
     },
     {
       path: 'size.spacing.small',
       token: { $value: { value: 4, unit: 'px' }, $type: 'dimension' },
+      loc: { line: 1, column: 1 },
     },
   ]);
 });
@@ -75,8 +82,16 @@ void test('flattenDesignTokens resolves alias references', () => {
   };
   const flat = flattenDesignTokens(tokens);
   assert.deepEqual(flat, [
-    { path: 'color.base', token: { $value: '#fff', $type: 'color' } },
-    { path: 'color.primary', token: { $value: '#fff', $type: 'color' } },
+    {
+      path: 'color.base',
+      token: { $value: '#fff', $type: 'color' },
+      loc: { line: 1, column: 1 },
+    },
+    {
+      path: 'color.primary',
+      token: { $value: '#fff', $type: 'color' },
+      loc: { line: 1, column: 1 },
+    },
   ]);
 });
 
