@@ -15,8 +15,8 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "blurs": {
-      "$type": "dimension",
-      "sm": { "$value": { "value": 4, "unit": "px" } }
+      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
+      "md": { "$type": "dimension", "$value": "{blurs.sm}" }
     }
   },
   "rules": { "design-token/blur": "error" }

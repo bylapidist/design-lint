@@ -1,4 +1,8 @@
 {
-  "tokens": { "colors": { "$type": "color", "base": { "$value": "#000000" } } },
+  "tokens": {
+    "color": {
+      "base": { "$type": "color", "$value": "#000000" }
+    }
+  },
   "rules": { "design-token/colors": "error" }
 }

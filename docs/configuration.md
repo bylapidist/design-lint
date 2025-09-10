@@ -52,7 +52,8 @@ Inline example:
 {
   "tokens": {
     "color": {
-      "primary": { "$type": "color", "$value": "#ff0000" }
+      "primary": { "$type": "color", "$value": "#ff0000" },
+      "secondary": { "$type": "color", "$value": "{color.primary}" }
     }
   }
 }
@@ -66,7 +67,8 @@ To group tokens by theme, supply an object keyed by theme name. Each theme may c
     "light": "./light.tokens.json",
     "dark": {
       "color": {
-        "primary": { "$type": "color", "$value": "#ffffff" }
+        "primary": { "$type": "color", "$value": "#ffffff" },
+        "secondary": { "$type": "color", "$value": "{color.primary}" }
       }
     }
   }
@@ -121,6 +123,7 @@ export default defineConfig({
   tokens: {
     color: {
       primary: { $type: 'color', $value: '#ff0000' },
+      secondary: { $type: 'color', $value: '{color.primary}' },
     },
   },
   rules: { 'design-token/colors': 'error' },

@@ -20,7 +20,8 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
         "$value": "#000",
         "$deprecated": "Use {color.new}"
       },
-      "new": { "$type": "color", "$value": "#fff" }
+      "new": { "$type": "color", "$value": "#fff" },
+      "alias": { "$type": "color", "$value": "{color.new}" }
     }
   },
   "rules": { "design-system/deprecation": "error" }

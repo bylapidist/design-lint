@@ -15,9 +15,8 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "spacing": {
-      "$type": "dimension",
-      "sm": { "$value": { "value": 4, "unit": "px" } },
-      "md": { "$value": { "value": 8, "unit": "px" } }
+      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
+      "md": { "$type": "dimension", "$value": "{spacing.sm}" }
     }
   },
   "rules": {

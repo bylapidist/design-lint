@@ -15,9 +15,8 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "letterSpacings": {
-      "$type": "dimension",
-      "tight": { "$value": { "value": -0.05, "unit": "em" } },
-      "loose": { "$value": { "value": 0.1, "unit": "em" } }
+      "tight": { "$type": "dimension", "$value": { "value": -0.05, "unit": "em" } },
+      "loose": { "$type": "dimension", "$value": "{letterSpacings.tight}" }
     }
   },
   "rules": { "design-token/letter-spacing": "error" }
