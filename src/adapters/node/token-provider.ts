@@ -28,19 +28,21 @@ export class NodeTokenProvider implements VariableProvider {
 function isThemeRecord(
   val: DesignTokens | Record<string, DesignTokens>,
 ): val is Record<string, DesignTokens> {
-  return Object.values(val).every((v) => {
-    if (!v || typeof v !== 'object') {
+  return Object.entries(val).every(([themeName, theme]) => {
+    if (themeName.startsWith('$')) {
+      return true;
+    }
+
+    if (!theme || typeof theme !== 'object') {
       return false;
     }
-    // Treat `v` as a theme only when its immediate children do not look like
-    // tokens (i.e. none expose a `$value` property). This allows single-theme
-    // token objects such as `{ color: { primary: { $value: '#fff' } } }` to be
-    // wrapped in a default theme while still accepting explicit theme maps.
-    return !Object.values(v as Record<string, unknown>).some(
-      (child) =>
-        child &&
-        typeof child === 'object' &&
-        '$value' in (child as Record<string, unknown>),
+
+    return Object.entries(theme as Record<string, unknown>).every(
+      ([key, child]) =>
+        key.startsWith('$') ||
+        (child &&
+          typeof child === 'object' &&
+          !('$value' in (child as Record<string, unknown>))),
     );
   });
 }
