@@ -1,12 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import {
-  evaluate,
-  parse as parseJson,
-  type MemberNode,
-  type ValueNode,
-  type DocumentNode,
-} from '@humanwhocodes/momoa';
+import { evaluate, parse as parseJson } from '@humanwhocodes/momoa';
 import yamlToMomoa from 'yaml-to-momoa';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
 import { parseDesignTokens } from '../../core/parser/index.js';
@@ -36,6 +30,33 @@ function hasBody(value: unknown): value is { body: unknown } {
   return isObject(value) && 'body' in value;
 }
 
+function hasLoc(
+  err: unknown,
+): err is { loc: { line: number; column: number } } {
+  return (
+    isObject(err) &&
+    'loc' in err &&
+    isObject(err.loc) &&
+    'line' in err.loc &&
+    typeof err.loc.line === 'number' &&
+    'column' in err.loc &&
+    typeof err.loc.column === 'number'
+  );
+}
+
+function formatDiagnostic(
+  filePath: string,
+  content: string,
+  line: number,
+  column: number,
+  message: string,
+): string {
+  const lines = content.split(/\r?\n/);
+  const excerpt = lines[line - 1] ?? '';
+  const caret = ' '.repeat(column - 1) + '^';
+  return `${filePath}:${String(line)}:${String(column)}\n${excerpt}\n${caret}\n${message}`;
+}
+
 function parseTokensContent(
   filePath: string,
   content: string,
@@ -45,7 +66,7 @@ function parseTokensContent(
 } {
   const ext = path.extname(filePath).toLowerCase();
   try {
-    const doc: DocumentNode =
+    const doc =
       ext === '.yaml' || ext === '.yml'
         ? yamlToMomoa(content)
         : parseJson(content, { mode: 'json', ranges: true });
@@ -57,22 +78,37 @@ function parseTokensContent(
 
     const locations = new Map<string, { line: number; column: number }>();
 
-    function getName(node: MemberNode['name']): string {
-      return node.type === 'Identifier' ? node.name : node.value;
+    function getName(node: unknown): string {
+      if (isObject(node)) {
+        if ('name' in node && typeof node.name === 'string') return node.name;
+        if ('value' in node && typeof node.value === 'string')
+          return node.value;
+      }
+      return '';
     }
 
-    function walk(value: ValueNode, prefix: string[]): void {
-      if (value.type !== 'Object') return;
-      const members = value.members;
-      const hasValue = members.some((m) => getName(m.name) === '$value');
-      if (hasValue) {
-        const pathId = prefix.join('.');
+    function walk(value: unknown, prefix: string[]): void {
+      if (
+        !isObject(value) ||
+        value.type !== 'Object' ||
+        !Array.isArray(value.members) ||
+        !isObject(value.loc) ||
+        !('start' in value.loc) ||
+        !isObject(value.loc.start) ||
+        typeof value.loc.start.line !== 'number' ||
+        typeof value.loc.start.column !== 'number'
+      ) {
+        return;
+      }
+      const pathId = prefix.join('.');
+      if (pathId) {
         locations.set(pathId, {
           line: value.loc.start.line,
           column: value.loc.start.column,
         });
       }
-      for (const m of members) {
+      for (const m of value.members) {
+        if (!isObject(m) || !('name' in m) || !('value' in m)) continue;
         const name = getName(m.name);
         if (name.startsWith('$')) continue;
         walk(m.value, [...prefix, name]);
@@ -94,33 +130,39 @@ function parseTokensContent(
   } catch (error: unknown) {
     let line: number | undefined;
     let column: number | undefined;
-    if (
-      isObject(error) &&
-      'node' in error &&
-      isObject(error.node) &&
-      'loc' in error.node &&
-      isObject(error.node.loc) &&
-      'start' in error.node.loc &&
-      isObject(error.node.loc.start) &&
-      typeof error.node.loc.start.line === 'number' &&
-      typeof error.node.loc.start.column === 'number'
-    ) {
-      line = error.node.loc.start.line;
-      column = error.node.loc.start.column;
-    } else if (
-      isObject(error) &&
-      'line' in error &&
-      typeof error.line === 'number' &&
-      'column' in error &&
-      typeof error.column === 'number'
-    ) {
-      line = error.line;
-      column = error.column;
+    if (isObject(error) && 'node' in error) {
+      const node = error.node;
+      if (isObject(node) && 'loc' in node) {
+        const loc = node.loc;
+        if (isObject(loc) && 'start' in loc) {
+          const start = loc.start;
+          if (
+            isObject(start) &&
+            typeof start.line === 'number' &&
+            typeof start.column === 'number'
+          ) {
+            line = start.line;
+            column = start.column;
+          }
+        }
+      }
+    } else if (isObject(error) && 'line' in error && 'column' in error) {
+      const lineVal = error.line;
+      const columnVal = error.column;
+      if (typeof lineVal === 'number' && typeof columnVal === 'number') {
+        line = lineVal;
+        column = columnVal;
+      }
     }
-    const message = error instanceof Error ? error.message : String(error);
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'string'
+          ? error
+          : JSON.stringify(error);
     if (line !== undefined && column !== undefined) {
       throw new Error(
-        `Error parsing ${filePath} (${String(line)}:${String(column)}): ${message}`,
+        formatDiagnostic(filePath, content, line, column, message),
       );
     }
     throw new Error(`Error parsing ${filePath}: ${message}`);
@@ -133,7 +175,25 @@ export async function parseDesignTokensFile(
   assertSupportedFile(filePath);
   const content = await readFile(filePath, 'utf8');
   const { tokens, getTokenLocation } = parseTokensContent(filePath, content);
-  return parseDesignTokens(tokens, getTokenLocation);
+  try {
+    return parseDesignTokens(tokens, getTokenLocation);
+  } catch (err) {
+    if (hasLoc(err)) {
+      const { line, column } = err.loc;
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'string'
+            ? err
+            : JSON.stringify(err);
+      throw new Error(
+        formatDiagnostic(filePath, content, line, column, message),
+      );
+    }
+    throw err instanceof Error
+      ? err
+      : new Error(typeof err === 'string' ? err : JSON.stringify(err));
+  }
 }
 
 export async function readDesignTokensFile(
@@ -143,6 +203,24 @@ export async function readDesignTokensFile(
   const content = await readFile(filePath, 'utf8');
   const { tokens, getTokenLocation } = parseTokensContent(filePath, content);
   // Validate the structure but discard the result.
-  parseDesignTokens(tokens, getTokenLocation);
+  try {
+    parseDesignTokens(tokens, getTokenLocation);
+  } catch (err) {
+    if (hasLoc(err)) {
+      const { line, column } = err.loc;
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'string'
+            ? err
+            : JSON.stringify(err);
+      throw new Error(
+        formatDiagnostic(filePath, content, line, column, message),
+      );
+    }
+    throw err instanceof Error
+      ? err
+      : new Error(typeof err === 'string' ? err : JSON.stringify(err));
+  }
   return tokens;
 }

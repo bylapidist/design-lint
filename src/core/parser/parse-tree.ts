@@ -42,35 +42,6 @@ function isTokenGroup(node: unknown): node is TokenGroup {
   return isRecord(node) && !isToken(node);
 }
 
-function validateExtensions(value: unknown, path: string): void {
-  if (value === undefined) return;
-  if (!isRecord(value)) {
-    throw new Error(`Token or group ${path} has invalid $extensions`);
-  }
-  for (const key of Object.keys(value)) {
-    if (!key.includes('.')) {
-      throw new Error(
-        `Token or group ${path} has invalid $extensions key: ${key}`,
-      );
-    }
-  }
-}
-
-function validateDeprecated(value: unknown, path: string): void {
-  if (value === undefined) return;
-  if (typeof value !== 'boolean' && typeof value !== 'string') {
-    throw new Error(`Token or group ${path} has invalid $deprecated`);
-  }
-}
-
-function validateMetadata(
-  node: { $extensions?: unknown; $deprecated?: unknown },
-  path: string,
-): void {
-  validateExtensions(node.$extensions, path);
-  validateDeprecated(node.$deprecated, path);
-}
-
 export function buildParseTree(
   tokens: DesignTokens,
   getLoc?: (path: string) => { line: number; column: number },
@@ -79,23 +50,69 @@ export function buildParseTree(
   const result: FlattenedToken[] = [];
   const seenPaths = new Map<string, string>();
 
+  interface ParseError extends Error {
+    loc?: { line: number; column: number };
+    path?: string;
+  }
+
+  const error = (path: string, message: string): never => {
+    const err: ParseError = new Error(message);
+    err.path = path;
+    if (getLoc) err.loc = getLoc(path);
+    throw err;
+  };
+
+  function validateExtensions(value: unknown, path: string): void {
+    if (value === undefined) return;
+    if (!isRecord(value)) {
+      const label = path || '(root)';
+      error(path, `Token or group ${label} has invalid $extensions`);
+      return;
+    }
+    for (const key of Object.keys(value)) {
+      if (!key.includes('.')) {
+        const label = path || '(root)';
+        error(
+          path,
+          `Token or group ${label} has invalid $extensions key: ${key}`,
+        );
+      }
+    }
+  }
+
+  function validateDeprecated(value: unknown, path: string): void {
+    if (value === undefined) return;
+    if (typeof value !== 'boolean' && typeof value !== 'string') {
+      const label = path || '(root)';
+      error(path, `Token or group ${label} has invalid $deprecated`);
+    }
+  }
+
+  function validateMetadata(
+    node: { $extensions?: unknown; $deprecated?: unknown },
+    path: string,
+  ): void {
+    validateExtensions(node.$extensions, path);
+    validateDeprecated(node.$deprecated, path);
+  }
+
   function walk(
     group: TokenGroup,
     prefix: string[],
     inheritedType?: string,
     inheritedDeprecated?: boolean | string,
   ): void {
-    const pathLabel = prefix.length ? prefix.join('.') : '(root)';
-    validateMetadata(group, pathLabel);
+    const pathId = prefix.join('.');
+    validateMetadata(group, pathId);
     if (prefix.length === 0) {
       if (
         '$schema' in group &&
         typeof Reflect.get(group, '$schema') !== 'string'
       ) {
-        throw new Error('Root group has invalid $schema');
+        error(pathId, 'Root group has invalid $schema');
       }
     } else if ('$schema' in group) {
-      throw new Error('$schema is only allowed on the root group');
+      error(pathId, '$schema is only allowed on the root group');
     }
     const currentType = group.$type ?? inheritedType;
     const currentDeprecated = group.$deprecated ?? inheritedDeprecated;
@@ -103,19 +120,22 @@ export function buildParseTree(
 
     for (const name of Object.keys(group)) {
       if (GROUP_PROPS.has(name)) continue;
+      const pathParts = [...prefix, name];
+      const childPath = pathParts.join('.');
       if (name.startsWith('$')) {
-        throw new Error(`Invalid token or group name: ${name}`);
+        error(childPath, `Invalid token or group name: ${name}`);
       }
       if (INVALID_NAME_CHARS.test(name)) {
-        throw new Error(`Invalid token or group name: ${name}`);
+        error(childPath, `Invalid token or group name: ${name}`);
       }
       const lower = name.toLowerCase();
       const existing = seenNames.get(lower);
       if (existing) {
         if (existing === name) {
-          throw new Error(`Duplicate token name: ${name}`);
+          error(childPath, `Duplicate token name: ${name}`);
         }
-        throw new Error(
+        error(
+          childPath,
           `Duplicate token name differing only by case: ${existing} vs ${name}`,
         );
       }
@@ -123,19 +143,18 @@ export function buildParseTree(
 
       const node = group[name];
       if (node === undefined) continue;
-      const pathParts = [...prefix, name];
-      const pathId = pathParts.join('.');
-      const lowerPath = pathId.toLowerCase();
+      const lowerPath = childPath.toLowerCase();
       const existingPath = seenPaths.get(lowerPath);
       if (existingPath) {
-        if (existingPath === pathId) {
-          throw new Error(`Duplicate token path: ${pathId}`);
+        if (existingPath === childPath) {
+          error(childPath, `Duplicate token path: ${childPath}`);
         }
-        throw new Error(
-          `Duplicate token path differing only by case: ${existingPath} vs ${pathId}`,
+        error(
+          childPath,
+          `Duplicate token path differing only by case: ${existingPath} vs ${childPath}`,
         );
       }
-      seenPaths.set(lowerPath, pathId);
+      seenPaths.set(lowerPath, childPath);
 
       if (isRecord(node)) {
         if (isToken(node)) {
@@ -143,14 +162,15 @@ export function buildParseTree(
           const tokenDeprecated = token.$deprecated ?? currentDeprecated;
           if (tokenDeprecated !== undefined)
             token.$deprecated = tokenDeprecated;
-          const loc = getLoc ? getLoc(pathId) : { line: 1, column: 1 };
-          tokenLocations.set(pathId, loc);
-          result.push({ path: pathId, token, loc });
+          const loc = getLoc ? getLoc(childPath) : { line: 1, column: 1 };
+          tokenLocations.set(childPath, loc);
+          result.push({ path: childPath, token, loc });
         } else if (isTokenGroup(node)) {
           for (const key of Object.keys(node)) {
             if (LEGACY_PROPS.has(key)) {
-              throw new Error(
-                `Token ${pathId} uses legacy property ${key}; expected $${key}`,
+              error(
+                childPath,
+                `Token ${childPath} uses legacy property ${key}; expected $${key}`,
               );
             }
           }
@@ -158,14 +178,14 @@ export function buildParseTree(
             (k) => !GROUP_PROPS.has(k),
           );
           if ('$type' in node && childKeys.length === 0) {
-            throw new Error(`Token ${pathId} is missing $value`);
+            error(childPath, `Token ${childPath} is missing $value`);
           }
           walk(node, pathParts, currentType, currentDeprecated);
         } else {
-          throw new Error(`Token ${pathId} must be an object with $value`);
+          error(childPath, `Token ${childPath} must be an object with $value`);
         }
       } else {
-        throw new Error(`Token ${pathId} must be an object with $value`);
+        error(childPath, `Token ${childPath} must be an object with $value`);
       }
     }
   }

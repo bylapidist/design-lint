@@ -2018,3 +2018,23 @@ void test('CLI handles errors from watch callbacks', async () => {
   assert.ok(stderr.includes('boom'));
   assert.ok(!stderr.includes('UnhandledPromise'));
 });
+
+void test('CLI surfaces token parse diagnostics', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const dir = makeTmpDir();
+  const tokensPath = path.join(dir, 'bad.tokens.json');
+  fs.writeFileSync(tokensPath, '{ "color": { $type: "color", }', 'utf8');
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ tokens: { default: './bad.tokens.json' }, rules: {} }),
+  );
+  const res = spawnSync(
+    process.execPath,
+    ['--import', tsxLoader, cli, '--no-color'],
+    { encoding: 'utf8', cwd: dir },
+  );
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /bad\.tokens\.json:1:/);
+  assert.match(res.stderr, /\n\s*\^\n/);
+});

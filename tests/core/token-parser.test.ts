@@ -136,7 +136,10 @@ void test('parseDesignTokensFile reports location on parse error', async () => {
 
   await assert.rejects(
     () => parseDesignTokensFile(file),
-    (err: Error) => err.message.includes(file) && /\(1:\d+\)/.test(err.message),
+    (err: Error) =>
+      err.message.startsWith(`${file}:1:`) &&
+      err.message.includes('{ "color": { $type: "color", }') &&
+      /\n\s*\^\n/.test(err.message),
   );
 });
 
