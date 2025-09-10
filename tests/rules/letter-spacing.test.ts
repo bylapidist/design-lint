@@ -2,42 +2,41 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
+import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
+
+const tokens = {
+  letterSpacings: {
+    $type: 'dimension',
+    tight: { $value: '-0.05em' },
+    none: { $value: '0em' },
+  },
+};
+
+function createLinter() {
+  return new Linter(
+    { tokens, rules: { 'design-token/letter-spacing': 'error' } },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: new NodeTokenProvider({ default: tokens }),
+    },
+  );
+}
 
 void test('design-token/letter-spacing reports invalid value', async () => {
-  const linter = new Linter(
-    {
-      tokens: { letterSpacings: { tight: '-0.05em' } },
-      rules: { 'design-token/letter-spacing': 'error' },
-    },
-    new FileSource(),
-  );
+  const linter = createLinter();
   const res = await linter.lintText('.a{letter-spacing:2px;}', 'file.css');
   assert.equal(res.messages.length, 1);
 });
 
 void test('design-token/letter-spacing accepts valid values', async () => {
-  const linter = new Linter(
-    {
-      tokens: {
-        letterSpacings: { tight: '-0.05em', none: 0 },
-      },
-      rules: { 'design-token/letter-spacing': 'error' },
-    },
-    new FileSource(),
-  );
+  const linter = createLinter();
   const css = '.a{letter-spacing:-0.05em;} .b{letter-spacing:0;}';
   const res = await linter.lintText(css, 'file.css');
   assert.equal(res.messages.length, 0);
 });
 
 void test('design-token/letter-spacing reports numeric literals', async () => {
-  const linter = new Linter(
-    {
-      tokens: { letterSpacings: { none: 0 } },
-      rules: { 'design-token/letter-spacing': 'error' },
-    },
-    new FileSource(),
-  );
+  const linter = createLinter();
   const res = await linter.lintText(
     'const ls = <div style={{ letterSpacing: 2 }} />;',
     'file.tsx',
@@ -46,13 +45,7 @@ void test('design-token/letter-spacing reports numeric literals', async () => {
 });
 
 void test('design-token/letter-spacing ignores numbers in JSX props', async () => {
-  const linter = new Linter(
-    {
-      tokens: { letterSpacings: { none: 0 } },
-      rules: { 'design-token/letter-spacing': 'error' },
-    },
-    new FileSource(),
-  );
+  const linter = createLinter();
   const code = 'export const C = () => <Component headingLevel={2} />;';
   const res = await linter.lintText(code, 'file.tsx');
   assert.equal(res.messages.length, 0);
@@ -60,12 +53,13 @@ void test('design-token/letter-spacing ignores numbers in JSX props', async () =
 
 void test('design-token/letter-spacing warns when tokens missing', async () => {
   const linter = new Linter(
+    { rules: { 'design-token/letter-spacing': 'warn' } },
     {
-      rules: { 'design-token/letter-spacing': 'warn' },
+      documentSource: new FileSource(),
+      tokenProvider: new NodeTokenProvider(),
     },
-    new FileSource(),
   );
   const res = await linter.lintText('', 'file.ts');
   assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].message.includes('tokens.letterSpacings'));
+  assert.ok(res.messages[0].message.includes('letter-spacing tokens'));
 });

@@ -1,10 +1,5 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule, LegacyRuleContext } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 
 interface BlurRuleOptions {
   units?: string[];
@@ -17,39 +12,7 @@ export const blurRule: RuleModule<
   name: 'design-token/blur',
   meta: { description: 'enforce blur tokens', category: 'design-token' },
   create(context) {
-    const blurTokens = context.tokens.blurs;
-    if (
-      !blurTokens ||
-      (Array.isArray(blurTokens)
-        ? blurTokens.length === 0
-        : Object.keys(blurTokens).length === 0)
-    ) {
-      context.report({
-        message:
-          'design-token/blur requires blur tokens; configure tokens.blurs to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
-    if (Array.isArray(blurTokens)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'filter' || decl.prop === 'backdrop-filter') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, blurTokens)) {
-              const suggest = name ? closestToken(name, blurTokens) : null;
-              context.report({
-                message: `Unexpected blur ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
+    const blurTokens = context.getFlattenedTokens('dimension');
     const parse = (val: unknown): number | null => {
       if (typeof val === 'number') return val;
       if (typeof val === 'string') {
@@ -60,11 +23,21 @@ export const blurRule: RuleModule<
       }
       return null;
     };
-    const allowed = new Set(
-      Object.values(blurTokens)
-        .map((v) => parse(v))
-        .filter((n): n is number => n !== null),
-    );
+    const allowed = new Set<number>();
+    for (const { path, token } of blurTokens) {
+      if (!path.startsWith('blurs.')) continue;
+      const num = parse(token.$value);
+      if (num !== null) allowed.add(num);
+    }
+    if (allowed.size === 0) {
+      context.report({
+        message:
+          'design-token/blur requires blur tokens; configure tokens with $type "dimension" under a "blurs" group to enable this rule.',
+        line: 1,
+        column: 1,
+      });
+      return {};
+    }
     const allowedUnits = new Set(
       (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
         u.toLowerCase(),

@@ -1,54 +1,27 @@
 import ts from 'typescript';
 import type { RuleModule, LegacyRuleContext } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
-
 export const zIndexRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-token/z-index',
   meta: { description: 'enforce z-index tokens', category: 'design-token' },
   create(context) {
-    const zTokens = context.tokens.zIndex;
-    if (
-      !zTokens ||
-      (Array.isArray(zTokens)
-        ? zTokens.length === 0
-        : Object.keys(zTokens).length === 0)
-    ) {
+    const zTokens = context.getFlattenedTokens('number');
+    const allowed = new Set<number>();
+    for (const { path, token } of zTokens) {
+      if (!path.startsWith('zIndex.')) continue;
+      const val = token.$value;
+      const num = typeof val === 'number' ? val : Number(val);
+      if (!Number.isNaN(num)) allowed.add(num);
+    }
+    if (allowed.size === 0) {
       context.report({
         message:
-          'design-token/z-index requires zIndex tokens; configure tokens.zIndex to enable this rule.',
+          'design-token/z-index requires z-index tokens; configure tokens with $type "number" under a "zIndex" group to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(zTokens)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'z-index') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, zTokens)) {
-              const suggest = name ? closestToken(name, zTokens) : null;
-              context.report({
-                message: `Unexpected z-index ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
-    const allowed = new Set<number>(
-      Object.values(zTokens)
-        .map((n) => Number(n))
-        .filter((n) => !Number.isNaN(n)),
-    );
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;
