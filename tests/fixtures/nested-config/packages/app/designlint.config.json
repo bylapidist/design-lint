@@ -1,4 +1,4 @@
 {
-  "tokens": { "colors": { "primary": "#00ff00" } },
+  "tokens": { "colors": { "$type": "color", "primary": { "$value": "#00ff00" } } },
   "rules": { "design-token/colors": "error" }
 }
