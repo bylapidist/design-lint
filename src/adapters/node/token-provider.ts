@@ -28,12 +28,16 @@ export class NodeTokenProvider implements VariableProvider {
 function isThemeRecord(
   val: DesignTokens | Record<string, DesignTokens>,
 ): val is Record<string, DesignTokens> {
-  return Object.values(val).every((v) => {
-    if (!v || typeof v !== 'object') {
+  return Object.entries(val).every(([themeName, theme]) => {
+    if (themeName.startsWith('$')) {
+      return true;
+    }
+
+    if (!theme || typeof theme !== 'object') {
       return false;
     }
 
-    return Object.entries(v as Record<string, unknown>).every(
+    return Object.entries(theme as Record<string, unknown>).every(
       ([key, child]) =>
         key.startsWith('$') ||
         (child &&
