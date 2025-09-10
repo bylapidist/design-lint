@@ -422,3 +422,65 @@ void test('rejects non-token file paths in config', async () => {
     /Token file paths must be relative and end with \.tokens or \.tokens\.json/,
   );
 });
+
+void test('rejects duplicate token names differing only by case', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {
+        color: {
+          $type: 'color',
+          Blue: { $value: '#00f' },
+          blue: { $value: '#00f' },
+        },
+      },
+    }),
+  );
+  await assert.rejects(loadConfig(tmp), /duplicate token name/i);
+});
+
+void test('rejects token names with invalid characters', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {
+        'bad.name': { $type: 'color', $value: '#000' },
+      },
+    }),
+  );
+  await assert.rejects(loadConfig(tmp), /invalid token or group name/i);
+});
+
+void test('rejects circular token aliases', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {
+        color: {
+          a: { $type: 'color', $value: '{color.b}' },
+          b: { $type: 'color', $value: '{color.a}' },
+        },
+      },
+    }),
+  );
+  await assert.rejects(loadConfig(tmp), /circular alias/i);
+});
+
+void test('rejects invalid typography tokens', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {
+        typography: {
+          $type: 'typography',
+          bad: { $value: { fontFamily: 'Arial' } },
+        },
+      },
+    }),
+  );
+  await assert.rejects(loadConfig(tmp), /invalid typography value/i);
+});
