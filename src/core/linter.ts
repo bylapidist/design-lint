@@ -1,10 +1,14 @@
 import type {
   LintResult,
-  DesignTokens,
   LintMessage,
-  RuleContext,
+  LegacyRuleContext,
+  DesignTokens,
 } from './types.js';
-import { mergeTokens, extractVarName } from './token-utils.js';
+import {
+  extractVarName,
+  getFlattenedTokens as flattenTokens,
+  type TokenPattern,
+} from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
@@ -17,7 +21,10 @@ import type {
 import { parserRegistry } from './parser-registry.js';
 
 export interface Config {
-  tokens?: DesignTokens | Record<string, DesignTokens>;
+  tokens?:
+    | DesignTokens
+    | Record<string, DesignTokens | string>
+    | Record<string, unknown>;
   rules?: Record<string, unknown>;
   ignoreFiles?: string[];
   plugins?: string[];
@@ -28,7 +35,7 @@ export interface Config {
 }
 
 interface ResolvedConfig extends Omit<Config, 'tokens'> {
-  tokens: DesignTokens;
+  tokens: Record<string, unknown>;
 }
 
 /**
@@ -45,23 +52,18 @@ export class Linter {
 
   constructor(config: Config, env: Environment) {
     const provider: TokenProvider = env.tokenProvider ?? {
-      load: () =>
-        Promise.resolve({
-          themes: (config.tokens ? { default: config.tokens } : {}) as Record<
-            string,
-            DesignTokens
-          >,
-          merged: (config.tokens ?? {}) as DesignTokens,
-        }),
+      load: () => Promise.resolve({}),
     };
-    this.config = { ...config, tokens: {} };
+    this.config = {
+      ...config,
+      tokens: config.tokens ?? {},
+    };
     this.ruleRegistry = new RuleRegistry(this.config, env.pluginLoader);
     this.tokenTracker = new TokenTracker(provider);
     this.source = env.documentSource;
     this.cache = env.cacheProvider;
     this.tokensReady = provider.load().then((t) => {
-      this.tokensByTheme = t.themes;
-      this.config.tokens = t.merged;
+      this.tokensByTheme = t;
     });
   }
 
@@ -169,17 +171,19 @@ export class Linter {
       if (rule.meta.category) {
         ruleCategories[rule.name] = rule.meta.category;
       }
-      const themes =
-        isRecord(options) && isStringArray(options.themes)
-          ? options.themes
-          : undefined;
-      const tokens = mergeTokens(this.tokensByTheme, themes);
-      const ctx: RuleContext = {
+      const ctx: LegacyRuleContext = {
         sourceId,
-        tokens,
+        tokens: this.config.tokens as Record<
+          string,
+          Record<string, unknown> | TokenPattern[] | undefined
+        >,
         options,
         metadata,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
+        getFlattenedTokens: (type: string, theme?: string) =>
+          flattenTokens(this.tokensByTheme, theme).filter(
+            ({ token }) => token.$type === type,
+          ),
       };
       return rule.create(ctx);
     });
@@ -229,10 +233,6 @@ function getDisabledLines(text: string): Set<number> {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((v) => typeof v === 'string');
 }
 
 function inferFileType(sourceId: string): string {

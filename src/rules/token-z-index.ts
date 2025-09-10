@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
@@ -7,7 +7,7 @@ import {
 } from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const zIndexRule: RuleModule = {
+export const zIndexRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-token/z-index',
   meta: { description: 'enforce z-index tokens', category: 'design-token' },
   create(context) {
@@ -45,7 +45,9 @@ export const zIndexRule: RuleModule = {
       };
     }
     const allowed = new Set<number>(
-      Object.values(zTokens).filter((n) => !Number.isNaN(n)),
+      Object.values(zTokens)
+        .map((n) => Number(n))
+        .filter((n) => !Number.isNaN(n)),
     );
     return {
       onNode(node) {

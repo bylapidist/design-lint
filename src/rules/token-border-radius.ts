@@ -1,72 +1,53 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
 interface BorderRadiusOptions {
   units?: string[];
 }
 
-export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
+export const borderRadiusRule: RuleModule<
+  BorderRadiusOptions,
+  LegacyRuleContext<BorderRadiusOptions>
+> = {
   name: 'design-token/border-radius',
   meta: {
     description: 'enforce border-radius tokens',
     category: 'design-token',
   },
   create(context) {
-    const radiiTokens = context.tokens.borderRadius;
-    if (
-      !radiiTokens ||
-      (Array.isArray(radiiTokens)
-        ? radiiTokens.length === 0
-        : Object.keys(radiiTokens).length === 0)
-    ) {
+    const radiusTokens = context.getFlattenedTokens('dimension');
+    const allowed = new Set<number>();
+    for (const { path, token } of radiusTokens) {
+      if (!path.startsWith('radius.')) continue;
+      const val = token.$value;
+      if (typeof val === 'number') {
+        allowed.add(val);
+      } else if (typeof val === 'string') {
+        const parsed = valueParser.unit(val);
+        if (parsed) {
+          const num = parseFloat(parsed.number);
+          if (!isNaN(num)) allowed.add(num);
+        }
+      } else if (
+        val &&
+        typeof val === 'object' &&
+        'value' in (val as Record<string, unknown>) &&
+        typeof (val as { value?: unknown }).value === 'number'
+      ) {
+        allowed.add((val as { value: number }).value);
+      }
+    }
+    if (allowed.size === 0) {
       context.report({
         message:
-          'design-token/border-radius requires radius tokens; configure tokens.borderRadius to enable this rule.',
+          'design-token/border-radius requires radius tokens; configure tokens with $type "dimension" under a "radius" group to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(radiiTokens)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'border-radius') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, radiiTokens)) {
-              const suggest = name ? closestToken(name, radiiTokens) : null;
-              context.report({
-                message: `Unexpected border radius ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
-    const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        const parsed = valueParser.unit(val);
-        if (parsed) return parseFloat(parsed.number);
-        const num = Number(val);
-        if (!isNaN(num)) return num;
-      }
-      return null;
-    };
-    const allowed = new Set(
-      Object.values(radiiTokens)
-        .map((v) => parse(v))
-        .filter((n): n is number => n !== null),
-    );
     const allowedUnits = new Set(
       (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
         u.toLowerCase(),

@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
@@ -7,7 +7,7 @@ import {
 } from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const letterSpacingRule: RuleModule = {
+export const letterSpacingRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-token/letter-spacing',
   meta: {
     description: 'enforce letter-spacing tokens',

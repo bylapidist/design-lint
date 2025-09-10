@@ -4,6 +4,7 @@ import { FileSource } from './file-source.js';
 import { NodePluginLoader } from './plugin-loader.js';
 import { NodeCacheProvider } from './node-cache-provider.js';
 import { NodeTokenProvider } from './token-provider.js';
+import type { DesignTokens } from '../../core/types.js';
 
 export interface CreateNodeEnvironmentOptions {
   cacheLocation?: string;
@@ -23,8 +24,7 @@ export function createNodeEnvironment(
       ? new NodeCacheProvider(cacheLocation)
       : undefined,
     tokenProvider: new NodeTokenProvider(
-      config.tokens,
-      config.wrapTokensWithVar,
+      config.tokens as DesignTokens | Record<string, DesignTokens> | undefined,
     ),
   };
 }

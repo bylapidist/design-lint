@@ -1,12 +1,12 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
   closestToken,
 } from '../core/token-utils.js';
 
-export const outlineRule: RuleModule = {
+export const outlineRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-token/outline',
   meta: { description: 'enforce outline tokens', category: 'design-token' },
   create(context) {
@@ -46,7 +46,7 @@ export const outlineRule: RuleModule = {
     const normalize = (val: string): string =>
       valueParser.stringify(valueParser(val).nodes).trim();
     const allowed = new Set(
-      Object.values(outlineTokens).map((v) => normalize(v)),
+      Object.values(outlineTokens).map((v) => normalize(v as string)),
     );
     return {
       onCSSDeclaration(decl) {

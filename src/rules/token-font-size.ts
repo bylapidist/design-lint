@@ -1,11 +1,11 @@
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
   closestToken,
 } from '../core/token-utils.js';
 
-export const fontSizeRule: RuleModule = {
+export const fontSizeRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-token/font-size',
   meta: { description: 'enforce font-size tokens', category: 'design-token' },
   create(context) {

@@ -2,12 +2,7 @@ import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
-import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
 
 type ColorFormat =
@@ -43,65 +38,32 @@ interface ColorRuleOptions {
   allow?: ColorFormat[];
 }
 
-export const colorsRule: RuleModule<ColorRuleOptions> = {
+export const colorsRule: RuleModule<
+  ColorRuleOptions,
+  LegacyRuleContext<ColorRuleOptions>
+> = {
   name: 'design-token/colors',
   meta: { description: 'disallow raw colors', category: 'design-token' },
   create(context) {
-    const colorTokens = context.tokens.colors;
-    if (
-      !colorTokens ||
-      (Array.isArray(colorTokens)
-        ? colorTokens.length === 0
-        : Object.keys(colorTokens).length === 0)
-    ) {
+    const colorTokens = context.getFlattenedTokens('color');
+    if (colorTokens.length === 0) {
       context.report({
         message:
-          'design-token/colors requires color tokens; configure tokens.colors to enable this rule.',
+          'design-token/colors requires color tokens; configure tokens with $type "color" to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(colorTokens)) {
-      const checkVar = (value: string, line: number, column: number) => {
-        const name = extractVarName(value);
-        if (!name || !matchToken(name, colorTokens)) {
-          const suggest = name ? closestToken(name, colorTokens) : null;
-          context.report({
-            message: `Unexpected color ${value}`,
-            line,
-            column,
-            suggest: suggest ?? undefined,
-          });
-        }
-      };
-      return {
-        onNode(node) {
-          if (!isStyleValue(node)) return;
-          const sourceFile = node.getSourceFile();
-          const handle = (text: string, n: ts.Node) => {
-            const pos = sourceFile.getLineAndCharacterOfPosition(n.getStart());
-            checkVar(text, pos.line + 1, pos.character + 1);
-          };
-          if (
-            ts.isStringLiteral(node) ||
-            ts.isNoSubstitutionTemplateLiteral(node)
-          ) {
-            handle(node.text, node);
-          } else if (ts.isTemplateExpression(node)) {
-            handle(node.head.text, node.head);
-            for (const span of node.templateSpans) {
-              handle(span.literal.text, span.literal);
-            }
-          }
-        },
-        onCSSDeclaration(decl) {
-          checkVar(decl.value, decl.line, decl.column);
-        },
-      };
-    }
     const allowed = new Set(
-      Object.values(colorTokens).map((value) => value.toLowerCase()),
+      colorTokens
+        .map(({ token }) => {
+          const v = token.$value;
+          return typeof v === 'string' && !v.startsWith('{')
+            ? v.toLowerCase()
+            : null;
+        })
+        .filter((v): v is string => v !== null),
     );
     const opts = context.options ?? {};
     const allowFormats = new Set(opts.allow ?? []);

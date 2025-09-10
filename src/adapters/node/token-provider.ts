@@ -1,33 +1,37 @@
 import type { VariableProvider } from '../../core/environment.js';
 import type { DesignTokens } from '../../core/types.js';
-import {
-  normalizeTokens,
-  type NormalizedTokens,
-} from '../../core/token-utils.js';
 
 export class NodeTokenProvider implements VariableProvider {
-  private tokens?: DesignTokens | Record<string, DesignTokens>;
-  private wrapVar: boolean;
-  private normalized?: NormalizedTokens;
+  private tokens: Record<string, DesignTokens>;
 
-  constructor(
-    tokens?: DesignTokens | Record<string, DesignTokens>,
-    wrapTokensWithVar = false,
-  ) {
-    this.tokens = tokens;
-    this.wrapVar = wrapTokensWithVar;
+  constructor(tokens?: DesignTokens | Record<string, DesignTokens>) {
+    this.tokens = tokens
+      ? isThemeRecord(tokens)
+        ? tokens
+        : { default: tokens }
+      : {};
   }
 
-  load(): Promise<NormalizedTokens> {
-    this.normalized ??= normalizeTokens(this.tokens, this.wrapVar);
-    return Promise.resolve(this.normalized);
+  load(): Promise<Record<string, DesignTokens>> {
+    return Promise.resolve(this.tokens);
   }
 
-  getTokens(): NormalizedTokens | undefined {
-    return this.normalized;
+  getTokens(): Record<string, DesignTokens> | undefined {
+    return this.tokens;
   }
 
   subscribe(): () => void {
     return () => undefined;
   }
+}
+
+function isThemeRecord(
+  val: DesignTokens | Record<string, DesignTokens>,
+): val is Record<string, DesignTokens> {
+  return Object.values(val).every(
+    (v) =>
+      v &&
+      typeof v === 'object' &&
+      !('$value' in (v as Record<string, unknown>)),
+  );
 }

@@ -1,5 +1,5 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
@@ -10,7 +10,10 @@ interface BlurRuleOptions {
   units?: string[];
 }
 
-export const blurRule: RuleModule<BlurRuleOptions> = {
+export const blurRule: RuleModule<
+  BlurRuleOptions,
+  LegacyRuleContext<BlurRuleOptions>
+> = {
   name: 'design-token/blur',
   meta: { description: 'enforce blur tokens', category: 'design-token' },
   create(context) {

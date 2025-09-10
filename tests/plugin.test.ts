@@ -6,7 +6,11 @@ import { FileSource } from '../src/adapters/node/file-source.ts';
 import { loadConfig } from '../src/config/loader.ts';
 import { NodePluginLoader } from '../src/adapters/node/plugin-loader.ts';
 import type { PluginLoader } from '../src/core/plugin-loader.ts';
-import type { PluginModule, RuleModule } from '../src/core/types.ts';
+import type {
+  PluginModule,
+  RuleModule,
+  LegacyRuleContext,
+} from '../src/core/types.ts';
 
 void test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
@@ -155,10 +159,13 @@ void test('supports custom plugin loaders', async () => {
     ): Promise<{ path: string; plugin: PluginModule }> {
       void _p;
       void _c;
-      const rule: RuleModule = {
+      const rule: RuleModule<unknown, LegacyRuleContext> = {
         name: 'mock/rule',
         meta: { description: 'mock rule' },
-        create: () => ({}),
+        create: (ctx) => {
+          ctx.getFlattenedTokens('color');
+          return {};
+        },
       };
       return Promise.resolve({ path: 'mock', plugin: { rules: [rule] } });
     }

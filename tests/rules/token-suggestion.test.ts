@@ -6,26 +6,14 @@ import { FileSource } from '../../src/adapters/node/file-source.ts';
 void test('suggests closest token name', async () => {
   const linter = new Linter(
     {
-      tokens: {
-        spacing: ['--space-scale-100', '--space-scale-200'],
-        variables: {
-          spacing100: {
-            id: '--space-scale-100',
-            modes: { base: 1 },
-          },
-          spacing200: {
-            id: '--space-scale-200',
-            aliasOf: '--space-scale-100',
-          },
-        },
-      },
-      rules: { 'design-token/spacing': 'error' },
+      tokens: { fontSizes: ['--font-size-100', '--font-size-200'] },
+      rules: { 'design-token/font-size': 'error' },
     },
     new FileSource(),
   );
   const res = await linter.lintText(
-    'a{margin:var(--space-scale-10o);}',
+    'a{font-size:var(--font-size-10o);}',
     'a.css',
   );
-  assert.equal(res.messages[0]?.suggest, '--space-scale-100');
+  assert.equal(res.messages[0]?.suggest, '--font-size-100');
 });

@@ -1,15 +1,17 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import { isInNonStyleJsx } from '../utils/jsx.js';
 
-export const deprecationRule: RuleModule = {
+export const deprecationRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-system/deprecation',
   meta: {
     description: 'flag deprecated tokens or components',
     category: 'design-token',
   },
   create(context) {
-    const deprecations = context.tokens.deprecations;
+    const deprecations = context.tokens.deprecations as
+      | Record<string, { replacement?: string }>
+      | undefined;
     if (!deprecations || Object.keys(deprecations).length === 0) {
       context.report({
         message:

@@ -5,6 +5,11 @@ import { TypeScriptLoader } from 'cosmiconfig-typescript-loader';
 import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
+import { readDesignTokensFile } from '../adapters/node/token-parser.js';
+import {
+  migrateLegacyTokens,
+  LEGACY_TOKEN_GROUPS,
+} from './migrate-legacy-tokens.js';
 
 /**
  * Resolve and load configuration for the linter.
@@ -77,5 +82,36 @@ export async function loadConfig(
     const location = result?.filepath ? ` at ${result.filepath}` : '';
     throw new Error(`Invalid config${location}: ${parsed.error.message}`);
   }
-  return parsed.data;
+  const config = parsed.data;
+  const legacyKeys = new Set(LEGACY_TOKEN_GROUPS);
+  const isLegacy = (val: unknown): val is Record<string, unknown> =>
+    typeof val === 'object' &&
+    val !== null &&
+    Object.keys(val).some((k) => legacyKeys.has(k));
+  if (config.tokens && typeof config.tokens === 'object') {
+    if (isLegacy(config.tokens)) {
+      console.warn(
+        'Legacy token groups detected in config.tokens; they were automatically migrated to the W3C Design Tokens format.',
+      );
+      config.tokens = migrateLegacyTokens(config.tokens);
+    } else {
+      const baseDir = config.configPath ? path.dirname(config.configPath) : cwd;
+      const themes = config.tokens as Record<string, unknown>;
+      for (const [theme, val] of Object.entries(themes)) {
+        if (
+          typeof val === 'string' &&
+          (val.endsWith('.tokens') || val.endsWith('.tokens.json'))
+        ) {
+          const filePath = path.resolve(baseDir, val);
+          themes[theme] = await readDesignTokensFile(filePath);
+        } else if (isLegacy(val)) {
+          console.warn(
+            `Legacy token groups detected for theme "${theme}"; they were automatically migrated to the W3C Design Tokens format.`,
+          );
+          themes[theme] = migrateLegacyTokens(val);
+        }
+      }
+    }
+  }
+  return config;
 }

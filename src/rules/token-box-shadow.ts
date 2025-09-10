@@ -1,12 +1,12 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
   closestToken,
 } from '../core/token-utils.js';
 
-export const boxShadowRule: RuleModule = {
+export const boxShadowRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-token/box-shadow',
   meta: { description: 'enforce box-shadow tokens', category: 'design-token' },
   create(context) {
@@ -46,7 +46,7 @@ export const boxShadowRule: RuleModule = {
     const normalize = (val: string): string =>
       valueParser.stringify(valueParser(val).nodes).trim();
     const allowed = new Set(
-      Object.values(shadowTokens).map((v) => normalize(v)),
+      Object.values(shadowTokens).map((v) => normalize(v as string)),
     );
     return {
       onCSSDeclaration(decl) {

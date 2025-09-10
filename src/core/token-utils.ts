@@ -1,168 +1,10 @@
-import type { DesignTokens, VariableDefinition } from './types.js';
+import type { DesignTokens, Token, TokenGroup } from './types.js';
 import picomatch from 'picomatch';
 import leven from 'leven';
 
+const ALIAS_PATTERN = /^\{([^}]+)\}$/;
+
 export type TokenPattern = string | RegExp;
-
-export interface NormalizedTokens {
-  themes: Record<string, DesignTokens>;
-  merged: DesignTokens;
-}
-
-const TOKEN_GROUPS = [
-  'colors',
-  'spacing',
-  'zIndex',
-  'borderRadius',
-  'borderWidths',
-  'shadows',
-  'durations',
-  'animations',
-  'blurs',
-  'borderColors',
-  'opacity',
-  'outlines',
-  'fontSizes',
-  'fonts',
-  'lineHeights',
-  'fontWeights',
-  'letterSpacings',
-  'variables',
-  'deprecations',
-];
-
-function isMultiTheme(
-  tokens: DesignTokens | Record<string, DesignTokens>,
-): tokens is Record<string, DesignTokens> {
-  return Object.keys(tokens).some((k) => !TOKEN_GROUPS.includes(k));
-}
-
-function normalizeSingle(tokens: DesignTokens, wrapVar: boolean): DesignTokens {
-  const normalized: DesignTokens = {};
-  for (const [group, defs] of Object.entries(tokens)) {
-    if (Array.isArray(defs)) {
-      normalized[group] = defs;
-      continue;
-    }
-    if (!isRecord(defs)) {
-      normalized[group] = defs;
-      continue;
-    }
-    if (group === 'variables') {
-      const map: Record<string, VariableDefinition> = {};
-      for (const [name, value] of Object.entries(defs)) {
-        if (isRecord(value)) {
-          const v = value as unknown as VariableDefinition;
-          map[name] = {
-            id: v.id,
-            modes: v.modes ? { ...v.modes } : undefined,
-            aliasOf: v.aliasOf,
-          };
-        }
-      }
-      normalized[group] = map;
-      continue;
-    }
-    const map: Record<string, unknown> = {};
-    for (const [name, value] of Object.entries(defs)) {
-      if (wrapVar && typeof value === 'string') {
-        const trimmed = value.trim();
-        if (trimmed.startsWith('var(')) {
-          map[name] = trimmed;
-        } else {
-          const tokenName = trimmed.startsWith('--') ? trimmed : `--${trimmed}`;
-          map[name] = `var(${tokenName})`;
-        }
-      } else {
-        map[name] = value;
-      }
-    }
-    normalized[group] = map;
-  }
-  return normalized;
-}
-
-export function mergeTokens(
-  tokensByTheme: Record<string, DesignTokens>,
-  themes?: string[],
-): DesignTokens {
-  const merged: DesignTokens = {};
-  const selected = themes ?? Object.keys(tokensByTheme);
-  for (const theme of selected) {
-    const source = tokensByTheme[theme];
-    for (const [group, defs] of Object.entries(source)) {
-      if (Array.isArray(defs)) {
-        const existing = merged[group];
-        const target: (string | RegExp)[] = Array.isArray(existing)
-          ? (existing as (string | RegExp)[])
-          : [];
-        const defsArray = defs as (string | RegExp)[];
-        merged[group] = Array.from(
-          new Set<string | RegExp>([...target, ...defsArray]),
-        );
-        continue;
-      }
-      if (!isRecord(defs)) {
-        if (merged[group] === undefined) {
-          merged[group] = defs;
-        }
-        continue;
-      }
-      if (group === 'variables') {
-        const existing = merged[group];
-        const targetMap = (isRecord(existing) ? existing : {}) as Partial<
-          Record<string, VariableDefinition>
-        >;
-        for (const [name, value] of Object.entries(
-          defs as Record<string, VariableDefinition>,
-        )) {
-          const current = targetMap[name];
-          if (!current) {
-            targetMap[name] = {
-              id: value.id,
-              modes: value.modes ? { ...value.modes } : undefined,
-              aliasOf: value.aliasOf,
-            };
-          } else {
-            if (value.modes) {
-              current.modes = { ...(current.modes ?? {}), ...value.modes };
-            }
-            if (current.aliasOf === undefined && value.aliasOf !== undefined) {
-              current.aliasOf = value.aliasOf;
-            }
-          }
-        }
-        merged[group] = targetMap as Record<string, VariableDefinition>;
-        continue;
-      }
-      const existing = merged[group];
-      const targetMap: Record<string, unknown> = isRecord(existing)
-        ? existing
-        : {};
-      for (const [name, value] of Object.entries(defs)) {
-        if (!(name in targetMap)) targetMap[name] = value;
-      }
-      merged[group] = targetMap;
-    }
-  }
-  return merged;
-}
-
-export function normalizeTokens(
-  tokens: DesignTokens | Record<string, DesignTokens> | undefined,
-  wrapVar = false,
-): NormalizedTokens {
-  const themes: Record<string, DesignTokens> = {};
-  if (!tokens) return { themes, merged: {} };
-  if (isMultiTheme(tokens)) {
-    for (const [theme, defs] of Object.entries(tokens)) {
-      themes[theme] = normalizeSingle(defs, wrapVar);
-    }
-  } else {
-    themes.default = normalizeSingle(tokens, wrapVar);
-  }
-  return { themes, merged: mergeTokens(themes) };
-}
 
 export function matchToken(
   name: string,
@@ -196,11 +38,118 @@ export function closestToken(
   return best;
 }
 
+export interface FlattenedToken {
+  path: string;
+  token: Token;
+}
+
+export function flattenDesignTokens(tokens: DesignTokens): FlattenedToken[] {
+  const result: FlattenedToken[] = [];
+  const map = new Map<string, Token>();
+  function walk(
+    group: TokenGroup,
+    prefix: string[],
+    inheritedType?: string,
+    inheritedDeprecated?: boolean | string,
+  ): void {
+    const currentType = group.$type ?? inheritedType;
+    const currentDeprecated = group.$deprecated ?? inheritedDeprecated;
+    for (const name of Object.keys(group)) {
+      if (name.startsWith('$')) continue;
+      const node = (group as Record<string, TokenGroup | Token | undefined>)[
+        name
+      ];
+      if (node === undefined) continue;
+      const path = [...prefix, name];
+      if (isToken(node)) {
+        const token: Token = {
+          ...node,
+          $type: node.$type ?? currentType,
+        };
+        const tokenDeprecated = token.$deprecated ?? currentDeprecated;
+        if (tokenDeprecated !== undefined) token.$deprecated = tokenDeprecated;
+        const key = path.join('.');
+        result.push({ path: key, token });
+        map.set(key, token);
+      } else {
+        walk(node, path, currentType, currentDeprecated);
+      }
+    }
+  }
+  walk(tokens, [], undefined, undefined);
+
+  function resolveAlias(targetPath: string, stack: string[]): Token {
+    if (stack.includes(targetPath)) {
+      throw new Error(
+        `Circular alias reference: ${[...stack, targetPath].join(' -> ')}`,
+      );
+    }
+    const target = map.get(targetPath);
+    if (!target) {
+      const source = stack[0];
+      throw new Error(
+        `Token ${source} references unknown token: ${targetPath}`,
+      );
+    }
+    const val = target.$value;
+    if (typeof val === 'string') {
+      const m = ALIAS_PATTERN.exec(val);
+      if (m) return resolveAlias(m[1], [...stack, targetPath]);
+    }
+    if (target.$type === undefined) {
+      const source = stack[0];
+      throw new Error(
+        `Token ${source} references token without $type: ${targetPath}`,
+      );
+    }
+    if (target.$value === undefined) {
+      const source = stack[0];
+      throw new Error(
+        `Token ${source} references token without $value: ${targetPath}`,
+      );
+    }
+    return target;
+  }
+
+  for (const item of result) {
+    const val = item.token.$value;
+    if (typeof val === 'string') {
+      const m = ALIAS_PATTERN.exec(val);
+      if (m) {
+        const resolved = resolveAlias(m[1], [item.path]);
+        if (
+          item.token.$type !== undefined &&
+          resolved.$type !== undefined &&
+          item.token.$type !== resolved.$type
+        ) {
+          throw new Error(
+            `Token ${item.path} references token of type ${resolved.$type}; expected ${item.token.$type}`,
+          );
+        }
+        item.token.$type = item.token.$type ?? resolved.$type;
+        item.token.$value = resolved.$value;
+      }
+    }
+  }
+
+  return result;
+}
+
+export function getFlattenedTokens(
+  tokensByTheme: Record<string, DesignTokens>,
+  theme = 'default',
+): FlattenedToken[] {
+  if (Object.prototype.hasOwnProperty.call(tokensByTheme, theme)) {
+    return flattenDesignTokens(tokensByTheme[theme]);
+  }
+  return [];
+}
+
+function isToken(node: Token | TokenGroup): node is Token {
+  return '$value' in node;
+}
+
 export function extractVarName(value: string): string | null {
   const m = /^var\(\s*(--[A-Za-z0-9_-]+)\s*(?:,.*)?\)$/.exec(value.trim());
   return m ? m[1] : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }

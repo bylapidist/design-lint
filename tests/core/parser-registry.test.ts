@@ -4,11 +4,11 @@ import { parserRegistry } from '../../src/core/parser-registry.ts';
 import { createFileDocument } from '../../src/adapters/node/file-document.ts';
 import type {
   RuleModule,
-  RuleContext,
+  LegacyRuleContext,
   LintMessage,
 } from '../../src/core/types.ts';
 
-const rule: RuleModule = {
+const rule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'test',
   meta: { description: 'test rule' },
   create(ctx) {
@@ -45,12 +45,13 @@ for (const c of cases) {
     const parser = parserRegistry[doc.type];
     assert.ok(parser, 'parser exists');
     const messages: LintMessage[] = [];
-    const ctx: RuleContext = {
+    const ctx: LegacyRuleContext = {
       sourceId: c.sourceId,
       tokens: {},
       options: undefined,
       report: (m) =>
         messages.push({ ...m, severity: 'error', ruleId: rule.name }),
+      getFlattenedTokens: () => [],
     };
     const listener = rule.create(ctx);
     await parser(c.text, c.sourceId, [listener], messages);

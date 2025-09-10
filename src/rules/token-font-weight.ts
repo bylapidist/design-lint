@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
@@ -7,7 +7,7 @@ import {
 } from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const fontWeightRule: RuleModule = {
+export const fontWeightRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-token/font-weight',
   meta: { description: 'enforce font-weight tokens', category: 'design-token' },
   create(context) {

@@ -1,7 +1,7 @@
 import type { Config } from './linter.js';
 import type { PluginLoader } from './plugin-loader.js';
 import type { CacheProvider } from './cache-provider.js';
-import type { NormalizedTokens } from './token-utils.js';
+import type { DesignTokens } from './types.js';
 
 export interface LintDocument {
   id: string;
@@ -23,7 +23,7 @@ export interface DocumentSource {
 }
 
 export interface TokenProvider {
-  load(): Promise<NormalizedTokens>;
+  load(): Promise<Record<string, DesignTokens>>;
 }
 
 export type VariableProvider = TokenProvider;

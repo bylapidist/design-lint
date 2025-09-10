@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
@@ -12,7 +12,10 @@ interface BorderWidthOptions {
   units?: string[];
 }
 
-export const borderWidthRule: RuleModule<BorderWidthOptions> = {
+export const borderWidthRule: RuleModule<
+  BorderWidthOptions,
+  LegacyRuleContext<BorderWidthOptions>
+> = {
   name: 'design-token/border-width',
   meta: {
     description: 'enforce border-width tokens',

@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, LegacyRuleContext } from '../core/types.js';
 import {
   matchToken,
   extractVarName,
@@ -8,7 +8,7 @@ import {
 } from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const durationRule: RuleModule = {
+export const durationRule: RuleModule<unknown, LegacyRuleContext> = {
   name: 'design-token/duration',
   meta: { description: 'enforce duration tokens', category: 'design-token' },
   create(context) {

@@ -38,22 +38,31 @@ my-plugin/
 ```
 
 ### 2. Implement rules
+Rules receive a `LegacyRuleContext` which exposes `getFlattenedTokens` for accessing
+design tokens by type. The helper returns an array of flattened tokens for the
+current theme.
+
 ```ts
 // index.ts
-export default {
-  rules: [
-    {
-      name: 'acme/no-raw-colors',
-      meta: { description: 'disallow hex colors' },
-      create(ctx) {
-        return {
-          Declaration(node) {
-            // report violations
-          },
-        };
+import type { RuleModule, LegacyRuleContext } from '@lapidist/design-lint';
+
+const noRawColors: RuleModule<unknown, LegacyRuleContext> = {
+  name: 'acme/no-raw-colors',
+  meta: { description: 'disallow hex colors' },
+  create(ctx) {
+    const allowed = new Set(ctx.getFlattenedTokens('color').map(t => t.$value));
+    return {
+      Declaration(node) {
+        if (node.property === 'color' && /^#/.test(node.value) && !allowed.has(node.value)) {
+          // report violations
+        }
       },
-    },
-  ],
+    };
+  },
+};
+
+export default {
+  rules: [noRawColors],
 };
 ```
 
