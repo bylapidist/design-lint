@@ -5,6 +5,7 @@ import { TypeScriptLoader } from 'cosmiconfig-typescript-loader';
 import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
+import { readDesignTokensFile } from '../adapters/node/token-parser.js';
 
 /**
  * Resolve and load configuration for the linter.
@@ -77,5 +78,19 @@ export async function loadConfig(
     const location = result?.filepath ? ` at ${result.filepath}` : '';
     throw new Error(`Invalid config${location}: ${parsed.error.message}`);
   }
-  return parsed.data;
+  const config = parsed.data;
+  if (config.tokens && typeof config.tokens === 'object') {
+    const baseDir = config.configPath ? path.dirname(config.configPath) : cwd;
+    const themes = config.tokens as Record<string, unknown>;
+    for (const [theme, val] of Object.entries(themes)) {
+      if (
+        typeof val === 'string' &&
+        (val.endsWith('.tokens') || val.endsWith('.tokens.json'))
+      ) {
+        const filePath = path.resolve(baseDir, val);
+        themes[theme] = await readDesignTokensFile(filePath);
+      }
+    }
+  }
+  return config;
 }
