@@ -115,6 +115,23 @@ void test('parseDesignTokens rejects tokens missing $value', () => {
   assert.throws(() => parseDesignTokens(tokens), /missing \$value/i);
 });
 
+void test('parseDesignTokens rejects legacy shorthand token values', () => {
+  const tokens = {
+    color: { $type: 'color', blue: '#00f' },
+  } as unknown as DesignTokens;
+  assert.throws(
+    () => parseDesignTokens(tokens),
+    /must be an object with \$value/i,
+  );
+});
+
+void test('parseDesignTokens rejects legacy token properties', () => {
+  const tokens = {
+    color: { blue: { value: '#00f', type: 'color' } },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /legacy property/i);
+});
+
 void test('parseDesignTokens rejects tokens with mismatched $type and value', () => {
   const tokens = {
     color: { $type: 'color', bad: { $value: 123 as unknown as string } },

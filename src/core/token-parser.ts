@@ -12,6 +12,13 @@ const GROUP_PROPS = new Set([
   '$deprecated',
   '$schema',
 ]);
+const LEGACY_PROPS = new Set([
+  'type',
+  'value',
+  'description',
+  'extensions',
+  'deprecated',
+]);
 const INVALID_NAME_CHARS = /[{}\.]/;
 const ALIAS_PATTERN = /^\{([^}]+)\}$/;
 
@@ -497,7 +504,6 @@ function validateToken(
 
 export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
   const result: FlattenedToken[] = [];
-  const loose = new Set<Token>();
   const seenPaths = new Map<string, string>();
 
   function walk(
@@ -566,6 +572,13 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
             token.$deprecated = tokenDeprecated;
           result.push({ path: pathId, token });
         } else {
+          for (const key of Object.keys(node)) {
+            if (LEGACY_PROPS.has(key)) {
+              throw new Error(
+                `Token ${pathId} uses legacy property ${key}; expected $${key}`,
+              );
+            }
+          }
           const childKeys = Object.keys(node).filter(
             (k) => !GROUP_PROPS.has(k),
           );
@@ -575,12 +588,7 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
           walk(node as TokenGroup, pathParts, currentType, currentDeprecated);
         }
       } else {
-        const token: Token = { $value: node, $type: currentType };
-        if (currentDeprecated !== undefined) {
-          token.$deprecated = currentDeprecated;
-        }
-        result.push({ path: pathId, token });
-        loose.add(token);
+        throw new Error(`Token ${pathId} must be an object with $value`);
       }
     }
   }
@@ -588,7 +596,6 @@ export function parseDesignTokens(tokens: DesignTokens): FlattenedToken[] {
   walk(tokens, [], undefined, undefined);
   const tokenMap = new Map(result.map((t) => [t.path, t.token]));
   for (const { path, token } of result) {
-    if (loose.has(token)) continue;
     validateToken(path, token, tokenMap);
   }
   return result;

@@ -72,14 +72,15 @@ void test('getFlattenedTokens resolves aliases', () => {
   ]);
 });
 
-void test('getFlattenedTokens handles primitive token values', () => {
+void test('getFlattenedTokens rejects primitive token values', () => {
   const tokens = {
     default: {
       colors: { primary: '#fff' },
       deprecations: { old: { replacement: 'new' } },
     },
   } as unknown as Record<string, DesignTokens>;
-  assert.doesNotThrow(() => {
-    getFlattenedTokens(tokens, 'default');
-  });
+  assert.throws(
+    () => getFlattenedTokens(tokens, 'default'),
+    /must be an object with \$value/i,
+  );
 });
