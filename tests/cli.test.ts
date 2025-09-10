@@ -63,7 +63,7 @@ void test('CLI runs when executed via a symlink', () => {
   fs.symlinkSync(cli, link);
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsxLoader, link, '--help'],
+    ['--import', tsxLoader, link, '--help'],
     { encoding: 'utf8' },
   );
   assert.equal(res.status, 0);
@@ -75,7 +75,7 @@ void test('init creates json config by default', () => {
   const dir = makeTmpDir();
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsxLoader, cli, 'init'],
+    ['--import', tsxLoader, cli, 'init'],
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
@@ -88,7 +88,7 @@ void test('init detects TypeScript and creates ts config', () => {
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsxLoader, cli, 'init'],
+    ['--import', tsxLoader, cli, 'init'],
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
@@ -104,7 +104,7 @@ void test('--init-format overrides detection', () => {
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsxLoader, cli, 'init', '--init-format', 'json'],
+    ['--import', tsxLoader, cli, 'init', '--init-format', 'json'],
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
@@ -125,7 +125,7 @@ void test('--init-format supports all formats', () => {
     const dir = makeTmpDir();
     const res = spawnSync(
       process.execPath,
-      ['--loader', tsxLoader, cli, 'init', '--init-format', fmt],
+      ['--import', tsxLoader, cli, 'init', '--init-format', fmt],
       { encoding: 'utf8', cwd: dir },
     );
     assert.equal(res.status, 0);
@@ -141,7 +141,7 @@ void test('CLI expands glob patterns with braces', () => {
   fs.writeFileSync(path.join(dir, 'src', 'b.module.scss'), '');
   const res = spawnSync(
     process.execPath,
-    ['--loader', tsxLoader, cli, '**/*.module.{css,scss}', '--format', 'json'],
+    ['--import', tsxLoader, cli, '**/*.module.{css,scss}', '--format', 'json'],
     { encoding: 'utf8', cwd: dir },
   );
   assert.equal(res.status, 0);
@@ -160,7 +160,7 @@ void test('CLI exits non-zero on lint errors', () => {
   const result = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
@@ -185,7 +185,7 @@ void test('CLI warns when no files match', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'nomatch',
@@ -208,7 +208,7 @@ void test('--quiet suppresses "No files matched" warning', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'nomatch',
@@ -233,7 +233,7 @@ void test('CLI exits 0 when warnings are within --max-warnings', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -263,7 +263,7 @@ void test('CLI exits 0 when warnings equal --max-warnings', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -293,7 +293,7 @@ void test('CLI exits 1 when warnings exceed --max-warnings', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -320,7 +320,7 @@ void test('CLI errors on invalid --max-warnings', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -346,7 +346,7 @@ void test('CLI reports missing ignore file', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -372,7 +372,7 @@ void test('CLI reports missing plugin', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -399,7 +399,7 @@ void test('CLI --fix applies fixes', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -422,7 +422,7 @@ void test('CLI surfaces config load errors', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -442,7 +442,7 @@ void test('CLI surfaces output write errors', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -469,7 +469,7 @@ void test('CLI writes report to file with --output', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -494,7 +494,7 @@ void test('CLI --quiet suppresses stdout output', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
@@ -516,7 +516,7 @@ void test('CLI disables colors when stdout is not a TTY', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
@@ -539,7 +539,7 @@ void test('CLI reports unknown formatter', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
@@ -566,7 +566,7 @@ void test('CLI loads formatter from module path', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       path.join(fixture, 'bad.ts'),
@@ -596,7 +596,7 @@ void test('CLI outputs SARIF reports', () => {
     const res = spawnSync(
       process.execPath,
       [
-        '--loader',
+        '--import',
         tsxLoader,
         cli,
         'file.ts',
@@ -632,7 +632,7 @@ void test('CLI loads external plugin rules', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -659,7 +659,7 @@ void test('CLI reports plugin load errors', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -695,7 +695,7 @@ void test('CLI ignores common directories by default', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       path.basename(dir),
@@ -738,7 +738,7 @@ void test('.designlintignore can unignore paths via CLI', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'src',
@@ -789,7 +789,7 @@ void test('CLI skips directories listed in .designlintignore', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'src',
@@ -829,7 +829,7 @@ void test('CLI --ignore-path excludes files', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'src',
@@ -869,9 +869,9 @@ void test('CLI --concurrency limits parallel lint tasks', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
-      '--loader',
+      '--import',
       path.join(__dirname, 'helpers', 'trackConcurrency.ts'),
       cli,
       '--concurrency',
@@ -896,7 +896,7 @@ void test('CLI errors on invalid --concurrency', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -922,7 +922,7 @@ void test('CLI plugin load errors include context and remediation', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -951,7 +951,7 @@ void test('CLI --report outputs JSON log', () => {
   spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -989,7 +989,7 @@ void test('CLI re-runs on file change in watch mode', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1046,7 +1046,7 @@ void test('CLI ignores --output/--report files in watch mode', async () => {
     const proc = spawn(
       process.execPath,
       [
-        '--loader',
+        '--import',
         tsxLoader,
         cli,
         'file.ts',
@@ -1152,7 +1152,7 @@ void test('CLI --cache reuses results from disk', () => {
   );
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const args = [
-    '--loader',
+    '--import',
     tsxLoader,
     cli,
     'file.ts',
@@ -1188,7 +1188,7 @@ void test('CLI --cache invalidates when files change', () => {
   );
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const args = [
-    '--loader',
+    '--import',
     tsxLoader,
     cli,
     'file.ts',
@@ -1242,7 +1242,7 @@ void test('CLI --cache busts when mtime is unchanged but size differs', () => {
   );
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const args = [
-    '--loader',
+    '--import',
     tsxLoader,
     cli,
     'file.ts',
@@ -1273,7 +1273,7 @@ void test('CLI writes cache to specified --cache-location', () => {
   const res = spawnSync(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1306,7 +1306,7 @@ void test('CLI re-runs with updated config in watch mode', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1370,7 +1370,7 @@ module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rul
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1442,7 +1442,7 @@ export default plugin;`;
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1500,7 +1500,7 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1568,7 +1568,7 @@ if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}'
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1632,7 +1632,7 @@ void test('CLI reloads when nested ignore file changes in watch mode', async () 
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'nested',
@@ -1686,7 +1686,7 @@ void test('CLI updates ignore list when .gitignore changes in watch mode', async
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1745,7 +1745,7 @@ void test('CLI continues watching after deleting ignore files in watch mode', as
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1802,7 +1802,7 @@ void test('CLI clears cache when a watched file is deleted', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1859,7 +1859,7 @@ void test('CLI continues linting after deleting a watched file', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'a.ts',
@@ -1916,7 +1916,7 @@ void test('CLI closes watcher on SIGINT', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
@@ -1973,7 +1973,7 @@ void test('CLI handles errors from watch callbacks', async () => {
   const proc = spawn(
     process.execPath,
     [
-      '--loader',
+      '--import',
       tsxLoader,
       cli,
       'file.ts',
