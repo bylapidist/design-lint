@@ -1,16 +1,12 @@
 import ts from 'typescript';
 
 export function isStyleValue(node: ts.Node): boolean {
-  let curr: ts.Node | undefined = node;
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  while (curr) {
+  for (let curr: ts.Node = node; !ts.isSourceFile(curr); curr = curr.parent) {
     if (ts.isJsxAttribute(curr)) {
       return curr.name.getText() === 'style';
     }
     if (ts.isPropertyAssignment(curr) && curr.name.getText() === 'style') {
-      let p: ts.Node | undefined = curr.parent;
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      while (p) {
+      for (let p: ts.Node = curr.parent; !ts.isSourceFile(p); p = p.parent) {
         if (ts.isCallExpression(p)) {
           const expr = p.expression;
           if (
@@ -25,11 +21,9 @@ export function isStyleValue(node: ts.Node): boolean {
         if (ts.isJsxAttribute(p) && p.name.getText() === 'style') {
           return true;
         }
-        p = p.parent;
       }
       return false;
     }
-    curr = curr.parent;
   }
   return false;
 }

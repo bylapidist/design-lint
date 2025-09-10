@@ -15,6 +15,14 @@ type CliOptions = ExecuteOptions &
     watch?: boolean;
   };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function hasVersion(value: unknown): value is { version: string } {
+  return isRecord(value) && typeof value.version === 'string';
+}
+
 function createProgram(version: string) {
   const program = new Command();
   program
@@ -108,8 +116,11 @@ export async function run(argv = process.argv.slice(2)) {
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
   const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
   const pkgData = fs.readFileSync(pkgPath, 'utf8');
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const pkg: { version: string } = JSON.parse(pkgData);
+  const pkgRaw: unknown = JSON.parse(pkgData);
+  if (!hasVersion(pkgRaw)) {
+    throw new Error('Invalid package.json');
+  }
+  const pkg = pkgRaw;
 
   const program = createProgram(pkg.version);
 

@@ -18,6 +18,10 @@ function assertSupportedFile(filePath: string): void {
   }
 }
 
+function isDesignTokens(value: unknown): value is DesignTokens {
+  return typeof value === 'object' && value !== null;
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -30,14 +34,12 @@ function parseTokensContent(filePath: string, content: string): DesignTokens {
         ? yamlToMomoa(content)
         : parseJson(content, { mode: 'json', ranges: true });
     const result = evaluate(doc.body);
-    if (!isObject(result)) {
+    if (!isDesignTokens(result)) {
       throw new Error(
         `Error parsing ${filePath}: root value must be an object`,
       );
     }
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const json = result as unknown as DesignTokens;
-    return json;
+    return result;
   } catch (error: unknown) {
     let line: number | undefined;
     let column: number | undefined;
