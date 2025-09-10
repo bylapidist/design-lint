@@ -17,10 +17,26 @@ const ruleSettingSchema = z.union([
   z.tuple([severitySchema, z.unknown()]),
 ]);
 
-const designTokensSchema = z.record(
-  z.string(),
-  z.unknown(),
-) as unknown as z.ZodType<DesignTokens>;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isToken(value: unknown): boolean {
+  return isRecord(value) && '$value' in value;
+}
+
+function isTokenGroup(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  for (const [key, val] of Object.entries(value)) {
+    if (key.startsWith('$')) continue;
+    if (!isToken(val) && !isTokenGroup(val)) return false;
+  }
+  return true;
+}
+
+const designTokensSchema = z.unknown().refine(isTokenGroup, {
+  message: 'Tokens must be W3C Design Tokens objects',
+}) as unknown as z.ZodType<DesignTokens>;
 
 const tokenFileSchema = z
   .string()
