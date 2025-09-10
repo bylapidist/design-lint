@@ -66,7 +66,28 @@ export default {
 };
 ```
 
-### 3. Test the plugin
+### 3. Register token transforms
+If your plugin consumes design tokens from other tools, provide a transform
+to convert them to the W3C format. Register the transform during plugin
+initialisation:
+
+```ts
+import { registerTokenTransform, type DesignTokens } from '@lapidist/design-lint';
+
+export function setup(): void {
+  const unregister = registerTokenTransform((tokens: DesignTokens) =>
+    convertFromFigma(tokens),
+  );
+  // call unregister() during teardown if the transform is temporary
+}
+
+function convertFromFigma(tokens: DesignTokens): DesignTokens {
+  // convert tokens here
+  return tokens;
+}
+```
+
+### 4. Test the plugin
 ```ts
 import test from 'node:test';
 import assert from 'node:assert/strict';

@@ -3,7 +3,11 @@ import assert from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseDesignTokens } from '../../src/core/parser/index.ts';
+import {
+  parseDesignTokens,
+  registerTokenTransform,
+  type TokenTransform,
+} from '../../src/core/parser/index.ts';
 import { parseDesignTokensFile } from '../../src/adapters/node/token-parser.ts';
 import type { DesignTokens } from '../../src/core/types.js';
 
@@ -570,4 +574,54 @@ void test('parseDesignTokens normalizes colors to rgb when configured', () => {
   };
   const result = parseDesignTokens(tokens, undefined, { colorSpace: 'rgb' });
   assert.equal(result[0].token.$value, 'rgb(0, 255, 0)');
+});
+
+void test('parseDesignTokens applies custom transforms', () => {
+  const legacy = {
+    color: { blue: { value: '#00f', type: 'color' } },
+  } as unknown as DesignTokens;
+
+  const transform: TokenTransform = (tokens) => {
+    function walk(node: unknown): unknown {
+      if (typeof node !== 'object' || node === null) return node;
+      const result: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(node)) {
+        const newKey =
+          key === 'value' ? '$value' : key === 'type' ? '$type' : key;
+        result[newKey] = walk(value);
+      }
+      return result;
+    }
+    return walk(tokens) as DesignTokens;
+  };
+
+  assert.throws(() => parseDesignTokens(legacy));
+  const parsed = parseDesignTokens(legacy, undefined, {
+    transforms: [transform],
+  });
+  assert.equal(parsed[0].path, 'color.blue');
+});
+
+void test('registerTokenTransform applies transforms globally', () => {
+  const legacy = {
+    color: { red: { value: '#f00', type: 'color' } },
+  } as unknown as DesignTokens;
+
+  const unregister = registerTokenTransform((tokens) => {
+    function walk(node: unknown): unknown {
+      if (typeof node !== 'object' || node === null) return node;
+      const result: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(node)) {
+        const newKey =
+          key === 'value' ? '$value' : key === 'type' ? '$type' : key;
+        result[newKey] = walk(value);
+      }
+      return result;
+    }
+    return walk(tokens) as DesignTokens;
+  });
+
+  const parsed = parseDesignTokens(legacy);
+  unregister();
+  assert.equal(parsed[0].path, 'color.red');
 });
