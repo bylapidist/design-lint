@@ -52,20 +52,20 @@ jobs:
             test -f "designlint.config.$fmt"
           done
           rm -f designlint.config.*
-            cat > designlint.config.json <<'EOF'
-            {
-              "tokens": {
-                "color": {
-                  "old": { "$type": "color", "$value": "#000", "$deprecated": "Use {color.new}" },
-                  "new": { "$type": "color", "$value": "#fff" }
-                }
-              },
-              "rules": {
-                "design-system/deprecation": "error",
-                "design-token/colors": "warn"
+          cat > designlint.config.json <<'EOF'
+          {
+            "tokens": {
+              "color": {
+                "old": { "$type": "color", "$value": "#000", "$deprecated": "Use {color.new}" },
+                "new": { "$type": "color", "$value": "#fff" }
               }
+            },
+            "rules": {
+              "design-system/deprecation": "error",
+              "design-token/colors": "warn"
             }
-            EOF
+          }
+          EOF
           echo "const a = 'old'; const b = '#000';" > file.ts
           echo "const a = 'old';" > ignored.ts
           echo "ignored.ts" > .extraignore
@@ -97,106 +97,106 @@ jobs:
           cat > formatter.mjs <<'EOF'
           export default (results) => JSON.stringify(results)
           EOF
-          npx design-lint file.ts --config designlint.config.json --format ./formatter.mjs || true
-            cat > designlint.config.js <<'EOF'
-            module.exports = {
-              tokens: {
-                color: {
-                  old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                  new: { $type: 'color', $value: '#fff' }
-                }
-              },
-              rules: {
-                'design-system/deprecation': 'error',
-                'design-token/colors': 'warn'
+          npx design-lint file.ts --config designlint.config.json --format "$(realpath formatter.mjs)" || true
+          cat > designlint.config.js <<'EOF'
+          module.exports = {
+            tokens: {
+              color: {
+                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
+                new: { $type: 'color', $value: '#fff' }
               }
-            };
-            EOF
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          };
+          EOF
           npx design-lint file.ts --config designlint.config.js --format json || true
           rm designlint.config.js
-            cat > designlint.config.cjs <<'EOF'
-            module.exports = {
-              tokens: {
-                color: {
-                  old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                  new: { $type: 'color', $value: '#fff' }
-                }
-              },
-              rules: {
-                'design-system/deprecation': 'error',
-                'design-token/colors': 'warn'
+          cat > designlint.config.cjs <<'EOF'
+          module.exports = {
+            tokens: {
+              color: {
+                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
+                new: { $type: 'color', $value: '#fff' }
               }
-            };
-            EOF
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          };
+          EOF
           npx design-lint file.ts --config designlint.config.cjs --format json || true
           rm designlint.config.cjs
-            cat > designlint.config.mjs <<'EOF'
-            export default {
-              tokens: {
-                color: {
-                  old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                  new: { $type: 'color', $value: '#fff' }
-                }
-              },
-              rules: {
-                'design-system/deprecation': 'error',
-                'design-token/colors': 'warn'
+          cat > designlint.config.mjs <<'EOF'
+          export default {
+            tokens: {
+              color: {
+                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
+                new: { $type: 'color', $value: '#fff' }
               }
-            };
-            EOF
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          };
+          EOF
           npx design-lint file.ts --config designlint.config.mjs --format json || true
           rm designlint.config.mjs
-            cat > designlint.config.mts <<'EOF'
-            import type { Config } from '@lapidist/design-lint';
+          cat > designlint.config.mts <<'EOF'
+          import type { Config } from '@lapidist/design-lint';
 
-            export default {
-              tokens: {
-                color: {
-                  old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                  new: { $type: 'color', $value: '#fff' }
-                }
-              },
-              rules: {
-                'design-system/deprecation': 'error',
-                'design-token/colors': 'warn'
+          export default {
+            tokens: {
+              color: {
+                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
+                new: { $type: 'color', $value: '#fff' }
               }
-            } satisfies Config;
-            EOF
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
+            }
+          } satisfies Config;
+          EOF
           npx design-lint file.ts --config designlint.config.mts --format json || true
           rm designlint.config.mts
-            cat > designlint.config.ts <<'EOF'
-            import type { Config } from '@lapidist/design-lint';
+          cat > designlint.config.ts <<'EOF'
+          import type { Config } from '@lapidist/design-lint';
 
-            export default {
-              tokens: {
-                color: {
-                  old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                  new: { $type: 'color', $value: '#fff' }
-                }
-              },
-              rules: {
-                'design-system/deprecation': 'error',
-                'design-token/colors': 'warn'
+          export default {
+            tokens: {
+              color: {
+                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
+                new: { $type: 'color', $value: '#fff' }
               }
-            } satisfies Config;
-            EOF
-            npx design-lint file.ts --config designlint.config.ts --format json || true
-            rm designlint.config.ts
-            cat > suggestion.config.json <<'EOF'
-            {
-              "tokens": {
-                "default": {
-                  "spacing": {
-                    "scale-100": { "$type": "dimension", "$value": "4px" }
-                  }
-                }
-              },
-              "rules": {
-                "design-token/spacing": "error"
-              }
+            },
+            rules: {
+              'design-system/deprecation': 'error',
+              'design-token/colors': 'warn'
             }
-            EOF
-            echo ".a{padding:5px;}" > suggestion.css
-            npx design-lint suggestion.css --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt || true
-            grep -Fq "Unexpected spacing 5px" suggestion.txt
-            npx design-lint file.ts --format json || true
+          } satisfies Config;
+          EOF
+          npx design-lint file.ts --config designlint.config.ts --format json || true
+          rm designlint.config.ts
+          cat > suggestion.config.json <<'EOF'
+          {
+            "tokens": {
+              "default": {
+                "spacing": {
+                  "scale-100": { "$type": "dimension", "$value": "4px" }
+                }
+              }
+            },
+            "rules": {
+              "design-token/spacing": "error"
+            }
+          }
+          EOF
+          echo ".a{padding:5px;}" > suggestion.css
+          npx design-lint suggestion.css --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt || true
+          grep -Fq "Unexpected spacing 5px" suggestion.txt
+          npx design-lint file.ts --format json || true
