@@ -15,6 +15,7 @@ export interface Token {
   $description?: string;
   $extensions?: Record<string, unknown>;
   $deprecated?: boolean | string;
+  aliasOf?: string[];
 }
 
 /**

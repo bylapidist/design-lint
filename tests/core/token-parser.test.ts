@@ -479,6 +479,64 @@ void test('parseDesignTokens rejects gradient tokens with unknown properties', (
   assert.throws(() => parseDesignTokens(tokens), /invalid gradient value/i);
 });
 
+void test('parseDesignTokens resolves aliases inside gradient stops', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      base: { $value: '#fff' },
+      dark: { $value: '#000' },
+    },
+    gradient: {
+      $type: 'gradient',
+      hero: {
+        $value: [
+          { color: '{color.base}', position: 0 },
+          { color: '{color.dark}', position: 1 },
+        ],
+      },
+    },
+  };
+  const result = parseDesignTokens(tokens);
+  const grad = result.find((t) => t.path === 'gradient.hero');
+  assert(grad);
+  assert.deepEqual(grad.token.$value, [
+    { color: '#fff', position: 0 },
+    { color: '#000', position: 1 },
+  ]);
+  assert.deepEqual(grad.token.aliasOf, ['color.base', 'color.dark']);
+});
+
+void test('parseDesignTokens resolves aliases inside shadow segments', () => {
+  const tokens: DesignTokens = {
+    color: { $type: 'color', shadow: { $value: '#00000080' } },
+    shadow: {
+      $type: 'shadow',
+      subtle: {
+        $value: [
+          {
+            color: '{color.shadow}',
+            offsetX: { value: 0, unit: 'px' },
+            offsetY: { value: 1, unit: 'px' },
+            blur: { value: 2, unit: 'px' },
+          },
+        ],
+      },
+    },
+  };
+  const result = parseDesignTokens(tokens);
+  const subtle = result.find((t) => t.path === 'shadow.subtle');
+  assert(subtle);
+  assert.deepEqual(subtle.token.$value, [
+    {
+      color: '#00000080',
+      offsetX: { value: 0, unit: 'px' },
+      offsetY: { value: 1, unit: 'px' },
+      blur: { value: 2, unit: 'px' },
+    },
+  ]);
+  assert.deepEqual(subtle.token.aliasOf, ['color.shadow']);
+});
+
 void test('parseDesignTokens validates typography composite tokens', () => {
   const tokens: DesignTokens = {
     typography: {
