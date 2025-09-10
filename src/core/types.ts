@@ -42,6 +42,7 @@ export type DesignTokens = RootTokenGroup;
 export interface FlattenedToken {
   path: string;
   token: Token;
+  loc: { line: number; column: number };
 }
 
 export interface LintMessage {

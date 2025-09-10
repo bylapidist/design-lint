@@ -31,4 +31,4 @@ export {
   getFlattenedTokens,
   type TokenPattern,
 } from './token-utils.js';
-export { parseDesignTokens } from './parser/index.js';
+export { parseDesignTokens, getTokenLocation } from './parser/index.js';

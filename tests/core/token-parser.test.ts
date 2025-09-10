@@ -110,10 +110,10 @@ void test('parseDesignTokensFile reads a .tokens.json file', async () => {
   await writeFile(file, JSON.stringify(tokens), 'utf8');
 
   const result = await parseDesignTokensFile(file);
-  assert.deepEqual(result[0], {
-    path: 'color.blue',
-    token: { $value: '#00f', $type: 'color' },
-  });
+  assert.equal(result[0].path, 'color.blue');
+  assert.deepEqual(result[0].token, { $value: '#00f', $type: 'color' });
+  assert.equal(typeof result[0].loc.line, 'number');
+  assert.equal(typeof result[0].loc.column, 'number');
 });
 
 void test('parseDesignTokensFile reads a .tokens.yaml file', async () => {
@@ -123,10 +123,10 @@ void test('parseDesignTokensFile reads a .tokens.yaml file', async () => {
   await writeFile(file, yaml, 'utf8');
 
   const result = await parseDesignTokensFile(file);
-  assert.deepEqual(result[0], {
-    path: 'color.blue',
-    token: { $value: '#00f', $type: 'color' },
-  });
+  assert.equal(result[0].path, 'color.blue');
+  assert.deepEqual(result[0].token, { $value: '#00f', $type: 'color' });
+  assert.equal(typeof result[0].loc.line, 'number');
+  assert.equal(typeof result[0].loc.column, 'number');
 });
 
 void test('parseDesignTokensFile reports location on parse error', async () => {

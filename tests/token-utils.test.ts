@@ -4,6 +4,7 @@ import {
   matchToken,
   closestToken,
   extractVarName,
+  flattenDesignTokens,
 } from '../src/core/token-utils.ts';
 
 void test('matchToken handles regexp and glob patterns and missing matches', () => {
@@ -27,4 +28,12 @@ void test('extractVarName parses var() and ignores invalid values', () => {
   assert.equal(extractVarName('var(  --x  )'), '--x');
   assert.equal(extractVarName('--x'), null);
   assert.equal(extractVarName('var(--foo.bar)'), null);
+});
+
+void test('flattenDesignTokens provides location information', () => {
+  const tokens = {
+    color: { $type: 'color', blue: { $value: '#00f' } },
+  };
+  const result = flattenDesignTokens(tokens);
+  assert.deepEqual(result[0].loc, { line: 1, column: 1 });
 });
