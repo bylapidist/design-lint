@@ -34,7 +34,7 @@ The file may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `tokens` | object | `undefined` | Defines [design tokens](./glossary.md#design-tokens) available to rules. |
+| `tokens` | object | `undefined` | A [W3C Design Tokens](./glossary.md#design-tokens) tree or a map of themes. Theme values may be inline token objects or paths to `.tokens` files. |
 | `rules` | object | `undefined` | Enables [rules](./rules/index.md) and sets their severity. |
 | `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
 | `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
@@ -44,18 +44,36 @@ The file may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`.
 
 
 ## Tokens
-Tokens describe the design system in a machine-readable form. You can inline tokens or reference separate JSON files. Example:
+Tokens describe the design system in a machine-readable form. Provide a W3C Design Tokens object directly or supply a map of theme names.
+
+Inline example:
 
 ```json
 {
   "tokens": {
-    "colors": { "primary": "#ff0000" },
-    "spacing": { "sm": 4 }
+    "color": {
+      "primary": { "$type": "color", "$value": "#ff0000" }
+    }
   }
 }
 ```
 
-To group tokens by theme, provide an object keyed by theme name. Each theme contains the same token categories.
+To group tokens by theme, supply an object keyed by theme name. Each theme may contain an inline token tree or a path to an external token file. Paths resolve relative to the configuration file:
+
+```json
+{
+  "tokens": {
+    "light": "./light.tokens.json",
+    "dark": {
+      "color": {
+        "primary": { "$type": "color", "$value": "#ffffff" }
+      }
+    }
+  }
+}
+```
+
+Legacy `colors`, `spacing`, and similar groups are automatically migrated to this format with a warning.
 
 ## Rules and severity
 Enable a rule by adding it to the `rules` map with a severity:
@@ -93,7 +111,11 @@ Configuration can be written in JavaScript or TypeScript for dynamic setups:
 import { defineConfig } from '@lapidist/design-lint';
 
 export default defineConfig({
-  tokens: { colors: { primary: '#ff0000' } },
+  tokens: {
+    color: {
+      primary: { $type: 'color', $value: '#ff0000' },
+    },
+  },
   rules: { 'design-token/colors': 'error' },
 });
 ```
