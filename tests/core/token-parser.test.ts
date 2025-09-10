@@ -103,6 +103,30 @@ void test('parseDesignTokensFile reads a .tokens.json file', async () => {
   });
 });
 
+void test('parseDesignTokensFile reads a .tokens.yaml file', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
+  const file = path.join(dir, 'theme.tokens.yaml');
+  const yaml = "color:\n  $type: color\n  blue:\n    $value: '#00f'\n";
+  await writeFile(file, yaml, 'utf8');
+
+  const result = await parseDesignTokensFile(file);
+  assert.deepEqual(result[0], {
+    path: 'color.blue',
+    token: { $value: '#00f', $type: 'color' },
+  });
+});
+
+void test('parseDesignTokensFile reports location on parse error', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
+  const file = path.join(dir, 'bad.tokens.json');
+  await writeFile(file, '{ "color": { $type: "color", }', 'utf8');
+
+  await assert.rejects(
+    () => parseDesignTokensFile(file),
+    (err: Error) => err.message.includes(file) && /\(1:\d+\)/.test(err.message),
+  );
+});
+
 void test('parseDesignTokens rejects tokens missing explicit type', () => {
   const tokens = { foo: { $value: 1 } } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(tokens), /missing \$type/i);
