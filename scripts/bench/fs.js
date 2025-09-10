@@ -13,6 +13,6 @@ const targets = process.argv.slice(2);
   const start = performance.now();
   await linter.lintTargets(targets.length ? targets : ['.']);
   const end = performance.now();
-  // eslint-disable-next-line no-console
-  console.log(`Linted in ${(end - start).toFixed(2)}ms`);
+  const duration = (end - start).toFixed(2);
+  process.stdout.write(`Linted in ${duration}ms\n`);
 })();
