@@ -6,6 +6,8 @@ import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
 import { readDesignTokensFile } from '../adapters/node/token-parser.js';
+import { parseDesignTokens } from '../core/token-parser.js';
+import type { DesignTokens } from '../core/types.js';
 
 /**
  * Resolve and load configuration for the linter.
@@ -88,6 +90,25 @@ export async function loadConfig(
         themes[theme] = await readDesignTokensFile(filePath);
       }
     }
+    if (isThemeRecord(themes as Record<string, DesignTokens>)) {
+      for (const t of Object.values(themes)) {
+        parseDesignTokens(t as DesignTokens);
+      }
+    } else {
+      parseDesignTokens(themes as unknown as DesignTokens);
+    }
   }
   return config;
+}
+
+function isThemeRecord(
+  val: DesignTokens | Record<string, DesignTokens>,
+): val is Record<string, DesignTokens> {
+  return Object.values(val).every(
+    (v) =>
+      v &&
+      typeof v === 'object' &&
+      !('$value' in (v as Record<string, unknown>)) &&
+      !('value' in (v as Record<string, unknown>)),
+  );
 }

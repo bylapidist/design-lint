@@ -33,6 +33,7 @@ function isThemeRecord(
     (v) =>
       v &&
       typeof v === 'object' &&
-      !('$value' in (v as Record<string, unknown>)),
+      !('$value' in (v as Record<string, unknown>)) &&
+      !('value' in (v as Record<string, unknown>)),
   );
 }

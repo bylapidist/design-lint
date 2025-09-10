@@ -382,6 +382,15 @@ void test('rejects unresolved token aliases', async () => {
   await assert.rejects(loadConfig(tmp), /references unknown token/);
 });
 
+void test('rejects inline tokens using legacy shorthand', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'designlint.config.json'),
+    JSON.stringify({ tokens: { color: { $type: 'color', blue: '#00f' } } }),
+  );
+  await assert.rejects(loadConfig(tmp), /must be an object with \$value/);
+});
+
 void test('rejects non-token file paths in config', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
