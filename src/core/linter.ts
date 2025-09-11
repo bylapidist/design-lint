@@ -91,10 +91,12 @@ export class Linter {
         ...config,
         tokens: inlineTokens ?? {},
       };
+      const ruleRegistry = new RuleRegistry(resolvedConfig, env);
+      const tokenTracker = new TokenTracker(provider);
       deps = {
-        ruleRegistry: new RuleRegistry(resolvedConfig, env),
-        tokenTracker: new TokenTracker(provider),
-        tokensReady: provider.load(),
+        ruleRegistry,
+        tokenTracker,
+        tokensReady: ruleRegistry.load().then(() => provider.load()),
       };
     } else {
       deps = depsOrEnv;
@@ -132,8 +134,8 @@ export class Linter {
     ignoreFiles: string[];
     warning?: string;
   }> {
-    await this.tokensReady;
     await this.ruleRegistry.load();
+    await this.tokensReady;
     const runner = new Runner({
       config: this.config,
       tokenTracker: this.tokenTracker,
@@ -196,8 +198,8 @@ export class Linter {
     docType?: string,
     metadata?: Record<string, unknown>,
   ): Promise<LintResult> {
-    await this.tokensReady;
     await this.ruleRegistry.load();
+    await this.tokensReady;
     const enabled = this.ruleRegistry.getEnabledRules();
     await this.tokenTracker.configure(enabled);
     if (this.tokenTracker.hasUnusedTokenRules()) {
