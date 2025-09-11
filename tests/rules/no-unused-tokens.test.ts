@@ -1,30 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
 import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
-import type { Environment } from '../../src/core/environment.ts';
-
-async function tempFile(content: string): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(process.cwd(), 'tmp-'));
-  const file = path.join(dir, 'file.ts');
-  await fs.writeFile(file, content);
-  return path.relative(process.cwd(), file);
-}
+import type { LintDocument } from '../../src/core/environment.ts';
 
 void test('design-system/no-unused-tokens reports unused tokens', async () => {
-  const file = await tempFile('const color = "#000000";');
   const tokens = {
     color: {
       primary: { $value: '#000000', $type: 'color' },
       unused: { $value: '#123456', $type: 'color' },
-    },
-  };
-  const env: Environment = {
-    documentSource: new FileSource(),
-    tokenProvider: {
-      load: () => Promise.resolve({ default: tokens }),
     },
   };
   const linter = initLinter(
@@ -32,9 +16,14 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
       tokens,
       rules: { 'design-system/no-unused-tokens': 'warn' },
     },
-    env,
+    new FileSource(),
   );
-  const { results } = await linter.lintTargets([file]);
+  const doc: LintDocument = {
+    id: 'file.ts',
+    type: 'ts',
+    getText: () => Promise.resolve('const color = "#000000";'),
+  };
+  const { results } = await linter.lintDocuments([doc]);
   const msg = results
     .flatMap((r) => r.messages)
     .find((m) => m.ruleId === 'design-system/no-unused-tokens');
@@ -44,7 +33,6 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
 });
 
 void test('design-system/no-unused-tokens includes token metadata', async () => {
-  const file = await tempFile('');
   const tokens = {
     color: {
       unused: {
@@ -55,20 +43,19 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
       },
     },
   };
-  const env: Environment = {
-    documentSource: new FileSource(),
-    tokenProvider: {
-      load: () => Promise.resolve({ default: tokens }),
-    },
-  };
   const linter = initLinter(
     {
       tokens,
       rules: { 'design-system/no-unused-tokens': 'warn' },
     },
-    env,
+    new FileSource(),
   );
-  const { results } = await linter.lintTargets([file]);
+  const doc: LintDocument = {
+    id: 'file.ts',
+    type: 'ts',
+    getText: () => Promise.resolve(''),
+  };
+  const { results } = await linter.lintDocuments([doc]);
   const msg = results
     .flatMap((r) => r.messages)
     .find((m) => m.ruleId === 'design-system/no-unused-tokens');
@@ -80,16 +67,9 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
 });
 
 void test('design-system/no-unused-tokens passes when tokens used', async () => {
-  const file = await tempFile('const color = "#000000";');
   const tokens = {
     color: {
       primary: { $value: '#000000', $type: 'color' },
-    },
-  };
-  const env: Environment = {
-    documentSource: new FileSource(),
-    tokenProvider: {
-      load: () => Promise.resolve({ default: tokens }),
     },
   };
   const linter = initLinter(
@@ -97,9 +77,14 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
       tokens,
       rules: { 'design-system/no-unused-tokens': 'error' },
     },
-    env,
+    new FileSource(),
   );
-  const { results } = await linter.lintTargets([file]);
+  const doc: LintDocument = {
+    id: 'file.ts',
+    type: 'ts',
+    getText: () => Promise.resolve('const color = "#000000";'),
+  };
+  const { results } = await linter.lintDocuments([doc]);
   const has = results.some((r) =>
     r.messages.some((m) => m.ruleId === 'design-system/no-unused-tokens'),
   );
@@ -107,17 +92,10 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
 });
 
 void test('design-system/no-unused-tokens can ignore tokens', async () => {
-  const file = await tempFile('const color = "#000000";');
   const tokens = {
     color: {
       primary: { $value: '#000000', $type: 'color' },
       unused: { $value: '#123456', $type: 'color' },
-    },
-  };
-  const env: Environment = {
-    documentSource: new FileSource(),
-    tokenProvider: {
-      load: () => Promise.resolve({ default: tokens }),
     },
   };
   const linter = initLinter(
@@ -127,9 +105,14 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
         'design-system/no-unused-tokens': ['warn', { ignore: ['#123456'] }],
       },
     },
-    env,
+    new FileSource(),
   );
-  const { results } = await linter.lintTargets([file]);
+  const doc: LintDocument = {
+    id: 'file.ts',
+    type: 'ts',
+    getText: () => Promise.resolve('const color = "#000000";'),
+  };
+  const { results } = await linter.lintDocuments([doc]);
   const has = results.some((r) =>
     r.messages.some((m) => m.ruleId === 'design-system/no-unused-tokens'),
   );
@@ -137,24 +120,22 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
 });
 
 void test('design-system/no-unused-tokens matches hex case-insensitively', async () => {
-  const file = await tempFile('const color = "#ABCDEF";');
   const tokens = {
     color: { primary: { $value: '#abcdef', $type: 'color' } },
-  };
-  const env: Environment = {
-    documentSource: new FileSource(),
-    tokenProvider: {
-      load: () => Promise.resolve({ default: tokens }),
-    },
   };
   const linter = initLinter(
     {
       tokens,
       rules: { 'design-system/no-unused-tokens': 'warn' },
     },
-    env,
+    new FileSource(),
   );
-  const { results } = await linter.lintTargets([file]);
+  const doc: LintDocument = {
+    id: 'file.ts',
+    type: 'ts',
+    getText: () => Promise.resolve('const color = "#ABCDEF";'),
+  };
+  const { results } = await linter.lintDocuments([doc]);
   const has = results.some((r) =>
     r.messages.some((m) => m.ruleId === 'design-system/no-unused-tokens'),
   );
