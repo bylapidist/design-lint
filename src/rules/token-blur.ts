@@ -1,5 +1,6 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { isRecord } from '../utils/type-guards.js';
 
 interface BlurRuleOptions {
   units?: string[];
@@ -62,7 +63,3 @@ export const blurRule: RuleModule<BlurRuleOptions> = {
     };
   },
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}

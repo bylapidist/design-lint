@@ -4,6 +4,7 @@ import type { LintResult } from '../core/types.js';
 import { stylish } from './stylish.js';
 import { jsonFormatter } from './json.js';
 import { sarifFormatter } from './sarif.js';
+import { isRecord } from '../utils/type-guards.js';
 
 type Formatter = (results: LintResult[], useColor?: boolean) => string;
 
@@ -61,8 +62,4 @@ function resolveFormatter(mod: unknown): Formatter | undefined {
 
 function isFormatter(value: unknown): value is Formatter {
   return typeof value === 'function';
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
