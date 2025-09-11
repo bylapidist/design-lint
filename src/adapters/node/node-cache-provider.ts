@@ -1,6 +1,6 @@
 import flatCache, { type FlatCache } from 'flat-cache';
 import path from 'path';
-import type { CacheProvider, CacheEntry } from '../../core/cache-provider';
+import type { CacheProvider, CacheEntry } from '../../core/cache-provider.js';
 
 export class NodeCacheProvider implements CacheProvider {
   private cache: FlatCache;

@@ -1,6 +1,6 @@
 import valueParser from 'postcss-value-parser';
-import { tokenRule } from '../utils/token-rule';
-import { isRecord } from '../utils/is-record';
+import { tokenRule } from '../utils/token-rule.js';
+import { isRecord } from '../utils/is-record.js';
 
 const normalize = (val: string): string =>
   valueParser.stringify(valueParser(val).nodes).trim();

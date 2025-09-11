@@ -8,7 +8,7 @@ import {
   type CallExpression,
   type ExpressionStatement,
 } from 'typescript';
-import { isHyperscriptCall } from '../../src/utils/is-hyperscript-call.ts';
+import { isHyperscriptCall } from '../../src/utils/is-hyperscript-call.js';
 
 function getCall(code: string): CallExpression {
   const sf = createSourceFile(

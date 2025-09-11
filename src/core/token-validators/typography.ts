@@ -1,8 +1,8 @@
-import { isRecord } from '../../utils/is-record';
-import { validateFontFamily } from './fontFamily';
-import { validateDimension } from './dimension';
-import { validateFontWeight } from './fontWeight';
-import { validateNumber } from './number';
+import { isRecord } from '../../utils/is-record.js';
+import { validateFontFamily } from './fontFamily.js';
+import { validateDimension } from './dimension.js';
+import { validateFontWeight } from './fontWeight.js';
+import { validateNumber } from './number.js';
 
 export function validateTypography(value: unknown, path: string): void {
   if (!isRecord(value)) {

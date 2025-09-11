@@ -9,7 +9,7 @@ import {
   type Node,
   type StringLiteral,
 } from 'typescript';
-import { isInNonStyleJsx } from '../../src/utils/is-in-non-style-jsx.ts';
+import { isInNonStyleJsx } from '../../src/utils/is-in-non-style-jsx.js';
 
 function getStrings(code: string): StringLiteral[] {
   const sf = createSourceFile(

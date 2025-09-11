@@ -7,12 +7,12 @@ import {
   parseDesignTokens,
   registerTokenTransform,
   type TokenTransform,
-} from '../../src/core/parser/index.ts';
+} from '../../src/core/parser/index.js';
 import {
   parseDesignTokensFile,
   TokenParseError,
-} from '../../src/adapters/node/token-parser.ts';
-import type { DesignTokens } from '../../src/core/types';
+} from '../../src/adapters/node/token-parser.js';
+import type { DesignTokens } from '../../src/core/types.js';
 
 void test('parseDesignTokens flattens tokens with paths in declaration order', () => {
   const tokens: DesignTokens = {

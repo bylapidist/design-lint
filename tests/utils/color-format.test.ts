@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   detectColorFormat,
   namedColors,
-} from '../../src/utils/color-format.ts';
+} from '../../src/utils/color-format.js';
 
 void test('detectColorFormat identifies formats', () => {
   assert.equal(detectColorFormat('#fff'), 'hex');

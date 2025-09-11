@@ -1,10 +1,10 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { LintResult } from '../core/types';
-import { stylish } from './stylish';
-import { jsonFormatter } from './json';
-import { sarifFormatter } from './sarif';
-import { isRecord } from '../utils/is-record';
+import type { LintResult } from '../core/types.js';
+import { stylish } from './stylish.js';
+import { jsonFormatter } from './json.js';
+import { sarifFormatter } from './sarif.js';
+import { isRecord } from '../utils/is-record.js';
 
 type Formatter = (results: LintResult[], useColor?: boolean) => string;
 

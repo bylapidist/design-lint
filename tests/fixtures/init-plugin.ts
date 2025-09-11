@@ -1,5 +1,5 @@
-import type { PluginModule } from '../../src/core/types.ts';
-import type { Environment } from '../../src/core/environment.ts';
+import type { PluginModule } from '../../src/core/types.js';
+import type { Environment } from '../../src/core/environment.js';
 
 export const inits: Environment[] = [];
 

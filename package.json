@@ -26,7 +26,6 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "postbuild": "node scripts/postbuild.js",
     "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",

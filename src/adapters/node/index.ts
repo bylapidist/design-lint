@@ -1,10 +1,10 @@
-export { FileSource } from './file-source';
-export { createFileDocument } from './file-document';
-export { NodePluginLoader } from './plugin-loader';
-export { NodeCacheProvider } from './node-cache-provider';
-export { createNodeEnvironment } from './environment';
+export { FileSource } from './file-source.js';
+export { createFileDocument } from './file-document.js';
+export { NodePluginLoader } from './plugin-loader.js';
+export { NodeCacheProvider } from './node-cache-provider.js';
+export { createNodeEnvironment } from './environment.js';
 export {
   parseDesignTokensFile,
   readDesignTokensFile,
   TokenParseError,
-} from './token-parser';
+} from './token-parser.js';

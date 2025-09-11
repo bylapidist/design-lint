@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLinter as initLinter } from '../../src/index.ts';
-import { FileSource } from '../../src/adapters/node/file-source.ts';
+import { createLinter as initLinter } from '../../src/index.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
 
 void test('reports CSS parse errors', async () => {
   const linter = initLinter({}, new FileSource());

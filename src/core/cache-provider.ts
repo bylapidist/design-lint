@@ -1,4 +1,4 @@
-import type { LintResult } from './types';
+import type { LintResult } from './types.js';
 
 export interface CacheEntry {
   mtime: number;

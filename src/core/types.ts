@@ -1,6 +1,6 @@
 import type ts from 'typescript';
 import type { z } from 'zod';
-import type { Environment } from './environment';
+import type { Environment } from './environment.js';
 
 export interface VariableDefinition {
   id: string;

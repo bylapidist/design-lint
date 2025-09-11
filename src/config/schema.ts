@@ -1,8 +1,8 @@
 import path from 'node:path';
 import { z } from 'zod';
-import type { Config } from '../core/linter';
-import type { DesignTokens } from '../core/types';
-import { isRecord } from '../utils/is-record';
+import type { Config } from '../core/linter.js';
+import type { DesignTokens } from '../core/types.js';
+import { isRecord } from '../utils/is-record.js';
 
 const severitySchema = z.union([
   z.literal('error'),

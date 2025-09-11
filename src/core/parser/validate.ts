@@ -1,6 +1,6 @@
-import type { Token, FlattenedToken } from '../types';
-import { validatorRegistry } from '../token-validators/index';
-import { isRecord } from '../../utils/is-record';
+import type { Token, FlattenedToken } from '../types.js';
+import { validatorRegistry } from '../token-validators/index.js';
+import { isRecord } from '../../utils/is-record.js';
 
 function validateExtensions(value: unknown, path: string): void {
   if (value === undefined) return;

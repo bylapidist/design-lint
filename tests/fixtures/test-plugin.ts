@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import type { PluginModule, RuleModule } from '../../src/core/types.ts';
+import type { PluginModule, RuleModule } from '../../src/core/types.js';
 
 const rule: RuleModule<unknown> = {
   name: 'plugin/test',

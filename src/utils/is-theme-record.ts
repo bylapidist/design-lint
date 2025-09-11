@@ -1,5 +1,5 @@
-import type { DesignTokens } from '../core/types';
-import { isRecord } from './is-record';
+import type { DesignTokens } from '../core/types.js';
+import { isRecord } from './is-record.js';
 
 /**
  * Determines whether a value is a record of theme names mapping to design tokens.

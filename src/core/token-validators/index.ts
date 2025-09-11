@@ -1,15 +1,15 @@
-import type { Token } from '../types';
-import { validateColor } from './color';
-import { validateDimension } from './dimension';
-import { validateNumber } from './number';
-import { validateFontFamily } from './fontFamily';
-import { validateFontWeight } from './fontWeight';
-import { validateDuration } from './duration';
-import { validateCubicBezier } from './cubicBezier';
-import { validateShadow } from './shadow';
-import { validateStrokeStyle } from './strokeStyle';
-import { validateGradient } from './gradient';
-import { validateTypography } from './typography';
+import type { Token } from '../types.js';
+import { validateColor } from './color.js';
+import { validateDimension } from './dimension.js';
+import { validateNumber } from './number.js';
+import { validateFontFamily } from './fontFamily.js';
+import { validateFontWeight } from './fontWeight.js';
+import { validateDuration } from './duration.js';
+import { validateCubicBezier } from './cubicBezier.js';
+import { validateShadow } from './shadow.js';
+import { validateStrokeStyle } from './strokeStyle.js';
+import { validateGradient } from './gradient.js';
+import { validateTypography } from './typography.js';
 
 export type TokenValidator = (
   value: unknown,

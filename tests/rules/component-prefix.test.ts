@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLinter as initLinter } from '../../src/index.ts';
-import { FileSource } from '../../src/adapters/node/file-source.ts';
-import { applyFixes } from '../../src/index.ts';
+import { createLinter as initLinter } from '../../src/index.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import { applyFixes } from '../../src/index.js';
 
 void test('design-system/component-prefix enforces prefix on components', async () => {
   const linter = initLinter(

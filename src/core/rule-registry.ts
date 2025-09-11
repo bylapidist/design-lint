@@ -1,9 +1,9 @@
-import type { Config } from './linter';
-import type { RuleModule } from './types';
-import type { Environment } from './environment';
-import { builtInRules } from '../rules/index';
-import { PluginManager, type PluginMeta } from './plugin-manager';
-import { ConfigError } from './errors';
+import type { Config } from './linter.js';
+import type { RuleModule } from './types.js';
+import type { Environment } from './environment.js';
+import { builtInRules } from '../rules/index.js';
+import { PluginManager, type PluginMeta } from './plugin-manager.js';
+import { ConfigError } from './errors.js';
 
 export class RuleRegistry {
   private ruleMap = new Map<string, { rule: RuleModule; source: string }>();

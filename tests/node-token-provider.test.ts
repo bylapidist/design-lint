@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { NodeTokenProvider } from '../src/adapters/node/token-provider.ts';
+import { NodeTokenProvider } from '../src/adapters/node/token-provider.js';
 
 const tokens = {
   color: {
