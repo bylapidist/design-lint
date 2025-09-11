@@ -21,13 +21,6 @@ const GROUP_PROPS = new Set([
   '$schema',
   '$metadata',
 ]);
-const LEGACY_PROPS = new Set([
-  'type',
-  'value',
-  'description',
-  'extensions',
-  'deprecated',
-]);
 const INVALID_NAME_CHARS = /[{}\.]/;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -147,13 +140,6 @@ export function buildParseTree(
           tokenLocations.set(pathId, loc);
           result.push({ path: pathId, token, loc });
         } else if (isTokenGroup(node)) {
-          for (const key of Object.keys(node)) {
-            if (LEGACY_PROPS.has(key)) {
-              throw new Error(
-                `Token ${pathId} uses legacy property ${key}; expected $${key}`,
-              );
-            }
-          }
           const childKeys = Object.keys(node).filter(
             (k) => !GROUP_PROPS.has(k),
           );
