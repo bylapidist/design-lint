@@ -3,10 +3,10 @@ import type {
   RuleContext,
   RuleListener,
   RuleModule,
-} from '../core/types.js';
+} from '../../core/types.js';
 import { z } from 'zod';
-import { isObject } from './is-object.js';
-import { toArray } from './collections/index.js';
+import { isObject } from '../guards/index.js';
+import { toArray } from '../collections/index.js';
 
 /**
  * Configuration for creating a token-based rule via {@link tokenRule}.
@@ -41,6 +41,9 @@ interface TokenRuleConfig<TOptions, TAllowed> {
 
 /**
  * Determines whether a value has a numeric `size` property.
+ *
+ * @param value - The value to inspect.
+ * @returns `true` if the value exposes a numeric `size` property.
  */
 const hasSize = (value: unknown): value is { size: number } =>
   isObject(value) && typeof Reflect.get(value, 'size') === 'number';
@@ -48,6 +51,24 @@ const hasSize = (value: unknown): value is { size: number } =>
 /**
  * Simplifies writing rules that operate on design tokens by handling token
  * collection, allowed-value preparation, and empty-state reporting.
+ *
+ * @example
+ * const myRule = tokenRule({
+ *   name: 'example/no-red',
+ *   meta: { description: 'disallow red tokens' },
+ *   tokens: 'color',
+ *   message: 'red tokens are not allowed',
+ *   getAllowed: () => new Set(['blue']),
+ *   create(ctx, allowed) {
+ *     return {
+ *       onToken(token) {
+ *         if (!allowed.has(token.$value)) {
+ *           ctx.report({ message: token.$value, line: 1, column: 1 });
+ *         }
+ *       },
+ *     };
+ *   },
+ * });
  */
 export function tokenRule<TOptions = unknown, TAllowed = Set<unknown>>(
   config: TokenRuleConfig<TOptions, TAllowed>,

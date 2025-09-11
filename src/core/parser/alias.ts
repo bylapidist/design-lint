@@ -1,4 +1,7 @@
 import type { Token } from '../types.js';
+import { collections } from '../../utils/index.js';
+
+const { isArray } = collections;
 
 const ALIAS_GLOBAL = /\{([^}]+)\}/g;
 const ALIAS_EXACT = /^\{([^}]+)\}$/;
@@ -80,7 +83,7 @@ export function resolveAliases(
         return String(target.$value);
       });
     }
-    if (Array.isArray(val)) {
+    if (isArray(val)) {
       return val.map((v) => walk(v));
     }
     if (typeof val === 'object' && val !== null) {

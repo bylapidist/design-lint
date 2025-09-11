@@ -9,7 +9,9 @@ import {
   type Node,
   type StringLiteral,
 } from 'typescript';
-import { isInNonStyleJsx } from '../../src/utils/is-in-non-style-jsx.js';
+import { guards } from '../../src/utils/index.js';
+
+const { isInNonStyleJsx } = guards.ast;
 
 function getStrings(code: string): StringLiteral[] {
   const sf = createSourceFile(

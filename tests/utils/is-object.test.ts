@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isObject } from '../../src/utils/is-object.js';
+import { guards } from '../../src/utils/index.js';
+
+const { isObject } = guards.data;
 
 void test('isObject detects objects and arrays', () => {
   assert.equal(isObject({}), true);

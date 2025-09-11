@@ -1,4 +1,6 @@
-import { isRecord } from '../../utils/is-record.js';
+import { guards } from '../../utils/index.js';
+
+const { isRecord } = guards.data;
 
 const DIMENSION_UNITS = new Set(['px', 'rem']);
 

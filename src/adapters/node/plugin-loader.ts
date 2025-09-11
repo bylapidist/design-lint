@@ -6,7 +6,10 @@ import { realpathIfExists, relFromCwd } from './utils/paths.js';
 import type { PluginModule } from '../../core/types.js';
 import type { PluginLoader, LoadedPlugin } from '../../core/plugin-loader.js';
 import { PluginError } from '../../core/errors.js';
-import { isRecord } from '../../utils/is-record.js';
+import { guards, collections } from '../../utils/index.js';
+
+const { isRecord } = guards.data;
+const { isArray } = collections;
 
 export class NodePluginLoader implements PluginLoader {
   async load(p: string, configPath?: string): Promise<LoadedPlugin> {
@@ -72,7 +75,7 @@ function resolvePlugin(mod: unknown): PluginModule {
 function isPluginModule(value: unknown): value is PluginModule {
   return (
     isRecord(value) &&
-    Array.isArray(value.rules) &&
+    isArray(value.rules) &&
     (value.name === undefined || typeof value.name === 'string') &&
     (value.version === undefined || typeof value.version === 'string') &&
     (value.init === undefined || typeof value.init === 'function')

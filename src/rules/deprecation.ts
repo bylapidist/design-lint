@@ -1,7 +1,9 @@
 import ts from 'typescript';
 import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
-import { isInNonStyleJsx } from '../utils/is-in-non-style-jsx.js';
+import { guards } from '../utils/index.js';
+
+const { isInNonStyleJsx } = guards.ast;
 
 export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',

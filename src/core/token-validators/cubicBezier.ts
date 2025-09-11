@@ -1,5 +1,9 @@
+import { collections } from '../../utils/index.js';
+
+const { isArray } = collections;
+
 export function validateCubicBezier(value: unknown, path: string): void {
-  if (Array.isArray(value) && value.length === 4) {
+  if (isArray(value) && value.length === 4) {
     for (let i = 0; i < 4; i++) {
       const v: unknown = value[i];
       if (typeof v !== 'number' || v < 0 || v > 1) {

@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { toArray } from '../../src/utils/collections/index.js';
+import { collections } from '../../src/utils/index.js';
+
+const { toArray } = collections;
 
 void test('toArray returns arrays unchanged', () => {
   const arr = [1, 2];

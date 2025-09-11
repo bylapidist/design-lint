@@ -1,5 +1,5 @@
-import type { DesignTokens } from '../core/types.js';
-import { isRecord } from './is-record.js';
+import type { DesignTokens } from '../../../core/types.js';
+import { isRecord } from '../data/index.js';
 
 /**
  * Determines whether a value conforms to the `DesignTokens` structure.
@@ -9,6 +9,9 @@ import { isRecord } from './is-record.js';
  *
  * @param value - The value to test.
  * @returns `true` if the value is a `DesignTokens` object.
+ *
+ * @example
+ * isDesignTokens({ color: { red: { $value: '#f00' } } }); // => true
  */
 export const isDesignTokens = (value: unknown): value is DesignTokens =>
   isRecord(value);

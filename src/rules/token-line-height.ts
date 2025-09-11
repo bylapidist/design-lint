@@ -1,6 +1,8 @@
 import ts from 'typescript';
-import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
+import { rules, guards } from '../utils/index.js';
+
+const { tokenRule } = rules;
+const { isStyleValue } = guards.ast;
 
 const parse = (val: string): number | null => {
   const v = val.trim();

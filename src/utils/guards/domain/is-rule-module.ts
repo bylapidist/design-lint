@@ -1,5 +1,5 @@
-import type { RuleModule } from '../core/types.js';
-import { isRecord } from './is-record.js';
+import type { RuleModule } from '../../../core/types.js';
+import { isRecord } from '../data/index.js';
 
 /**
  * Options for {@link isRuleModule}.
@@ -21,6 +21,9 @@ export interface IsRuleModuleOptions {
  * @param value - The value to check.
  * @param options - Validation requirements.
  * @returns `true` if the value is a `RuleModule`.
+ *
+ * @example
+ * isRuleModule({ name: 'demo', create: () => ({}) }); // => true
  */
 export const isRuleModule = (
   value: unknown,
