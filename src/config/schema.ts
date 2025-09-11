@@ -2,6 +2,7 @@ import path from 'node:path';
 import { z } from 'zod';
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
+import { isRecord } from '../utils/type-guards.js';
 
 const severitySchema = z.union([
   z.literal('error'),
@@ -16,10 +17,6 @@ const ruleSettingSchema = z.union([
   severitySchema,
   z.tuple([severitySchema, z.unknown()]),
 ]);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function isToken(value: unknown): boolean {
   return isRecord(value) && '$value' in value;
