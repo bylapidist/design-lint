@@ -1,9 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  detectColorFormat,
-  namedColors,
-} from '../../src/utils/color-format.js';
+import { detectColorFormat, namedColors } from '../../src/utils/color/index.js';
 
 void test('detectColorFormat identifies formats', () => {
   assert.equal(detectColorFormat('#fff'), 'hex');

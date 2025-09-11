@@ -4,7 +4,7 @@ import colorString from 'color-string';
 import { z } from 'zod';
 import { tokenRule } from '../utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
-import { detectColorFormat, type ColorFormat } from '../utils/color-format.js';
+import { detectColorFormat, type ColorFormat } from '../utils/color/index.js';
 
 interface ColorRuleOptions {
   allow?: ColorFormat[];
