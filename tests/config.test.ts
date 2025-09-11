@@ -8,6 +8,7 @@ import { resolveConfigFile } from '../src/config/file-resolution.ts';
 import { loadTokens } from '../src/config/token-loader.ts';
 import { Linter } from '../src/core/linter.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
+import { ConfigError } from '../src/core/errors.ts';
 
 void test('resolveConfigFile returns null when config missing', async () => {
   const tmp = makeTmpDir();
@@ -171,14 +172,24 @@ void test('throws on invalid rule setting', async () => {
     configPath,
     JSON.stringify({ rules: { 'design-token/colors': 'invalid' } }),
   );
-  await assert.rejects(loadConfig(tmp), /Invalid config/);
+  await assert.rejects(loadConfig(tmp), (err) => {
+    assert.ok(err instanceof ConfigError);
+    assert.ok(err.context.includes('designlint.config.json'));
+    assert.equal(err.remediation, 'Review and fix the configuration file.');
+    return err.message.includes('Invalid config');
+  });
 });
 
 void test('throws on invalid plugin path', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, JSON.stringify({ plugins: [123] }));
-  await assert.rejects(loadConfig(tmp), /Invalid config/);
+  await assert.rejects(loadConfig(tmp), (err) => {
+    assert.ok(err instanceof ConfigError);
+    assert.ok(err.context.includes('designlint.config.json'));
+    assert.equal(err.remediation, 'Review and fix the configuration file.');
+    return err.message.includes('Invalid config');
+  });
 });
 
 void test('loads config from .mjs', async () => {
@@ -321,7 +332,12 @@ void test('throws on unknown rule name', async () => {
   const linter = new Linter(config, { documentSource: new FileSource() });
   await assert.rejects(
     () => linter.lintText('const x = 1;', 'file.ts'),
-    /Unknown rule\(s\): unknown\/rule/,
+    (err) => {
+      assert.ok(err instanceof ConfigError);
+      assert.equal(err.context, 'Config.rules');
+      assert.equal(err.remediation, 'Remove or correct these rule names.');
+      return err.message.includes('Unknown rule(s): unknown/rule');
+    },
   );
 });
 

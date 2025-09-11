@@ -5,6 +5,7 @@ import { realpathIfExists } from '../adapters/node/utils/paths.js';
 import { resolveConfigFile } from './file-resolution.js';
 import { loadTokens } from './token-loader.js';
 import { isRecord } from '../utils/type-guards.js';
+import { ConfigError } from '../core/errors.js';
 
 /**
  * Resolve and load configuration for the linter.
@@ -34,7 +35,11 @@ export async function loadConfig(
   const parsed = configSchema.safeParse(merged);
   if (!parsed.success) {
     const location = result?.filepath ? ` at ${result.filepath}` : '';
-    throw new Error(`Invalid config${location}: ${parsed.error.message}`);
+    throw new ConfigError({
+      message: `Invalid config${location}: ${parsed.error.message}`,
+      context: result?.filepath ? `Config file "${result.filepath}"` : 'Config',
+      remediation: 'Review and fix the configuration file.',
+    });
   }
   const config = parsed.data;
   if (config.tokens && typeof config.tokens === 'object') {

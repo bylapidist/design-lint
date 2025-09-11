@@ -1,18 +1,7 @@
 import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
 import type { PluginLoader } from './plugin-loader.js';
-
-export interface EngineErrorOptions {
-  message: string;
-  context: string;
-  remediation: string;
-}
-
-export function createEngineError(opts: EngineErrorOptions): Error {
-  return new Error(
-    `${opts.message}\nContext: ${opts.context}\nRemediation: ${opts.remediation}`,
-  );
-}
+import { PluginError } from './errors.js';
 
 export class PluginManager {
   private pluginPaths: string[] = [];
@@ -32,7 +21,7 @@ export class PluginManager {
         this.config.configPath,
       );
       if (!isRecord(plugin) || !Array.isArray(plugin.rules)) {
-        throw createEngineError({
+        throw new PluginError({
           message: `Invalid plugin "${pluginSource}": expected { rules: RuleModule[] }`,
           context: `Plugin "${pluginSource}"`,
           remediation: 'Export an object with a "rules" array.',
@@ -41,7 +30,7 @@ export class PluginManager {
       for (const rule of plugin.rules) {
         if (!isRuleModule(rule)) {
           const ruleName = getRuleName(rule) ?? '<unknown>';
-          throw createEngineError({
+          throw new PluginError({
             message:
               `Invalid rule "${ruleName}" in plugin "${pluginSource}": ` +
               'expected { name: string; meta: { description: string }; create: Function }',
@@ -52,7 +41,7 @@ export class PluginManager {
         }
         const existing = this.ruleMap.get(rule.name);
         if (existing) {
-          throw createEngineError({
+          throw new PluginError({
             message: `Rule "${rule.name}" from plugin "${pluginSource}" conflicts with rule from "${existing.source}"`,
             context: `Plugin "${pluginSource}"`,
             remediation: 'Use a unique rule name to avoid collisions.',

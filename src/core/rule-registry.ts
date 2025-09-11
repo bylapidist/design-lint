@@ -2,7 +2,8 @@ import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
 import type { PluginLoader } from './plugin-loader.js';
 import { builtInRules } from '../rules/index.js';
-import { PluginManager, createEngineError } from './plugin-manager.js';
+import { PluginManager } from './plugin-manager.js';
+import { ConfigError } from './errors.js';
 
 export class RuleRegistry {
   private ruleMap = new Map<string, { rule: RuleModule; source: string }>();
@@ -62,7 +63,7 @@ export class RuleRegistry {
       }
     }
     if (unknown.length > 0) {
-      throw createEngineError({
+      throw new ConfigError({
         message: `Unknown rule(s): ${unknown.join(', ')}`,
         context: 'Config.rules',
         remediation: 'Remove or correct these rule names.',
