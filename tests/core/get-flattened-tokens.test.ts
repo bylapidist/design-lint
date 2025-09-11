@@ -44,15 +44,21 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
   ]);
 });
 
-void test('getFlattenedTokens defaults to the "default" theme', () => {
-  const tokens: DesignTokens = {
-    palette: { $type: 'color', primary: { $value: '#fff' } },
+void test('getFlattenedTokens merges tokens from all themes when none is specified', () => {
+  const tokens: Record<string, DesignTokens> = {
+    light: { palette: { $type: 'color', primary: { $value: '#fff' } } },
+    dark: { palette: { $type: 'color', secondary: { $value: '#000' } } },
   };
-  const flat = getFlattenedTokens({ default: tokens });
+  const flat = getFlattenedTokens(tokens);
   assert.deepEqual(flat, [
     {
       path: 'palette.primary',
       token: { $value: '#fff', $type: 'color' },
+      loc: { line: 1, column: 1 },
+    },
+    {
+      path: 'palette.secondary',
+      token: { $value: '#000', $type: 'color' },
       loc: { line: 1, column: 1 },
     },
   ]);
