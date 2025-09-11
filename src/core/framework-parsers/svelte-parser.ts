@@ -2,6 +2,7 @@ import ts from 'typescript';
 import { parseCSS } from './css-parser.js';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
 import type { parse as svelteParse } from 'svelte/compiler';
+import { isRecord } from '../../utils/type-guards.js';
 
 export async function lintSvelte(
   text: string,
@@ -170,10 +171,6 @@ export async function lintSvelte(
       for (const l of listeners) l.onCSSDeclaration?.(decl);
     }
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 function isSvelteAttr(value: unknown): value is {

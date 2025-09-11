@@ -1,12 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import writeFileAtomic from 'write-file-atomic';
+import { isRecord } from '../utils/type-guards.js';
 
 const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 export function detectInitFormat(initFormat?: string): string {
   if (initFormat && !supported.has(initFormat)) {
@@ -26,15 +23,11 @@ export function detectInitFormat(initFormat?: string): string {
           const pkgText = fs.readFileSync(pkgPath, 'utf8');
           const pkgData: unknown = JSON.parse(pkgText);
           if (isRecord(pkgData)) {
-            const deps = isRecord(pkgData.dependencies)
-              ? pkgData.dependencies
-              : undefined;
-            const devDeps = isRecord(pkgData.devDependencies)
-              ? pkgData.devDependencies
-              : undefined;
             if (
-              (deps && 'typescript' in deps) ||
-              (devDeps && 'typescript' in devDeps)
+              (isRecord(pkgData.dependencies) &&
+                'typescript' in pkgData.dependencies) ||
+              (isRecord(pkgData.devDependencies) &&
+                'typescript' in pkgData.devDependencies)
             ) {
               format = 'ts';
             }

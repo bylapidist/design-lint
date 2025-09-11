@@ -2,6 +2,7 @@ import postcss from 'postcss';
 import { parse as scssParser } from 'postcss-scss';
 import lessSyntax from 'postcss-less';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
+import { isObject } from '../../utils/type-guards.js';
 
 export function parseCSS(
   text: string,
@@ -25,7 +26,8 @@ export function parseCSS(
       });
     });
   } catch (e: unknown) {
-    const err = isRecord(e) ? e : {};
+    const err: { message?: unknown; line?: unknown; column?: unknown } =
+      isObject(e) ? e : {};
     messages.push({
       ruleId: 'parse-error',
       message:
@@ -52,8 +54,4 @@ export function lintCSS(
   for (const decl of decls) {
     for (const l of listeners) l.onCSSDeclaration?.(decl);
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
