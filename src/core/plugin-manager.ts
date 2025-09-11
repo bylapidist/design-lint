@@ -4,6 +4,7 @@ import type { PluginLoader } from './plugin-loader.js';
 import type { Environment } from './environment.js';
 import { PluginError } from './errors.js';
 import { isRecord } from '../utils/type-guards.js';
+import { isRuleModule } from '../rules/utils/is-rule-module.js';
 
 export interface PluginMeta {
   path: string;
@@ -39,7 +40,9 @@ export class PluginManager {
         await plugin.init(env);
       }
       for (const rule of plugin.rules) {
-        if (!isRuleModule(rule)) {
+        if (
+          !isRuleModule(rule, { requireMeta: true, requireNonEmptyName: true })
+        ) {
           const ruleName = getRuleName(rule) ?? '<unknown>';
           throw new PluginError({
             message:
@@ -74,16 +77,4 @@ function getRuleName(rule: unknown): string | undefined {
   return isRecord(rule) && typeof rule.name === 'string'
     ? rule.name
     : undefined;
-}
-
-function isRuleModule(value: unknown): value is RuleModule {
-  return (
-    isRecord(value) &&
-    typeof value.name === 'string' &&
-    value.name.trim() !== '' &&
-    isRecord(value.meta) &&
-    typeof value.meta.description === 'string' &&
-    value.meta.description.trim() !== '' &&
-    typeof value.create === 'function'
-  );
 }

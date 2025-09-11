@@ -2,15 +2,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { globby } from 'globby';
 import type { RuleModule } from '../core/types.js';
-
-function isRuleModule(value: unknown): value is RuleModule {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const name: unknown = Reflect.get(value, 'name');
-  const create: unknown = Reflect.get(value, 'create');
-  return typeof name === 'string' && typeof create === 'function';
-}
+import { isRuleModule } from './utils/is-rule-module.js';
 
 const ruleDir = path.dirname(fileURLToPath(import.meta.url));
 const ruleFiles = await globby('*.{ts,js}', {
@@ -25,7 +17,7 @@ const modules = await Promise.all(
     if (typeof mod === 'object' && mod !== null) {
       values = Object.values(mod);
     }
-    return values.filter(isRuleModule);
+    return values.filter((value): value is RuleModule => isRuleModule(value));
   }),
 );
 
