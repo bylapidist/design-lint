@@ -6,7 +6,7 @@ import { realpathIfExists, relFromCwd } from './utils/paths.js';
 import type { PluginModule } from '../../core/types.js';
 import type { PluginLoader, LoadedPlugin } from '../../core/plugin-loader.js';
 import { PluginError } from '../../core/errors.js';
-import { isRecord } from '../../utils/is-record.js';
+import { isRecord } from '../../utils/type-guards/index.js';
 
 export class NodePluginLoader implements PluginLoader {
   async load(p: string, configPath?: string): Promise<LoadedPlugin> {

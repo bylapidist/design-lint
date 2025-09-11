@@ -1,6 +1,6 @@
 import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
-import { isRecord } from '../utils/is-record.js';
+import { isRecord } from '../utils/type-guards/index.js';
 import { getFlattenedTokens, extractVarName } from './token-utils.js';
 
 type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isDesignTokens } from '../../src/utils/is-design-tokens.js';
+import { isDesignTokens } from '../../src/utils/type-guards/index.js';
 
 void test('isDesignTokens accepts records', () => {
   assert.equal(isDesignTokens({ foo: { $value: 'bar' } }), true);

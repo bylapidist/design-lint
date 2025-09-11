@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isRuleModule } from '../../src/utils/is-rule-module.js';
+import { isRuleModule } from '../../src/utils/type-guards/index.js';
 
 const valid = { name: 'x', create: () => ({}) };
 const withMeta = {

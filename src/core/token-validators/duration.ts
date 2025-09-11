@@ -1,4 +1,4 @@
-import { isRecord } from '../../utils/is-record.js';
+import { isRecord } from '../../utils/type-guards/index.js';
 
 const DURATION_UNITS = new Set(['ms', 's']);
 

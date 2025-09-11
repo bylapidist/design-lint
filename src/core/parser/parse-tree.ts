@@ -4,7 +4,7 @@ import type {
   TokenGroup,
   FlattenedToken,
 } from '../types.js';
-import { isRecord } from '../../utils/is-record.js';
+import { isRecord } from '../../utils/type-guards/index.js';
 
 const tokenLocations = new Map<string, { line: number; column: number }>();
 

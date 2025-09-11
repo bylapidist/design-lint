@@ -3,7 +3,7 @@ import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
 import { tokenRule } from '../utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
-import { isRecord } from '../utils/is-record.js';
+import { isRecord } from '../utils/type-guards/index.js';
 
 interface BorderWidthOptions {
   units?: string[];

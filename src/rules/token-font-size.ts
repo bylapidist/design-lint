@@ -1,5 +1,5 @@
 import { tokenRule } from '../utils/token-rule.js';
-import { isRecord } from '../utils/is-record.js';
+import { isRecord } from '../utils/type-guards/index.js';
 
 const parseSize = (val: unknown): number | null => {
   if (

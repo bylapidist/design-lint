@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isRecord } from '../../src/utils/is-record.js';
+import { isRecord } from '../../src/utils/type-guards/index.js';
 
 void test('isRecord detects plain objects', () => {
   assert.equal(isRecord({ a: 1 }), true);

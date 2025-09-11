@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { globby } from 'globby';
 import type { RuleModule } from '../core/types.js';
-import { isRuleModule } from '../utils/is-rule-module.js';
+import { isRuleModule } from '../utils/type-guards/index.js';
 
 const ruleDir = path.dirname(fileURLToPath(import.meta.url));
 const ruleFiles = await globby('*.{ts,js}', {

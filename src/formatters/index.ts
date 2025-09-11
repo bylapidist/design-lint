@@ -4,7 +4,7 @@ import type { LintResult } from '../core/types.js';
 import { stylish } from './stylish.js';
 import { jsonFormatter } from './json.js';
 import { sarifFormatter } from './sarif.js';
-import { isRecord } from '../utils/is-record.js';
+import { isRecord } from '../utils/type-guards/index.js';
 
 type Formatter = (results: LintResult[], useColor?: boolean) => string;
 

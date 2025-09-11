@@ -5,7 +5,7 @@ import type {
   RuleModule,
 } from '../core/types.js';
 import { z } from 'zod';
-import { isObject } from './is-object.js';
+import { isObject } from './type-guards/index.js';
 import { toArray } from './to-array.js';
 
 /**

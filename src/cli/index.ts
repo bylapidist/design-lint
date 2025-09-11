@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
 import { TokenParseError } from '../adapters/node/token-parser.js';
-import { isRecord } from '../utils/is-record.js';
+import { isRecord } from '../utils/type-guards/index.js';
 import { prepareEnvironment, type PrepareEnvironmentOptions } from './env.js';
 import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';

@@ -1,4 +1,4 @@
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule } from '../../core/types.js';
 import { isRecord } from './is-record.js';
 
 /**

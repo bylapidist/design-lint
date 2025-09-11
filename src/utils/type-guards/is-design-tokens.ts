@@ -1,4 +1,4 @@
-import type { DesignTokens } from '../core/types.js';
+import type { DesignTokens } from '../../core/types.js';
 import { isRecord } from './is-record.js';
 
 /**
