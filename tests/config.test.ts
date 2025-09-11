@@ -4,9 +4,49 @@ import fs from 'node:fs';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import path from 'node:path';
 import { loadConfig } from '../src/config/loader.ts';
+import { resolveConfigFile } from '../src/config/file-resolution.ts';
+import { loadTokens } from '../src/config/token-loader.ts';
 import { Linter } from '../src/core/linter.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 
+void test('resolveConfigFile returns null when config missing', async () => {
+  const tmp = makeTmpDir();
+  const result = await resolveConfigFile(tmp);
+  assert.equal(result, null);
+});
+
+void test('resolveConfigFile finds config', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(configPath, JSON.stringify({ tokens: {} }));
+  const nested = path.join(tmp, 'nested');
+  fs.mkdirSync(nested, { recursive: true });
+  const result = await resolveConfigFile(nested);
+  assert.ok(result?.filepath.endsWith('designlint.config.json'));
+});
+
+void test('loadTokens reads token files', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'light.tokens.json'),
+    JSON.stringify({ color: { primary: { $type: 'color', $value: '#000' } } }),
+  );
+  const tokens = await loadTokens({ light: './light.tokens.json' }, tmp);
+  const light = tokens.light as { color: { primary: { $value: string } } };
+  assert.equal(light.color.primary.$value, '#000');
+});
+
+void test('loadTokens propagates errors', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'bad.tokens.json'),
+    JSON.stringify({ color: { primary: { $type: 'color' } } }),
+  );
+  await assert.rejects(
+    loadTokens({ light: './bad.tokens.json' }, tmp),
+    /missing \$value/i,
+  );
+});
 void test('returns default config when none found', async () => {
   const tmp = makeTmpDir();
   const config = await loadConfig(tmp);
