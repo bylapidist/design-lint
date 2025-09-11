@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 interface VariantPropOptions {
@@ -12,6 +13,12 @@ export const variantPropRule: RuleModule<VariantPropOptions> = {
     description:
       'ensure specified components use allowed values for their variant prop',
     category: 'component',
+    schema: z
+      .object({
+        components: z.record(z.string(), z.array(z.string())).optional(),
+        prop: z.string().optional(),
+      })
+      .optional(),
   },
   create(context) {
     const { components = {}, prop: propName = 'variant' } =

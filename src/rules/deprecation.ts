@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 import { isInNonStyleJsx } from '../utils/jsx.js';
 
@@ -7,6 +8,7 @@ export const deprecationRule: RuleModule = {
   meta: {
     description: 'flag deprecated tokens',
     category: 'design-token',
+    schema: z.void(),
   },
   create(context) {
     const deprecated = new Map<string, { reason?: string; suggest?: string }>();

@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 interface ImportPathOptions {
@@ -12,6 +13,12 @@ export const importPathRule: RuleModule<ImportPathOptions> = {
     description:
       'ensure design system components are imported from configured packages',
     category: 'component',
+    schema: z
+      .object({
+        packages: z.array(z.string()).optional(),
+        components: z.array(z.string()).optional(),
+      })
+      .optional(),
   },
   create(context) {
     const opts: ImportPathOptions = context.options ?? {};

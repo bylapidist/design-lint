@@ -1,4 +1,5 @@
 import valueParser from 'postcss-value-parser';
+import { z } from 'zod';
 import { tokenRule } from './utils/token-rule.js';
 import { isRecord } from '../utils/type-guards.js';
 
@@ -8,7 +9,11 @@ interface BlurRuleOptions {
 
 export const blurRule = tokenRule<BlurRuleOptions>({
   name: 'design-token/blur',
-  meta: { description: 'enforce blur tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce blur tokens',
+    category: 'design-token',
+    schema: z.object({ units: z.array(z.string()).optional() }).optional(),
+  },
   tokens: 'dimension',
   message:
     'design-token/blur requires blur tokens; configure tokens with $type "dimension" under a "blurs" group to enable this rule.',
