@@ -47,10 +47,10 @@ for (const c of cases) {
     const messages: LintMessage[] = [];
     const ctx: RuleContext = {
       sourceId: c.sourceId,
-      tokens: {},
       options: undefined,
       report: (m) =>
         messages.push({ ...m, severity: 'error', ruleId: rule.name }),
+      getFlattenedTokens: () => [],
     };
     const listener = rule.create(ctx);
     await parser(c.text, c.sourceId, [listener], messages);

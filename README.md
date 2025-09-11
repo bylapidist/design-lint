@@ -12,7 +12,7 @@
 [![build](https://img.shields.io/github/actions/workflow/status/bylapidist/design-lint/ci.yml?label=CI&logo=github)](https://github.com/bylapidist/design-lint/actions)
 [![license](https://img.shields.io/npm/l/%40lapidist/design-lint.svg)](LICENSE)
 
-**@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, flags unsupported components and offers rich formatting options for continuous integration pipelines.
+**@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, flags unsupported components and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [W3C Design Tokens format](https://design-tokens.github.io/community-group/technical-reports/format/), serving as a reference implementation of the specification.
 
 ## Quick start
 
@@ -44,7 +44,7 @@ Run with `--fix` to automatically replace deprecated tokens or components and ti
 Lint JavaScript, TypeScript, CSS, SCSS, Sass and Less, including inline styles and tagged template literals.
 
 ### Extensible
-Extend behaviour with custom rules, formatters and plugins for your design system.
+Extend behaviour with custom rules, formatters, and token transforms for your design system.
 
 | Advantage | @lapidist/design-lint | Generic linters |
 | --- | --- | --- |

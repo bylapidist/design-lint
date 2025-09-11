@@ -14,7 +14,10 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
-    "outlines": { "focus": "2px solid #000" }
+    "outlines": {
+      "focus": { "$type": "string", "$value": "2px solid #000" },
+      "active": { "$type": "string", "$value": "{outlines.focus}" }
+    }
   },
   "rules": { "design-token/outline": "error" }
 }

@@ -1,10 +1,5 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
 export const letterSpacingRule: RuleModule = {
@@ -14,43 +9,19 @@ export const letterSpacingRule: RuleModule = {
     category: 'design-token',
   },
   create(context) {
-    const letterSpacings = context.tokens.letterSpacings;
-    if (
-      !letterSpacings ||
-      (Array.isArray(letterSpacings)
-        ? letterSpacings.length === 0
-        : Object.keys(letterSpacings).length === 0)
-    ) {
-      context.report({
-        message:
-          'design-token/letter-spacing requires letterSpacings tokens; configure tokens.letterSpacings to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
-    if (Array.isArray(letterSpacings)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'letter-spacing') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, letterSpacings)) {
-              const suggest = name ? closestToken(name, letterSpacings) : null;
-              context.report({
-                message: `Unexpected letter spacing ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
+    const letterSpacings = context.getFlattenedTokens('dimension');
     const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
+      if (
+        isRecord(val) &&
+        typeof val.value === 'number' &&
+        typeof val.unit === 'string'
+      ) {
+        const factor = val.unit === 'px' ? 1 : 16;
+        return val.value * factor;
+      }
       if (typeof val === 'string') {
         const v = val.trim();
+        if (v === '0') return 0;
         const unitMatch = /^(-?\d*\.?\d+)(px|rem|em)$/.exec(v);
         if (unitMatch) {
           const [, num, unit] = unitMatch;
@@ -63,11 +34,27 @@ export const letterSpacingRule: RuleModule = {
     };
     const numeric = new Set<number>();
     const values = new Set<string>();
-    for (const val of Object.values(letterSpacings)) {
-      const str = String(val).trim();
-      values.add(str);
+    for (const { path, token } of letterSpacings) {
+      if (!path.startsWith('letterSpacings.')) continue;
+      const val = token.$value;
       const num = parse(val);
       if (num !== null) numeric.add(num);
+      if (
+        isRecord(val) &&
+        typeof val.value === 'number' &&
+        typeof val.unit === 'string'
+      ) {
+        values.add(`${String(val.value)}${val.unit}`);
+      }
+    }
+    if (numeric.size === 0 && values.size === 0) {
+      context.report({
+        message:
+          'design-token/letter-spacing requires letter-spacing tokens; configure tokens with $type "dimension" under a "letterSpacings" group to enable this rule.',
+        line: 1,
+        column: 1,
+      });
+      return {};
     }
     return {
       onNode(node) {
@@ -110,3 +97,7 @@ export const letterSpacingRule: RuleModule = {
     };
   },
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

@@ -6,7 +6,8 @@ import { stylish } from '../../src/formatters/stylish.ts';
 import { jsonFormatter } from '../../src/formatters/json.ts';
 import { sarifFormatter } from '../../src/formatters/sarif.ts';
 import { getFormatter } from '../../src/index.ts';
-import type { LintResult } from '../../src/core/types.ts';
+import { TokenTracker } from '../../src/core/token-tracker.ts';
+import type { LintResult, DesignTokens } from '../../src/core/types.ts';
 
 interface SarifLog {
   runs: {
@@ -163,6 +164,37 @@ void test('json formatter serializes metadata and categories', () => {
   const parsed = JSON.parse(out) as LintResult[];
   assert.equal(parsed[0]?.messages[0]?.metadata?.foo, 'bar');
   assert.equal(parsed[0]?.ruleCategories?.rule, 'design-token');
+});
+
+void test('json formatter serializes token metadata', async () => {
+  const tokens: DesignTokens = {
+    color: {
+      unused: {
+        $value: '#123456',
+        $type: 'color',
+        $deprecated: 'deprecated',
+        $extensions: { 'vendor.foo': true },
+      },
+    },
+  };
+  const tracker = new TokenTracker({
+    load: () => Promise.resolve({ default: tokens }),
+  });
+  await tracker.configure([
+    {
+      rule: { name: 'design-system/no-unused-tokens' },
+      severity: 'warn',
+      options: {},
+    },
+  ]);
+  const results = tracker.generateReports('config');
+  const out = jsonFormatter(results);
+  const parsed = JSON.parse(out) as LintResult[];
+  const meta = parsed[0].messages[0].metadata;
+  assert(meta);
+  assert.equal(meta.path, 'color.unused');
+  assert.equal(meta.deprecated, 'deprecated');
+  assert.deepEqual(meta.extensions, { 'vendor.foo': true });
 });
 
 void test('sarif formatter outputs rules and links results', () => {

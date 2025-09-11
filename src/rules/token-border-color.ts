@@ -2,11 +2,6 @@ import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 
 type ColorFormat =
   | 'hex'
@@ -44,43 +39,25 @@ export const borderColorRule: RuleModule = {
     category: 'design-token',
   },
   create(context) {
-    const borderColorTokens = context.tokens.borderColors;
-    if (
-      !borderColorTokens ||
-      (Array.isArray(borderColorTokens)
-        ? borderColorTokens.length === 0
-        : Object.keys(borderColorTokens).length === 0)
-    ) {
+    const borderColorTokens = context.getFlattenedTokens('color');
+    if (borderColorTokens.length === 0) {
       context.report({
         message:
-          'design-token/border-color requires border color tokens; configure tokens.borderColors to enable this rule.',
+          'design-token/border-color requires color tokens; configure tokens with $type "color" to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(borderColorTokens)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (/^border(-(top|right|bottom|left))?-color$/.test(decl.prop)) {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, borderColorTokens)) {
-              const suggest = name
-                ? closestToken(name, borderColorTokens)
-                : null;
-              context.report({
-                message: `Unexpected border color ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
     const allowed = new Set(
-      Object.values(borderColorTokens).map((v) => v.toLowerCase()),
+      borderColorTokens
+        .map(({ token }) => {
+          const v = token.$value;
+          return typeof v === 'string' && !v.startsWith('{')
+            ? v.toLowerCase()
+            : null;
+        })
+        .filter((v): v is string => v !== null),
     );
     return {
       onCSSDeclaration(decl) {

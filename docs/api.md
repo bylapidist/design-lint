@@ -52,13 +52,26 @@ const { results } = await linter.lintTargets(['src/**/*.ts']);
 Key methods:
 - `lintTargets(targets, fix?)` – lint files or globs.
 - `lintText(text, id, metadata?)` – lint a string.
-- `getTokenCompletions()` – list available tokens.
+- `getTokenCompletions()` – list available token paths grouped by theme.
 
 ## Helper functions
 - `loadConfig(cwd, path?)` – resolve configuration.
 - `defineConfig(config)` – provide type checking for config files.
 - `getFormatter(name)` – load a formatter by name or path.
 - `applyFixes(text, messages)` – apply non-overlapping fixes.
+- `registerTokenTransform(transform)` – convert design tokens before validation;
+  returns an unregister function.
+- `parseDesignTokens(tokens, getLoc?, options?)` – validate and flatten design tokens.
+- `readDesignTokensFile(path)` – load and validate a `.tokens` or `.tokens.json` file.
+- `parseDesignTokensFile(path)` – read and parse a design tokens file, returning flattened tokens.
+- `TokenParseError` – error type exposing file location details for token parsing failures.
+
+### Token transforms
+Design token objects may originate from sources like Figma or Tokens Studio.
+Use `registerTokenTransform()` to supply converters that adapt these formats
+to the [W3C Design Tokens specification](./glossary.md#design-tokens).
+Transforms run before token normalization and validation.
+`parseDesignTokens()` also accepts a `transforms` array for per-call transforms.
 
 ## Types
 design-lint ships with TypeScript definitions for `Config`, `LintResult`, `RuleModule`, and more:

@@ -14,8 +14,10 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
-    "fontSizes": { "base": 16, "lg": 24 },
-    "fonts": { "sans": "Inter, sans-serif" }
+    "fonts": {
+      "sans": { "$type": "fontFamily", "$value": "Inter, sans-serif" },
+      "alt": { "$type": "fontFamily", "$value": "{fonts.sans}" }
+    }
   },
   "rules": { "design-token/font-family": "error" }
 }

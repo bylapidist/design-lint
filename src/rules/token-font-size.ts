@@ -1,49 +1,19 @@
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 
 export const fontSizeRule: RuleModule = {
   name: 'design-token/font-size',
   meta: { description: 'enforce font-size tokens', category: 'design-token' },
   create(context) {
-    const fontSizes = context.tokens.fontSizes;
-    if (
-      !fontSizes ||
-      (Array.isArray(fontSizes)
-        ? fontSizes.length === 0
-        : Object.keys(fontSizes).length === 0)
-    ) {
-      context.report({
-        message:
-          'design-token/font-size requires fontSizes tokens; configure tokens.fontSizes to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
-    if (Array.isArray(fontSizes)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'font-size') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, fontSizes)) {
-              const suggest = name ? closestToken(name, fontSizes) : null;
-              context.report({
-                message: `Unexpected font size ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
+    const fontSizes = context.getFlattenedTokens('dimension');
     const parseSize = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
+      if (
+        isRecord(val) &&
+        typeof val.value === 'number' &&
+        typeof val.unit === 'string'
+      ) {
+        const factor = val.unit === 'px' ? 1 : 16;
+        return val.value * factor;
+      }
       if (typeof val === 'string') {
         const match = /^(\d*\.?\d+)(px|rem|em)$/.exec(val.trim());
         if (match) {
@@ -55,11 +25,21 @@ export const fontSizeRule: RuleModule = {
       }
       return null;
     };
-    const sizes = new Set(
-      Object.values(fontSizes)
-        .map((s) => parseSize(s))
-        .filter((s): s is number => s !== null),
-    );
+    const sizes = new Set<number>();
+    for (const { path, token } of fontSizes) {
+      if (!path.startsWith('fontSizes.')) continue;
+      const num = parseSize(token.$value);
+      if (num !== null) sizes.add(num);
+    }
+    if (sizes.size === 0) {
+      context.report({
+        message:
+          'design-token/font-size requires font size tokens; configure tokens with $type "dimension" under a "fontSizes" group to enable this rule.',
+        line: 1,
+        column: 1,
+      });
+      return {};
+    }
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'font-size') {
@@ -76,3 +56,7 @@ export const fontSizeRule: RuleModule = {
     };
   },
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

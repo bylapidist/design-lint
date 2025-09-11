@@ -16,16 +16,24 @@ export type {
   RuleContext,
   RuleListener,
   DesignTokens,
+  Token,
+  TokenGroup,
   PluginModule,
   CSSDeclaration,
   Fix,
+  FlattenedToken,
 } from './types.js';
 export {
   matchToken,
   closestToken,
   extractVarName,
-  mergeTokens,
-  normalizeTokens,
+  flattenDesignTokens,
+  getFlattenedTokens,
   type TokenPattern,
-  type NormalizedTokens,
 } from './token-utils.js';
+export {
+  parseDesignTokens,
+  getTokenLocation,
+  registerTokenTransform,
+  type TokenTransform,
+} from './parser/index.js';

@@ -1,11 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
 interface BorderWidthOptions {
@@ -19,54 +14,26 @@ export const borderWidthRule: RuleModule<BorderWidthOptions> = {
     category: 'design-token',
   },
   create(context) {
-    const widthTokens = context.tokens.borderWidths;
-    if (
-      !widthTokens ||
-      (Array.isArray(widthTokens)
-        ? widthTokens.length === 0
-        : Object.keys(widthTokens).length === 0)
-    ) {
+    const widthTokens = context.getFlattenedTokens('dimension');
+    const parse = (val: unknown): number | null => {
+      if (isRecord(val) && typeof val.value === 'number') return val.value;
+      return null;
+    };
+    const allowed = new Set<number>();
+    for (const { path, token } of widthTokens) {
+      if (!path.startsWith('borderWidths.')) continue;
+      const num = parse(token.$value);
+      if (num !== null) allowed.add(num);
+    }
+    if (allowed.size === 0) {
       context.report({
         message:
-          'design-token/border-width requires border width tokens; configure tokens.borderWidths to enable this rule.',
+          'design-token/border-width requires border width tokens; configure tokens with $type "dimension" under a "borderWidths" group to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(widthTokens)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'border-width') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, widthTokens)) {
-              const suggest = name ? closestToken(name, widthTokens) : null;
-              context.report({
-                message: `Unexpected border width ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
-    const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        const parsed = valueParser.unit(val);
-        if (parsed) return parseFloat(parsed.number);
-        const num = Number(val);
-        if (!isNaN(num)) return num;
-      }
-      return null;
-    };
-    const allowed = new Set(
-      Object.values(widthTokens)
-        .map((v) => parse(v))
-        .filter((n): n is number => n !== null),
-    );
     const allowedUnits = new Set(
       (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
         u.toLowerCase(),
@@ -160,3 +127,7 @@ export const borderWidthRule: RuleModule<BorderWidthOptions> = {
 };
 
 export default borderWidthRule;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

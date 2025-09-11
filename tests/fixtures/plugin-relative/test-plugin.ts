@@ -7,6 +7,7 @@ const plugin: PluginModule = {
       name: 'plugin/test',
       meta: { description: 'test rule' },
       create(context) {
+        context.getFlattenedTokens('color');
         return {
           onNode(node) {
             if (node.kind === ts.SyntaxKind.SourceFile) {

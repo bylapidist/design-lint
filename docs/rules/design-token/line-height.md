@@ -14,13 +14,16 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
-    "lineHeights": { "base": 1.5, "tight": "20px" }
+    "lineHeights": {
+      "base": { "$type": "number", "$value": 1.5 },
+      "tight": { "$type": "number", "$value": "{lineHeights.base}" }
+    }
   },
   "rules": { "design-token/line-height": "error" }
 }
 ```
 
-Line-height tokens may be numbers (unitless) or strings with `px`, `rem`, `em`, or `%` units. String values are normalized for comparison.
+Line-height tokens use the `number` type.
 
 ## Options
 No additional options.

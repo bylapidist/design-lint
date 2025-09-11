@@ -1,12 +1,7 @@
-import postcss, { type Parser, type Root } from 'postcss';
-import { parse as scssParseRaw } from 'postcss-scss';
-import postcssLess from 'postcss-less';
+import postcss from 'postcss';
+import { parse as scssParser } from 'postcss-scss';
+import lessSyntax from 'postcss-less';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
-
-const scssParse: Parser<Root> = scssParseRaw as unknown as Parser<Root>;
-const lessParse: Parser<Root> = (
-  postcssLess as unknown as { parse: Parser<Root> }
-).parse;
 
 export function parseCSS(
   text: string,
@@ -15,11 +10,11 @@ export function parseCSS(
 ): CSSDeclaration[] {
   const decls: CSSDeclaration[] = [];
   try {
-    const root: Root =
+    const root =
       lang === 'scss' || lang === 'sass'
-        ? scssParse(text)
+        ? scssParser(text)
         : lang === 'less'
-          ? lessParse(text)
+          ? lessSyntax.parse(text)
           : postcss.parse(text);
     root.walkDecls((d) => {
       decls.push({

@@ -5,9 +5,12 @@ import { FileSource } from '../../src/adapters/node/file-source.ts';
 
 const config = {
   tokens: {
-    colors: { primary: '#000000' },
-    spacing: { sm: 4 },
-    opacity: { full: 1 },
+    color: { $type: 'color', primary: { $value: '#000000' } },
+    spacing: {
+      $type: 'dimension',
+      sm: { $value: { value: 4, unit: 'px' } },
+    },
+    opacity: { $type: 'number', full: { $value: 1 } },
   },
   rules: {
     'design-token/colors': 'error',
@@ -67,7 +70,7 @@ void test('reports raw tokens in string style attributes', async () => {
 void test('reports raw tokens once for single style property', async () => {
   const linter = new Linter(
     {
-      tokens: { colors: { primary: '#000000' } },
+      tokens: { color: { $type: 'color', primary: { $value: '#000000' } } },
       rules: { 'design-token/colors': 'error' },
     },
     new FileSource(),

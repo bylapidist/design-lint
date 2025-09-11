@@ -33,7 +33,7 @@ The `Environment` abstraction hides platform concerns. The default Node environm
 Supplies raw text to the linter. The Node adapter [`FileSource`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/file-source.ts) reads from disk.
 
 ### Parser adapters
-Convert documents into ASTs. CSS uses PostCSS, JavaScript and TypeScript rely on the TypeScript compiler, and Vue/Svelte files compile before analysis. See [`src/core/parsers`](https://github.com/bylapidist/design-lint/tree/main/src/core/parsers).
+Convert documents into ASTs. CSS uses PostCSS, JavaScript and TypeScript rely on the TypeScript compiler, and Vue/Svelte files compile before analysis. See [`src/core/framework-parsers`](https://github.com/bylapidist/design-lint/tree/main/src/core/framework-parsers).
 
 ### Rule engine
 Registers rules and coordinates execution. See [`src/core/linter.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/linter.ts) and [`src/core/rule-registry.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/rule-registry.ts).
@@ -44,11 +44,18 @@ Transforms collected results into human- or machine-readable output. Implementat
 ### Plugin loader
 Resolves configuration packages, rules, and formatters. The Node implementation is [`src/adapters/node/plugin-loader.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/plugin-loader.ts).
 
+### Plugin manager
+Coordinates plugin loading and registers rules. It validates rule shape, prevents name collisions, and exposes the final set of
+plugins to the linter. See [`src/core/plugin-manager.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/plugin-manager.ts).
+
 ### Cache provider
 Stores metadata and parsed documents across runs. [`src/adapters/node/node-cache-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk.
 
 ### Token provider
 Supplies design tokens to rules. [`src/adapters/node/token-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/token-provider.ts) normalises tokens from configuration.
+
+### Token tracker
+Keeps track of token usage across linted files and reports unused values for the [`design-system/no-unused-tokens`](./rules/design-system/no-unused-tokens.md) rule. Implementation: [`src/core/token-tracker.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/token-tracker.ts).
 
 ## Performance and caching
 design-lint processes files concurrently across CPU cores. Parsed documents and rule results are cached between runs in `.designlintcache` to reduce work.

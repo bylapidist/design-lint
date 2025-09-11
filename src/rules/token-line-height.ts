@@ -1,75 +1,42 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
 export const lineHeightRule: RuleModule = {
   name: 'design-token/line-height',
   meta: { description: 'enforce line-height tokens', category: 'design-token' },
   create(context) {
-    const lineHeights = context.tokens.lineHeights;
-    if (
-      !lineHeights ||
-      (Array.isArray(lineHeights)
-        ? lineHeights.length === 0
-        : Object.keys(lineHeights).length === 0)
-    ) {
+    const lineHeights = context.getFlattenedTokens('number');
+    const parse = (val: string): number | null => {
+      const v = val.trim();
+      const unitMatch = /^(\d*\.?\d+)(px|rem|em)%?$/.exec(v);
+      if (unitMatch) {
+        const [, num, unit] = unitMatch;
+        const n = parseFloat(num);
+        const factor =
+          unit === 'px' ? 1 : unit === 'rem' || unit === 'em' ? 16 : 1;
+        return n * factor;
+      }
+      const pctMatch = /^(\d*\.?\d+)%$/.exec(v);
+      if (pctMatch) return parseFloat(pctMatch[1]) / 100;
+      const num = Number(v);
+      return isNaN(num) ? null : num;
+    };
+    const allowed = new Set<number>();
+    for (const { path, token } of lineHeights) {
+      if (!path.startsWith('lineHeights.')) continue;
+      const val = token.$value;
+      if (typeof val === 'number') allowed.add(val);
+    }
+    if (allowed.size === 0) {
       context.report({
         message:
-          'design-token/line-height requires lineHeights tokens; configure tokens.lineHeights to enable this rule.',
+          'design-token/line-height requires line height tokens; configure tokens with $type "number" under a "lineHeights" group to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(lineHeights)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'line-height') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, lineHeights)) {
-              const suggest = name ? closestToken(name, lineHeights) : null;
-              context.report({
-                message: `Unexpected line height ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
-    const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        const v = val.trim();
-        if (v === '') return null;
-        const unitMatch = /^(\d*\.?\d+)(px|rem|em)$/.exec(v);
-        if (unitMatch) {
-          const [, num, unit] = unitMatch;
-          const n = parseFloat(num);
-          const factor = unit === 'px' ? 1 : 16;
-          return n * factor;
-        }
-        const pctMatch = /^(\d*\.?\d+)%$/.exec(v);
-        if (pctMatch) {
-          return parseFloat(pctMatch[1]) / 100;
-        }
-        const num = Number(v);
-        if (!isNaN(num)) return num;
-      }
-      return null;
-    };
-    const allowed = new Set(
-      Object.values(lineHeights)
-        .map((v) => parse(v))
-        .filter((n): n is number => n !== null),
-    );
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;

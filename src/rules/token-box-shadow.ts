@@ -1,53 +1,58 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 
 export const boxShadowRule: RuleModule = {
   name: 'design-token/box-shadow',
   meta: { description: 'enforce box-shadow tokens', category: 'design-token' },
   create(context) {
-    const shadowTokens = context.tokens.shadows;
-    if (
-      !shadowTokens ||
-      (Array.isArray(shadowTokens)
-        ? shadowTokens.length === 0
-        : Object.keys(shadowTokens).length === 0)
-    ) {
+    const shadowTokens = context.getFlattenedTokens('shadow');
+    const normalize = (val: string): string =>
+      valueParser.stringify(valueParser(val).nodes).trim();
+    const allowed = new Set<string>();
+    const parseDim = (v: unknown): string | null => {
+      if (typeof v === 'string') return v;
+      if (
+        isRecord(v) &&
+        typeof v.value === 'number' &&
+        typeof v.unit === 'string'
+      ) {
+        return `${String(v.value)}${v.unit}`;
+      }
+      return null;
+    };
+    const toString = (val: unknown): string | null => {
+      const items = Array.isArray(val) ? val : [val];
+      const parts: string[] = [];
+      for (const item of items) {
+        if (!isRecord(item)) return null;
+        const { offsetX, offsetY, blur, spread, color, inset } = item;
+        if (typeof color !== 'string') return null;
+        const ox = parseDim(offsetX);
+        const oy = parseDim(offsetY);
+        const bl = parseDim(blur);
+        const sp = spread === undefined ? null : parseDim(spread);
+        if (!ox || !oy || !bl) return null;
+        const seg = [inset === true ? 'inset' : null, ox, oy, bl, sp, color]
+          .filter((p): p is string => !!p)
+          .join(' ');
+        parts.push(seg);
+      }
+      return parts.join(', ');
+    };
+    for (const { path, token } of shadowTokens) {
+      if (!path.startsWith('shadows.')) continue;
+      const val = toString(token.$value);
+      if (val) allowed.add(normalize(val));
+    }
+    if (allowed.size === 0) {
       context.report({
         message:
-          'design-token/box-shadow requires shadow tokens; configure tokens.shadows to enable this rule.',
+          'design-token/box-shadow requires shadow tokens; configure tokens with $type "shadow" under a "shadows" group to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(shadowTokens)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'box-shadow') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, shadowTokens)) {
-              const suggest = name ? closestToken(name, shadowTokens) : null;
-              context.report({
-                message: `Unexpected box shadow ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
-    const normalize = (val: string): string =>
-      valueParser.stringify(valueParser(val).nodes).trim();
-    const allowed = new Set(
-      Object.values(shadowTokens).map((v) => normalize(v)),
-    );
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'box-shadow') {
@@ -84,3 +89,7 @@ export const boxShadowRule: RuleModule = {
     };
   },
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}

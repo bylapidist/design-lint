@@ -1,5 +1,6 @@
-import type { DesignTokens, LintResult } from './types.js';
+import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
+import { getFlattenedTokens, extractVarName } from './token-utils.js';
 
 type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';
 
@@ -31,7 +32,7 @@ interface UnusedRuleConfig {
 }
 
 export class TokenTracker {
-  private allTokenValues = new Set<string>();
+  private allTokenValues = new Map<string, FlattenedToken>();
   private usedTokenValues = new Set<string>();
   private unusedTokenRules: UnusedRuleConfig[] = [];
   private provider?: TokenProvider;
@@ -43,7 +44,7 @@ export class TokenTracker {
 
   private async loadTokens(): Promise<void> {
     if (this.loaded) return;
-    const tokens = (await this.provider?.load())?.merged;
+    const tokens = await this.provider?.load();
     this.allTokenValues = collectTokenValues(tokens);
     this.loaded = true;
   }
@@ -70,7 +71,7 @@ export class TokenTracker {
 
   async trackUsage(text: string): Promise<void> {
     await this.loadTokens();
-    for (const token of this.allTokenValues) {
+    for (const token of this.allTokenValues.keys()) {
       if (this.usedTokenValues.has(token)) continue;
       const tokenType = getTokenType(token);
       if (classifiers[tokenType](token, text)) {
@@ -82,18 +83,23 @@ export class TokenTracker {
   generateReports(configPath: string): LintResult[] {
     const results: LintResult[] = [];
     for (const { ruleId, severity, ignored } of this.unusedTokenRules) {
-      const unused = Array.from(this.allTokenValues).filter(
-        (t) => !this.usedTokenValues.has(t) && !ignored.has(t),
+      const unused = Array.from(this.allTokenValues.entries()).filter(
+        ([value]) => !this.usedTokenValues.has(value) && !ignored.has(value),
       );
       if (unused.length) {
         results.push({
           sourceId: configPath,
-          messages: unused.map((t) => ({
+          messages: unused.map(([value, info]) => ({
             ruleId,
-            message: `Token ${t} is defined but never used`,
+            message: `Token ${value} is defined but never used`,
             severity,
             line: 1,
             column: 1,
+            metadata: {
+              path: info.path,
+              deprecated: info.token.$deprecated,
+              extensions: info.token.$extensions,
+            },
           })),
         });
       }
@@ -102,29 +108,35 @@ export class TokenTracker {
   }
 }
 
-function collectTokenValues(tokens?: DesignTokens): Set<string> {
-  const values = new Set<string>();
-  if (!tokens) return values;
-  for (const [group, defs] of Object.entries(tokens)) {
-    if (group === 'deprecations') continue;
-    if (group === 'variables' && isRecord(defs)) {
-      for (const v of Object.values(defs)) {
-        if (isRecord(v) && typeof v.id === 'string') values.add(v.id);
+function collectTokenValues(
+  tokensByTheme?: Record<string, DesignTokens>,
+): Map<string, FlattenedToken> {
+  const values = new Map<string, FlattenedToken>();
+  if (!tokensByTheme) return values;
+  for (const theme of Object.keys(tokensByTheme)) {
+    if (theme.startsWith('$')) continue;
+    for (const flat of getFlattenedTokens(tokensByTheme, theme)) {
+      const val = flat.token.$value;
+      if (typeof val === 'string') {
+        if (val.includes('*')) continue;
+        const name = extractVarName(val);
+        const key = name ?? val;
+        if (!values.has(key)) values.set(key, flat);
+        continue;
       }
-      continue;
-    }
-    if (Array.isArray(defs)) {
-      for (const t of defs) {
-        if (typeof t === 'string' && !t.includes('*')) values.add(t);
+      if (typeof val === 'number') {
+        const key = String(val);
+        if (!values.has(key)) values.set(key, flat);
+        continue;
       }
-    } else if (isRecord(defs)) {
-      for (const val of Object.values(defs)) {
-        if (typeof val === 'string') {
-          const m = /^var\((--[^)]+)\)$/.exec(val);
-          values.add(m ? m[1] : val);
-        } else if (typeof val === 'number') {
-          values.add(String(val));
-        }
+      if (isDimension(val)) {
+        const key = `${String(val.value)}${val.unit}`;
+        if (!values.has(key)) values.set(key, flat);
+        continue;
+      }
+      if (isDuration(val)) {
+        const key = `${String(val.value)}${val.unit}`;
+        if (!values.has(key)) values.set(key, flat);
       }
     }
   }
@@ -151,4 +163,20 @@ function isUnusedTokenRule(e: {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function isDimension(value: unknown): value is { value: number; unit: string } {
+  return (
+    isRecord(value) &&
+    typeof Reflect.get(value, 'value') === 'number' &&
+    typeof Reflect.get(value, 'unit') === 'string'
+  );
+}
+
+function isDuration(value: unknown): value is { value: number; unit: string } {
+  return (
+    isRecord(value) &&
+    typeof Reflect.get(value, 'value') === 'number' &&
+    typeof Reflect.get(value, 'unit') === 'string'
+  );
 }

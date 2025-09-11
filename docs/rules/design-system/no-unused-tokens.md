@@ -20,7 +20,12 @@ Given this configuration:
 
 ```json
 {
-  "tokens": { "colors": { "primary": "#000000", "unused": "#ff0000" } },
+  "tokens": {
+    "color": {
+      "primary": { "$type": "color", "$value": "#000000" },
+      "unused": { "$type": "color", "$value": "{color.primary}" }
+    }
+  },
   "rules": { "design-system/no-unused-tokens": "warn" }
 }
 ```
@@ -40,7 +45,7 @@ A CSS variable can also be ignored:
   "rules": {
     "design-system/no-unused-tokens": [
       "warn",
-      { "ignore": ["--legacy-color"] }
+      { "ignore": ["--custom-color"] }
     ]
   }
 }

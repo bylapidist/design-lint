@@ -22,9 +22,6 @@ export function createNodeEnvironment(
     cacheProvider: cacheLocation
       ? new NodeCacheProvider(cacheLocation)
       : undefined,
-    tokenProvider: new NodeTokenProvider(
-      config.tokens,
-      config.wrapTokensWithVar,
-    ),
+    tokenProvider: new NodeTokenProvider(config.tokens),
   };
 }

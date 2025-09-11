@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { z } from 'zod';
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
@@ -16,42 +17,46 @@ const ruleSettingSchema = z.union([
   z.tuple([severitySchema, z.unknown()]),
 ]);
 
-const numberOrString = z.union([z.number(), z.string()]);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
-const tokenPatternArray = z.array(z.union([z.string(), z.instanceof(RegExp)]));
+function isToken(value: unknown): boolean {
+  return isRecord(value) && '$value' in value;
+}
 
-const tokenGroup = <T extends z.ZodType>(
-  schema: T,
-): z.ZodType<Record<string, z.infer<T>> | (string | RegExp)[]> =>
-  z.union([z.record(z.string(), schema), tokenPatternArray]);
+function isTokenGroup(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  for (const [key, val] of Object.entries(value)) {
+    if (key.startsWith('$')) continue;
+    if (!isToken(val) && !isTokenGroup(val)) return false;
+  }
+  return true;
+}
 
-const baseTokensSchema: z.ZodType<DesignTokens> = z
-  .object({
-    colors: tokenGroup(z.string()).optional(),
-    spacing: tokenGroup(z.number()).optional(),
-    zIndex: tokenGroup(z.number()).optional(),
-    borderRadius: tokenGroup(numberOrString).optional(),
-    borderWidths: tokenGroup(numberOrString).optional(),
-    shadows: tokenGroup(z.string()).optional(),
-    durations: tokenGroup(numberOrString).optional(),
-    animations: tokenGroup(z.string()).optional(),
-    blurs: tokenGroup(numberOrString).optional(),
-    borderColors: tokenGroup(z.string()).optional(),
-    opacity: tokenGroup(numberOrString).optional(),
-    outlines: tokenGroup(z.string()).optional(),
-    fontSizes: tokenGroup(numberOrString).optional(),
-    fonts: tokenGroup(z.string()).optional(),
-    lineHeights: tokenGroup(numberOrString).optional(),
-    fontWeights: tokenGroup(numberOrString).optional(),
-    letterSpacings: tokenGroup(numberOrString).optional(),
-    deprecations: z
-      .record(z.string(), z.object({ replacement: z.string().optional() }))
-      .optional(),
-  })
-  .catchall(z.unknown());
+const designTokensSchema = z.custom<DesignTokens>(isTokenGroup, {
+  message: 'Tokens must be W3C Design Tokens objects',
+});
 
-const tokensSchema: z.ZodType<DesignTokens | Record<string, DesignTokens>> =
-  z.union([baseTokensSchema, z.record(z.string(), baseTokensSchema)]);
+const tokenFileSchema = z
+  .string()
+  .refine(
+    (p) =>
+      !path.isAbsolute(p) &&
+      (p.endsWith('.tokens') ||
+        p.endsWith('.tokens.json') ||
+        p.endsWith('.tokens.yaml') ||
+        p.endsWith('.tokens.yml')),
+    {
+      message:
+        'Token file paths must be relative and end with .tokens, .tokens.json, .tokens.yaml, or .tokens.yml',
+    },
+  );
+
+const tokensSchema = z.union([
+  designTokensSchema,
+  z.record(z.string(), z.union([designTokensSchema, tokenFileSchema])),
+]);
 
 export const configSchema: z.ZodType<Config> = z
   .object({

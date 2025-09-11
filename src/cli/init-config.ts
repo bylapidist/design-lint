@@ -4,6 +4,10 @@ import writeFileAtomic from 'write-file-atomic';
 
 const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 export function detectInitFormat(initFormat?: string): string {
   if (initFormat && !supported.has(initFormat)) {
     throw new Error(
@@ -20,12 +24,20 @@ export function detectInitFormat(initFormat?: string): string {
       if (fs.existsSync(pkgPath)) {
         try {
           const pkgText = fs.readFileSync(pkgPath, 'utf8');
-          const pkg = JSON.parse(pkgText) as unknown as {
-            dependencies?: Record<string, unknown>;
-            devDependencies?: Record<string, unknown>;
-          };
-          if (pkg.dependencies?.typescript || pkg.devDependencies?.typescript) {
-            format = 'ts';
+          const pkgData: unknown = JSON.parse(pkgText);
+          if (isRecord(pkgData)) {
+            const deps = isRecord(pkgData.dependencies)
+              ? pkgData.dependencies
+              : undefined;
+            const devDeps = isRecord(pkgData.devDependencies)
+              ? pkgData.devDependencies
+              : undefined;
+            if (
+              (deps && 'typescript' in deps) ||
+              (devDeps && 'typescript' in devDeps)
+            ) {
+              format = 'ts';
+            }
           }
         } catch {}
       }

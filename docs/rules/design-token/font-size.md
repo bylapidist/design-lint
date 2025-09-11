@@ -14,14 +14,16 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
-    "fontSizes": { "base": "1rem", "lg": 20 },
-    "fonts": { "sans": "Inter, sans-serif" }
+    "fontSizes": {
+      "base": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } },
+      "lg": { "$type": "dimension", "$value": "{fontSizes.base}" }
+    }
   },
   "rules": { "design-token/font-size": "error" }
 }
 ```
 
-Font-size tokens may be defined as numbers (interpreted as `px`) or strings with `px`, `rem`, or `em` units. These units are converted to pixel values for comparison.
+Font-size tokens use the `dimension` type with explicit units.
 
 ## Options
 No additional options.

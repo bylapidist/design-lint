@@ -158,7 +158,10 @@ void test('supports custom plugin loaders', async () => {
       const rule: RuleModule = {
         name: 'mock/rule',
         meta: { description: 'mock rule' },
-        create: () => ({}),
+        create: (ctx) => {
+          ctx.getFlattenedTokens('color');
+          return {};
+        },
       };
       return Promise.resolve({ path: 'mock', plugin: { rules: [rule] } });
     }

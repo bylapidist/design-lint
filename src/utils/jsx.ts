@@ -1,15 +1,17 @@
 import ts from 'typescript';
 
 export function isInNonStyleJsx(node: ts.Node): boolean {
-  let curr: ts.Node | undefined = node.parent;
-  while (curr) {
+  for (
+    let curr: ts.Node = node.parent;
+    !ts.isSourceFile(curr);
+    curr = curr.parent
+  ) {
     if (ts.isJsxAttribute(curr)) {
       return curr.name.getText() !== 'style';
     }
     if (ts.isPropertyAssignment(curr)) {
       if (curr.name.getText() === 'style') return false;
-      let p: ts.Node | undefined = curr.parent;
-      while (p) {
+      for (let p: ts.Node = curr.parent; !ts.isSourceFile(p); p = p.parent) {
         if (ts.isPropertyAssignment(p) && p.name.getText() === 'style') {
           return false;
         }
@@ -32,7 +34,6 @@ export function isInNonStyleJsx(node: ts.Node): boolean {
           }
           break;
         }
-        p = p.parent as ts.Node | undefined;
       }
     }
     if (
@@ -42,7 +43,6 @@ export function isInNonStyleJsx(node: ts.Node): boolean {
     ) {
       return true;
     }
-    curr = curr.parent as ts.Node | undefined;
   }
   return false;
 }

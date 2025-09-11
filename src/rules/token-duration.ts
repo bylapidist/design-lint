@@ -1,77 +1,37 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
 export const durationRule: RuleModule = {
   name: 'design-token/duration',
   meta: { description: 'enforce duration tokens', category: 'design-token' },
   create(context) {
-    const durationTokens = context.tokens.durations;
-    if (
-      !durationTokens ||
-      (Array.isArray(durationTokens)
-        ? durationTokens.length === 0
-        : Object.keys(durationTokens).length === 0)
-    ) {
-      context.report({
-        message:
-          'design-token/duration requires duration tokens; configure tokens.durations to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
-    if (Array.isArray(durationTokens)) {
-      const checkVar = (value: string, line: number, column: number) => {
-        const name = extractVarName(value);
-        if (!name || !matchToken(name, durationTokens)) {
-          const suggest = name ? closestToken(name, durationTokens) : null;
-          context.report({
-            message: `Unexpected duration ${value}`,
-            line,
-            column,
-            suggest: suggest ?? undefined,
-          });
-        }
-      };
-      return {
-        onCSSDeclaration(decl) {
-          const prop = decl.prop.toLowerCase();
-          if (
-            prop === 'transition' ||
-            prop === 'transition-duration' ||
-            prop === 'animation' ||
-            prop === 'animation-duration'
-          ) {
-            checkVar(decl.value, decl.line, decl.column);
-          }
-        },
-      };
-    }
+    const durationTokens = context.getFlattenedTokens('duration');
     const parse = (val: unknown): number | null => {
-      if (typeof val === 'number') return val;
-      if (typeof val === 'string') {
-        const v = val.trim();
-        const match = /^(-?\d*\.?\d+)(ms|s)$/.exec(v);
-        if (match) {
-          const num = parseFloat(match[1]);
-          return match[2] === 's' ? num * 1000 : num;
+      if (typeof val === 'object' && val !== null) {
+        const unit: unknown = Reflect.get(val, 'unit');
+        const num: unknown = Reflect.get(val, 'value');
+        if (typeof unit === 'string' && typeof num === 'number') {
+          return unit === 's' ? num * 1000 : unit === 'ms' ? num : null;
         }
-        const num = Number(v);
-        if (!isNaN(num)) return num;
       }
       return null;
     };
     const allowed = new Set<number>();
-    for (const val of Object.values(durationTokens)) {
-      const num = parse(val);
+    for (const { path, token } of durationTokens) {
+      if (!path.startsWith('durations.')) continue;
+      const num = parse(token.$value);
       if (num !== null) allowed.add(num);
+    }
+    if (allowed.size === 0) {
+      context.report({
+        message:
+          'design-token/duration requires duration tokens; configure tokens with $type "duration" under a "durations" group to enable this rule.',
+        line: 1,
+        column: 1,
+      });
+      return {};
     }
     return {
       onNode(node) {

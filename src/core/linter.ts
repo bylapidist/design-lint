@@ -1,10 +1,10 @@
 import type {
   LintResult,
-  DesignTokens,
   LintMessage,
   RuleContext,
+  DesignTokens,
 } from './types.js';
-import { mergeTokens, extractVarName } from './token-utils.js';
+import { getFlattenedTokens as flattenTokens } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
@@ -16,8 +16,15 @@ import type {
 } from './environment.js';
 import { parserRegistry } from './parser-registry.js';
 
+function isDesignTokens(val: unknown): val is DesignTokens {
+  return typeof val === 'object' && val !== null;
+}
+
 export interface Config {
-  tokens?: DesignTokens | Record<string, DesignTokens>;
+  tokens?:
+    | DesignTokens
+    | Record<string, DesignTokens | string>
+    | Record<string, unknown>;
   rules?: Record<string, unknown>;
   ignoreFiles?: string[];
   plugins?: string[];
@@ -28,7 +35,7 @@ export interface Config {
 }
 
 interface ResolvedConfig extends Omit<Config, 'tokens'> {
-  tokens: DesignTokens;
+  tokens: Record<string, unknown>;
 }
 
 /**
@@ -44,24 +51,27 @@ export class Linter {
   private tokensReady: Promise<void>;
 
   constructor(config: Config, env: Environment) {
+    const inlineTokens = config.tokens;
     const provider: TokenProvider = env.tokenProvider ?? {
-      load: () =>
-        Promise.resolve({
-          themes: (config.tokens ? { default: config.tokens } : {}) as Record<
-            string,
-            DesignTokens
-          >,
-          merged: (config.tokens ?? {}) as DesignTokens,
-        }),
+      load: () => {
+        if (inlineTokens && isDesignTokens(inlineTokens)) {
+          flattenTokens({ default: inlineTokens });
+          return Promise.resolve({ default: inlineTokens });
+        }
+        return Promise.resolve({});
+      },
     };
-    this.config = { ...config, tokens: {} };
+    const tokensConfig = inlineTokens ?? {};
+    this.config = {
+      ...config,
+      tokens: tokensConfig,
+    };
     this.ruleRegistry = new RuleRegistry(this.config, env.pluginLoader);
     this.tokenTracker = new TokenTracker(provider);
     this.source = env.documentSource;
     this.cache = env.cacheProvider;
     this.tokensReady = provider.load().then((t) => {
-      this.tokensByTheme = t.themes;
-      this.config.tokens = t.merged;
+      this.tokensByTheme = t;
     });
   }
 
@@ -117,27 +127,11 @@ export class Linter {
   }
 
   getTokenCompletions(): Record<string, string[]> {
-    const tokens = this.config.tokens;
     const completions: Record<string, string[]> = {};
-    for (const [group, defs] of Object.entries(tokens)) {
-      if (group === 'variables' && isRecord(defs)) {
-        const names: string[] = [];
-        for (const v of Object.values(defs)) {
-          if (isRecord(v) && typeof v.id === 'string') names.push(v.id);
-        }
-        if (names.length) completions[group] = names;
-        continue;
-      }
-      if (Array.isArray(defs)) {
-        const names = defs.filter((t): t is string => typeof t === 'string');
-        if (names.length) completions[group] = names;
-      } else if (isRecord(defs)) {
-        const names: string[] = [];
-        for (const val of Object.values(defs)) {
-          const v = typeof val === 'string' ? extractVarName(val) : null;
-          if (v) names.push(v);
-        }
-        if (names.length) completions[group] = names;
+    for (const theme of Object.keys(this.tokensByTheme)) {
+      const flat = flattenTokens(this.tokensByTheme, theme);
+      if (flat.length) {
+        completions[theme] = flat.map((t) => t.path);
       }
     }
     return completions;
@@ -169,17 +163,17 @@ export class Linter {
       if (rule.meta.category) {
         ruleCategories[rule.name] = rule.meta.category;
       }
-      const themes =
-        isRecord(options) && isStringArray(options.themes)
-          ? options.themes
-          : undefined;
-      const tokens = mergeTokens(this.tokensByTheme, themes);
       const ctx: RuleContext = {
         sourceId,
-        tokens,
         options,
         metadata,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
+        getFlattenedTokens: (type?: string, theme?: string) => {
+          const tokens = flattenTokens(this.tokensByTheme, theme);
+          return type
+            ? tokens.filter(({ token }) => token.$type === type)
+            : tokens;
+        },
       };
       return rule.create(ctx);
     });
@@ -225,14 +219,6 @@ function getDisabledLines(text: string): Set<number> {
     if (block) disabled.add(i + 1);
   }
   return disabled;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((v) => typeof v === 'string');
 }
 
 function inferFileType(sourceId: string): string {

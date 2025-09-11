@@ -15,12 +15,16 @@ async function tempFile(content: string): Promise<string> {
 
 void test('design-system/no-unused-tokens reports unused tokens', async () => {
   const file = await tempFile('const color = "#000000";');
-  const tokens = { colors: { primary: '#000000', unused: '#123456' } };
+  const tokens = {
+    color: {
+      primary: { $value: '#000000', $type: 'color' },
+      unused: { $value: '#123456', $type: 'color' },
+    },
+  };
   const env: Environment = {
     documentSource: new FileSource(),
     tokenProvider: {
-      load: () =>
-        Promise.resolve({ themes: { default: tokens }, merged: tokens }),
+      load: () => Promise.resolve({ default: tokens }),
     },
   };
   const linter = new Linter(
@@ -39,14 +43,53 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
   assert.ok(msg.message.includes('#123456'));
 });
 
-void test('design-system/no-unused-tokens passes when tokens used', async () => {
-  const file = await tempFile('const color = "#000000";');
-  const tokens = { colors: { primary: '#000000' } };
+void test('design-system/no-unused-tokens includes token metadata', async () => {
+  const file = await tempFile('');
+  const tokens = {
+    color: {
+      unused: {
+        $value: '#123456',
+        $type: 'color',
+        $deprecated: 'deprecated',
+        $extensions: { 'vendor.foo': true },
+      },
+    },
+  };
   const env: Environment = {
     documentSource: new FileSource(),
     tokenProvider: {
-      load: () =>
-        Promise.resolve({ themes: { default: tokens }, merged: tokens }),
+      load: () => Promise.resolve({ default: tokens }),
+    },
+  };
+  const linter = new Linter(
+    {
+      tokens,
+      rules: { 'design-system/no-unused-tokens': 'warn' },
+    },
+    env,
+  );
+  const { results } = await linter.lintTargets([file]);
+  const msg = results
+    .flatMap((r) => r.messages)
+    .find((m) => m.ruleId === 'design-system/no-unused-tokens');
+  assert(msg);
+  assert(msg.metadata);
+  assert.equal(msg.metadata.path, 'color.unused');
+  assert.equal(msg.metadata.deprecated, 'deprecated');
+  assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
+});
+
+void test('design-system/no-unused-tokens passes when tokens used', async () => {
+  const file = await tempFile('const color = "#000000";');
+  const tokens = {
+    color: {
+      primary: { $value: '#000000', $type: 'color' },
+    },
+  };
+  const env: Environment = {
+    documentSource: new FileSource(),
+    tokenProvider: {
+      load: () => Promise.resolve({ default: tokens }),
     },
   };
   const linter = new Linter(
@@ -65,12 +108,16 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
 
 void test('design-system/no-unused-tokens can ignore tokens', async () => {
   const file = await tempFile('const color = "#000000";');
-  const tokens = { colors: { primary: '#000000', unused: '#123456' } };
+  const tokens = {
+    color: {
+      primary: { $value: '#000000', $type: 'color' },
+      unused: { $value: '#123456', $type: 'color' },
+    },
+  };
   const env: Environment = {
     documentSource: new FileSource(),
     tokenProvider: {
-      load: () =>
-        Promise.resolve({ themes: { default: tokens }, merged: tokens }),
+      load: () => Promise.resolve({ default: tokens }),
     },
   };
   const linter = new Linter(
@@ -91,12 +138,13 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
 
 void test('design-system/no-unused-tokens matches hex case-insensitively', async () => {
   const file = await tempFile('const color = "#ABCDEF";');
-  const tokens = { colors: { primary: '#abcdef' } };
+  const tokens = {
+    color: { primary: { $value: '#abcdef', $type: 'color' } },
+  };
   const env: Environment = {
     documentSource: new FileSource(),
     tokenProvider: {
-      load: () =>
-        Promise.resolve({ themes: { default: tokens }, merged: tokens }),
+      load: () => Promise.resolve({ default: tokens }),
     },
   };
   const linter = new Linter(

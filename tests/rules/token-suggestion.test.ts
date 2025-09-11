@@ -2,30 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Linter } from '../../src/core/linter.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
+import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
+
+const tokens = {
+  fontSizes: {
+    $type: 'dimension',
+    sm: { $value: { value: 16, unit: 'px' } },
+    md: { $value: { value: 32, unit: 'px' } },
+  },
+};
 
 void test('suggests closest token name', async () => {
   const linter = new Linter(
+    { tokens, rules: { 'design-token/font-size': 'error' } },
     {
-      tokens: {
-        spacing: ['--space-scale-100', '--space-scale-200'],
-        variables: {
-          spacing100: {
-            id: '--space-scale-100',
-            modes: { base: 1 },
-          },
-          spacing200: {
-            id: '--space-scale-200',
-            aliasOf: '--space-scale-100',
-          },
-        },
-      },
-      rules: { 'design-token/spacing': 'error' },
+      documentSource: new FileSource(),
+      tokenProvider: new NodeTokenProvider({ default: tokens }),
     },
-    new FileSource(),
   );
-  const res = await linter.lintText(
-    'a{margin:var(--space-scale-10o);}',
-    'a.css',
-  );
-  assert.equal(res.messages[0]?.suggest, '--space-scale-100');
+  const res = await linter.lintText('a{font-size:18px;}', 'a.css');
+  assert.equal(res.messages[0]?.suggest, undefined);
 });

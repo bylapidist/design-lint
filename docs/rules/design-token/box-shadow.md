@@ -13,12 +13,25 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 
 ```json
 {
-  "tokens": { "shadows": { "sm": "0 1px 2px rgba(0,0,0,0.1)" } },
+  "tokens": {
+    "shadows": {
+      "sm": {
+        "$type": "shadow",
+        "$value": {
+          "offsetX": { "value": 0, "unit": "px" },
+          "offsetY": { "value": 1, "unit": "px" },
+          "blur": { "value": 2, "unit": "px" },
+          "color": "rgba(0,0,0,0.1)"
+        }
+      },
+      "md": { "$type": "shadow", "$value": "{shadows.sm}" }
+    }
+  },
   "rules": { "design-token/box-shadow": "error" }
 }
 ```
 
-Shadow tokens must be strings representing complete `box-shadow` declarations. Each declaration should include all required lengths and color values; no default units are assumed.
+Shadow tokens use the `shadow` type with sub-values for offsets, blur, spread, and color.
 
 ## Options
 No additional options.

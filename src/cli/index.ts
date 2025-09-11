@@ -3,16 +3,26 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
+import { TokenParseError } from '../adapters/node/token-parser.js';
 import { prepareEnvironment, type PrepareEnvironmentOptions } from './env.js';
 import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
 import { initConfig } from './init-config.js';
+import { exportTokens } from './tokens.js';
 
 type CliOptions = ExecuteOptions &
   PrepareEnvironmentOptions & {
     color?: boolean;
     watch?: boolean;
   };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function hasVersion(value: unknown): value is { version: string } {
+  return isRecord(value) && typeof value.version === 'string';
+}
 
 function createProgram(version: string) {
   const program = new Command();
@@ -72,6 +82,25 @@ function createProgram(version: string) {
     .action((opts: { initFormat?: string }) => {
       initConfig(opts.initFormat);
     });
+
+  program
+    .command('tokens')
+    .description('Export flattened design tokens as JSON')
+    .option('--theme <name>', 'Theme name to export')
+    .option('--out <file>', 'Write tokens to file')
+    .option('--config <path>', 'Path to configuration file')
+    .action(
+      async (
+        opts: { theme?: string; out?: string; config?: string },
+        cmd: Command,
+      ) => {
+        const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+        await exportTokens({
+          ...opts,
+          config: opts.config ?? parent.config,
+        });
+      },
+    );
   return program;
 }
 
@@ -88,7 +117,11 @@ export async function run(argv = process.argv.slice(2)) {
   let useColor = Boolean(process.stdout.isTTY && supportsColor);
   const pkgPath = fileURLToPath(new URL('../../package.json', import.meta.url));
   const pkgData = fs.readFileSync(pkgPath, 'utf8');
-  const pkg = JSON.parse(pkgData) as unknown as { version: string };
+  const pkgRaw: unknown = JSON.parse(pkgData);
+  if (!hasVersion(pkgRaw)) {
+    throw new Error('Invalid package.json');
+  }
+  const pkg = pkgRaw;
 
   const program = createProgram(pkg.version);
 
@@ -102,8 +135,13 @@ export async function run(argv = process.argv.slice(2)) {
       process.exitCode = exitCode;
       if (options.watch) await watchMode(patterns, options, services);
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(useColor ? chalk.red(message) : message);
+      if (err instanceof TokenParseError) {
+        const out = err.format();
+        console.error(useColor ? chalk.red(out) : out);
+      } else {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(useColor ? chalk.red(message) : message);
+      }
       process.exitCode = 1;
     }
   });

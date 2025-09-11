@@ -1,11 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 import { isStyleValue } from '../utils/style.js';
 
 interface SpacingOptions {
@@ -17,38 +12,27 @@ export const spacingRule: RuleModule<SpacingOptions> = {
   name: 'design-token/spacing',
   meta: { description: 'enforce spacing scale', category: 'design-token' },
   create(context) {
-    const spacingTokens = context.tokens.spacing;
-    if (
-      !spacingTokens ||
-      (Array.isArray(spacingTokens)
-        ? spacingTokens.length === 0
-        : Object.keys(spacingTokens).length === 0)
-    ) {
+    const spacingTokens = context.getFlattenedTokens('dimension');
+    const allowed = new Set<number>();
+    for (const { path, token } of spacingTokens) {
+      if (!path.startsWith('spacing.')) continue;
+      const val = token.$value;
+      if (val && typeof val === 'object') {
+        const num: unknown = Reflect.get(val, 'value');
+        if (typeof num === 'number') {
+          allowed.add(num);
+        }
+      }
+    }
+    if (allowed.size === 0) {
       context.report({
         message:
-          'design-token/spacing requires spacing tokens; configure tokens.spacing to enable this rule.',
+          'design-token/spacing requires spacing tokens; configure tokens with $type "dimension" under a "spacing" group to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(spacingTokens)) {
-      return {
-        onCSSDeclaration(decl) {
-          const name = extractVarName(decl.value);
-          if (!name || !matchToken(name, spacingTokens)) {
-            const suggest = name ? closestToken(name, spacingTokens) : null;
-            context.report({
-              message: `Unexpected spacing ${decl.value}`,
-              line: decl.line,
-              column: decl.column,
-              suggest: suggest ?? undefined,
-            });
-          }
-        },
-      };
-    }
-    const allowed = new Set(Object.values(spacingTokens));
     const opts = context.options ?? {};
     const base = opts.base ?? 4;
     const isAllowed = (n: number) => allowed.has(n) || n % base === 0;

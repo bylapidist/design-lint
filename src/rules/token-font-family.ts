@@ -1,48 +1,25 @@
 import type { RuleModule } from '../core/types.js';
-import {
-  matchToken,
-  extractVarName,
-  closestToken,
-} from '../core/token-utils.js';
 
 export const fontFamilyRule: RuleModule = {
   name: 'design-token/font-family',
   meta: { description: 'enforce font-family tokens', category: 'design-token' },
   create(context) {
-    const fontFamilies = context.tokens.fonts;
-    if (
-      !fontFamilies ||
-      (Array.isArray(fontFamilies)
-        ? fontFamilies.length === 0
-        : Object.keys(fontFamilies).length === 0)
-    ) {
+    const fontFamilies = context.getFlattenedTokens('fontFamily');
+    const fonts = new Set<string>();
+    for (const { path, token } of fontFamilies) {
+      if (!path.startsWith('fonts.')) continue;
+      const val = token.$value;
+      if (typeof val === 'string') fonts.add(val);
+    }
+    if (fonts.size === 0) {
       context.report({
         message:
-          'design-token/font-family requires fonts tokens; configure tokens.fonts to enable this rule.',
+          'design-token/font-family requires font tokens; configure tokens with $type "fontFamily" under a "fonts" group to enable this rule.',
         line: 1,
         column: 1,
       });
       return {};
     }
-    if (Array.isArray(fontFamilies)) {
-      return {
-        onCSSDeclaration(decl) {
-          if (decl.prop === 'font-family') {
-            const name = extractVarName(decl.value);
-            if (!name || !matchToken(name, fontFamilies)) {
-              const suggest = name ? closestToken(name, fontFamilies) : null;
-              context.report({
-                message: `Unexpected font family ${decl.value}`,
-                line: decl.line,
-                column: decl.column,
-                suggest: suggest ?? undefined,
-              });
-            }
-          }
-        },
-      };
-    }
-    const fonts = new Set(Object.values(fontFamilies));
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'font-family') {
