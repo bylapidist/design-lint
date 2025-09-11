@@ -17,6 +17,23 @@ import type {
 } from './environment.js';
 import { parserRegistry } from './parser-registry.js';
 
+export const FILE_TYPE_MAP: Record<string, string> = {
+  ts: 'ts',
+  tsx: 'ts',
+  mts: 'ts',
+  cts: 'ts',
+  js: 'ts',
+  jsx: 'ts',
+  mjs: 'ts',
+  cjs: 'ts',
+  css: 'css',
+  scss: 'css',
+  sass: 'css',
+  less: 'css',
+  vue: 'vue',
+  svelte: 'svelte',
+};
+
 function isDesignTokens(val: unknown): val is DesignTokens {
   return typeof val === 'object' && val !== null;
 }
@@ -254,23 +271,7 @@ function getDisabledLines(text: string): Set<number> {
   return disabled;
 }
 
-function inferFileType(sourceId: string): string {
+export function inferFileType(sourceId: string): string {
   const ext = sourceId.split('.').pop()?.toLowerCase() ?? '';
-  const map: Record<string, string> = {
-    ts: 'ts',
-    tsx: 'ts',
-    mts: 'ts',
-    cts: 'ts',
-    js: 'ts',
-    jsx: 'ts',
-    mjs: 'ts',
-    cjs: 'ts',
-    css: 'css',
-    scss: 'css',
-    sass: 'css',
-    less: 'css',
-    vue: 'vue',
-    svelte: 'svelte',
-  };
-  return map[ext] ?? ext;
+  return FILE_TYPE_MAP[ext] ?? ext;
 }
