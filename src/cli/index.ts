@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
 import { TokenParseError } from '../adapters/node/token-parser.js';
+import { isRecord } from '../utils/type-guards.js';
 import { prepareEnvironment, type PrepareEnvironmentOptions } from './env.js';
 import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
@@ -15,10 +16,6 @@ type CliOptions = ExecuteOptions &
     color?: boolean;
     watch?: boolean;
   };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function hasVersion(value: unknown): value is { version: string } {
   return isRecord(value) && typeof value.version === 'string';

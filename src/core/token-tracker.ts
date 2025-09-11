@@ -1,5 +1,6 @@
 import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
+import { isRecord } from '../utils/type-guards.js';
 import { getFlattenedTokens, extractVarName } from './token-utils.js';
 
 type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';
@@ -159,10 +160,6 @@ function isUnusedTokenRule(e: {
     (Array.isArray(e.options.ignore) &&
       e.options.ignore.every((t): t is string => typeof t === 'string'))
   );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 function isDimension(value: unknown): value is { value: number; unit: string } {

@@ -2,6 +2,7 @@ import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
 import type { PluginLoader } from './plugin-loader.js';
 import { PluginError } from './errors.js';
+import { isRecord } from '../utils/type-guards.js';
 
 export class PluginManager {
   private pluginPaths: string[] = [];
@@ -71,8 +72,4 @@ function isRuleModule(value: unknown): value is RuleModule {
     value.meta.description.trim() !== '' &&
     typeof value.create === 'function'
   );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
