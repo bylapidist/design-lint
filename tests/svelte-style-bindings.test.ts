@@ -30,3 +30,21 @@ void test('style bindings report spacing and color violations', async () => {
     );
   }
 });
+
+void test('style bindings inside control-flow blocks report violations', async () => {
+  const res = await lint('ControlFlow.svelte');
+  const spacing = res.messages.filter(
+    (m) => m.ruleId === 'design-token/spacing',
+  );
+  const colors = res.messages.filter((m) => m.ruleId === 'design-token/colors');
+  assert.equal(
+    spacing.length,
+    7,
+    `expected 7 spacing violations, got ${String(spacing.length)}`,
+  );
+  assert.equal(
+    colors.length,
+    7,
+    `expected 7 color violations, got ${String(colors.length)}`,
+  );
+});
