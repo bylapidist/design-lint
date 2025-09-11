@@ -1,5 +1,6 @@
 import type ts from 'typescript';
 import type { z } from 'zod';
+import type { Environment } from './environment.js';
 
 export interface VariableDefinition {
   id: string;
@@ -92,7 +93,10 @@ export interface RuleListener {
 }
 
 export interface PluginModule {
+  name?: string;
+  version?: string;
   rules: RuleModule[];
+  init?(env: Environment): void | Promise<void>;
 }
 
 export interface CSSDeclaration {

@@ -16,7 +16,10 @@ Plugins let you package and share rules, formatters, and other extensions. This 
 - [See also](#see-also)
 
 ## Overview
-A plugin is an npm package that exports an object with a `rules` array. The package name forms the rule namespace: `<plugin>/<rule>`.
+A plugin is an npm package that exports an object with at least a `rules` array.
+Plugins may also optionally specify `name`, `version`, and an `init(env)` function
+for running setup logic. The package name forms the rule namespace:
+`<plugin>/<rule>`.
 
 > **Note:** Declare `@lapidist/design-lint` as a `peerDependency` to ensure users install a compatible version.
 
@@ -37,14 +40,15 @@ my-plugin/
 }
 ```
 
-### 2. Implement rules
+### 2. Implement rules and metadata
 Rules receive a `RuleContext` which exposes `getFlattenedTokens` for accessing
 design tokens by type. The helper returns an array of flattened tokens for the
-current theme.
+current theme. The plugin can also expose a `name`, `version`, and an `init`
+hook that receives the runtime environment.
 
 ```ts
 // index.ts
-import type { RuleModule } from '@lapidist/design-lint';
+import type { RuleModule, PluginModule } from '@lapidist/design-lint';
 
 const noRawColors: RuleModule<unknown> = {
   name: 'acme/no-raw-colors',
@@ -61,9 +65,16 @@ const noRawColors: RuleModule<unknown> = {
   },
 };
 
-export default {
+const plugin: PluginModule = {
+  name: 'acme',
+  version: '1.0.0',
   rules: [noRawColors],
+  init(env) {
+    // optional setup using env
+  },
 };
+
+export default plugin;
 ```
 
 Rules can expose a [Zod](https://zod.dev/) schema for their options via
@@ -87,19 +98,24 @@ const rule: RuleModule<{ ignore?: string[] }> = {
 ```
 
 ### 3. Register token transforms
-If your plugin consumes design tokens from other tools, provide a transform
-to convert them to the W3C format. Register the transform during plugin
-initialisation:
+If your plugin consumes design tokens from other tools, provide a transform to
+convert them to the W3C format. Register the transform inside `init`:
 
 ```ts
-import { registerTokenTransform, type DesignTokens } from '@lapidist/design-lint';
+import {
+  registerTokenTransform,
+  type DesignTokens,
+  type PluginModule,
+} from '@lapidist/design-lint';
 
-export function setup(): void {
-  const unregister = registerTokenTransform((tokens: DesignTokens) =>
-    convertFromFigma(tokens),
-  );
-  // call unregister() during teardown if the transform is temporary
-}
+const plugin: PluginModule = {
+  rules: [noRawColors],
+  init() {
+    registerTokenTransform((tokens: DesignTokens) => convertFromFigma(tokens));
+  },
+};
+
+export default plugin;
 
 function convertFromFigma(tokens: DesignTokens): DesignTokens {
   // convert tokens here
@@ -115,7 +131,10 @@ import { Linter, FileSource } from '@lapidist/design-lint';
 import plugin from '../index.js';
 
 void test('reports raw colors', async () => {
-  const linter = initLinter({ plugins: [plugin], rules: { 'acme/no-raw-colors': 'error' } }, new FileSource());
+  const linter = initLinter(
+    { plugins: [plugin], rules: { 'acme/no-raw-colors': 'error' } },
+    { documentSource: new FileSource() },
+  );
   const res = await linter.lintText('h1 { color: #fff; }', 'file.css');
   assert.equal(res.messages.length, 1);
 });

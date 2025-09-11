@@ -7,6 +7,7 @@ import { loadConfig } from '../src/config/loader.ts';
 import { NodePluginLoader } from '../src/adapters/node/plugin-loader.ts';
 import type { PluginLoader } from '../src/core/plugin-loader.ts';
 import type { PluginModule, RuleModule } from '../src/core/types.ts';
+import type { Environment } from '../src/core/environment.ts';
 import { PluginError } from '../src/core/errors.ts';
 
 void test('external plugin rules execute', async () => {
@@ -125,8 +126,10 @@ void test('throws when plugin rule conflicts with existing rule', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'conflict-plugin.ts');
   const linter = initLinter(
     { plugins: [pluginPath] },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
@@ -208,4 +211,51 @@ void test('supports custom plugin loaders', async () => {
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'mock/rule');
+});
+
+void test('calls plugin init with environment', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'init-plugin.ts');
+  const env = {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+  };
+  const linter = initLinter({ plugins: [pluginPath] }, env);
+  await linter.lintText('const a = 1;', 'file.ts');
+  const mod = (await import(pluginPath)) as { inits: Environment[] };
+  assert.equal(mod.inits.length, 1);
+  assert.strictEqual(mod.inits[0], env);
+});
+
+void test('exposes plugin metadata', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'init-plugin.ts');
+  const linter = initLinter(
+    { plugins: [pluginPath] },
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
+  );
+  await linter.lintText('const a = 1;', 'file.ts');
+  const meta = await linter.getPluginMetadata();
+  assert.deepEqual(meta, [
+    { path: pluginPath, name: 'init-plugin', version: '1.0.0' },
+  ]);
+});
+
+void test('plugin init can transform tokens before load', async () => {
+  const pluginPath = path.join(
+    __dirname,
+    'fixtures',
+    'token-transform-plugin.ts',
+  );
+  const linter = initLinter(
+    {
+      plugins: [pluginPath],
+      tokens: { color: { red: { $type: 'color', $value: '#f00' } } },
+    },
+    { documentSource: new FileSource(), pluginLoader: new NodePluginLoader() },
+  );
+  await linter.lintText('const a = 1;', 'file.ts');
+  const completions = linter.getTokenCompletions();
+  assert.ok(completions.default.includes('color.blue'));
 });

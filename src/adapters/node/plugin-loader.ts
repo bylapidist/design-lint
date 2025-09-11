@@ -70,7 +70,13 @@ function resolvePlugin(mod: unknown): PluginModule {
 }
 
 function isPluginModule(value: unknown): value is PluginModule {
-  return isRecord(value) && Array.isArray(value.rules);
+  return (
+    isRecord(value) &&
+    Array.isArray(value.rules) &&
+    (value.name === undefined || typeof value.name === 'string') &&
+    (value.version === undefined || typeof value.version === 'string') &&
+    (value.init === undefined || typeof value.init === 'function')
+  );
 }
 
 function getErrorCode(e: unknown): string | undefined {

@@ -28,9 +28,9 @@ export function setupLinter(
     ...config,
     tokens: inlineTokens ?? {},
   };
-  const tokensReady = provider.load();
-  const ruleRegistry = new RuleRegistry(resolvedConfig, env.pluginLoader);
+  const ruleRegistry = new RuleRegistry(resolvedConfig, env);
   const tokenTracker = new TokenTracker(provider);
+  const tokensReady = ruleRegistry.load().then(() => provider.load());
   const linter = new Linter(resolvedConfig, {
     ruleRegistry,
     tokenTracker,
