@@ -2,7 +2,7 @@ import ts from 'typescript';
 import { parseCSS } from './css-parser.js';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
 import type { parse as svelteParse } from 'svelte/compiler';
-import { isRecord } from '../../utils/type-guards.js';
+import { isRecord } from '../../utils/is-record.js';
 
 export async function lintSvelte(
   text: string,

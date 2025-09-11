@@ -4,7 +4,7 @@ import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
 import { resolveConfigFile } from './file-resolution.js';
 import { loadTokens } from './token-loader.js';
-import { isRecord } from '../utils/type-guards.js';
+import { isRecord } from '../utils/is-record.js';
 import { ConfigError } from '../core/errors.js';
 
 /**

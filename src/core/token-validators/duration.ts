@@ -1,4 +1,4 @@
-import { isRecord } from './utils.js';
+import { isRecord } from '../../utils/is-record.js';
 
 const DURATION_UNITS = new Set(['ms', 's']);
 

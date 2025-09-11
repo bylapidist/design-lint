@@ -1,4 +1,4 @@
-import { isRecord } from './utils.js';
+import { isRecord } from '../../utils/is-record.js';
 import { validateDimension } from './dimension.js';
 
 const STROKE_STYLE_KEYWORDS = new Set([

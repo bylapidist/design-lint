@@ -3,8 +3,8 @@ import type { RuleModule } from './types.js';
 import type { PluginLoader } from './plugin-loader.js';
 import type { Environment } from './environment.js';
 import { PluginError } from './errors.js';
-import { isRecord } from '../utils/type-guards.js';
-import { isRuleModule } from '../rules/utils/is-rule-module.js';
+import { isRecord } from '../utils/is-record.js';
+import { isRuleModule } from '../utils/is-rule-module.js';
 
 export interface PluginMeta {
   path: string;

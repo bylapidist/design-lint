@@ -2,7 +2,7 @@ import postcss from 'postcss';
 import { parse as scssParser } from 'postcss-scss';
 import lessSyntax from 'postcss-less';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
-import { isObject } from '../../utils/type-guards.js';
+import { isObject } from '../../utils/is-object.js';
 
 export function parseCSS(
   text: string,

@@ -3,7 +3,8 @@ import path from 'path';
 import { loadConfig } from '../config/loader.js';
 import { getFlattenedTokens } from '../core/token-utils.js';
 import type { DesignTokens } from '../core/types.js';
-import { isDesignTokens, isThemeRecord } from '../utils/type-guards.js';
+import { isDesignTokens } from '../utils/is-design-tokens.js';
+import { isThemeRecord } from '../utils/is-theme-record.js';
 
 interface TokensCommandOptions {
   theme?: string;

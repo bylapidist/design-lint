@@ -12,9 +12,18 @@ export type ColorFormat =
   | 'color'
   | 'named';
 
+/**
+ * Set of CSS color names supported by the `color-name` package.
+ */
 export const namedColors = new Set(Object.keys(colorName));
 
-export function detectColorFormat(value: string): ColorFormat | null {
+/**
+ * Detects the format of a CSS color string.
+ *
+ * @param value - The color string to examine.
+ * @returns The detected color format or `null` if unknown.
+ */
+export const detectColorFormat = (value: string): ColorFormat | null => {
   const v = value.toLowerCase();
   if (v.startsWith('#')) return 'hex';
   if (v.startsWith('rgba(')) return 'rgba';
@@ -27,4 +36,4 @@ export function detectColorFormat(value: string): ColorFormat | null {
   if (v.startsWith('color(')) return 'color';
   if (namedColors.has(v)) return 'named';
   return null;
-}
+};
