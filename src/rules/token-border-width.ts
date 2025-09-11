@@ -2,7 +2,7 @@ import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
 import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
+import { isStyleValue } from '../utils/ast/index.js';
 import { isRecord } from '../utils/is-record.js';
 
 interface BorderWidthOptions {

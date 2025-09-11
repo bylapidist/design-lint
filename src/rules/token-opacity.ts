@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
+import { isStyleValue } from '../utils/ast/index.js';
 
 export const opacityRule = tokenRule({
   name: 'design-token/opacity',

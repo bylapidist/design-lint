@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
+import { isStyleValue } from '../utils/ast/index.js';
 import { isRecord } from '../utils/is-record.js';
 
 const parse = (val: unknown): number | null => {

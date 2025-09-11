@@ -3,7 +3,7 @@ import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import { z } from 'zod';
 import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
+import { isStyleValue } from '../utils/ast/index.js';
 import { detectColorFormat, type ColorFormat } from '../utils/color-format.js';
 
 interface ColorRuleOptions {

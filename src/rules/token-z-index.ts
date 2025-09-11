@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
+import { isStyleValue } from '../utils/ast/index.js';
 
 export const zIndexRule = tokenRule({
   name: 'design-token/z-index',

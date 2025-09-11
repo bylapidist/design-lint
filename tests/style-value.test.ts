@@ -9,7 +9,7 @@ import {
   type Node,
   type StringLiteral,
 } from 'typescript';
-import { isStyleValue } from '../src/utils/style.js';
+import { isStyleValue } from '../src/utils/ast/index.js';
 
 function getStringNode(code: string, text: string): StringLiteral {
   const sf = createSourceFile(
