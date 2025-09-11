@@ -3,7 +3,8 @@ import path from 'path';
 import ignore, { type Ignore } from 'ignore';
 import { getFormatter } from '../formatters/index.js';
 import type { CacheProvider } from '../core/cache-provider.js';
-import type { Config, Linter } from '../core/linter.js';
+import type { Config } from '../core/linter.js';
+import type { Linter } from '../index.js';
 import type { LintResult } from '../core/types.js';
 import { createNodeEnvironment } from '../adapters/node/environment.js';
 import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
@@ -41,9 +42,9 @@ export interface PrepareEnvironmentOptions {
 export async function prepareEnvironment(
   options: PrepareEnvironmentOptions,
 ): Promise<Environment> {
-  const [{ loadConfig }, { Linter }, { loadIgnore }] = await Promise.all([
+  const [{ loadConfig }, { createLinter }, { loadIgnore }] = await Promise.all([
     import('../config/loader.js'),
-    import('../core/linter.js'),
+    import('../index.js'),
     import('../core/ignore.js'),
   ]);
 
@@ -65,7 +66,7 @@ export async function prepareEnvironment(
   });
   const cache = env.cacheProvider;
   const linterRef = {
-    current: new Linter(config, env),
+    current: createLinter(config, env),
   };
   const pluginPaths = await linterRef.current.getPluginPaths();
 

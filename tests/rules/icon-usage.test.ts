@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { applyFixes } from '../../src/index.ts';
 
 void test('design-system/icon-usage reports raw svg', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: { 'design-system/icon-usage': 'error' },
     },
@@ -20,7 +20,7 @@ void test('design-system/icon-usage reports raw svg', async () => {
 });
 
 void test('design-system/icon-usage matches substitutions', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/icon-usage': [
@@ -40,7 +40,7 @@ void test('design-system/icon-usage matches substitutions', async () => {
 });
 
 void test('design-system/icon-usage fixes svg opening and closing tags', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: { 'design-system/icon-usage': 'error' },
     },

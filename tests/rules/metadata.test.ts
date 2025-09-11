@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import type { PluginLoader } from '../../src/core/plugin-loader.ts';
 import type { PluginModule, RuleModule } from '../../src/core/types.ts';
@@ -32,7 +32,7 @@ void test('metadata propagates through report', async () => {
       return Promise.resolve({ path: 'mock', plugin: { rules: [rule] } });
     }
   }
-  const linter = new Linter(
+  const linter = initLinter(
     { plugins: ['mock'], rules: { 'mock/rule': 'error' } },
     { documentSource: new FileSource(), pluginLoader: new MockLoader() },
   );

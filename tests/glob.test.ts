@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
-import { Linter } from '../src/core/linter.ts';
+import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 
 void test('lintTargets expands glob patterns with globby', async () => {
@@ -14,7 +14,7 @@ void test('lintTargets expands glob patterns with globby', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter({ tokens: {}, rules: {} }, new FileSource());
+    const linter = initLinter({ tokens: {}, rules: {} }, new FileSource());
     const { results, warning } = await linter.lintTargets([
       '**/*.module.{css,scss}',
     ]);

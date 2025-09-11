@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 
@@ -13,7 +13,7 @@ const tokens = {
 };
 
 void test('suggests closest token name', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     { tokens, rules: { 'design-token/font-size': 'error' } },
     {
       documentSource: new FileSource(),

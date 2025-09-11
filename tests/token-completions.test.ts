@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../src/core/linter.js';
+import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.js';
 
 void test('getTokenCompletions returns token paths by theme', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens: {
         light: {

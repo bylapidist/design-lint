@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 
 const config = {
@@ -31,14 +31,14 @@ function assertIds(messages: { ruleId: string }[]) {
 }
 
 void test('reports raw tokens in .scss files', async () => {
-  const linter = new Linter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(cssSample, 'file.scss');
   assert.equal(res.messages.length, 3);
   assertIds(res.messages);
 });
 
 void test('reports raw tokens in Vue <style lang="scss">', async () => {
-  const linter = new Linter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(
     `<template><div/></template><style lang="scss">${cssSample}</style>`,
     'Comp.vue',
@@ -48,7 +48,7 @@ void test('reports raw tokens in Vue <style lang="scss">', async () => {
 });
 
 void test('reports raw tokens in Svelte <style lang="scss">', async () => {
-  const linter = new Linter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(
     `<div></div><style lang="scss">${cssSample}</style>`,
     'Comp.svelte',
@@ -58,7 +58,7 @@ void test('reports raw tokens in Svelte <style lang="scss">', async () => {
 });
 
 void test('reports raw tokens in string style attributes', async () => {
-  const linter = new Linter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(
     `const C = () => <div style="color: #fff; margin: 5px; opacity: 0.5"></div>;`,
     'file.tsx',
@@ -68,7 +68,7 @@ void test('reports raw tokens in string style attributes', async () => {
 });
 
 void test('reports raw tokens once for single style property', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens: { color: { $type: 'color', primary: { $value: '#000000' } } },
       rules: { 'design-token/colors': 'error' },

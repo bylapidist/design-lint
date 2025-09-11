@@ -1,4 +1,4 @@
-import { Linter, type Config } from './core/linter.js';
+import { Linter, type Config, LintService, setupLinter } from './core/index.js';
 import type { Environment } from './core/environment.js';
 
 export * from './core/index.js';
@@ -9,5 +9,12 @@ export { getFormatter } from './formatters/index.js';
 export { builtInRules } from './rules/index.js';
 
 export function createLinter(config: Config, env: Environment): Linter {
-  return new Linter(config, env);
+  return setupLinter(config, env).linter;
+}
+
+export function createLintService(
+  config: Config,
+  env: Environment,
+): LintService {
+  return setupLinter(config, env).service;
 }

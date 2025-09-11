@@ -7,14 +7,12 @@ import type {
 } from './types.js';
 import { getFlattenedTokens as flattenTokens } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
-import { RuleRegistry } from './rule-registry.js';
-import { TokenTracker } from './token-tracker.js';
+import type { RuleRegistry } from './rule-registry.js';
+import type { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
-import type {
-  Environment,
-  LintDocument,
-  TokenProvider,
-} from './environment.js';
+import type { LintDocument } from './environment.js';
+import type { CacheProvider } from './cache-provider.js';
+import type { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
 
 export const FILE_TYPE_MAP: Record<string, string> = {
@@ -33,10 +31,6 @@ export const FILE_TYPE_MAP: Record<string, string> = {
   vue: 'vue',
   svelte: 'svelte',
 };
-
-function isDesignTokens(val: unknown): val is DesignTokens {
-  return typeof val === 'object' && val !== null;
-}
 
 export interface Config {
   tokens?:
@@ -64,33 +58,29 @@ export class Linter {
   private tokensByTheme: Record<string, DesignTokens> = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
-  private source: Environment['documentSource'];
-  private cache?: Environment['cacheProvider'];
   private tokensReady: Promise<void>;
-
-  constructor(config: Config, env: Environment) {
-    const inlineTokens = config.tokens;
-    const provider: TokenProvider = env.tokenProvider ?? {
-      load: () => {
-        if (inlineTokens && isDesignTokens(inlineTokens)) {
-          flattenTokens({ default: inlineTokens });
-          return Promise.resolve({ default: inlineTokens });
-        }
-        return Promise.resolve({});
-      },
-    };
-    const tokensConfig = inlineTokens ?? {};
+  private service?: LintService;
+  constructor(
+    config: Config,
+    deps: {
+      ruleRegistry: RuleRegistry;
+      tokenTracker: TokenTracker;
+      tokensReady: Promise<Record<string, DesignTokens>>;
+    },
+  ) {
     this.config = {
       ...config,
-      tokens: tokensConfig,
+      tokens: config.tokens ?? {},
     };
-    this.ruleRegistry = new RuleRegistry(this.config, env.pluginLoader);
-    this.tokenTracker = new TokenTracker(provider);
-    this.source = env.documentSource;
-    this.cache = env.cacheProvider;
-    this.tokensReady = provider.load().then((t) => {
+    this.ruleRegistry = deps.ruleRegistry;
+    this.tokenTracker = deps.tokenTracker;
+    this.tokensReady = deps.tokensReady.then((t) => {
       this.tokensByTheme = t;
     });
+  }
+
+  setService(service: LintService): void {
+    this.service = service;
   }
 
   async lintDocument(doc: LintDocument, fix = false): Promise<LintResult> {
@@ -102,6 +92,7 @@ export class Linter {
   async lintDocuments(
     documents: LintDocument[],
     fix = false,
+    cache?: CacheProvider,
   ): Promise<{
     results: LintResult[];
     ignoreFiles: string[];
@@ -114,7 +105,7 @@ export class Linter {
       tokenTracker: this.tokenTracker,
       lintDocument: this.lintText.bind(this),
     });
-    return runner.run(documents, fix, this.cache);
+    return runner.run(documents, fix, cache);
   }
 
   async lintTargets(
@@ -126,22 +117,10 @@ export class Linter {
     ignoreFiles: string[];
     warning?: string;
   }> {
-    const {
-      documents,
-      ignoreFiles: scanIgnores,
-      warning: scanWarning,
-    } = await this.source.scan(targets, this.config, ignore);
-    const {
-      results,
-      ignoreFiles: runIgnores,
-      warning: runWarning,
-    } = await this.lintDocuments(documents, fix);
-    const ignoreFiles = Array.from(new Set([...scanIgnores, ...runIgnores]));
-    return {
-      results,
-      ignoreFiles,
-      warning: scanWarning ?? runWarning,
-    };
+    if (!this.service) {
+      throw new Error('Lint service not configured');
+    }
+    return this.service.lintTargets(targets, fix, ignore);
   }
 
   getTokenCompletions(): Record<string, string[]> {

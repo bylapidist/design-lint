@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 
 function createLinter(rule: unknown = 'error') {
   const tokens = { opacity: { $type: 'number', low: { $value: 0.2 } } };
-  return new Linter(
+  return initLinter(
     { tokens, rules: { 'design-token/opacity': rule } },
     {
       documentSource: new FileSource(),
@@ -50,7 +50,7 @@ void test('design-token/opacity ignores numbers in JSX props', async () => {
 });
 
 void test('design-token/opacity warns when tokens missing', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     { rules: { 'design-token/opacity': 'warn' } },
     {
       documentSource: new FileSource(),

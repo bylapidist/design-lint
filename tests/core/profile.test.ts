@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.ts';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { createNodeEnvironment } from '../../src/adapters/node/environment.ts';
 import type { Config } from '../../src/core/linter.ts';
 
@@ -17,7 +17,7 @@ void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const config = { tokens: {}, rules: {} };
   const env = createNodeEnvironment(config);
-  const linter = new Linter(config, env);
+  const linter = initLinter(config, env);
   const cwd = process.cwd();
   process.chdir(dir);
   process.env.DESIGNLINT_PROFILE = '1';

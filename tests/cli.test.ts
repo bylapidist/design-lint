@@ -5,8 +5,11 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
 import { readWhenReady } from './helpers/fs.ts';
-import { Linter } from '../src/index.ts';
-import { FileSource } from '../src/index.ts';
+import {
+  createLinter as initLinter,
+  FileSource,
+  type Linter,
+} from '../src/index.ts';
 import type { LintResult } from '../src/core/types.ts';
 import ignore from 'ignore';
 
@@ -1151,7 +1154,7 @@ void test('CLI cache updates after --fix run', async () => {
       return Promise.resolve();
     },
   };
-  const linter = new Linter(config, {
+  const linter = initLinter(config, {
     documentSource: new FileSource(),
     cacheProvider: cache,
   });

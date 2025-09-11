@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 
@@ -9,7 +9,7 @@ const tokens = {
 };
 
 function createLinter() {
-  return new Linter(
+  return initLinter(
     {
       tokens,
       rules: { 'design-token/font-family': 'error' },
@@ -29,7 +29,7 @@ void test('design-token/font-family reports invalid font-family', async () => {
 });
 
 void test('design-token/font-family warns when tokens missing', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     { rules: { 'design-token/font-family': 'warn' } },
     {
       documentSource: new FileSource(),

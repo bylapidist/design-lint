@@ -2,7 +2,7 @@ import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-import { Linter } from '../src/core/linter.ts';
+import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 import { createFileDocument } from '../src/adapters/node/file-document.ts';
 import { loadConfig } from '../src/config/loader.ts';
@@ -11,7 +11,7 @@ const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
 void test('lintDocument matches lintTargets result', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource() });
   const file = path.join(fixtureDir, 'src', 'App.svelte');
   const doc = createFileDocument(file);
   const res1 = await linter.lintDocument(doc);
@@ -22,7 +22,7 @@ void test('lintDocument matches lintTargets result', async () => {
 
 void test('lintDocument reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource() });
   const file = path.join(fixtureDir, 'src', 'App.svelte');
   const doc = createFileDocument(file);
   const original = fs.readFile;
@@ -50,7 +50,7 @@ void test('lintDocument reports unreadable file', async () => {
 
 void test('lintTargets reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource() });
   const file = path.join(fixtureDir, 'src', 'App.svelte');
   const original = fs.readFile;
   const stub = mock.method(

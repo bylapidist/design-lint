@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 
 void test('design-system/import-path flags components from wrong package', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/import-path': [
@@ -23,7 +23,7 @@ void test('design-system/import-path flags components from wrong package', async
 });
 
 void test('design-system/import-path allows configured package', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/import-path': [
@@ -42,7 +42,7 @@ void test('design-system/import-path allows configured package', async () => {
 });
 
 void test('design-system/import-path handles default imports', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/import-path': [
@@ -58,7 +58,7 @@ void test('design-system/import-path handles default imports', async () => {
 });
 
 void test('design-system/import-path enforces package in Vue components', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/import-path': [
@@ -77,7 +77,7 @@ void test('design-system/import-path enforces package in Vue components', async 
 });
 
 void test('design-system/import-path enforces package in Svelte components', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/import-path': [

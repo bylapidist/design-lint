@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
-import { Linter } from '../src/core/linter.ts';
+import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 
 const tokens = {
@@ -26,7 +26,7 @@ void test('lintTargets ignores common directories by default', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );
@@ -48,7 +48,7 @@ void test('lintTargets respects .gitignore via globby', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );
@@ -74,7 +74,7 @@ void test('.designlintignore can unignore paths', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );
@@ -96,7 +96,7 @@ void test('.designlintignore overrides .gitignore', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );
@@ -121,7 +121,7 @@ void test('.designlintignore supports negative patterns', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );
@@ -143,7 +143,7 @@ void test('.designlintignore supports Windows paths', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );
@@ -164,7 +164,7 @@ void test('config ignoreFiles are respected', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       {
         tokens,
         rules: { 'design-system/deprecation': 'error' },
@@ -191,7 +191,7 @@ void test('additional ignore file is respected', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );
@@ -213,7 +213,7 @@ void test('lintTargets respects nested .gitignore', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );
@@ -236,7 +236,7 @@ void test('nested .designlintignore overrides parent patterns', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = new Linter(
+    const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
       new FileSource(),
     );

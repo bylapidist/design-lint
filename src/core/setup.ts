@@ -1,0 +1,42 @@
+import { Linter, type Config } from './linter.js';
+import type { Environment, TokenProvider } from './environment.js';
+import { RuleRegistry } from './rule-registry.js';
+import { TokenTracker } from './token-tracker.js';
+import { LintService } from './lint-service.js';
+import { getFlattenedTokens as flattenTokens } from './token-utils.js';
+import type { DesignTokens } from './types.js';
+
+function isDesignTokens(val: unknown): val is DesignTokens {
+  return typeof val === 'object' && val !== null;
+}
+
+export function setupLinter(
+  config: Config,
+  env: Environment,
+): { linter: Linter; service: LintService } {
+  const inlineTokens = config.tokens;
+  const provider: TokenProvider = env.tokenProvider ?? {
+    load: () => {
+      if (inlineTokens && isDesignTokens(inlineTokens)) {
+        flattenTokens({ default: inlineTokens });
+        return Promise.resolve({ default: inlineTokens });
+      }
+      return Promise.resolve({});
+    },
+  };
+  const resolvedConfig: Config = {
+    ...config,
+    tokens: inlineTokens ?? {},
+  };
+  const tokensReady = provider.load();
+  const ruleRegistry = new RuleRegistry(resolvedConfig, env.pluginLoader);
+  const tokenTracker = new TokenTracker(provider);
+  const linter = new Linter(resolvedConfig, {
+    ruleRegistry,
+    tokenTracker,
+    tokensReady,
+  });
+  const service = new LintService(linter, resolvedConfig, env);
+  linter.setService(service);
+  return { linter, service };
+}

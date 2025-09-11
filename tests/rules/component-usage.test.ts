@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { applyFixes } from '../../src/index.ts';
 
 void test('design-system/component-usage suggests substitutions', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-usage': [
@@ -22,7 +22,7 @@ void test('design-system/component-usage suggests substitutions', async () => {
 });
 
 void test('design-system/component-usage matches mixed-case tags', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-usage': [
@@ -39,7 +39,7 @@ void test('design-system/component-usage matches mixed-case tags', async () => {
 });
 
 void test('design-system/component-usage matches mixed-case substitution keys', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-usage': [
@@ -56,7 +56,7 @@ void test('design-system/component-usage matches mixed-case substitution keys', 
 });
 
 void test('design-system/component-usage fixes self-closing tags', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-usage': [
@@ -76,7 +76,7 @@ void test('design-system/component-usage fixes self-closing tags', async () => {
 });
 
 void test('design-system/component-usage fixes opening and closing tags', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-usage': [
