@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { tokenRule } from '../../src/utils/token-rule.ts';
-import type { RuleContext } from '../../src/core/types.ts';
+import { tokenRule } from '../../src/utils/token-rule.js';
+import type { RuleContext } from '../../src/core/types.js';
 
 void test('tokenRule reports when tokens are missing', () => {
   const rule = tokenRule({

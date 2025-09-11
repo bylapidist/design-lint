@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stylish } from '../../src/formatters/stylish.ts';
-import { jsonFormatter } from '../../src/formatters/json.ts';
-import { sarifFormatter } from '../../src/formatters/sarif.ts';
-import { getFormatter } from '../../src/index.ts';
-import { TokenTracker } from '../../src/core/token-tracker.ts';
-import type { LintResult, DesignTokens } from '../../src/core/types.ts';
+import { stylish } from '../../src/formatters/stylish.js';
+import { jsonFormatter } from '../../src/formatters/json.js';
+import { sarifFormatter } from '../../src/formatters/sarif.js';
+import { getFormatter } from '../../src/index.js';
+import { TokenTracker } from '../../src/core/token-tracker.js';
+import type { LintResult, DesignTokens } from '../../src/core/types.js';
 
 interface SarifLog {
   runs: {

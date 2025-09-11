@@ -9,7 +9,7 @@ import {
   type PropertyAssignment,
   type VariableStatement,
 } from 'typescript';
-import { isStyleName } from '../../src/utils/is-style-name.ts';
+import { isStyleName } from '../../src/utils/is-style-name.js';
 
 void test('isStyleName detects style property names', () => {
   const sf = createSourceFile(

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLinter as initLinter } from '../../src/index.ts';
-import { createNodeEnvironment } from '../../src/adapters/node/environment.ts';
+import { createLinter as initLinter } from '../../src/index.js';
+import { createNodeEnvironment } from '../../src/adapters/node/environment.js';
 
 void test('Linter integrates registry, parser and trackers', async () => {
   const config = {

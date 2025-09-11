@@ -1,5 +1,5 @@
-import type { CacheProvider } from './cache-provider';
-import { CacheManager } from './cache-manager';
+import type { CacheProvider } from './cache-provider.js';
+import { CacheManager } from './cache-manager.js';
 
 export const CacheService = {
   async prune(

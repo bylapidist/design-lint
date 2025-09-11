@@ -1,8 +1,8 @@
-import type { DesignTokens, FlattenedToken } from '../types';
-import { buildParseTree } from './parse-tree';
-import { normalizeTokens } from './normalize';
-import { normalizeColorValues, type ColorSpace } from './normalize-colors';
-import { validateTokens } from './validate';
+import type { DesignTokens, FlattenedToken } from '../types.js';
+import { buildParseTree } from './parse-tree.js';
+import { normalizeTokens } from './normalize.js';
+import { normalizeColorValues, type ColorSpace } from './normalize-colors.js';
+import { validateTokens } from './validate.js';
 
 export type TokenTransform = (tokens: DesignTokens) => DesignTokens;
 
@@ -16,7 +16,7 @@ export function registerTokenTransform(transform: TokenTransform): () => void {
   };
 }
 
-export { getTokenLocation } from './parse-tree';
+export { getTokenLocation } from './parse-tree.js';
 
 export interface ParseDesignTokensOptions {
   colorSpace?: ColorSpace;

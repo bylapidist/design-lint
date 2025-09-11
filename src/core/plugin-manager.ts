@@ -1,10 +1,10 @@
-import type { Config } from './linter';
-import type { RuleModule } from './types';
-import type { PluginLoader } from './plugin-loader';
-import type { Environment } from './environment';
-import { PluginError } from './errors';
-import { isRecord } from '../utils/is-record';
-import { isRuleModule } from '../utils/is-rule-module';
+import type { Config } from './linter.js';
+import type { RuleModule } from './types.js';
+import type { PluginLoader } from './plugin-loader.js';
+import type { Environment } from './environment.js';
+import { PluginError } from './errors.js';
+import { isRecord } from '../utils/is-record.js';
+import { isRuleModule } from '../utils/is-rule-module.js';
 
 export interface PluginMeta {
   path: string;

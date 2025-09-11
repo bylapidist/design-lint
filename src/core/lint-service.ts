@@ -1,7 +1,7 @@
-import type { Config } from './linter';
-import type { Environment } from './environment';
-import type { LintResult } from './types';
-import { Linter } from './linter';
+import type { Config } from './linter.js';
+import type { Environment } from './environment.js';
+import type { LintResult } from './types.js';
+import { Linter } from './linter.js';
 
 export class LintService {
   private config: Config;

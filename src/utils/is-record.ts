@@ -1,4 +1,4 @@
-import { isObject } from './is-object';
+import { isObject } from './is-object.js';
 
 /**
  * Determines whether a value is a plain object (i.e., a record) and not an array.

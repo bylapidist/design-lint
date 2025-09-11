@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeTmpDir } from '../../src/adapters/node/utils/tmp.ts';
-import { loadIgnore } from '../../src/core/ignore.ts';
+import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
+import { loadIgnore } from '../../src/core/ignore.js';
 
 void test('loadIgnore returns defaults when files missing', async () => {
   const dir = makeTmpDir();

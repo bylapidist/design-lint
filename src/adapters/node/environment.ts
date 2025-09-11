@@ -1,9 +1,9 @@
-import type { Environment } from '../../core/environment';
-import type { Config } from '../../core/linter';
-import { FileSource } from './file-source';
-import { NodePluginLoader } from './plugin-loader';
-import { NodeCacheProvider } from './node-cache-provider';
-import { NodeTokenProvider } from './token-provider';
+import type { Environment } from '../../core/environment.js';
+import type { Config } from '../../core/linter.js';
+import { FileSource } from './file-source.js';
+import { NodePluginLoader } from './plugin-loader.js';
+import { NodeCacheProvider } from './node-cache-provider.js';
+import { NodeTokenProvider } from './token-provider.js';
 
 export interface CreateNodeEnvironmentOptions {
   cacheLocation?: string;

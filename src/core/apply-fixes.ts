@@ -1,4 +1,4 @@
-import type { LintMessage, Fix } from './types';
+import type { LintMessage, Fix } from './types.js';
 
 export function applyFixes(text: string, messages: LintMessage[]): string {
   const fixes: Fix[] = messages

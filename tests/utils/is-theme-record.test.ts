@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isThemeRecord } from '../../src/utils/is-theme-record.ts';
+import { isThemeRecord } from '../../src/utils/is-theme-record.js';
 
 void test('isThemeRecord detects multiple themes with shared tokens', () => {
   const themes = {

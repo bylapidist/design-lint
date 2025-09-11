@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Runner } from '../../src/index.ts';
-import { TokenTracker } from '../../src/core/token-tracker.ts';
-import type { LintDocument } from '../../src/core/environment.ts';
+import { Runner } from '../../src/index.js';
+import { TokenTracker } from '../../src/core/token-tracker.js';
+import type { LintDocument } from '../../src/core/environment.js';
 
 interface CacheEntry {
   mtime: number;

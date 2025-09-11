@@ -3,13 +3,13 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import chalk, { supportsColor } from 'chalk';
-import { TokenParseError } from '../adapters/node/token-parser';
-import { isRecord } from '../utils/is-record';
-import { prepareEnvironment, type PrepareEnvironmentOptions } from './env';
-import { executeLint, type ExecuteOptions } from './execute';
-import { watchMode } from './watch';
-import { initConfig } from './init-config';
-import { exportTokens } from './tokens';
+import { TokenParseError } from '../adapters/node/token-parser.js';
+import { isRecord } from '../utils/is-record.js';
+import { prepareEnvironment, type PrepareEnvironmentOptions } from './env.js';
+import { executeLint, type ExecuteOptions } from './execute.js';
+import { watchMode } from './watch.js';
+import { initConfig } from './init-config.js';
+import { exportTokens } from './tokens.js';
 
 type CliOptions = ExecuteOptions &
   PrepareEnvironmentOptions & {

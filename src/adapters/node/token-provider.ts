@@ -1,8 +1,8 @@
-import type { VariableProvider } from '../../core/environment';
-import type { DesignTokens } from '../../core/types';
-import type { Config } from '../../core/linter';
-import { isDesignTokens } from '../../utils/is-design-tokens';
-import { isThemeRecord } from '../../utils/is-theme-record';
+import type { VariableProvider } from '../../core/environment.js';
+import type { DesignTokens } from '../../core/types.js';
+import type { Config } from '../../core/linter.js';
+import { isDesignTokens } from '../../utils/is-design-tokens.js';
+import { isThemeRecord } from '../../utils/is-theme-record.js';
 
 export class NodeTokenProvider implements VariableProvider {
   private tokens: Record<string, DesignTokens>;

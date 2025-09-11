@@ -1,4 +1,4 @@
-import type { Token } from '../types';
+import type { Token } from '../types.js';
 
 const ALIAS_GLOBAL = /\{([^}]+)\}/g;
 const ALIAS_EXACT = /^\{([^}]+)\}$/;

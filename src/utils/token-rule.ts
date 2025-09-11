@@ -3,10 +3,10 @@ import type {
   RuleContext,
   RuleListener,
   RuleModule,
-} from '../core/types';
+} from '../core/types.js';
 import { z } from 'zod';
-import { isObject } from './is-object';
-import { toArray } from './to-array';
+import { isObject } from './is-object.js';
+import { toArray } from './to-array.js';
 
 /**
  * Configuration for creating a token-based rule via {@link tokenRule}.

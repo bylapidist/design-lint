@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
-import { createLinter as initLinter } from '../src/index.ts';
-import { FileSource } from '../src/adapters/node/file-source.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
+import { createLinter as initLinter } from '../src/index.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
 
 const tokens = {
   old: { $type: 'color', $value: '#000', $deprecated: 'Use {new}' },

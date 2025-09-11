@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'path';
-import { createLinter as initLinter } from '../src/index.ts';
-import { FileSource } from '../src/adapters/node/file-source.ts';
-import { loadConfig } from '../src/config/loader.ts';
-import { NodePluginLoader } from '../src/adapters/node/plugin-loader.ts';
-import type { PluginLoader } from '../src/core/plugin-loader.ts';
-import type { PluginModule, RuleModule } from '../src/core/types.ts';
-import type { Environment } from '../src/core/environment.ts';
-import { PluginError } from '../src/core/errors.ts';
+import { createLinter as initLinter } from '../src/index.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
+import { loadConfig } from '../src/config/loader.js';
+import { NodePluginLoader } from '../src/adapters/node/plugin-loader.js';
+import type { PluginLoader } from '../src/core/plugin-loader.js';
+import type { PluginModule, RuleModule } from '../src/core/types.js';
+import type { Environment } from '../src/core/environment.js';
+import { PluginError } from '../src/core/errors.js';
 
 void test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');

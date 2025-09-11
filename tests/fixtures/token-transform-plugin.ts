@@ -1,5 +1,5 @@
-import type { PluginModule, DesignTokens, TokenGroup } from '../../src/core/types.ts';
-import { registerTokenTransform } from '../../src/core/index.ts';
+import type { PluginModule, DesignTokens, TokenGroup } from '../../src/core/types.js';
+import { registerTokenTransform } from '../../src/core/index.js';
 
 const plugin: PluginModule = {
   rules: [],

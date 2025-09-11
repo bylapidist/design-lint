@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CacheManager } from '../../src/core/cache-manager.ts';
+import { CacheManager } from '../../src/core/cache-manager.js';
 import { promises as fs } from 'fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { LintResult } from '../../src/core/types.ts';
-import { createFileDocument } from '../../src/adapters/node/file-document.ts';
+import type { LintResult } from '../../src/core/types.js';
+import { createFileDocument } from '../../src/adapters/node/file-document.js';
 
 void test('CacheManager applies fixes when enabled', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cm-'));

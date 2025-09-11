@@ -2,11 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
-import { realpathIfExists, relFromCwd } from './utils/paths';
-import type { PluginModule } from '../../core/types';
-import type { PluginLoader, LoadedPlugin } from '../../core/plugin-loader';
-import { PluginError } from '../../core/errors';
-import { isRecord } from '../../utils/is-record';
+import { realpathIfExists, relFromCwd } from './utils/paths.js';
+import type { PluginModule } from '../../core/types.js';
+import type { PluginLoader, LoadedPlugin } from '../../core/plugin-loader.js';
+import { PluginError } from '../../core/errors.js';
+import { isRecord } from '../../utils/is-record.js';
 
 export class NodePluginLoader implements PluginLoader {
   async load(p: string, configPath?: string): Promise<LoadedPlugin> {

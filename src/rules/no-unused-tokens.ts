@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { RuleModule } from '../core/types';
+import type { RuleModule } from '../core/types.js';
 
 export const noUnusedTokensRule: RuleModule = {
   name: 'design-system/no-unused-tokens',

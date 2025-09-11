@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLinter as initLinter } from '../../src/index.ts';
-import { FileSource } from '../../src/adapters/node/file-source.ts';
-import type { LintDocument } from '../../src/core/environment.ts';
+import { createLinter as initLinter } from '../../src/index.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import type { LintDocument } from '../../src/core/environment.js';
 
 void test('design-system/no-unused-tokens reports unused tokens', async () => {
   const tokens = {

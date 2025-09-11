@@ -2,10 +2,10 @@ import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-import { createLinter as initLinter } from '../src/index.ts';
-import { FileSource } from '../src/adapters/node/file-source.ts';
-import { createFileDocument } from '../src/adapters/node/file-document.ts';
-import { loadConfig } from '../src/config/loader.ts';
+import { createLinter as initLinter } from '../src/index.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
+import { createFileDocument } from '../src/adapters/node/file-document.js';
+import { loadConfig } from '../src/config/loader.js';
 
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 

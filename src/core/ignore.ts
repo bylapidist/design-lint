@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import ignore from 'ignore';
-import type { Config } from './linter';
+import type { Config } from './linter.js';
 
 export const defaultIgnore = [
   '**/node_modules/**',

@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeTmpDir } from '../../src/adapters/node/utils/tmp.ts';
-import { createLinter as initLinter } from '../../src/index.ts';
-import { createNodeEnvironment } from '../../src/adapters/node/environment.ts';
-import type { Config } from '../../src/core/linter.ts';
+import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
+import { createLinter as initLinter } from '../../src/index.js';
+import { createNodeEnvironment } from '../../src/adapters/node/environment.js';
+import type { Config } from '../../src/core/linter.js';
 
 // Ensure FileSource.scan logs when profiling is enabled
 // This also covers the catch branch for missing files by passing a non-existent target

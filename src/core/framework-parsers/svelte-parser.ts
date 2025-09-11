@@ -1,8 +1,8 @@
 import ts from 'typescript';
-import { parseCSS } from './css-parser';
-import type { CSSDeclaration, LintMessage, RuleModule } from '../types';
+import { parseCSS } from './css-parser.js';
+import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
 import type { parse as svelteParse } from 'svelte/compiler';
-import { isRecord } from '../../utils/is-record';
+import { isRecord } from '../../utils/is-record.js';
 
 export async function lintSvelte(
   text: string,

@@ -7,7 +7,7 @@ import {
   ScriptTarget,
   type Expression,
 } from 'typescript';
-import { isJsxLike } from '../../src/utils/is-jsx-like.ts';
+import { isJsxLike } from '../../src/utils/is-jsx-like.js';
 
 function getExpression(code: string): Expression {
   const sf = createSourceFile(

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { Linter } from '../../src/core/linter.ts';
-import type { Environment } from '../../src/core/environment.ts';
+import { Linter } from '../../src/core/linter.js';
+import type { Environment } from '../../src/core/environment.js';
 
 void test('constructor accepts legacy environment', async () => {
   const env: Environment = {

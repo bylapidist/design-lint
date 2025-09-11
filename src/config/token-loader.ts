@@ -2,11 +2,11 @@ import path from 'node:path';
 import {
   readDesignTokensFile,
   TokenParseError,
-} from '../adapters/node/token-parser';
-import { parseDesignTokens } from '../core/parser/index';
-import { isDesignTokens } from '../utils/is-design-tokens';
-import { isThemeRecord } from '../utils/is-theme-record';
-import { isRecord } from '../utils/is-record';
+} from '../adapters/node/token-parser.js';
+import { parseDesignTokens } from '../core/parser/index.js';
+import { isDesignTokens } from '../utils/is-design-tokens.js';
+import { isThemeRecord } from '../utils/is-theme-record.js';
+import { isRecord } from '../utils/is-record.js';
 
 export async function loadTokens(
   tokens: unknown,

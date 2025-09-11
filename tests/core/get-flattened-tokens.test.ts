@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getFlattenedTokens } from '../../src/core/token-utils.ts';
-import type { DesignTokens } from '../../src/core/types.ts';
+import { getFlattenedTokens } from '../../src/core/token-utils.js';
+import type { DesignTokens } from '../../src/core/types.js';
 
 void test('getFlattenedTokens flattens tokens for specified theme and preserves metadata', () => {
   const tokens: Record<string, DesignTokens> = {

@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { FileSource } from '../../src/adapters/node/file-source.ts';
-import { makeTmpDir } from '../../src/adapters/node/utils/tmp.ts';
-import type { Config } from '../../src/core/linter.ts';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
+import type { Config } from '../../src/core/linter.js';
 
 void test('FileSource.scan applies nested ignore files for glob targets', async () => {
   const dir = makeTmpDir();

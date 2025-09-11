@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import path from 'node:path';
-import { loadConfig } from '../src/config/loader.ts';
-import { resolveConfigFile } from '../src/config/file-resolution.ts';
-import { loadTokens } from '../src/config/token-loader.ts';
-import { createLinter as initLinter } from '../src/index.ts';
-import { FileSource } from '../src/adapters/node/file-source.ts';
-import { ConfigError } from '../src/core/errors.ts';
+import { loadConfig } from '../src/config/loader.js';
+import { resolveConfigFile } from '../src/config/file-resolution.js';
+import { loadTokens } from '../src/config/token-loader.js';
+import { createLinter as initLinter } from '../src/index.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
+import { ConfigError } from '../src/core/errors.js';
 
 void test('resolveConfigFile returns null when config missing', async () => {
   const tmp = makeTmpDir();
