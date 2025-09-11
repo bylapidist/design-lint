@@ -44,11 +44,18 @@ Transforms collected results into human- or machine-readable output. Implementat
 ### Plugin loader
 Resolves configuration packages, rules, and formatters. The Node implementation is [`src/adapters/node/plugin-loader.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/plugin-loader.ts).
 
+### Plugin manager
+Coordinates plugin loading and registers rules. It validates rule shape, prevents name collisions, and exposes the final set of
+plugins to the linter. See [`src/core/plugin-manager.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/plugin-manager.ts).
+
 ### Cache provider
 Stores metadata and parsed documents across runs. [`src/adapters/node/node-cache-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk.
 
 ### Token provider
 Supplies design tokens to rules. [`src/adapters/node/token-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/token-provider.ts) normalises tokens from configuration.
+
+### Token tracker
+Keeps track of token usage across linted files and reports unused values for the [`design-system/no-unused-tokens`](./rules/design-system/no-unused-tokens.md) rule. Implementation: [`src/core/token-tracker.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/token-tracker.ts).
 
 ## Performance and caching
 design-lint processes files concurrently across CPU cores. Parsed documents and rule results are cached between runs in `.designlintcache` to reduce work.
