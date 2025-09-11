@@ -68,7 +68,7 @@
     "flat-cache": "6.1.13",
     "globby": "14.1.0",
     "ignore": "7.0.5",
-    "leven": "4.0.0",
+    "leven": "4.1.0",
     "p-limit": "7.1.1",
     "picomatch": "4.0.3",
     "postcss": "8.5.6",
