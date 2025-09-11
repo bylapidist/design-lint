@@ -1,7 +1,11 @@
 import type { DesignTokens } from '../core/types.js';
 
+export function isObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null;
+}
+
 export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return isObject(value) && !Array.isArray(value);
 }
 
 export function isDesignTokens(value: unknown): value is DesignTokens {

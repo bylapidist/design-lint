@@ -4,6 +4,7 @@ import type {
   TokenGroup,
   FlattenedToken,
 } from '../types.js';
+import { isRecord } from '../../utils/type-guards.js';
 
 const tokenLocations = new Map<string, { line: number; column: number }>();
 
@@ -22,10 +23,6 @@ const GROUP_PROPS = new Set([
   '$metadata',
 ]);
 const INVALID_NAME_CHARS = /[{}\.]/;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function isToken(node: unknown): node is Token {
   return isRecord(node) && '$value' in node;
