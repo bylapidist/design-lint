@@ -5,10 +5,7 @@ import { getIgnorePatterns } from '../../core/ignore.js';
 import type { Config } from '../../core/linter.js';
 import type { DocumentSource } from '../../core/environment.js';
 import { createFileDocument } from './file-document.js';
-
-const defaultPatterns = [
-  '**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,css,scss,sass,less,svelte,vue}',
-];
+import { defaultPatterns } from '../../core/file-types.js';
 
 export class FileSource implements DocumentSource {
   async scan(

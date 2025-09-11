@@ -18,23 +18,7 @@ import type {
 import type { CacheProvider } from './cache-provider.js';
 import { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
-
-export const FILE_TYPE_MAP: Record<string, string> = {
-  ts: 'ts',
-  tsx: 'ts',
-  mts: 'ts',
-  cts: 'ts',
-  js: 'ts',
-  jsx: 'ts',
-  mjs: 'ts',
-  cjs: 'ts',
-  css: 'css',
-  scss: 'css',
-  sass: 'css',
-  less: 'css',
-  vue: 'vue',
-  svelte: 'svelte',
-};
+import { FILE_TYPE_MAP } from './file-types.js';
 
 export interface Config {
   tokens?:
