@@ -1,5 +1,75 @@
 # @lapidist/design-lint
 
+## 5.1.0
+
+### Minor Changes
+
+- 3be455d: add location data to flattened tokens and expose getTokenLocation helper
+- 3be455d: align token utilities with W3C Design Tokens format and support root $schema
+- 3be455d: feat(core): add function to flatten W3C Design Tokens tree
+- 3be455d: use Momoa to parse design token files with YAML support and clearer errors
+- 3be455d: remove legacy token migration utilities and stop accepting legacy token groups
+- 3be455d: add token transform registry and parseDesignTokens transform support
+- 3be455d: add token validator registry for extensible validation
+- 3be455d: feat: allow config tokens field to accept spec token trees or theme file paths
+
+### Patch Changes
+
+- 3be455d: resolve nested token aliases and record references
+- 3be455d: allow $metadata fields in token trees, ignore metadata in token tracking, and accept .tokens.yaml paths in config
+- 3be455d: chore: disallow type assertions in library code
+- 3be455d: remove legacy token normalization utilities
+- 3be455d: feat(cli): add tokens export command to write resolved design tokens
+- 3be455d: expose spec-compliant design tokens per theme via config token provider
+- 3be455d: avoid migrating spec tokens in config loader to fix CLI smoke test
+- 3be455d: fix NodeTokenProvider default-theme detection for inline token configs
+- 3be455d: fix NodeTokenProvider misclassifying theme records with primitive metadata entries
+- 3be455d: fix smoke test to resolve custom formatter path and here-doc warnings
+- 3be455d: refactor border-radius rule to read dimension tokens via getFlattenedTokens
+- 3be455d: refactor color rules to read spec tokens via getFlattenedTokens
+- 3be455d: refactor opacity rule to read tokens via getFlattenedTokens
+- 3be455d: refactor remaining token rules to read flattened spec tokens and update tests accordingly
+- 3be455d: refactor spacing rule to read dimension tokens via getFlattenedTokens
+- 3be455d: add helper to flatten spec tokens per theme for runtime consumers
+- 3be455d: expose getFlattenedTokens in rule context for flattened token access
+- 3be455d: handle alias chains and detect circular references in design token parser
+- 3be455d: handle primitive token values in token parser
+- 3be455d: handle token spec edge cases like alias type mismatches, case-insensitive path collisions, and unknown composite properties
+- 3be455d: avoid reporting alias tokens as unused when tracking token usage
+- 3be455d: introduce W3C token model scaffolding and export token types
+- 3be455d: ensure inline config tokens are loaded when no token provider is supplied
+- 3be455d: load config tokens from external `.tokens` files
+- 3be455d: merge tokens from all themes when no theme is specified
+- 3be455d: migrate legacy token groups during config load
+- 3be455d: migrate legacy token groups to W3C Design Tokens format
+- 3be455d: refactor token file parser to Node adapter to keep core environment agnostic
+- 3be455d: validate color tokens using culori and allow normalizing colors
+- 3be455d: preserve $extensions and $deprecated metadata in W3C token parser and flattener
+- 3be455d: refactor linter to provide per-theme flattened tokens to rules
+- 3be455d: fix getTokenCompletions to list token paths by theme
+- 3be455d: reject legacy shorthand token syntax and enforce $type/$value
+- 3be455d: reject tokens missing $value and validate mismatched token values
+- 3be455d: remove eslint-disable-next-line comments and address lint issues
+- 3be455d: remove custom type stubs in favour of library definitions
+- 3be455d: remove `LegacyDesignTokens` type in favor of spec `DesignTokens`
+- 3be455d: remove legacy token property checks
+- 3be455d: remove LegacyRuleContext and detect `$deprecated` tokens
+- 3be455d: remove legacy token fallbacks and surface token parse errors
+- 3be455d: rename parser folder to framework-parsers
+- 3be455d: resolve aliases when flattening design tokens and remove alias filtering in token tracker
+- 3be455d: fix theme detection to recognize per-theme tokens defined at the root and export them via the CLI
+- 3be455d: add parser for spec-compliant design token files and validate token/group names
+- 3be455d: refactor token parser into modular pipeline
+- 3be455d: validate composite design token types like shadow, strokeStyle, gradient and typography
+- 3be455d: add detailed parser diagnostics with file locations
+- 3be455d: fix tokens command to respect global config path option
+- 3be455d: include token metadata in unused token reports
+- 3be455d: validate alias references in spec token parser
+- 3be455d: validate duration and cubicBezier token values and restrict units
+- 3be455d: enforce .tokens paths in config and validate token files
+- 3be455d: validate tokens have explicit types and enforce per-type semantics
+- 3be455d: require design token objects in config and surface token parsing errors
+
 ## 5.0.0
 
 ### Major Changes
