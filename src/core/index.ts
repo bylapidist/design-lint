@@ -4,6 +4,7 @@ export { setupLinter } from './setup.js';
 export { applyFixes } from './apply-fixes.js';
 export { Runner } from './runner.js';
 export { PluginError, ConfigError } from './errors.js';
+export { FILE_TYPE_MAP, defaultPatterns } from './file-types.js';
 export type {
   Environment,
   TokenProvider,
