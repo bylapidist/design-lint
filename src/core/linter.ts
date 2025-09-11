@@ -3,6 +3,7 @@ import type {
   LintMessage,
   RuleContext,
   DesignTokens,
+  RuleModule,
 } from './types.js';
 import { getFlattenedTokens as flattenTokens } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
@@ -154,10 +155,31 @@ export class Linter {
     if (this.tokenTracker.hasUnusedTokenRules()) {
       await this.tokenTracker.trackUsage(text);
     }
+    const { listeners, ruleDescriptions, ruleCategories, messages } =
+      this.buildRuleContexts(enabled, sourceId, metadata);
+    await this.runParser(text, sourceId, docType, listeners, messages);
+    const filtered = this.filterDisabledMessages(text, messages);
+    return {
+      sourceId,
+      messages: filtered,
+      ruleDescriptions,
+      ruleCategories,
+    };
+  }
+
+  protected buildRuleContexts(
+    enabled: ReturnType<RuleRegistry['getEnabledRules']>,
+    sourceId: string,
+    metadata?: Record<string, unknown>,
+  ): {
+    listeners: ReturnType<RuleModule['create']>[];
+    ruleDescriptions: Record<string, string>;
+    ruleCategories: Record<string, string>;
+    messages: LintMessage[];
+  } {
     const messages: LintMessage[] = [];
     const ruleDescriptions: Record<string, string> = {};
     const ruleCategories: Record<string, string> = {};
-    const disabledLines = getDisabledLines(text);
     const listeners = enabled.map(({ rule, options, severity }) => {
       ruleDescriptions[rule.name] = rule.meta.description;
       if (rule.meta.category) {
@@ -177,18 +199,29 @@ export class Linter {
       };
       return rule.create(ctx);
     });
+    return { listeners, ruleDescriptions, ruleCategories, messages };
+  }
+
+  protected async runParser(
+    text: string,
+    sourceId: string,
+    docType: string | undefined,
+    listeners: ReturnType<RuleModule['create']>[],
+    messages: LintMessage[],
+  ): Promise<void> {
     const type = docType ?? inferFileType(sourceId);
     const parser = parserRegistry[type];
     if (parser) {
       await parser(text, sourceId, listeners, messages);
     }
-    const filtered = messages.filter((m) => !disabledLines.has(m.line));
-    return {
-      sourceId,
-      messages: filtered,
-      ruleDescriptions,
-      ruleCategories,
-    };
+  }
+
+  protected filterDisabledMessages(
+    text: string,
+    messages: LintMessage[],
+  ): LintMessage[] {
+    const disabledLines = getDisabledLines(text);
+    return messages.filter((m) => !disabledLines.has(m.line));
   }
 }
 
