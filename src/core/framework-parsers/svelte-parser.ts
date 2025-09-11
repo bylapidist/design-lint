@@ -69,12 +69,27 @@ export async function lintSvelte(
     }
     return decls;
   };
+  const toNodesArray = (value: unknown): unknown[] =>
+    Array.isArray(value) ? value : [];
   const getNodes = (node: Record<string, unknown>): unknown[] => {
-    if (Array.isArray(node.nodes)) return node.nodes;
-    if (Array.isArray(node.children)) return node.children;
+    const nodes: unknown[] = [];
+    nodes.push(...toNodesArray(node.nodes));
+    nodes.push(...toNodesArray(node.children));
     const frag = node.fragment;
-    if (isRecord(frag) && Array.isArray(frag.nodes)) return frag.nodes;
-    return [];
+    nodes.push(...toNodesArray(isRecord(frag) ? frag.nodes : undefined));
+    for (const key of [
+      'consequent',
+      'alternate',
+      'body',
+      'fallback',
+      'pending',
+      'then',
+      'catch',
+    ]) {
+      const value = node[key];
+      nodes.push(...toNodesArray(isRecord(value) ? value.nodes : undefined));
+    }
+    return nodes;
   };
   const walk = (node: unknown): void => {
     if (!isRecord(node)) return;
