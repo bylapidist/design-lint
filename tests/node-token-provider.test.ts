@@ -35,6 +35,16 @@ void test('accepts explicit theme records without modification', async () => {
   assert.deepEqual(result, themes);
 });
 
+void test('accepts theme records with tokens at the root', async () => {
+  const themes = {
+    light: { primary: { $type: 'color', $value: '#fff' } },
+    dark: { primary: { $type: 'color', $value: '#000' } },
+  };
+  const provider = new NodeTokenProvider(themes);
+  const result = await provider.load();
+  assert.deepEqual(result, themes);
+});
+
 void test('accepts theme records with primitive metadata fields', async () => {
   const themesWithMetadata = {
     light: tokens,
