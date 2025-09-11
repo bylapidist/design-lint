@@ -1,15 +1,31 @@
-import type { RuleModule } from '../../core/types.js';
-import { isRecord } from '../../utils/type-guards.js';
+import type { RuleModule } from '../core/types.js';
+import { isRecord } from './is-record.js';
 
+/**
+ * Options for {@link isRuleModule}.
+ */
 export interface IsRuleModuleOptions {
+  /**
+   * Whether `meta` information must be present and non-empty.
+   */
   requireMeta?: boolean;
+  /**
+   * Whether the `name` must be a non-empty string.
+   */
   requireNonEmptyName?: boolean;
 }
 
-export function isRuleModule(
+/**
+ * Determines if an unknown value conforms to the {@link RuleModule} shape.
+ *
+ * @param value - The value to check.
+ * @param options - Validation requirements.
+ * @returns `true` if the value is a `RuleModule`.
+ */
+export const isRuleModule = (
   value: unknown,
   options: IsRuleModuleOptions = {},
-): value is RuleModule {
+): value is RuleModule => {
   if (!isRecord(value)) return false;
   const { requireMeta = false, requireNonEmptyName = false } = options;
   if (typeof value.name !== 'string') return false;
@@ -25,4 +41,4 @@ export function isRuleModule(
     }
   }
   return true;
-}
+};

@@ -1,22 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import ts from 'typescript';
+import {
+  createSourceFile,
+  forEachChild,
+  isStringLiteral,
+  ScriptKind,
+  ScriptTarget,
+  type Node,
+  type StringLiteral,
+} from 'typescript';
 import { isStyleValue } from '../src/utils/style.ts';
 
-function getStringNode(code: string, text: string): ts.StringLiteral {
-  const sf = ts.createSourceFile(
+function getStringNode(code: string, text: string): StringLiteral {
+  const sf = createSourceFile(
     'file.tsx',
     code,
-    ts.ScriptTarget.Latest,
+    ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TSX,
+    ScriptKind.TSX,
   );
-  let found: ts.StringLiteral | undefined;
-  const visit = (node: ts.Node) => {
-    if (ts.isStringLiteral(node) && node.text === text) {
+  let found: StringLiteral | undefined;
+  const visit = (node: Node) => {
+    if (isStringLiteral(node) && node.text === text) {
       found = node;
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   };
   visit(sf);
   if (!found) throw new Error('String not found');

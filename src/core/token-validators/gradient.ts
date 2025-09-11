@@ -1,4 +1,5 @@
-import { isArray, isRecord } from './utils.js';
+import { isArray } from '../../utils/is-array.js';
+import { isRecord } from '../../utils/is-record.js';
 import { validateColor } from './color.js';
 
 export function validateGradient(value: unknown, path: string): void {

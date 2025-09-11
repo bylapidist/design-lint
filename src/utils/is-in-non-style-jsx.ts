@@ -1,66 +1,14 @@
 import {
   isSourceFile,
-  isIdentifier,
-  isJsxElement,
-  isJsxFragment,
   isJsxAttribute,
   isCallExpression,
   isPropertyAssignment,
-  isJsxSelfClosingElement,
-  isPropertyAccessExpression,
   type Node,
 } from 'typescript';
-
-/**
- * Determines whether a node is any JSX-like construct.
- *
- * Specifically checks for:
- * - JSX elements (`<div>...</div>`)
- * - JSX self-closing elements (`<div />`)
- * - JSX fragments (`<>...</>`)
- *
- * @param n - The TypeScript AST node to check.
- * @returns `true` if the node is JSX-like, `false` otherwise.
- */
-const isJsxLike = (n: Node) =>
-  isJsxElement(n) || isJsxSelfClosingElement(n) || isJsxFragment(n);
-
-/**
- * Checks if a node represents a property or attribute named `style`.
- *
- * @param n - The TypeScript AST node to check.
- * @returns `true` if the node's text is exactly "style", `false` otherwise.
- */
-const isStyleName = (n: Node) => n.getText() === 'style';
-
-/**
- * Determines if a node represents a `React.createElement(...)` call.
- *
- * This is useful for detecting React component creation in code that
- * doesn't use JSX syntax.
- *
- * @param n - The TypeScript AST node to check.
- * @returns `true` if the node is a call to `React.createElement`.
- */
-const isReactCreateElementCall = (n: Node) =>
-  isCallExpression(n) &&
-  isPropertyAccessExpression(n.expression) &&
-  n.expression.name.getText() === 'createElement' &&
-  n.expression.expression.getText() === 'React';
-
-/**
- * Determines if a node represents a hyperscript `h(...)` call.
- *
- * Hyperscript is a JSX alternative used in some frameworks
- * (e.g. Preact, Vue render functions).
- *
- * @param n - The TypeScript AST node to check.
- * @returns `true` if the node is a call to `h(...)`.
- */
-const isHyperscriptCall = (n: Node) =>
-  isCallExpression(n) &&
-  isIdentifier(n.expression) &&
-  n.expression.text === 'h';
+import { isJsxLike } from './is-jsx-like.js';
+import { isStyleName } from './is-style-name.js';
+import { isReactCreateElementCall } from './is-react-create-element-call.js';
+import { isHyperscriptCall } from './is-hyperscript-call.js';
 
 /**
  * Determines whether a given TypeScript AST node is inside JSX (or JSX-like code)

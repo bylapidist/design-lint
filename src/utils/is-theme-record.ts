@@ -1,20 +1,21 @@
 import type { DesignTokens } from '../core/types.js';
+import { isRecord } from './is-record.js';
 
-export function isObject(value: unknown): value is object {
-  return typeof value === 'object' && value !== null;
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return isObject(value) && !Array.isArray(value);
-}
-
-export function isDesignTokens(value: unknown): value is DesignTokens {
-  return isRecord(value);
-}
-
-export function isThemeRecord(
+/**
+ * Determines whether a value is a record of theme names mapping to design tokens.
+ *
+ * A valid theme record:
+ * - Is a record with at least one non-metadata key (keys not starting with `$`).
+ * - For a single theme, it must contain at least one nested theme object (not
+ *   just design tokens).
+ * - For multiple themes, they must share at least one common token key.
+ *
+ * @param val - The value to test.
+ * @returns `true` if the value is a theme record, `false` otherwise.
+ */
+export const isThemeRecord = (
   val: unknown,
-): val is Record<string, DesignTokens> {
+): val is Record<string, DesignTokens> => {
   if (!isRecord(val)) return false;
   const entries = Object.entries(val).filter(([k]) => !k.startsWith('$'));
   if (entries.length === 0) return false;
@@ -41,4 +42,4 @@ export function isThemeRecord(
     }
   }
   return true;
-}
+};

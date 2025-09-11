@@ -1,4 +1,4 @@
-import { isRecord } from './utils.js';
+import { isRecord } from '../../utils/is-record.js';
 import { validateFontFamily } from './fontFamily.js';
 import { validateDimension } from './dimension.js';
 import { validateFontWeight } from './fontWeight.js';
