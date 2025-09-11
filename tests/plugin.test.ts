@@ -7,6 +7,7 @@ import { loadConfig } from '../src/config/loader.ts';
 import { NodePluginLoader } from '../src/adapters/node/plugin-loader.ts';
 import type { PluginLoader } from '../src/core/plugin-loader.ts';
 import type { PluginModule, RuleModule } from '../src/core/types.ts';
+import { PluginError } from '../src/core/errors.ts';
 
 void test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
@@ -65,7 +66,12 @@ void test('throws for invalid plugin modules', async () => {
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
-    /Invalid plugin/,
+    (err) => {
+      assert.ok(err instanceof PluginError);
+      assert.equal(err.context, 'Plugin');
+      assert.equal(err.remediation, 'Ensure the plugin exports a rules array.');
+      return err.message.includes('Invalid plugin module');
+    },
   );
 });
 
@@ -80,7 +86,15 @@ void test('throws for invalid plugin rules', async () => {
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
-    /Invalid rule/,
+    (err) => {
+      assert.ok(err instanceof PluginError);
+      assert.ok(err.context.includes('invalid-rule-plugin'));
+      assert.equal(
+        err.remediation,
+        'Ensure each rule has a non-empty name, meta.description, and a create function.',
+      );
+      return err.message.includes('Invalid rule');
+    },
   );
 });
 
@@ -95,7 +109,15 @@ void test('throws when plugin module missing', async () => {
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
-    /Failed to load plugin/,
+    (err) => {
+      assert.ok(err instanceof PluginError);
+      assert.ok(err.context.includes('missing-plugin.js'));
+      assert.equal(
+        err.remediation,
+        'Ensure the plugin is installed and resolvable.',
+      );
+      return err.message.includes('Failed to load plugin');
+    },
   );
 });
 
@@ -108,7 +130,15 @@ void test('throws when plugin rule conflicts with existing rule', async () => {
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
-    /conflicts with an existing rule/,
+    (err) => {
+      assert.ok(err instanceof PluginError);
+      assert.ok(err.context.includes('conflict-plugin.ts'));
+      assert.equal(
+        err.remediation,
+        'Use a unique rule name to avoid collisions.',
+      );
+      return err.message.includes('conflicts with rule');
+    },
   );
 });
 
@@ -125,7 +155,12 @@ void test('throws when two plugins define the same rule name', async () => {
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
     (err) => {
-      assert.ok(err instanceof Error);
+      assert.ok(err instanceof PluginError);
+      assert.ok(err.context.includes('duplicate-rule-plugin.ts'));
+      assert.equal(
+        err.remediation,
+        'Use a unique rule name to avoid collisions.',
+      );
       assert.ok(err.message.includes(pluginA));
       assert.ok(err.message.includes(pluginB));
       return true;

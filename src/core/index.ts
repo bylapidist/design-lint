@@ -1,6 +1,7 @@
 export { Linter, type Config } from './linter.js';
 export { applyFixes } from './apply-fixes.js';
 export { Runner } from './runner.js';
+export { PluginError, ConfigError } from './errors.js';
 export type {
   Environment,
   TokenProvider,

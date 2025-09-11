@@ -5,7 +5,7 @@ import { pathToFileURL } from 'url';
 import { realpathIfExists, relFromCwd } from './utils/paths.js';
 import type { PluginModule } from '../../core/types.js';
 import type { PluginLoader, LoadedPlugin } from '../../core/plugin-loader.js';
-import { createEngineError } from '../../core/plugin-manager.js';
+import { PluginError } from '../../core/errors.js';
 
 export class NodePluginLoader implements PluginLoader {
   async load(p: string, configPath?: string): Promise<LoadedPlugin> {
@@ -19,7 +19,7 @@ export class NodePluginLoader implements PluginLoader {
       resolved = realpathIfExists(path.resolve(p));
     }
     if (!fs.existsSync(resolved)) {
-      throw createEngineError({
+      throw new PluginError({
         message: `Plugin not found: "${relFromCwd(resolved)}"`,
         context: `Plugin "${p}"`,
         remediation: 'Ensure the plugin is installed and resolvable.',
@@ -40,7 +40,7 @@ export class NodePluginLoader implements PluginLoader {
           `${pathToFileURL(resolved).href}?t=${String(Date.now())}`
         );
       } else {
-        throw createEngineError({
+        throw new PluginError({
           message: `Failed to load plugin "${p}": ${
             e instanceof Error ? e.message : String(e)
           }`,
@@ -61,7 +61,7 @@ function resolvePlugin(mod: unknown): PluginModule {
       return candidate;
     }
   }
-  throw createEngineError({
+  throw new PluginError({
     message: 'Invalid plugin module',
     context: 'Plugin',
     remediation: 'Ensure the plugin exports a rules array.',
