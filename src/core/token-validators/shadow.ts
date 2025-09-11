@@ -1,5 +1,5 @@
 import { isRecord } from '../../utils/is-record.js';
-import { toArray } from '../../utils/to-array.js';
+import { toArray } from '../../utils/collections/index.js';
 import { validateColor } from './color.js';
 import { validateDimension } from './dimension.js';
 

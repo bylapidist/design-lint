@@ -6,7 +6,7 @@ import type {
 } from '../core/types.js';
 import { z } from 'zod';
 import { isObject } from './is-object.js';
-import { toArray } from './to-array.js';
+import { toArray } from './collections/index.js';
 
 /**
  * Configuration for creating a token-based rule via {@link tokenRule}.

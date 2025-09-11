@@ -1,4 +1,4 @@
-import { isArray } from '../../utils/is-array.js';
+import { isArray } from '../../utils/collections/index.js';
 import { isRecord } from '../../utils/is-record.js';
 import { validateColor } from './color.js';
 
