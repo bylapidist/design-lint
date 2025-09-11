@@ -2,9 +2,14 @@ import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import { z } from 'zod';
-import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
-import { detectColorFormat, type ColorFormat } from '../utils/color/index.js';
+import { rules, guards, color } from '../utils/index.js';
+import type { ColorFormat } from '../utils/index.js';
+
+const { tokenRule } = rules;
+const {
+  ast: { isStyleValue },
+} = guards;
+const { detectColorFormat } = color;
 
 interface ColorRuleOptions {
   allow?: ColorFormat[];

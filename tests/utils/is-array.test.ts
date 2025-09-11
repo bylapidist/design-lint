@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isArray } from '../../src/utils/collections/index.js';
+import { collections } from '../../src/utils/index.js';
+
+const { isArray } = collections;
 
 void test('isArray detects arrays', () => {
   assert.equal(isArray([]), true);

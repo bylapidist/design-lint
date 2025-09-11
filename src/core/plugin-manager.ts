@@ -3,8 +3,13 @@ import type { RuleModule } from './types.js';
 import type { PluginLoader } from './plugin-loader.js';
 import type { Environment } from './environment.js';
 import { PluginError } from './errors.js';
-import { isRecord } from '../utils/is-record.js';
-import { isRuleModule } from '../utils/is-rule-module.js';
+import { guards, collections } from '../utils/index.js';
+
+const {
+  data: { isRecord },
+  domain: { isRuleModule },
+} = guards;
+const { isArray } = collections;
 
 export interface PluginMeta {
   path: string;
@@ -29,7 +34,7 @@ export class PluginManager {
         name,
         this.config.configPath,
       );
-      if (!isRecord(plugin) || !Array.isArray(plugin.rules)) {
+      if (!isRecord(plugin) || !isArray(plugin.rules)) {
         throw new PluginError({
           message: `Invalid plugin "${pluginSource}": expected { rules: RuleModule[] }`,
           context: `Plugin "${pluginSource}"`,

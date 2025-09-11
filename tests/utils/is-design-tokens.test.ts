@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isDesignTokens } from '../../src/utils/is-design-tokens.js';
+import { guards } from '../../src/utils/index.js';
+
+const {
+  domain: { isDesignTokens },
+} = guards;
 
 void test('isDesignTokens accepts records', () => {
   assert.equal(isDesignTokens({ foo: { $value: 'bar' } }), true);

@@ -6,4 +6,4 @@ import type { Node } from 'typescript';
  * @param n - The TypeScript AST node to check.
  * @returns `true` if the node's text is exactly "style", `false` otherwise.
  */
-export const isStyleName = (n: Node) => n.getText() === 'style';
+export const isStyleName = (n: Node): boolean => n.getText() === 'style';

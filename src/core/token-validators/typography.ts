@@ -1,8 +1,12 @@
-import { isRecord } from '../../utils/is-record.js';
+import { guards } from '../../utils/index.js';
 import { validateFontFamily } from './fontFamily.js';
 import { validateDimension } from './dimension.js';
 import { validateFontWeight } from './fontWeight.js';
 import { validateNumber } from './number.js';
+
+const {
+  data: { isRecord },
+} = guards;
 
 export function validateTypography(value: unknown, path: string): void {
   if (!isRecord(value)) {
