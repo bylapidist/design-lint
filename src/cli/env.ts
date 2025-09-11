@@ -6,16 +6,7 @@ import type { CacheProvider } from '../core/cache-provider.js';
 import type { Config, Linter } from '../core/linter.js';
 import type { LintResult } from '../core/types.js';
 import { createNodeEnvironment } from '../adapters/node/environment.js';
-
-const relFromCwd = (p: string) =>
-  path.relative(process.cwd(), p).split(path.sep).join('/');
-const realpathIfExists = (p: string) => {
-  try {
-    return fs.realpathSync.native(p);
-  } catch {
-    return p;
-  }
-};
+import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
 
 export interface Environment {
   formatter: (results: LintResult[], useColor?: boolean) => string;
