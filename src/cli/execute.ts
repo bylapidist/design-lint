@@ -1,8 +1,8 @@
 import { performance } from 'node:perf_hooks';
 import chalk from 'chalk';
 import writeFileAtomic from 'write-file-atomic';
-import type { LintResult } from '../core/types.js';
-import type { Linter } from '../core/linter.js';
+import type { LintResult } from '../core/types';
+import type { Linter } from '../core/linter';
 
 export interface ExecuteOptions {
   fix?: boolean;

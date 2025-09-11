@@ -1,5 +1,5 @@
 import { parse, formatRgb, formatHex, formatHsl } from 'culori';
-import type { FlattenedToken } from '../types.js';
+import type { FlattenedToken } from '../types';
 
 export type ColorSpace = 'rgb' | 'hsl' | 'hex';
 

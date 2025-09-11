@@ -1,5 +1,5 @@
-import type { RuleModule } from '../core/types.js';
-import { isRecord } from './is-record.js';
+import type { RuleModule } from '../core/types';
+import { isRecord } from './is-record';
 
 /**
  * Options for {@link isRuleModule}.

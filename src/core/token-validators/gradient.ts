@@ -1,6 +1,6 @@
-import { isArray } from '../../utils/is-array.js';
-import { isRecord } from '../../utils/is-record.js';
-import { validateColor } from './color.js';
+import { isArray } from '../../utils/is-array';
+import { isRecord } from '../../utils/is-record';
+import { validateColor } from './color';
 
 export function validateGradient(value: unknown, path: string): void {
   if (!isArray(value) || value.length === 0) {

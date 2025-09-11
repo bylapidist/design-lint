@@ -1,7 +1,7 @@
-import type { Config } from '../core/linter.js';
-import { parseDesignTokens } from '../core/parser/index.js';
-import { isDesignTokens } from '../utils/is-design-tokens.js';
-import { isThemeRecord } from '../utils/is-theme-record.js';
+import type { Config } from '../core/linter';
+import { parseDesignTokens } from '../core/parser/index';
+import { isDesignTokens } from '../utils/is-design-tokens';
+import { isThemeRecord } from '../utils/is-theme-record';
 
 export class ConfigTokenProvider {
   private config: Config;

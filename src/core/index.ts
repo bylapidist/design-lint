@@ -1,19 +1,19 @@
-export { Linter, type Config } from './linter.js';
-export { LintService } from './lint-service.js';
-export { setupLinter } from './setup.js';
-export { applyFixes } from './apply-fixes.js';
-export { Runner } from './runner.js';
-export { PluginError, ConfigError } from './errors.js';
-export { FILE_TYPE_MAP, defaultPatterns } from './file-types.js';
+export { Linter, type Config } from './linter';
+export { LintService } from './lint-service';
+export { setupLinter } from './setup';
+export { applyFixes } from './apply-fixes';
+export { Runner } from './runner';
+export { PluginError, ConfigError } from './errors';
+export { FILE_TYPE_MAP, defaultPatterns } from './file-types';
 export type {
   Environment,
   TokenProvider,
   DocumentSource,
   LintDocument,
-} from './environment.js';
-export type { PluginLoader, LoadedPlugin } from './plugin-loader.js';
-export type { PluginMeta } from './plugin-manager.js';
-export type { CacheProvider, CacheEntry } from './cache-provider.js';
+} from './environment';
+export type { PluginLoader, LoadedPlugin } from './plugin-loader';
+export type { PluginMeta } from './plugin-manager';
+export type { CacheProvider, CacheEntry } from './cache-provider';
 export type {
   LintResult,
   LintMessage,
@@ -27,7 +27,7 @@ export type {
   CSSDeclaration,
   Fix,
   FlattenedToken,
-} from './types.js';
+} from './types';
 export {
   matchToken,
   closestToken,
@@ -35,10 +35,10 @@ export {
   flattenDesignTokens,
   getFlattenedTokens,
   type TokenPattern,
-} from './token-utils.js';
+} from './token-utils';
 export {
   parseDesignTokens,
   getTokenLocation,
   registerTokenTransform,
   type TokenTransform,
-} from './parser/index.js';
+} from './parser/index';

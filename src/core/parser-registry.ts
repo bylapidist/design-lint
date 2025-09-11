@@ -1,8 +1,8 @@
-import type { LintMessage, RuleModule } from './types.js';
-import { lintVue } from './framework-parsers/vue-parser.js';
-import { lintSvelte } from './framework-parsers/svelte-parser.js';
-import { lintTS } from './framework-parsers/ts-parser.js';
-import { lintCSS } from './framework-parsers/css-parser.js';
+import type { LintMessage, RuleModule } from './types';
+import { lintVue } from './framework-parsers/vue-parser';
+import { lintSvelte } from './framework-parsers/svelte-parser';
+import { lintTS } from './framework-parsers/ts-parser';
+import { lintCSS } from './framework-parsers/css-parser';
 
 export type ParserStrategy = (
   text: string,

@@ -1,11 +1,11 @@
 import path from 'node:path';
-import type { Config } from '../core/linter.js';
-import { configSchema } from './schema.js';
-import { realpathIfExists } from '../adapters/node/utils/paths.js';
-import { resolveConfigFile } from './file-resolution.js';
-import { loadTokens } from './token-loader.js';
-import { isRecord } from '../utils/is-record.js';
-import { ConfigError } from '../core/errors.js';
+import type { Config } from '../core/linter';
+import { configSchema } from './schema';
+import { realpathIfExists } from '../adapters/node/utils/paths';
+import { resolveConfigFile } from './file-resolution';
+import { loadTokens } from './token-loader';
+import { isRecord } from '../utils/is-record';
+import { ConfigError } from '../core/errors';
 
 /**
  * Resolve and load configuration for the linter.
