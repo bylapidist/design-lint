@@ -7,12 +7,16 @@ import type {
 } from './types.js';
 import { getFlattenedTokens as flattenTokens } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
-import type { RuleRegistry } from './rule-registry.js';
-import type { TokenTracker } from './token-tracker.js';
+import { RuleRegistry } from './rule-registry.js';
+import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
-import type { LintDocument } from './environment.js';
+import type {
+  LintDocument,
+  Environment,
+  TokenProvider,
+} from './environment.js';
 import type { CacheProvider } from './cache-provider.js';
-import type { LintService } from './lint-service.js';
+import { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
 
 export const FILE_TYPE_MAP: Record<string, string> = {
@@ -62,21 +66,66 @@ export class Linter {
   private service?: LintService;
   constructor(
     config: Config,
-    deps: {
-      ruleRegistry: RuleRegistry;
-      tokenTracker: TokenTracker;
-      tokensReady: Promise<Record<string, DesignTokens>>;
-    },
+    depsOrEnv:
+      | {
+          ruleRegistry: RuleRegistry;
+          tokenTracker: TokenTracker;
+          tokensReady: Promise<Record<string, DesignTokens>>;
+        }
+      | Environment,
   ) {
-    this.config = {
+    const isEnv = (val: unknown): val is Environment =>
+      typeof val === 'object' && val !== null && 'documentSource' in val;
+
+    let resolvedConfig: ResolvedConfig = {
       ...config,
       tokens: config.tokens ?? {},
     };
+    let deps:
+      | {
+          ruleRegistry: RuleRegistry;
+          tokenTracker: TokenTracker;
+          tokensReady: Promise<Record<string, DesignTokens>>;
+        }
+      | undefined;
+    let env: Environment | undefined;
+
+    if (isEnv(depsOrEnv)) {
+      env = depsOrEnv;
+      const inlineTokens = config.tokens;
+      const provider: TokenProvider = env.tokenProvider ?? {
+        load: () => {
+          if (inlineTokens && isDesignTokens(inlineTokens)) {
+            flattenTokens({ default: inlineTokens });
+            return Promise.resolve({ default: inlineTokens });
+          }
+          return Promise.resolve({});
+        },
+      };
+      resolvedConfig = {
+        ...config,
+        tokens: inlineTokens ?? {},
+      };
+      deps = {
+        ruleRegistry: new RuleRegistry(resolvedConfig, env.pluginLoader),
+        tokenTracker: new TokenTracker(provider),
+        tokensReady: provider.load(),
+      };
+    } else {
+      deps = depsOrEnv;
+    }
+
+    this.config = resolvedConfig;
     this.ruleRegistry = deps.ruleRegistry;
     this.tokenTracker = deps.tokenTracker;
     this.tokensReady = deps.tokensReady.then((t) => {
       this.tokensByTheme = t;
     });
+
+    if (env) {
+      const service = new LintService(this, resolvedConfig, env);
+      this.setService(service);
+    }
   }
 
   setService(service: LintService): void {
@@ -222,6 +271,10 @@ export class Linter {
 }
 
 export { applyFixes } from './apply-fixes.js';
+
+function isDesignTokens(val: unknown): val is DesignTokens {
+  return typeof val === 'object' && val !== null;
+}
 
 function getDisabledLines(text: string): Set<number> {
   const disabled = new Set<number>();
