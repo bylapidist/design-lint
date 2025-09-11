@@ -1,15 +1,17 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const fontWeightRule: RuleModule = {
+export const fontWeightRule = tokenRule({
   name: 'design-token/font-weight',
   meta: { description: 'enforce font-weight tokens', category: 'design-token' },
-  create(context) {
-    const fontWeights = context.getFlattenedTokens('fontWeight');
+  tokens: 'fontWeight',
+  message:
+    'design-token/font-weight requires font weight tokens; configure tokens with $type "fontWeight" under a "fontWeights" group to enable this rule.',
+  getAllowed(tokens) {
     const numeric = new Set<number>();
     const values = new Set<string>();
-    for (const { path, token } of fontWeights) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('fontWeights.')) continue;
       const val = token.$value;
       if (typeof val === 'number') {
@@ -21,15 +23,12 @@ export const fontWeightRule: RuleModule = {
         if (!isNaN(num)) numeric.add(num);
       }
     }
-    if (values.size === 0) {
-      context.report({
-        message:
-          'design-token/font-weight requires font weight tokens; configure tokens with $type "fontWeight" under a "fontWeights" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return { numeric, values };
+  },
+  isEmpty(allowed) {
+    return allowed.values.size === 0;
+  },
+  create(context, { numeric, values }) {
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;
@@ -70,4 +69,4 @@ export const fontWeightRule: RuleModule = {
       },
     };
   },
-};
+});

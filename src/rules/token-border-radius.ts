@@ -1,22 +1,24 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
 interface BorderRadiusOptions {
   units?: string[];
 }
 
-export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
+export const borderRadiusRule = tokenRule<BorderRadiusOptions>({
   name: 'design-token/border-radius',
   meta: {
     description: 'enforce border-radius tokens',
     category: 'design-token',
   },
-  create(context) {
-    const radiusTokens = context.getFlattenedTokens('dimension');
+  tokens: 'dimension',
+  message:
+    'design-token/border-radius requires radius tokens; configure tokens with $type "dimension" under a "radius" group to enable this rule.',
+  getAllowed(tokens) {
     const allowed = new Set<number>();
-    for (const { path, token } of radiusTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('radius.')) continue;
       const val = token.$value;
       if (val && typeof val === 'object') {
@@ -26,15 +28,9 @@ export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
         }
       }
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/border-radius requires radius tokens; configure tokens with $type "dimension" under a "radius" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     const allowedUnits = new Set(
       (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
         u.toLowerCase(),
@@ -81,4 +77,4 @@ export const borderRadiusRule: RuleModule<BorderRadiusOptions> = {
       },
     };
   },
-};
+});

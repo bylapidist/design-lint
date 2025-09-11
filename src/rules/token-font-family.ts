@@ -1,25 +1,21 @@
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 
-export const fontFamilyRule: RuleModule = {
+export const fontFamilyRule = tokenRule({
   name: 'design-token/font-family',
   meta: { description: 'enforce font-family tokens', category: 'design-token' },
-  create(context) {
-    const fontFamilies = context.getFlattenedTokens('fontFamily');
+  tokens: 'fontFamily',
+  message:
+    'design-token/font-family requires font tokens; configure tokens with $type "fontFamily" under a "fonts" group to enable this rule.',
+  getAllowed(tokens) {
     const fonts = new Set<string>();
-    for (const { path, token } of fontFamilies) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('fonts.')) continue;
       const val = token.$value;
       if (typeof val === 'string') fonts.add(val);
     }
-    if (fonts.size === 0) {
-      context.report({
-        message:
-          'design-token/font-family requires font tokens; configure tokens with $type "fontFamily" under a "fonts" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return fonts;
+  },
+  create(context, fonts) {
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'font-family') {
@@ -40,4 +36,4 @@ export const fontFamilyRule: RuleModule = {
       },
     };
   },
-};
+});

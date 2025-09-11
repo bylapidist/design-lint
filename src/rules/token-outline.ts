@@ -1,28 +1,25 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 
-export const outlineRule: RuleModule = {
+const normalize = (val: string): string =>
+  valueParser.stringify(valueParser(val).nodes).trim();
+
+export const outlineRule = tokenRule({
   name: 'design-token/outline',
   meta: { description: 'enforce outline tokens', category: 'design-token' },
-  create(context) {
-    const outlineTokens = context.getFlattenedTokens('string');
-    const normalize = (val: string): string =>
-      valueParser.stringify(valueParser(val).nodes).trim();
+  tokens: 'string',
+  message:
+    'design-token/outline requires outline tokens; configure tokens with $type "string" under an "outlines" group to enable this rule.',
+  getAllowed(tokens) {
     const allowed = new Set<string>();
-    for (const { path, token } of outlineTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('outlines.')) continue;
       const val = token.$value;
       if (typeof val === 'string') allowed.add(normalize(val));
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/outline requires outline tokens; configure tokens with $type "string" under an "outlines" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'outline') {
@@ -38,4 +35,4 @@ export const outlineRule: RuleModule = {
       },
     };
   },
-};
+});

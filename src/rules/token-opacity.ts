@@ -1,30 +1,25 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule, FlattenedToken } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const opacityRule: RuleModule = {
+export const opacityRule = tokenRule({
   name: 'design-token/opacity',
   meta: { description: 'enforce opacity tokens', category: 'design-token' },
-  create(context) {
-    const opacityTokens = context.getFlattenedTokens('number');
-    const allowed = new Set(
-      opacityTokens
-        .filter(
-          (t): t is FlattenedToken & { token: { $value: number } } =>
-            t.path.startsWith('opacity.') && typeof t.token.$value === 'number',
-        )
-        .map((t) => t.token.$value),
-    );
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/opacity requires opacity tokens; configure tokens with $type "number" under an "opacity" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
+  tokens: 'number',
+  message:
+    'design-token/opacity requires opacity tokens; configure tokens with $type "number" under an "opacity" group to enable this rule.',
+  getAllowed(tokens) {
+    const allowed = new Set<number>();
+    for (const { path, token } of tokens) {
+      if (!path.startsWith('opacity.')) continue;
+      if (typeof token.$value === 'number') {
+        allowed.add(token.$value);
+      }
     }
+    return allowed;
+  },
+  create(context, allowed) {
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;
@@ -57,4 +52,4 @@ export const opacityRule: RuleModule = {
       },
     };
   },
-};
+});

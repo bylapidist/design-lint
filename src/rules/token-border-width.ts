@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 import { isRecord } from '../utils/type-guards.js';
 
@@ -8,33 +8,27 @@ interface BorderWidthOptions {
   units?: string[];
 }
 
-export const borderWidthRule: RuleModule<BorderWidthOptions> = {
+export const borderWidthRule = tokenRule<BorderWidthOptions>({
   name: 'design-token/border-width',
   meta: {
     description: 'enforce border-width tokens',
     category: 'design-token',
   },
-  create(context) {
-    const widthTokens = context.getFlattenedTokens('dimension');
-    const parse = (val: unknown): number | null => {
-      if (isRecord(val) && typeof val.value === 'number') return val.value;
-      return null;
-    };
+  tokens: 'dimension',
+  message:
+    'design-token/border-width requires border width tokens; configure tokens with $type "dimension" under a "borderWidths" group to enable this rule.',
+  getAllowed(tokens) {
+    const parse = (val: unknown): number | null =>
+      isRecord(val) && typeof val.value === 'number' ? val.value : null;
     const allowed = new Set<number>();
-    for (const { path, token } of widthTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('borderWidths.')) continue;
       const num = parse(token.$value);
       if (num !== null) allowed.add(num);
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/border-width requires border width tokens; configure tokens with $type "dimension" under a "borderWidths" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     const allowedUnits = new Set(
       (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
         u.toLowerCase(),
@@ -125,6 +119,6 @@ export const borderWidthRule: RuleModule<BorderWidthOptions> = {
       },
     };
   },
-};
+});
 
 export default borderWidthRule;

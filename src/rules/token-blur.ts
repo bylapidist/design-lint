@@ -1,35 +1,29 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isRecord } from '../utils/type-guards.js';
 
 interface BlurRuleOptions {
   units?: string[];
 }
 
-export const blurRule: RuleModule<BlurRuleOptions> = {
+export const blurRule = tokenRule<BlurRuleOptions>({
   name: 'design-token/blur',
   meta: { description: 'enforce blur tokens', category: 'design-token' },
-  create(context) {
-    const blurTokens = context.getFlattenedTokens('dimension');
-    const parse = (val: unknown): number | null => {
-      if (isRecord(val) && typeof val.value === 'number') return val.value;
-      return null;
-    };
+  tokens: 'dimension',
+  message:
+    'design-token/blur requires blur tokens; configure tokens with $type "dimension" under a "blurs" group to enable this rule.',
+  getAllowed(tokens) {
+    const parse = (val: unknown): number | null =>
+      isRecord(val) && typeof val.value === 'number' ? val.value : null;
     const allowed = new Set<number>();
-    for (const { path, token } of blurTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('blurs.')) continue;
       const num = parse(token.$value);
       if (num !== null) allowed.add(num);
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/blur requires blur tokens; configure tokens with $type "dimension" under a "blurs" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     const allowedUnits = new Set(
       (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
         u.toLowerCase(),
@@ -62,4 +56,4 @@ export const blurRule: RuleModule<BlurRuleOptions> = {
       },
     };
   },
-};
+});
