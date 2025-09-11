@@ -1,10 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import { Runner } from '../../src/index.ts';
 import { TokenTracker } from '../../src/core/token-tracker.ts';
-import { createFileDocument } from '../../src/adapters/node/file-document.ts';
+import type { LintDocument } from '../../src/core/environment.ts';
 
 interface CacheEntry {
   mtime: number;
@@ -35,24 +33,27 @@ class MemoryCache {
 }
 
 void test('Runner handles non-positive concurrency values', async () => {
-  const dir = await fs.mkdtemp(path.join(process.cwd(), 'tmp-'));
-  const file = path.join(dir, 'test.css');
-  await fs.writeFile(file, 'a{color:red}');
+  const doc: LintDocument = {
+    id: 'test.css',
+    type: 'css',
+    getText: () => Promise.resolve('a{color:red}'),
+  };
   const runner = new Runner({
     config: { concurrency: 0, tokens: {} },
     tokenTracker: new TokenTracker(),
     lintDocument: (text, sourceId) =>
       Promise.resolve({ sourceId, messages: [] }),
   });
-  const res = await runner.run([createFileDocument(file)]);
-  assert.equal(res.results[0]?.sourceId, file);
-  await fs.rm(dir, { recursive: true, force: true });
+  const res = await runner.run([doc]);
+  assert.equal(res.results[0]?.sourceId, 'test.css');
 });
 
 void test('Runner prunes cache and saves results', async () => {
-  const dir = await fs.mkdtemp(path.join(process.cwd(), 'tmp-'));
-  const file = path.join(dir, 'test.css');
-  await fs.writeFile(file, 'a{color:red}');
+  const doc: LintDocument = {
+    id: 'test.css',
+    type: 'css',
+    getText: () => Promise.resolve('a{color:red}'),
+  };
   const cache = new MemoryCache();
   await cache.set('ghost.css', { mtime: 0, size: 0, result: {} });
   const runner = new Runner({
@@ -61,8 +62,7 @@ void test('Runner prunes cache and saves results', async () => {
     lintDocument: (text, sourceId) =>
       Promise.resolve({ sourceId, messages: [] }),
   });
-  await runner.run([createFileDocument(file)], false, cache, 'cache');
-  assert.deepEqual(await cache.keys(), [file]);
+  await runner.run([doc], false, cache, 'cache');
+  assert.deepEqual(await cache.keys(), ['test.css']);
   assert.ok(cache.saved);
-  await fs.rm(dir, { recursive: true, force: true });
 });
