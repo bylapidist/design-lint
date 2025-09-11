@@ -14,6 +14,7 @@ This page explains every option in `designlint.config.*`. It targets developers 
 - [Rules and severity](#rules-and-severity)
 - [Plugins](#plugins)
 - [Overrides](#overrides)
+- [Configuration best practices](#configuration-best-practices)
 - [JS and TS config files](#js-and-ts-config-files)
 - [Common patterns](#common-patterns)
 - [See also](#see-also)
@@ -28,9 +29,11 @@ Create a configuration file at the project root:
 }
 ```
 
-The file may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`.
+The config file name may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`. design-lint searches upward from the current working directory until it finds one of these files. Nested config files override settings from parent directories, allowing per-package customization in monorepos.
 
 ### Top-level options
+
+Each option tunes a specific aspect of design-lint. Use the table below as a quick reference.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -39,8 +42,8 @@ The file may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`.
 | `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
 | `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
 | `patterns` | string[] | `[]` | File patterns to lint when none are passed on the CLI. |
-| `concurrency` | number | `os.cpus()` | Maximum parallel workers. |
-| `wrapTokensWithVar` | boolean | `false` | Wrap token values with `var()` when autofixing CSS. |
+| `concurrency` | number | `os.cpus()` | Maximum parallel workers. Lower the value when running multiple linters in CI to avoid resource contention. |
+| `wrapTokensWithVar` | boolean | `false` | Wrap token values with `var()` when autofixing CSS. Useful when migrating legacy codebases to CSS variables. |
 
 
 ## Tokens
@@ -54,12 +57,16 @@ Inline example:
     "color": {
       "primary": { "$type": "color", "$value": "#ff0000" },
       "secondary": { "$type": "color", "$value": "{color.primary}" }
+    },
+    "space": {
+      "sm": { "$type": "dimension", "$value": "4px" },
+      "md": { "$type": "dimension", "$value": "8px" }
     }
   }
 }
 ```
 
-To group tokens by theme, supply an object keyed by theme name. Each theme may contain an inline token tree or a path to an external token file. Paths resolve relative to the configuration file:
+Organise tokens by category—such as `color`, `space`, or `typography`—to mirror your design language. To support light and dark themes, supply an object keyed by theme name. Each theme may contain an inline token tree or a path to an external token file. Paths resolve relative to the configuration file:
 
 ```json
 {
@@ -111,6 +118,12 @@ See the [plugins guide](./plugins.md) to author and publish your own.
 
 ## Overrides
 Use overrides to apply different settings to specific files. Create separate configuration files in subdirectories or use a JavaScript config file to inspect file paths at runtime.
+
+## Configuration best practices
+- **Layer configs in monorepos.** Place a root config with shared tokens and rules, then add package-level configs to tailor behavior.
+- **Keep tokens close to source.** Store token files alongside the components that consume them to simplify updates.
+- **Avoid global ignores.** Prefer targeted `ignoreFiles` entries over broad `.gitignore` patterns to reduce accidental omissions.
+- **Validate configs in CI.** Run design-lint as part of pull requests to catch misconfigurations early.
 
 ## JS and TS config files
 Configuration can be written in JavaScript or TypeScript for dynamic setups:
