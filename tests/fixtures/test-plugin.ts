@@ -18,6 +18,8 @@ const rule: RuleModule<unknown> = {
 };
 
 const plugin: PluginModule = {
+  name: 'test-plugin',
+  version: '1.0.0',
   rules: [rule],
 };
 

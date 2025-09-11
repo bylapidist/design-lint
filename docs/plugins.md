@@ -16,7 +16,7 @@ Plugins let you package and share rules, formatters, and other extensions. This 
 - [See also](#see-also)
 
 ## Overview
-A plugin is an npm package that exports an object with a `rules` array. The package name forms the rule namespace: `<plugin>/<rule>`.
+A plugin is an npm package that exports an object with a `rules` array. Plugins may also include optional `name`, `version`, and an `init(env)` function for one-time setup. The package name forms the rule namespace: `<plugin>/<rule>`.
 
 > **Note:** Declare `@lapidist/design-lint` as a `peerDependency` to ensure users install a compatible version.
 
@@ -62,6 +62,8 @@ const noRawColors: RuleModule<unknown> = {
 };
 
 export default {
+  name: 'design-lint-plugin-acme',
+  version: '1.0.0',
   rules: [noRawColors],
 };
 ```
@@ -88,18 +90,21 @@ const rule: RuleModule<{ ignore?: string[] }> = {
 
 ### 3. Register token transforms
 If your plugin consumes design tokens from other tools, provide a transform
-to convert them to the W3C format. Register the transform during plugin
-initialisation:
+to convert them to the W3C format. Register the transform in the plugin's
+`init` function:
 
 ```ts
 import { registerTokenTransform, type DesignTokens } from '@lapidist/design-lint';
 
-export function setup(): void {
-  const unregister = registerTokenTransform((tokens: DesignTokens) =>
-    convertFromFigma(tokens),
-  );
-  // call unregister() during teardown if the transform is temporary
-}
+export default {
+  rules: [],
+  init() {
+    const unregister = registerTokenTransform((tokens: DesignTokens) =>
+      convertFromFigma(tokens),
+    );
+    // call unregister() during teardown if the transform is temporary
+  },
+};
 
 function convertFromFigma(tokens: DesignTokens): DesignTokens {
   // convert tokens here

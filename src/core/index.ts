@@ -12,6 +12,7 @@ export type {
   LintDocument,
 } from './environment.js';
 export type { PluginLoader, LoadedPlugin } from './plugin-loader.js';
+export type { PluginInfo } from './plugin-manager.js';
 export type { CacheProvider, CacheEntry } from './cache-provider.js';
 export type {
   LintResult,

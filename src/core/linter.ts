@@ -91,7 +91,7 @@ export class Linter {
         tokens: inlineTokens ?? {},
       };
       deps = {
-        ruleRegistry: new RuleRegistry(resolvedConfig, env.pluginLoader),
+        ruleRegistry: new RuleRegistry(resolvedConfig, env),
         tokenTracker: new TokenTracker(provider),
         tokensReady: provider.load(),
       };
@@ -169,6 +169,10 @@ export class Linter {
 
   async getPluginPaths(): Promise<string[]> {
     return this.ruleRegistry.getPluginPaths();
+  }
+
+  async getPlugins(): Promise<import('./plugin-manager.js').PluginInfo[]> {
+    return this.ruleRegistry.getPlugins();
   }
 
   private async lintText(

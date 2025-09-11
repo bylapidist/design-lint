@@ -1,26 +1,31 @@
 import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
-import type { PluginLoader } from './plugin-loader.js';
+import type { Environment } from './environment.js';
 import { builtInRules } from '../rules/index.js';
-import { PluginManager } from './plugin-manager.js';
+import { PluginManager, type PluginInfo } from './plugin-manager.js';
 import { ConfigError } from './errors.js';
 
 export class RuleRegistry {
   private ruleMap = new Map<string, { rule: RuleModule; source: string }>();
   private pluginLoad: Promise<void>;
-  private pluginPaths: string[] = [];
+  private plugins: PluginInfo[] = [];
   private pluginManager?: PluginManager;
   constructor(
     private config: Config,
-    loader?: PluginLoader,
+    env?: Environment,
   ) {
     for (const rule of builtInRules) {
       this.ruleMap.set(rule.name, { rule, source: 'built-in' });
     }
-    if (loader && (this.config.plugins?.length ?? 0) > 0) {
-      this.pluginManager = new PluginManager(this.config, this.ruleMap, loader);
-      this.pluginLoad = this.pluginManager.getPlugins().then((paths) => {
-        this.pluginPaths = paths;
+    if (env?.pluginLoader && (this.config.plugins?.length ?? 0) > 0) {
+      this.pluginManager = new PluginManager(
+        this.config,
+        this.ruleMap,
+        env.pluginLoader,
+        env,
+      );
+      this.pluginLoad = this.pluginManager.getPlugins().then((plugins) => {
+        this.plugins = plugins;
       });
     } else {
       this.pluginLoad = Promise.resolve();
@@ -93,6 +98,11 @@ export class RuleRegistry {
 
   async getPluginPaths(): Promise<string[]> {
     await this.pluginLoad;
-    return this.pluginPaths;
+    return this.plugins.map((p) => p.path);
+  }
+
+  async getPlugins(): Promise<PluginInfo[]> {
+    await this.pluginLoad;
+    return this.plugins;
   }
 }

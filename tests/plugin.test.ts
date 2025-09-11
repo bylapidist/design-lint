@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 import { loadConfig } from '../src/config/loader.ts';
@@ -125,8 +126,10 @@ void test('throws when plugin rule conflicts with existing rule', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'conflict-plugin.ts');
   const linter = initLinter(
     { plugins: [pluginPath] },
-    new FileSource(),
-    new NodePluginLoader(),
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
   );
   await assert.rejects(
     () => linter.lintText('const a = 1;', 'file.ts'),
@@ -180,6 +183,36 @@ void test('getPluginPaths returns resolved plugin paths', async () => {
   await linter.lintText('const a = 1;', 'file.ts');
   const paths = await linter.getPluginPaths();
   assert.deepEqual(paths, [pluginPath]);
+});
+
+void test('plugin init runs with environment', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'init-plugin.ts');
+  const env = {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+  };
+  const linter = initLinter({ plugins: [pluginPath] }, env);
+  await linter.getPluginPaths();
+  const { initCount, receivedEnv } = (await import(
+    pathToFileURL(pluginPath).href
+  )) as { initCount: number; receivedEnv: unknown };
+  assert.equal(initCount, 1);
+  assert.ok(receivedEnv);
+});
+
+void test('getPlugins returns metadata', async () => {
+  const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
+  const linter = initLinter(
+    { plugins: [pluginPath] },
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new NodePluginLoader(),
+    },
+  );
+  const plugins = await linter.getPlugins();
+  assert.deepEqual(plugins, [
+    { path: pluginPath, name: 'test-plugin', version: '1.0.0' },
+  ]);
 });
 
 void test('supports custom plugin loaders', async () => {

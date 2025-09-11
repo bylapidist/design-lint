@@ -29,7 +29,7 @@ export function setupLinter(
     tokens: inlineTokens ?? {},
   };
   const tokensReady = provider.load();
-  const ruleRegistry = new RuleRegistry(resolvedConfig, env.pluginLoader);
+  const ruleRegistry = new RuleRegistry(resolvedConfig, env);
   const tokenTracker = new TokenTracker(provider);
   const linter = new Linter(resolvedConfig, {
     ruleRegistry,
