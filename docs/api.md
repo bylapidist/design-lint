@@ -61,6 +61,10 @@ Key methods:
 - `applyFixes(text, messages)` – apply non-overlapping fixes.
 - `registerTokenTransform(transform)` – convert design tokens before validation;
   returns an unregister function.
+- `parseDesignTokens(tokens, getLoc?, options?)` – validate and flatten design tokens.
+- `readDesignTokensFile(path)` – load and validate a `.tokens` or `.tokens.json` file.
+- `parseDesignTokensFile(path)` – read and parse a design tokens file, returning flattened tokens.
+- `TokenParseError` – error type exposing file location details for token parsing failures.
 
 ### Token transforms
 Design token objects may originate from sources like Figma or Tokens Studio.
