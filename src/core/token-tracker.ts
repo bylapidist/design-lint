@@ -130,14 +130,10 @@ function collectTokenValues(
         if (!values.has(key)) values.set(key, flat);
         continue;
       }
-      if (isDimension(val)) {
+      if (isValueWithUnit(val)) {
         const key = `${String(val.value)}${val.unit}`;
         if (!values.has(key)) values.set(key, flat);
         continue;
-      }
-      if (isDuration(val)) {
-        const key = `${String(val.value)}${val.unit}`;
-        if (!values.has(key)) values.set(key, flat);
       }
     }
   }
@@ -162,15 +158,9 @@ function isUnusedTokenRule(e: {
   );
 }
 
-function isDimension(value: unknown): value is { value: number; unit: string } {
-  return (
-    isRecord(value) &&
-    typeof Reflect.get(value, 'value') === 'number' &&
-    typeof Reflect.get(value, 'unit') === 'string'
-  );
-}
-
-function isDuration(value: unknown): value is { value: number; unit: string } {
+function isValueWithUnit(
+  value: unknown,
+): value is { value: number; unit: string } {
   return (
     isRecord(value) &&
     typeof Reflect.get(value, 'value') === 'number' &&
