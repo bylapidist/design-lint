@@ -43,12 +43,24 @@ export function flattenDesignTokens(tokens: DesignTokens): FlattenedToken[] {
 
 export function getFlattenedTokens(
   tokensByTheme: Record<string, DesignTokens>,
-  theme = 'default',
+  theme?: string,
 ): FlattenedToken[] {
-  if (Object.prototype.hasOwnProperty.call(tokensByTheme, theme)) {
-    return parseDesignTokens(tokensByTheme[theme]);
+  if (theme) {
+    if (Object.prototype.hasOwnProperty.call(tokensByTheme, theme)) {
+      return parseDesignTokens(tokensByTheme[theme]);
+    }
+    return [];
   }
-  return [];
+  // dedupe tokens by their path across themes
+  const seen = new Map<string, FlattenedToken>();
+  for (const tokens of Object.values(tokensByTheme)) {
+    for (const flat of parseDesignTokens(tokens)) {
+      if (!seen.has(flat.path)) {
+        seen.set(flat.path, flat);
+      }
+    }
+  }
+  return [...seen.values()];
 }
 
 export function extractVarName(value: string): string | null {

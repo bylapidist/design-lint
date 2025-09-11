@@ -62,7 +62,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function hasBody(value: unknown): value is { body: unknown } {
+function hasBody(value: unknown): value is DocumentNode {
   return isObject(value) && 'body' in value;
 }
 
@@ -75,15 +75,17 @@ function parseTokensContent(
 } {
   const ext = path.extname(filePath).toLowerCase();
   try {
-    const doc: DocumentNode =
+    const rawDoc: unknown =
       ext === '.yaml' || ext === '.yml'
         ? yamlToMomoa(content)
         : parseJson(content, { mode: 'json', ranges: true });
-    if (!hasBody(doc)) {
+    if (!hasBody(rawDoc)) {
       throw new Error(
         `Error parsing ${filePath}: root value must be an object`,
       );
     }
+
+    const doc = rawDoc;
 
     const locations = new Map<string, { line: number; column: number }>();
 
