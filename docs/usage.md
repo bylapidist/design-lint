@@ -76,7 +76,7 @@ Many rules support auto-fix. Use the `--fix` flag to update files in place:
 npx design-lint "src/**/*" --fix
 ```
 
-Run `--fix` locally before committing to keep diffs small and intentional. In CI environments, avoid `--fix`; instead run design-lint in read-only mode and fail the build if fixes are required. To preview changes without writing to disk, combine `--fix` with `--dry-run`.
+Run `--fix` locally before committing to keep diffs small and intentional. In CI environments, avoid `--fix`; instead run design-lint in read-only mode and fail the build if fixes are required. There is currently no dry-run mode for previewing changes.
 
 ## Export resolved tokens
 Use the `tokens` subcommand to write flattened tokens to a file or stdout. Alias references are resolved and metadata like `$extensions` is preserved:
