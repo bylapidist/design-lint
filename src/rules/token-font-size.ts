@@ -1,4 +1,5 @@
 import type { RuleModule } from '../core/types.js';
+import { isRecord } from '../utils/type-guards.js';
 
 export const fontSizeRule: RuleModule = {
   name: 'design-token/font-size',
@@ -56,7 +57,3 @@ export const fontSizeRule: RuleModule = {
     };
   },
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}

@@ -1,5 +1,6 @@
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
+import { isRecord } from '../utils/type-guards.js';
 
 export const boxShadowRule: RuleModule = {
   name: 'design-token/box-shadow',
@@ -89,7 +90,3 @@ export const boxShadowRule: RuleModule = {
     };
   },
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}

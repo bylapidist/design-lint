@@ -10,7 +10,11 @@ import {
   TokenParseError,
 } from '../adapters/node/token-parser.js';
 import { parseDesignTokens } from '../core/parser/index.js';
-import type { DesignTokens } from '../core/types.js';
+import {
+  isRecord,
+  isDesignTokens,
+  isThemeRecord,
+} from '../utils/type-guards.js';
 
 /**
  * Resolve and load configuration for the linter.
@@ -72,11 +76,9 @@ export async function loadConfig(
       ? realpathIfExists(result.filepath)
       : undefined,
   };
-  const isObject = (val: unknown): val is Record<string, unknown> =>
-    typeof val === 'object' && val !== null;
   const merged = {
     ...base,
-    ...(isObject(result?.config) ? result.config : {}),
+    ...(isRecord(result?.config) ? result.config : {}),
   };
   const parsed = configSchema.safeParse(merged);
   if (!parsed.success) {
@@ -127,41 +129,4 @@ export async function loadConfig(
     }
   }
   return config;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isDesignTokens(value: unknown): value is DesignTokens {
-  return isRecord(value);
-}
-
-function isThemeRecord(val: unknown): val is Record<string, DesignTokens> {
-  if (!isRecord(val)) return false;
-  const entries = Object.entries(val).filter(([k]) => !k.startsWith('$'));
-  if (entries.length === 0) return false;
-  if (entries.length === 1) {
-    const [, theme] = entries[0];
-    if (!isRecord(theme)) return false;
-    const children = Object.entries(theme)
-      .filter(([k]) => !k.startsWith('$'))
-      .map(([, v]) => v);
-    const allTokens = children.every(
-      (child) => isRecord(child) && ('$value' in child || 'value' in child),
-    );
-    return !allTokens;
-  }
-  let shared: string[] | null = null;
-  for (const [, theme] of entries) {
-    if (!isRecord(theme)) return false;
-    const keys = Object.keys(theme).filter((k) => !k.startsWith('$'));
-    if (shared === null) {
-      shared = keys;
-    } else {
-      shared = shared.filter((k) => keys.includes(k));
-      if (shared.length === 0) return false;
-    }
-  }
-  return true;
 }

@@ -2,6 +2,7 @@ import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
+import { isRecord } from '../utils/type-guards.js';
 
 interface BorderWidthOptions {
   units?: string[];
@@ -127,7 +128,3 @@ export const borderWidthRule: RuleModule<BorderWidthOptions> = {
 };
 
 export default borderWidthRule;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}

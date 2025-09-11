@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import type { RuleModule } from '../core/types.js';
 import { isStyleValue } from '../utils/style.js';
+import { isRecord } from '../utils/type-guards.js';
 
 export const letterSpacingRule: RuleModule = {
   name: 'design-token/letter-spacing',
@@ -97,7 +98,3 @@ export const letterSpacingRule: RuleModule = {
     };
   },
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
