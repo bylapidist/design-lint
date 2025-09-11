@@ -12,14 +12,20 @@ export async function lintSvelte(
   const { parse }: { parse: typeof svelteParse } = await import(
     'svelte/compiler'
   );
-  const ast = parse(text);
+  const ast = parse(text, { modern: true });
+  const getRange = (node: unknown): { start: number; end: number } | null => {
+    return isRecord(node) &&
+      typeof node.start === 'number' &&
+      typeof node.end === 'number'
+      ? { start: node.start, end: node.end }
+      : null;
+  };
   const scripts: string[] = [];
-  if (ast.instance)
-    scripts.push(
-      text.slice(ast.instance.content.start, ast.instance.content.end),
-    );
-  if (ast.module)
-    scripts.push(text.slice(ast.module.content.start, ast.module.content.end));
+  const instanceRange = ast.instance ? getRange(ast.instance.content) : null;
+  if (instanceRange)
+    scripts.push(text.slice(instanceRange.start, instanceRange.end));
+  const moduleRange = ast.module ? getRange(ast.module.content) : null;
+  if (moduleRange) scripts.push(text.slice(moduleRange.start, moduleRange.end));
   const styleDecls: CSSDeclaration[] = [];
   const replacements: { start: number; end: number; text: string }[] = [];
   const getLineAndColumn = (pos: number) => {
@@ -63,6 +69,13 @@ export async function lintSvelte(
     }
     return decls;
   };
+  const getNodes = (node: Record<string, unknown>): unknown[] => {
+    if (Array.isArray(node.nodes)) return node.nodes;
+    if (Array.isArray(node.children)) return node.children;
+    const frag = node.fragment;
+    if (isRecord(frag) && Array.isArray(frag.nodes)) return frag.nodes;
+    return [];
+  };
   const walk = (node: unknown): void => {
     if (!isRecord(node)) return;
     const attrs = Array.isArray(node.attributes) ? node.attributes : [];
@@ -90,12 +103,11 @@ export async function lintSvelte(
         replacements.push({ start: attrRaw.start, end: attrRaw.end, text: '' });
       }
     }
-    const children = Array.isArray(node.children) ? node.children : [];
-    for (const child of children) walk(child);
+    for (const child of getNodes(node)) walk(child);
   };
-  walk(ast.html);
-  const templateStart = ast.html?.start ?? 0;
-  let template = ast.html ? text.slice(ast.html.start, ast.html.end) : '';
+  walk(ast.fragment);
+  const templateStart = ast.start;
+  let template = text.slice(ast.start, ast.end);
   replacements
     .sort((a, b) => b.start - a.start)
     .forEach((r) => {
