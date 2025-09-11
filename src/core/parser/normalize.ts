@@ -1,5 +1,5 @@
-import type { FlattenedToken } from '../types.js';
-import { resolveAliases } from './alias.js';
+import type { FlattenedToken } from '../types';
+import { resolveAliases } from './alias';
 
 export function normalizeTokens(tokens: FlattenedToken[]): FlattenedToken[] {
   const tokenMap = new Map(tokens.map((t) => [t.path, t.token]));

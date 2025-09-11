@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { z } from 'zod';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule } from '../core/types';
 
 interface NoInlineStylesOptions {
   /** When true, the rule will ignore class/className attributes. */

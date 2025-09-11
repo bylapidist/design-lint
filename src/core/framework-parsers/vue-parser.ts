@@ -1,6 +1,6 @@
 import ts from 'typescript';
-import { parseCSS } from './css-parser.js';
-import type { RuleModule, LintMessage } from '../types.js';
+import { parseCSS } from './css-parser';
+import type { RuleModule, LintMessage } from '../types';
 
 export async function lintVue(
   text: string,

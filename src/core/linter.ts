@@ -4,22 +4,18 @@ import type {
   RuleContext,
   DesignTokens,
   RuleModule,
-} from './types.js';
-import { getFlattenedTokens as flattenTokens } from './token-utils.js';
-export { defaultIgnore } from './ignore.js';
-import { RuleRegistry } from './rule-registry.js';
-import type { PluginMeta } from './plugin-manager.js';
-import { TokenTracker } from './token-tracker.js';
-import { Runner } from './runner.js';
-import type {
-  LintDocument,
-  Environment,
-  TokenProvider,
-} from './environment.js';
-import type { CacheProvider } from './cache-provider.js';
-import { LintService } from './lint-service.js';
-import { parserRegistry } from './parser-registry.js';
-import { FILE_TYPE_MAP } from './file-types.js';
+} from './types';
+import { getFlattenedTokens as flattenTokens } from './token-utils';
+export { defaultIgnore } from './ignore';
+import { RuleRegistry } from './rule-registry';
+import type { PluginMeta } from './plugin-manager';
+import { TokenTracker } from './token-tracker';
+import { Runner } from './runner';
+import type { LintDocument, Environment, TokenProvider } from './environment';
+import type { CacheProvider } from './cache-provider';
+import { LintService } from './lint-service';
+import { parserRegistry } from './parser-registry';
+import { FILE_TYPE_MAP } from './file-types';
 
 export interface Config {
   tokens?:
@@ -299,7 +295,7 @@ export class Linter {
   }
 }
 
-export { applyFixes } from './apply-fixes.js';
+export { applyFixes } from './apply-fixes';
 
 function isDesignTokens(val: unknown): val is DesignTokens {
   return typeof val === 'object' && val !== null;

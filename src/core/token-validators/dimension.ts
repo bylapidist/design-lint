@@ -1,4 +1,4 @@
-import { isRecord } from '../../utils/is-record.js';
+import { isRecord } from '../../utils/is-record';
 
 const DIMENSION_UNITS = new Set(['px', 'rem']);
 

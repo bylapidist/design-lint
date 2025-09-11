@@ -1,7 +1,7 @@
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
-import { tokenRule } from '../utils/token-rule.js';
-import { detectColorFormat } from '../utils/color-format.js';
+import { tokenRule } from '../utils/token-rule';
+import { detectColorFormat } from '../utils/color-format';
 
 export const borderColorRule = tokenRule({
   name: 'design-token/border-color',

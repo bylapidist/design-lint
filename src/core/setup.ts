@@ -1,10 +1,10 @@
-import { Linter, type Config } from './linter.js';
-import type { Environment, TokenProvider } from './environment.js';
-import { RuleRegistry } from './rule-registry.js';
-import { TokenTracker } from './token-tracker.js';
-import { LintService } from './lint-service.js';
-import { getFlattenedTokens as flattenTokens } from './token-utils.js';
-import type { DesignTokens } from './types.js';
+import { Linter, type Config } from './linter';
+import type { Environment, TokenProvider } from './environment';
+import { RuleRegistry } from './rule-registry';
+import { TokenTracker } from './token-tracker';
+import { LintService } from './lint-service';
+import { getFlattenedTokens as flattenTokens } from './token-utils';
+import type { DesignTokens } from './types';
 
 function isDesignTokens(val: unknown): val is DesignTokens {
   return typeof val === 'object' && val !== null;

@@ -8,11 +8,11 @@ import {
   type DocumentNode,
 } from '@humanwhocodes/momoa';
 import yamlToMomoa from 'yaml-to-momoa';
-import type { DesignTokens, FlattenedToken } from '../../core/types.js';
+import type { DesignTokens, FlattenedToken } from '../../core/types';
 import {
   parseDesignTokens,
   type ParseDesignTokensOptions,
-} from '../../core/parser/index.js';
+} from '../../core/parser/index';
 
 export class TokenParseError extends Error {
   filePath: string;

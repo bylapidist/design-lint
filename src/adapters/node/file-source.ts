@@ -1,11 +1,11 @@
 import { globby } from 'globby';
 import { performance } from 'node:perf_hooks';
-import { realpathIfExists } from './utils/paths.js';
-import { getIgnorePatterns } from '../../core/ignore.js';
-import type { Config } from '../../core/linter.js';
-import type { DocumentSource } from '../../core/environment.js';
-import { createFileDocument } from './file-document.js';
-import { defaultPatterns } from '../../core/file-types.js';
+import { realpathIfExists } from './utils/paths';
+import { getIgnorePatterns } from '../../core/ignore';
+import type { Config } from '../../core/linter';
+import type { DocumentSource } from '../../core/environment';
+import { createFileDocument } from './file-document';
+import { defaultPatterns } from '../../core/file-types';
 
 export class FileSource implements DocumentSource {
   async scan(

@@ -1,4 +1,4 @@
-import type { LintResult } from '../core/types.js';
+import type { LintResult } from '../core/types';
 
 export function jsonFormatter(results: LintResult[], _useColor = true): string {
   void _useColor;

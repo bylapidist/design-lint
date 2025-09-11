@@ -1,4 +1,4 @@
-import { isArray } from './is-array.js';
+import { isArray } from './is-array';
 
 /**
  * Normalizes a value to always be returned as an array.

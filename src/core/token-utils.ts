@@ -1,7 +1,7 @@
-import type { DesignTokens, FlattenedToken } from './types.js';
+import type { DesignTokens, FlattenedToken } from './types';
 import picomatch from 'picomatch';
 import leven from 'leven';
-import { parseDesignTokens } from './parser/index.js';
+import { parseDesignTokens } from './parser/index';
 
 export type TokenPattern = string | RegExp;
 

@@ -1,7 +1,7 @@
-import type { Config } from './linter.js';
-import type { PluginLoader } from './plugin-loader.js';
-import type { CacheProvider } from './cache-provider.js';
-import type { DesignTokens } from './types.js';
+import type { Config } from './linter';
+import type { PluginLoader } from './plugin-loader';
+import type { CacheProvider } from './cache-provider';
+import type { DesignTokens } from './types';
 
 export interface LintDocument {
   id: string;

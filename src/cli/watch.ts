@@ -4,19 +4,19 @@ import { once } from 'node:events';
 import { createRequire } from 'module';
 import chokidar from 'chokidar';
 import chalk from 'chalk';
-import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
-import { loadConfig } from '../config/loader.js';
-import { createLinter } from '../index.js';
-import type { Config } from '../core/linter.js';
-import type { Linter } from '../index.js';
-import { createNodeEnvironment } from '../adapters/node/environment.js';
-import type { CacheProvider } from '../core/cache-provider.js';
+import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths';
+import { loadConfig } from '../config/loader';
+import { createLinter } from '../index';
+import type { Config } from '../core/linter';
+import type { Linter } from '../index';
+import { createNodeEnvironment } from '../adapters/node/environment';
+import type { CacheProvider } from '../core/cache-provider';
 import type { Ignore } from 'ignore';
 import {
   executeLint,
   type ExecuteServices,
   type ExecuteOptions,
-} from './execute.js';
+} from './execute';
 
 export interface WatchState {
   pluginPaths: string[];

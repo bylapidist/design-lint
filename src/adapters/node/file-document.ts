@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { LintDocument } from '../../core/environment.js';
+import type { LintDocument } from '../../core/environment';
 
 export function createFileDocument(sourceId: string): LintDocument {
   const absPath = path.resolve(sourceId);

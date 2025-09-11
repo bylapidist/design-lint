@@ -1,11 +1,11 @@
 import pLimit from 'p-limit';
 import os from 'node:os';
-import type { Config } from './linter.js';
-import type { CacheProvider } from './cache-provider.js';
-import type { LintResult } from './types.js';
-import { CacheService } from './cache-service.js';
-import { TokenTracker } from './token-tracker.js';
-import type { LintDocument } from './environment.js';
+import type { Config } from './linter';
+import type { CacheProvider } from './cache-provider';
+import type { LintResult } from './types';
+import { CacheService } from './cache-service';
+import { TokenTracker } from './token-tracker';
+import type { LintDocument } from './environment';
 
 export interface RunnerOptions {
   config: Config;

@@ -1,10 +1,5 @@
-import type {
-  DesignTokens,
-  Token,
-  TokenGroup,
-  FlattenedToken,
-} from '../types.js';
-import { isRecord } from '../../utils/is-record.js';
+import type { DesignTokens, Token, TokenGroup, FlattenedToken } from '../types';
+import { isRecord } from '../../utils/is-record';
 
 const tokenLocations = new Map<string, { line: number; column: number }>();
 

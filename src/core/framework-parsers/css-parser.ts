@@ -1,8 +1,8 @@
 import postcss from 'postcss';
 import { parse as scssParser } from 'postcss-scss';
 import lessSyntax from 'postcss-less';
-import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
-import { isObject } from '../../utils/is-object.js';
+import type { CSSDeclaration, LintMessage, RuleModule } from '../types';
+import { isObject } from '../../utils/is-object';
 
 export function parseCSS(
   text: string,

@@ -1,5 +1,5 @@
-import { isRecord } from '../../utils/is-record.js';
-import { validateDimension } from './dimension.js';
+import { isRecord } from '../../utils/is-record';
+import { validateDimension } from './dimension';
 
 const STROKE_STYLE_KEYWORDS = new Set([
   'solid',

@@ -1,4 +1,4 @@
-import type { PluginModule } from './types.js';
+import type { PluginModule } from './types';
 
 export interface LoadedPlugin {
   path: string;

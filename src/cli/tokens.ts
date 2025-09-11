@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { loadConfig } from '../config/loader.js';
-import { getFlattenedTokens } from '../core/token-utils.js';
-import type { DesignTokens } from '../core/types.js';
-import { isDesignTokens } from '../utils/is-design-tokens.js';
-import { isThemeRecord } from '../utils/is-theme-record.js';
+import { loadConfig } from '../config/loader';
+import { getFlattenedTokens } from '../core/token-utils';
+import type { DesignTokens } from '../core/types';
+import { isDesignTokens } from '../utils/is-design-tokens';
+import { isThemeRecord } from '../utils/is-theme-record';
 
 interface TokensCommandOptions {
   theme?: string;

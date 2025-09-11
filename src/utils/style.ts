@@ -5,9 +5,9 @@ import {
   isPropertyAssignment,
   type Node,
 } from 'typescript';
-import { isStyleName } from './is-style-name.js';
-import { isReactCreateElementCall } from './is-react-create-element-call.js';
-import { isHyperscriptCall } from './is-hyperscript-call.js';
+import { isStyleName } from './is-style-name';
+import { isReactCreateElementCall } from './is-react-create-element-call';
+import { isHyperscriptCall } from './is-hyperscript-call';
 
 /**
  * Determines whether a node's value belongs to a `style` attribute or `style`

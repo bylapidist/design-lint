@@ -1,7 +1,7 @@
-import { isRecord } from '../../utils/is-record.js';
-import { toArray } from '../../utils/to-array.js';
-import { validateColor } from './color.js';
-import { validateDimension } from './dimension.js';
+import { isRecord } from '../../utils/is-record';
+import { toArray } from '../../utils/to-array';
+import { validateColor } from './color';
+import { validateDimension } from './dimension';
 
 export function validateShadow(value: unknown, path: string): void {
   const items = toArray(value);

@@ -5,10 +5,10 @@ import {
   isPropertyAssignment,
   type Node,
 } from 'typescript';
-import { isJsxLike } from './is-jsx-like.js';
-import { isStyleName } from './is-style-name.js';
-import { isReactCreateElementCall } from './is-react-create-element-call.js';
-import { isHyperscriptCall } from './is-hyperscript-call.js';
+import { isJsxLike } from './is-jsx-like';
+import { isStyleName } from './is-style-name';
+import { isReactCreateElementCall } from './is-react-create-element-call';
+import { isHyperscriptCall } from './is-hyperscript-call';
 
 /**
  * Determines whether a given TypeScript AST node is inside JSX (or JSX-like code)
