@@ -93,3 +93,33 @@ void test('tokens command reads config from outside cwd', () => {
   >;
   assert.equal(out.default['color.red'].$value, '#ff0000');
 });
+
+void test('tokens command exports themes with root tokens', () => {
+  const dir = makeTmpDir();
+  const configPath = path.join(dir, 'designlint.config.json');
+  const tokens = {
+    light: { primary: { $type: 'color', $value: '#fff' } },
+    dark: { primary: { $type: 'color', $value: '#000' } },
+  };
+  fs.writeFileSync(configPath, JSON.stringify({ tokens, rules: {} }));
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      'tokens',
+      '--config',
+      'designlint.config.json',
+    ],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  assert.equal(res.status, 0);
+  const out = JSON.parse(res.stdout) as Record<
+    string,
+    Record<string, { $value: unknown }>
+  >;
+  assert.equal(out.light.primary.$value, '#fff');
+  assert.equal(out.dark.primary.$value, '#000');
+});

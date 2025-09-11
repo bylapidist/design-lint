@@ -38,12 +38,31 @@ function isDesignTokens(value: unknown): value is DesignTokens {
 
 function isThemeRecord(val: unknown): val is Record<string, DesignTokens> {
   if (!isRecord(val)) return false;
-  return Object.entries(val).every(([themeName, theme]) => {
-    if (themeName.startsWith('$')) return true;
-    if (!isDesignTokens(theme)) return false;
-    return Object.entries(theme).every(
-      ([key, child]) =>
-        key.startsWith('$') || (isRecord(child) && !('$value' in child)),
+  const entries = Object.entries(val).filter(([k]) => !k.startsWith('$'));
+  if (entries.length === 0) return false;
+  if (entries.length === 1) {
+    const [, theme] = entries[0];
+    if (!isRecord(theme)) return false;
+    const children = Object.entries(theme)
+      .filter(([k]) => !k.startsWith('$'))
+      .map(([, v]) => v);
+    const allTokens = children.every(
+      (child) => isRecord(child) && ('$value' in child || 'value' in child),
     );
-  });
+    return !allTokens;
+  }
+
+  let shared: string[] | null = null;
+  for (const [, theme] of entries) {
+    if (!isRecord(theme)) return false;
+    const keys = Object.keys(theme).filter((k) => !k.startsWith('$'));
+    if (shared === null) {
+      shared = keys;
+    } else {
+      shared = shared.filter((k) => keys.includes(k));
+      if (shared.length === 0) return false;
+    }
+  }
+
+  return true;
 }
