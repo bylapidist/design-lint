@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { tokenRule } from '../utils/token-rule.js';
+import { tokenRule } from '../utils/rules/index.js';
 import { isStyleValue } from '../utils/style.js';
 
 export const fontWeightRule = tokenRule({

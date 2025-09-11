@@ -2,7 +2,7 @@ import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import { z } from 'zod';
-import { tokenRule } from '../utils/token-rule.js';
+import { tokenRule } from '../utils/rules/index.js';
 import { isStyleValue } from '../utils/style.js';
 import { detectColorFormat, type ColorFormat } from '../utils/color-format.js';
 

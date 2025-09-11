@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { tokenRule } from '../../src/utils/token-rule.js';
+import { tokenRule } from '../../src/utils/rules/index.js';
 import type { RuleContext } from '../../src/core/types.js';
 
 void test('tokenRule reports when tokens are missing', () => {

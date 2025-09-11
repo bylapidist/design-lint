@@ -1,4 +1,4 @@
-import { tokenRule } from '../utils/token-rule.js';
+import { tokenRule } from '../utils/rules/index.js';
 import { isRecord } from '../utils/is-record.js';
 
 const parseSize = (val: unknown): number | null => {
