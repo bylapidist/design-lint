@@ -1,5 +1,20 @@
 # @lapidist/design-lint
 
+## 5.2.0
+
+### Minor Changes
+
+- ed35373: add dedicated PluginError and ConfigError classes and use them for plugin loading and configuration
+
+### Patch Changes
+
+- 83c2110: refactor: reuse shared path utilities in CLI environment
+- f321bc4: refactor file type mapping into exportable constant
+- 0d08b3c: refactor linter with helper methods and tests
+- a7ac5ef: refactor config loading into separate helpers
+- cdb9b83: refactor: centralize type guards
+- f8a1b31: refactor token rules to share common retrieval logic
+
 ## 5.1.0
 
 ### Minor Changes
