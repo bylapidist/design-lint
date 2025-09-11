@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 export const noUnusedTokensRule: RuleModule = {
@@ -5,6 +6,7 @@ export const noUnusedTokensRule: RuleModule = {
   meta: {
     description: 'report unused design tokens',
     category: 'design-token',
+    schema: z.void(),
   },
   create() {
     return {};

@@ -59,6 +59,18 @@ export class RuleRegistry {
         severity = this.normalizeSeverity(setting);
       }
       if (severity) {
+        if (rule.meta.schema) {
+          try {
+            options = rule.meta.schema.parse(options);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            throw new ConfigError({
+              message: `Invalid options for rule ${name}: ${msg}`,
+              context: 'Config.rules',
+              remediation: 'Review and fix the configuration file.',
+            });
+          }
+        }
         entries.push({ rule, options, severity });
       }
     }

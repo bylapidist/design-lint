@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 interface IconUsageOptions {
@@ -12,6 +13,9 @@ export const iconUsageRule: RuleModule<IconUsageOptions> = {
     description:
       'disallow raw svg elements or non design system icon components',
     category: 'component',
+    schema: z
+      .object({ substitutions: z.record(z.string(), z.string()).optional() })
+      .optional(),
   },
   create(context) {
     const subs: Record<string, string> = {

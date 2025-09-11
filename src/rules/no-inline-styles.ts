@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 interface NoInlineStylesOptions {
@@ -12,6 +13,7 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     description:
       'disallow inline style or className attributes on design system components',
     category: 'component',
+    schema: z.object({ ignoreClassName: z.boolean().optional() }).optional(),
   },
   create(context) {
     const ignoreClassName = context.options?.ignoreClassName ?? false;

@@ -66,6 +66,26 @@ export default {
 };
 ```
 
+Rules can expose a [Zod](https://zod.dev/) schema for their options via
+`meta.schema`. The engine validates user-supplied options against the schema
+and rejects invalid configurations.
+
+```ts
+import { z } from 'zod';
+
+const rule: RuleModule<{ ignore?: string[] }> = {
+  name: 'acme/example',
+  meta: {
+    description: 'example rule',
+    schema: z.object({ ignore: z.array(z.string()).optional() }),
+  },
+  create(ctx) {
+    // ctx.options is typed and validated
+    return {};
+  },
+};
+```
+
 ### 3. Register token transforms
 If your plugin consumes design tokens from other tools, provide a transform
 to convert them to the W3C format. Register the transform during plugin

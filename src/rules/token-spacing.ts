@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
+import { z } from 'zod';
 import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
@@ -10,7 +11,16 @@ interface SpacingOptions {
 
 export const spacingRule = tokenRule<SpacingOptions>({
   name: 'design-token/spacing',
-  meta: { description: 'enforce spacing scale', category: 'design-token' },
+  meta: {
+    description: 'enforce spacing scale',
+    category: 'design-token',
+    schema: z
+      .object({
+        base: z.number().optional(),
+        units: z.array(z.string()).optional(),
+      })
+      .optional(),
+  },
   tokens: 'dimension',
   message:
     'design-token/spacing requires spacing tokens; configure tokens with $type "dimension" under a "spacing" group to enable this rule.',

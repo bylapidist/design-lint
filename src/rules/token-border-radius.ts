@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
+import { z } from 'zod';
 import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
@@ -12,6 +13,7 @@ export const borderRadiusRule = tokenRule<BorderRadiusOptions>({
   meta: {
     description: 'enforce border-radius tokens',
     category: 'design-token',
+    schema: z.object({ units: z.array(z.string()).optional() }).optional(),
   },
   tokens: 'dimension',
   message:

@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 export interface ComponentUsageOptions {
@@ -11,6 +12,9 @@ export const componentUsageRule: RuleModule<ComponentUsageOptions> = {
     description:
       'disallow raw HTML elements when design system components exist',
     category: 'component',
+    schema: z
+      .object({ substitutions: z.record(z.string(), z.string()).optional() })
+      .optional(),
   },
   create(context) {
     const subs = context.options?.substitutions ?? {};
