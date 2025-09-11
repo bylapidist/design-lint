@@ -13,12 +13,12 @@ This guide walks you through installing and running @lapidist/design-lint for th
 - [Installation](#installation)
 - [Initial configuration](#initial-configuration)
 - [Run the linter](#run-the-linter)
-- [Fix issues automatically](#fix-issues-automatically)
+- [Autofix workflow](#autofix-workflow)
 - [Watch mode and caching](#watch-mode-and-caching)
 - [Target files and directories](#target-files-and-directories)
 - [Exit codes](#exit-codes)
 - [Troubleshooting](#troubleshooting)
-- [See also](#see-also)
+- [Next steps](#next-steps)
 
 ## Prerequisites
 - Node.js \>=22
@@ -33,11 +33,23 @@ Run the linter once without installing it locally:
 npx design-lint .
 ```
 
-To add design-lint to your project:
+For long-term use, install design-lint as a development dependency. This keeps your team on the same version and allows custom configuration:
 
 ```bash
 npm install --save-dev @lapidist/design-lint
 ```
+
+Use `npx` for ad-hoc checks or CI where the package is not yet installed. For projects committing to design-lint, prefer a local installation so the binary is available via `npm scripts`.
+
+```json
+{
+  "scripts": {
+    "lint:design": "design-lint"
+  }
+}
+```
+
+Run `npm run lint:design` to invoke the linter using the project-local version.
 
 ## Initial configuration
 Generate a starter configuration file:
@@ -57,12 +69,14 @@ npx design-lint "src/**/*"
 
 Use quotes around globs to prevent shell expansion. By default the CLI exits with code `1` when errors are found.
 
-## Fix issues automatically
+## Autofix workflow
 Many rules support auto-fix. Use the `--fix` flag to update files in place:
 
 ```bash
 npx design-lint "src/**/*" --fix
 ```
+
+Run `--fix` locally before committing to keep diffs small and intentional. In CI environments, avoid `--fix`; instead run design-lint in read-only mode and fail the build if fixes are required. To preview changes without writing to disk, combine `--fix` with `--dry-run`.
 
 ## Export resolved tokens
 Use the `tokens` subcommand to write flattened tokens to a file or stdout. Alias references are resolved and metadata like `$extensions` is preserved:
@@ -98,7 +112,7 @@ If the CLI fails or reports unexpected results:
 - Verify the [configuration](./configuration.md)
 - Consult the [troubleshooting guide](./troubleshooting.md)
 
-## See also
+## Next steps
 - [Configuration](./configuration.md)
 - [Rule reference](./rules/index.md)
 - [CI integration](./ci.md)
