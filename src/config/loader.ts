@@ -1,20 +1,10 @@
-import fs from 'node:fs';
 import path from 'node:path';
-import { cosmiconfig } from 'cosmiconfig';
-import { TypeScriptLoader } from 'cosmiconfig-typescript-loader';
 import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
-import {
-  readDesignTokensFile,
-  TokenParseError,
-} from '../adapters/node/token-parser.js';
-import { parseDesignTokens } from '../core/parser/index.js';
-import {
-  isRecord,
-  isDesignTokens,
-  isThemeRecord,
-} from '../utils/type-guards.js';
+import { resolveConfigFile } from './file-resolution.js';
+import { loadTokens } from './token-loader.js';
+import { isRecord } from '../utils/type-guards.js';
 
 /**
  * Resolve and load configuration for the linter.
@@ -26,46 +16,7 @@ export async function loadConfig(
   cwd: string,
   configPath?: string,
 ): Promise<Config> {
-  const explorer = cosmiconfig('designlint', {
-    searchPlaces: [
-      'package.json',
-      'designlint.config.ts',
-      'designlint.config.mts',
-      'designlint.config.js',
-      'designlint.config.mjs',
-      'designlint.config.cjs',
-      'designlint.config.json',
-      '.designlintrc',
-      '.designlintrc.json',
-      '.designlintrc.yaml',
-      '.designlintrc.yml',
-      '.designlintrc.js',
-      '.designlintrc.cjs',
-      '.designlintrc.mjs',
-      '.designlintrc.ts',
-      '.designlintrc.mts',
-    ],
-    loaders: {
-      '.ts': TypeScriptLoader(),
-      '.mts': TypeScriptLoader(),
-    },
-    searchStrategy: 'global',
-  });
-
-  let result: { config: unknown; filepath: string } | null;
-  if (configPath) {
-    const abs = path.resolve(cwd, configPath);
-    try {
-      await fs.promises.access(abs);
-    } catch {
-      throw new Error(
-        `Config file not found at ${abs}. Run \`npx design-lint init\` to create a config.`,
-      );
-    }
-    result = await explorer.load(abs);
-  } else {
-    result = await explorer.search(cwd);
-  }
+  const result = await resolveConfigFile(cwd, configPath);
 
   const base: Config = {
     tokens: {},
@@ -88,45 +39,7 @@ export async function loadConfig(
   const config = parsed.data;
   if (config.tokens && typeof config.tokens === 'object') {
     const baseDir = config.configPath ? path.dirname(config.configPath) : cwd;
-    const themes: Record<string, unknown> = {};
-    for (const [theme, val] of Object.entries(config.tokens)) {
-      if (typeof val === 'string') {
-        const filePath = path.resolve(baseDir, val);
-        try {
-          themes[theme] = await readDesignTokensFile(filePath);
-        } catch (err) {
-          if (err instanceof TokenParseError) throw err;
-          const message = err instanceof Error ? err.message : String(err);
-          throw new Error(
-            `Failed to read tokens for theme "${theme}": ${message}`,
-          );
-        }
-      } else {
-        themes[theme] = val;
-      }
-    }
-    if (isThemeRecord(themes)) {
-      for (const [theme, t] of Object.entries(themes)) {
-        try {
-          parseDesignTokens(t);
-        } catch (err) {
-          if (err instanceof TokenParseError) throw err;
-          const message = err instanceof Error ? err.message : String(err);
-          throw new Error(
-            `Failed to parse tokens for theme "${theme}": ${message}`,
-          );
-        }
-      }
-      config.tokens = themes;
-    } else if (isDesignTokens(themes)) {
-      try {
-        parseDesignTokens(themes);
-      } catch (err) {
-        if (err instanceof TokenParseError) throw err;
-        throw err instanceof Error ? err : new Error(String(err));
-      }
-      config.tokens = themes;
-    }
+    config.tokens = await loadTokens(config.tokens, baseDir);
   }
   return config;
 }
