@@ -1,7 +1,7 @@
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 
 type ColorFormat =
   | 'hex'
@@ -32,25 +32,18 @@ function detectFormat(value: string): ColorFormat | null {
   return null;
 }
 
-export const borderColorRule: RuleModule = {
+export const borderColorRule = tokenRule({
   name: 'design-token/border-color',
   meta: {
     description: 'enforce border-color tokens',
     category: 'design-token',
   },
-  create(context) {
-    const borderColorTokens = context.getFlattenedTokens('color');
-    if (borderColorTokens.length === 0) {
-      context.report({
-        message:
-          'design-token/border-color requires color tokens; configure tokens with $type "color" to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
-    const allowed = new Set(
-      borderColorTokens
+  tokens: 'color',
+  message:
+    'design-token/border-color requires color tokens; configure tokens with $type "color" to enable this rule.',
+  getAllowed(tokens) {
+    return new Set(
+      tokens
         .map(({ token }) => {
           const v = token.$value;
           return typeof v === 'string' && !v.startsWith('{')
@@ -59,6 +52,8 @@ export const borderColorRule: RuleModule = {
         })
         .filter((v): v is string => v !== null),
     );
+  },
+  create(context, allowed) {
     return {
       onCSSDeclaration(decl) {
         if (/^border(-(top|right|bottom|left))?-color$/.test(decl.prop)) {
@@ -80,4 +75,4 @@ export const borderColorRule: RuleModule = {
       },
     };
   },
-};
+});

@@ -1,42 +1,38 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const lineHeightRule: RuleModule = {
+const parse = (val: string): number | null => {
+  const v = val.trim();
+  const unitMatch = /^(\d*\.?\d+)(px|rem|em)%?$/.exec(v);
+  if (unitMatch) {
+    const [, num, unit] = unitMatch;
+    const n = parseFloat(num);
+    const factor = unit === 'px' ? 1 : unit === 'rem' || unit === 'em' ? 16 : 1;
+    return n * factor;
+  }
+  const pctMatch = /^(\d*\.?\d+)%$/.exec(v);
+  if (pctMatch) return parseFloat(pctMatch[1]) / 100;
+  const num = Number(v);
+  return isNaN(num) ? null : num;
+};
+
+export const lineHeightRule = tokenRule({
   name: 'design-token/line-height',
   meta: { description: 'enforce line-height tokens', category: 'design-token' },
-  create(context) {
-    const lineHeights = context.getFlattenedTokens('number');
-    const parse = (val: string): number | null => {
-      const v = val.trim();
-      const unitMatch = /^(\d*\.?\d+)(px|rem|em)%?$/.exec(v);
-      if (unitMatch) {
-        const [, num, unit] = unitMatch;
-        const n = parseFloat(num);
-        const factor =
-          unit === 'px' ? 1 : unit === 'rem' || unit === 'em' ? 16 : 1;
-        return n * factor;
-      }
-      const pctMatch = /^(\d*\.?\d+)%$/.exec(v);
-      if (pctMatch) return parseFloat(pctMatch[1]) / 100;
-      const num = Number(v);
-      return isNaN(num) ? null : num;
-    };
+  tokens: 'number',
+  message:
+    'design-token/line-height requires line height tokens; configure tokens with $type "number" under a "lineHeights" group to enable this rule.',
+  getAllowed(tokens) {
     const allowed = new Set<number>();
-    for (const { path, token } of lineHeights) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('lineHeights.')) continue;
       const val = token.$value;
       if (typeof val === 'number') allowed.add(val);
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/line-height requires line height tokens; configure tokens with $type "number" under a "lineHeights" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;
@@ -101,4 +97,4 @@ export const lineHeightRule: RuleModule = {
       },
     };
   },
-};
+});

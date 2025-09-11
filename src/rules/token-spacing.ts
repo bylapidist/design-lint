@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
 interface SpacingOptions {
@@ -8,13 +8,15 @@ interface SpacingOptions {
   units?: string[];
 }
 
-export const spacingRule: RuleModule<SpacingOptions> = {
+export const spacingRule = tokenRule<SpacingOptions>({
   name: 'design-token/spacing',
   meta: { description: 'enforce spacing scale', category: 'design-token' },
-  create(context) {
-    const spacingTokens = context.getFlattenedTokens('dimension');
+  tokens: 'dimension',
+  message:
+    'design-token/spacing requires spacing tokens; configure tokens with $type "dimension" under a "spacing" group to enable this rule.',
+  getAllowed(tokens) {
     const allowed = new Set<number>();
-    for (const { path, token } of spacingTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('spacing.')) continue;
       const val = token.$value;
       if (val && typeof val === 'object') {
@@ -24,15 +26,9 @@ export const spacingRule: RuleModule<SpacingOptions> = {
         }
       }
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/spacing requires spacing tokens; configure tokens with $type "dimension" under a "spacing" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     const opts = context.options ?? {};
     const base = opts.base ?? 4;
     const isAllowed = (n: number) => allowed.has(n) || n % base === 0;
@@ -122,4 +118,4 @@ export const spacingRule: RuleModule<SpacingOptions> = {
       },
     };
   },
-};
+});

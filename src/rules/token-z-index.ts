@@ -1,26 +1,23 @@
 import ts from 'typescript';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
-export const zIndexRule: RuleModule = {
+
+export const zIndexRule = tokenRule({
   name: 'design-token/z-index',
   meta: { description: 'enforce z-index tokens', category: 'design-token' },
-  create(context) {
-    const zTokens = context.getFlattenedTokens('number');
+  tokens: 'number',
+  message:
+    'design-token/z-index requires z-index tokens; configure tokens with $type "number" under a "zIndex" group to enable this rule.',
+  getAllowed(tokens) {
     const allowed = new Set<number>();
-    for (const { path, token } of zTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('zIndex.')) continue;
       const val = token.$value;
       if (typeof val === 'number') allowed.add(val);
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/z-index requires z-index tokens; configure tokens with $type "number" under a "zIndex" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;
@@ -52,4 +49,4 @@ export const zIndexRule: RuleModule = {
       },
     };
   },
-};
+});

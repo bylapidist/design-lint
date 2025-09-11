@@ -1,13 +1,15 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
-export const durationRule: RuleModule = {
+export const durationRule = tokenRule({
   name: 'design-token/duration',
   meta: { description: 'enforce duration tokens', category: 'design-token' },
-  create(context) {
-    const durationTokens = context.getFlattenedTokens('duration');
+  tokens: 'duration',
+  message:
+    'design-token/duration requires duration tokens; configure tokens with $type "duration" under a "durations" group to enable this rule.',
+  getAllowed(tokens) {
     const parse = (val: unknown): number | null => {
       if (typeof val === 'object' && val !== null) {
         const unit: unknown = Reflect.get(val, 'unit');
@@ -19,20 +21,14 @@ export const durationRule: RuleModule = {
       return null;
     };
     const allowed = new Set<number>();
-    for (const { path, token } of durationTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('durations.')) continue;
       const num = parse(token.$value);
       if (num !== null) allowed.add(num);
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/duration requires duration tokens; configure tokens with $type "duration" under a "durations" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;
@@ -82,4 +78,4 @@ export const durationRule: RuleModule = {
       },
     };
   },
-};
+});

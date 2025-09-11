@@ -2,7 +2,7 @@ import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
 type ColorFormat =
@@ -38,22 +38,15 @@ interface ColorRuleOptions {
   allow?: ColorFormat[];
 }
 
-export const colorsRule: RuleModule<ColorRuleOptions> = {
+export const colorsRule = tokenRule<ColorRuleOptions>({
   name: 'design-token/colors',
   meta: { description: 'disallow raw colors', category: 'design-token' },
-  create(context) {
-    const colorTokens = context.getFlattenedTokens('color');
-    if (colorTokens.length === 0) {
-      context.report({
-        message:
-          'design-token/colors requires color tokens; configure tokens with $type "color" to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
-    const allowed = new Set(
-      colorTokens
+  tokens: 'color',
+  message:
+    'design-token/colors requires color tokens; configure tokens with $type "color" to enable this rule.',
+  getAllowed(tokens) {
+    return new Set(
+      tokens
         .map(({ token }) => {
           const v = token.$value;
           return typeof v === 'string' && !v.startsWith('{')
@@ -62,6 +55,8 @@ export const colorsRule: RuleModule<ColorRuleOptions> = {
         })
         .filter((v): v is string => v !== null),
     );
+  },
+  create(context, allowed) {
     const opts = context.options ?? {};
     const allowFormats = new Set(opts.allow ?? []);
     const parserFormats = new Set<ColorFormat>([
@@ -117,4 +112,4 @@ export const colorsRule: RuleModule<ColorRuleOptions> = {
       },
     };
   },
-};
+});

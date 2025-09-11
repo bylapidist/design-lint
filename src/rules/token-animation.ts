@@ -1,30 +1,27 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 
-export const animationRule: RuleModule = {
+const normalize = (val: string): string =>
+  valueParser.stringify(valueParser(val).nodes).trim();
+
+export const animationRule = tokenRule({
   name: 'design-token/animation',
   meta: { description: 'enforce animation tokens', category: 'design-token' },
-  create(context) {
-    const animationTokens = context.getFlattenedTokens('string');
-    const normalize = (val: string): string =>
-      valueParser.stringify(valueParser(val).nodes).trim();
+  tokens: 'string',
+  message:
+    'design-token/animation requires animation tokens; configure tokens with $type "string" under an "animations" group to enable this rule.',
+  getAllowed(tokens) {
     const allowed = new Set<string>();
-    for (const { path, token } of animationTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('animations.')) continue;
       const val = token.$value;
       if (typeof val === 'string') {
         allowed.add(normalize(val));
       }
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/animation requires animation tokens; configure tokens with $type "string" under an "animations" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'animation') {
@@ -41,4 +38,4 @@ export const animationRule: RuleModule = {
       },
     };
   },
-};
+});

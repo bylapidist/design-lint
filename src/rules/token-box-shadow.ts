@@ -1,14 +1,17 @@
 import valueParser from 'postcss-value-parser';
-import type { RuleModule } from '../core/types.js';
+import { tokenRule } from './utils/token-rule.js';
 import { isRecord } from '../utils/type-guards.js';
 
-export const boxShadowRule: RuleModule = {
+const normalize = (val: string): string =>
+  valueParser.stringify(valueParser(val).nodes).trim();
+
+export const boxShadowRule = tokenRule({
   name: 'design-token/box-shadow',
   meta: { description: 'enforce box-shadow tokens', category: 'design-token' },
-  create(context) {
-    const shadowTokens = context.getFlattenedTokens('shadow');
-    const normalize = (val: string): string =>
-      valueParser.stringify(valueParser(val).nodes).trim();
+  tokens: 'shadow',
+  message:
+    'design-token/box-shadow requires shadow tokens; configure tokens with $type "shadow" under a "shadows" group to enable this rule.',
+  getAllowed(tokens) {
     const allowed = new Set<string>();
     const parseDim = (v: unknown): string | null => {
       if (typeof v === 'string') return v;
@@ -40,20 +43,14 @@ export const boxShadowRule: RuleModule = {
       }
       return parts.join(', ');
     };
-    for (const { path, token } of shadowTokens) {
+    for (const { path, token } of tokens) {
       if (!path.startsWith('shadows.')) continue;
       const val = toString(token.$value);
       if (val) allowed.add(normalize(val));
     }
-    if (allowed.size === 0) {
-      context.report({
-        message:
-          'design-token/box-shadow requires shadow tokens; configure tokens with $type "shadow" under a "shadows" group to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    return allowed;
+  },
+  create(context, allowed) {
     return {
       onCSSDeclaration(decl) {
         if (decl.prop === 'box-shadow') {
@@ -89,4 +86,4 @@ export const boxShadowRule: RuleModule = {
       },
     };
   },
-};
+});
