@@ -1,7 +1,11 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
+import { rules, guards } from '../utils/index.js';
+
+const { tokenRule } = rules;
+const {
+  ast: { isStyleValue },
+} = guards;
 
 export const durationRule = tokenRule({
   name: 'design-token/duration',

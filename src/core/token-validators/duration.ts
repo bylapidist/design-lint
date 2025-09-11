@@ -1,4 +1,8 @@
-import { isRecord } from '../../utils/is-record.js';
+import { guards } from '../../utils/index.js';
+
+const {
+  data: { isRecord },
+} = guards;
 
 const DURATION_UNITS = new Set(['ms', 's']);
 

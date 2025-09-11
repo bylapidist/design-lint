@@ -16,5 +16,5 @@ import {
  * @param n - The TypeScript AST node to check.
  * @returns `true` if the node is JSX-like, `false` otherwise.
  */
-export const isJsxLike = (n: Node) =>
+export const isJsxLike = (n: Node): boolean =>
   isJsxElement(n) || isJsxSelfClosingElement(n) || isJsxFragment(n);

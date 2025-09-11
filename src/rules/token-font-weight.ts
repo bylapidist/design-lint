@@ -1,6 +1,10 @@
 import ts from 'typescript';
-import { tokenRule } from '../utils/token-rule.js';
-import { isStyleValue } from '../utils/style.js';
+import { rules, guards } from '../utils/index.js';
+
+const { tokenRule } = rules;
+const {
+  ast: { isStyleValue },
+} = guards;
 
 export const fontWeightRule = tokenRule({
   name: 'design-token/font-weight',

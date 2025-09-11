@@ -1,5 +1,5 @@
-import type { DesignTokens } from '../core/types.js';
-import { isRecord } from './is-record.js';
+import type { DesignTokens } from '../../../core/types.js';
+import { isRecord } from '../data/index.js';
 
 /**
  * Determines whether a value is a record of theme names mapping to design tokens.
@@ -12,6 +12,9 @@ import { isRecord } from './is-record.js';
  *
  * @param val - The value to test.
  * @returns `true` if the value is a theme record, `false` otherwise.
+ *
+ * @example
+ * isThemeRecord({ light: { color: { red: { $value: '#f00' } } } }); // => true
  */
 export const isThemeRecord = (
   val: unknown,

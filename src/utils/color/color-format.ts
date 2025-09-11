@@ -1,5 +1,14 @@
+/**
+ * @packageDocumentation
+ *
+ * Helpers for working with CSS color formats.
+ */
 import colorName from 'color-name';
 
+/**
+ * List of supported CSS color formats that {@link detectColorFormat} can
+ * recognize.
+ */
 export type ColorFormat =
   | 'hex'
   | 'rgb'
@@ -15,13 +24,17 @@ export type ColorFormat =
 /**
  * Set of CSS color names supported by the `color-name` package.
  */
-export const namedColors = new Set(Object.keys(colorName));
+export const namedColors: ReadonlySet<string> = new Set(Object.keys(colorName));
 
 /**
  * Detects the format of a CSS color string.
  *
  * @param value - The color string to examine.
  * @returns The detected color format or `null` if unknown.
+ *
+ * @example
+ * detectColorFormat('#fff'); // => 'hex'
+ * detectColorFormat('rgb(0 0 0 / 0.5)'); // => 'rgb'
  */
 export const detectColorFormat = (value: string): ColorFormat | null => {
   const v = value.toLowerCase();

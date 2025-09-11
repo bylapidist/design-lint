@@ -1,6 +1,10 @@
-import { isArray } from '../../utils/collections/index.js';
-import { isRecord } from '../../utils/is-record.js';
+import { collections, guards } from '../../utils/index.js';
 import { validateColor } from './color.js';
+
+const { isArray } = collections;
+const {
+  data: { isRecord },
+} = guards;
 
 export function validateGradient(value: unknown, path: string): void {
   if (!isArray(value) || value.length === 0) {

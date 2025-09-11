@@ -4,6 +4,9 @@ import type { Environment } from './environment.js';
 import { builtInRules } from '../rules/index.js';
 import { PluginManager, type PluginMeta } from './plugin-manager.js';
 import { ConfigError } from './errors.js';
+import { collections } from '../utils/index.js';
+
+const { isArray } = collections;
 
 export class RuleRegistry {
   private ruleMap = new Map<string, { rule: RuleModule; source: string }>();
@@ -58,7 +61,7 @@ export class RuleRegistry {
       const rule = entry.rule;
       let severity: 'error' | 'warn' | undefined;
       let options: unknown = undefined;
-      if (Array.isArray(setting)) {
+      if (isArray(setting)) {
         severity = this.normalizeSeverity(setting[0]);
         options = setting[1];
       } else {

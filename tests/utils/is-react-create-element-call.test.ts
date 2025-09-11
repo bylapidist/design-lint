@@ -8,7 +8,11 @@ import {
   type CallExpression,
   type ExpressionStatement,
 } from 'typescript';
-import { isReactCreateElementCall } from '../../src/utils/is-react-create-element-call.js';
+import { guards } from '../../src/utils/index.js';
+
+const {
+  ast: { isReactCreateElementCall },
+} = guards;
 
 function getCall(code: string): CallExpression {
   const sf = createSourceFile(
