@@ -4,12 +4,14 @@ import type {
   RuleListener,
   RuleModule,
 } from '../../core/types.js';
+import { z } from 'zod';
 
 interface TokenRuleConfig<TOptions, TAllowed> {
   name: string;
   meta: {
     description: string;
     category?: string;
+    schema?: z.ZodType;
   };
   tokens: string | string[];
   message: string;
@@ -34,7 +36,7 @@ export function tokenRule<TOptions = unknown, TAllowed = Set<unknown>>(
 ): RuleModule<TOptions> {
   return {
     name: config.name,
-    meta: config.meta,
+    meta: { ...config.meta, schema: config.meta.schema ?? z.void() },
     create(context) {
       const types = Array.isArray(config.tokens)
         ? config.tokens

@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 interface ComponentPrefixOptions {
@@ -10,6 +11,7 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
   meta: {
     description: 'enforce a prefix for design system components',
     category: 'component',
+    schema: z.object({ prefix: z.string().optional() }).optional(),
   },
   create(context) {
     const prefix = context.options?.prefix ?? 'DS';

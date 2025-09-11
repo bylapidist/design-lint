@@ -1,4 +1,5 @@
 import type ts from 'typescript';
+import type { z } from 'zod';
 
 export interface VariableDefinition {
   id: string;
@@ -80,6 +81,7 @@ export interface RuleModule<
   meta: {
     description: string;
     category?: string;
+    schema?: z.ZodType;
   };
   create(context: TContext): RuleListener;
 }

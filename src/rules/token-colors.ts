@@ -2,6 +2,7 @@ import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import colorName from 'color-name';
+import { z } from 'zod';
 import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
 
@@ -40,7 +41,30 @@ interface ColorRuleOptions {
 
 export const colorsRule = tokenRule<ColorRuleOptions>({
   name: 'design-token/colors',
-  meta: { description: 'disallow raw colors', category: 'design-token' },
+  meta: {
+    description: 'disallow raw colors',
+    category: 'design-token',
+    schema: z
+      .object({
+        allow: z
+          .array(
+            z.enum([
+              'hex',
+              'rgb',
+              'rgba',
+              'hsl',
+              'hsla',
+              'hwb',
+              'lab',
+              'lch',
+              'color',
+              'named',
+            ]),
+          )
+          .optional(),
+      })
+      .optional(),
+  },
   tokens: 'color',
   message:
     'design-token/colors requires color tokens; configure tokens with $type "color" to enable this rule.',
