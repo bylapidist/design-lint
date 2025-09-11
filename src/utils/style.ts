@@ -1,24 +1,32 @@
-import ts from 'typescript';
+import {
+  isSourceFile,
+  isIdentifier,
+  isJsxAttribute,
+  isCallExpression,
+  isPropertyAssignment,
+  isPropertyAccessExpression,
+  type Node,
+} from 'typescript';
 
-export function isStyleValue(node: ts.Node): boolean {
-  for (let curr: ts.Node = node; !ts.isSourceFile(curr); curr = curr.parent) {
-    if (ts.isJsxAttribute(curr)) {
+export function isStyleValue(node: Node): boolean {
+  for (let curr: Node = node; !isSourceFile(curr); curr = curr.parent) {
+    if (isJsxAttribute(curr)) {
       return curr.name.getText() === 'style';
     }
-    if (ts.isPropertyAssignment(curr) && curr.name.getText() === 'style') {
-      for (let p: ts.Node = curr.parent; !ts.isSourceFile(p); p = p.parent) {
-        if (ts.isCallExpression(p)) {
+    if (isPropertyAssignment(curr) && curr.name.getText() === 'style') {
+      for (let p: Node = curr.parent; !isSourceFile(p); p = p.parent) {
+        if (isCallExpression(p)) {
           const expr = p.expression;
           if (
-            (ts.isPropertyAccessExpression(expr) &&
+            (isPropertyAccessExpression(expr) &&
               expr.name.getText() === 'createElement' &&
               expr.expression.getText() === 'React') ||
-            (ts.isIdentifier(expr) && expr.text === 'h')
+            (isIdentifier(expr) && expr.text === 'h')
           ) {
             return true;
           }
         }
-        if (ts.isJsxAttribute(p) && p.name.getText() === 'style') {
+        if (isJsxAttribute(p) && p.name.getText() === 'style') {
           return true;
         }
       }

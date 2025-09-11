@@ -1,48 +1,118 @@
-import ts from 'typescript';
+import {
+  isSourceFile,
+  isIdentifier,
+  isJsxElement,
+  isJsxFragment,
+  isJsxAttribute,
+  isCallExpression,
+  isPropertyAssignment,
+  isJsxSelfClosingElement,
+  isPropertyAccessExpression,
+  type Node,
+} from 'typescript';
 
-export function isInNonStyleJsx(node: ts.Node): boolean {
-  for (
-    let curr: ts.Node = node.parent;
-    !ts.isSourceFile(curr);
-    curr = curr.parent
-  ) {
-    if (ts.isJsxAttribute(curr)) {
-      return curr.name.getText() !== 'style';
-    }
-    if (ts.isPropertyAssignment(curr)) {
-      if (curr.name.getText() === 'style') return false;
-      for (let p: ts.Node = curr.parent; !ts.isSourceFile(p); p = p.parent) {
-        if (ts.isPropertyAssignment(p) && p.name.getText() === 'style') {
-          return false;
-        }
-        if (
-          ts.isJsxElement(p) ||
-          ts.isJsxSelfClosingElement(p) ||
-          ts.isJsxFragment(p)
-        ) {
-          return true;
-        }
-        if (ts.isCallExpression(p)) {
-          const expr = p.expression;
-          if (
-            (ts.isPropertyAccessExpression(expr) &&
-              expr.name.getText() === 'createElement' &&
-              expr.expression.getText() === 'React') ||
-            (ts.isIdentifier(expr) && expr.text === 'h')
-          ) {
-            return true;
-          }
+/**
+ * Determines whether a node is any JSX-like construct.
+ *
+ * Specifically checks for:
+ * - JSX elements (`<div>...</div>`)
+ * - JSX self-closing elements (`<div />`)
+ * - JSX fragments (`<>...</>`)
+ *
+ * @param n - The TypeScript AST node to check.
+ * @returns `true` if the node is JSX-like, `false` otherwise.
+ */
+const isJsxLike = (n: Node) =>
+  isJsxElement(n) || isJsxSelfClosingElement(n) || isJsxFragment(n);
+
+/**
+ * Checks if a node represents a property or attribute named `style`.
+ *
+ * @param n - The TypeScript AST node to check.
+ * @returns `true` if the node's text is exactly "style", `false` otherwise.
+ */
+const isStyleName = (n: Node) => n.getText() === 'style';
+
+/**
+ * Determines if a node represents a `React.createElement(...)` call.
+ *
+ * This is useful for detecting React component creation in code that
+ * doesn't use JSX syntax.
+ *
+ * @param n - The TypeScript AST node to check.
+ * @returns `true` if the node is a call to `React.createElement`.
+ */
+const isReactCreateElementCall = (n: Node) =>
+  isCallExpression(n) &&
+  isPropertyAccessExpression(n.expression) &&
+  n.expression.name.getText() === 'createElement' &&
+  n.expression.expression.getText() === 'React';
+
+/**
+ * Determines if a node represents a hyperscript `h(...)` call.
+ *
+ * Hyperscript is a JSX alternative used in some frameworks
+ * (e.g. Preact, Vue render functions).
+ *
+ * @param n - The TypeScript AST node to check.
+ * @returns `true` if the node is a call to `h(...)`.
+ */
+const isHyperscriptCall = (n: Node) =>
+  isCallExpression(n) &&
+  isIdentifier(n.expression) &&
+  n.expression.text === 'h';
+
+/**
+ * Determines whether a given TypeScript AST node is inside JSX (or JSX-like code)
+ * and **not** within a `style` attribute or `style` property assignment.
+ *
+ * This is useful for rules where we need to differentiate between inline style
+ * definitions and other JSX usage.
+ *
+ * The function:
+ * - Walks up the AST from the given node.
+ * - Returns `false` if it finds a `style` attribute or `style` property.
+ * - Returns `true` if it detects the node is inside JSX, a React `createElement` call,
+ *   or a `h()` hyperscript call. Otherwise, returns `false`.
+ *
+ * @param node - The TypeScript AST node to start from.
+ * @returns `true` if the node is inside non-style JSX (or JSX-like code), `false` otherwise.
+ */
+export function isInNonStyleJsx(node: Node): boolean {
+  // Walk up the AST starting from the node's parent until we reach the SourceFile (top of the AST)
+  for (let curr: Node = node.parent; !isSourceFile(curr); curr = curr.parent) {
+    // Check if we're in a JSX attribute: e.g., <div style={...} />
+    // If it's a style attribute, return false (we are inside inline styles)
+    if (isJsxAttribute(curr)) return !isStyleName(curr.name);
+
+    // Check if we're in an object property assignment: e.g., { style: ... }
+    if (isPropertyAssignment(curr)) {
+      // If the property key is "style", return false (inside a style object)
+      if (isStyleName(curr.name)) return false;
+
+      // Climb further up to see if this object lives inside JSX or createElement/h() calls
+      for (let p: Node = curr.parent; !isSourceFile(p); p = p.parent) {
+        // If we hit another property named "style" higher up, we're still inside styles -> exclude
+        if (isPropertyAssignment(p) && isStyleName(p.name)) return false;
+
+        // If we find JSX (element, self-closing, or fragment), confirm we're in JSX -> include
+        if (isJsxLike(p)) return true;
+
+        // If we encounter a function call, check if it's React.createElement or h()
+        if (isCallExpression(p)) {
+          // React.createElement(...) or h(...) means JSX-like context -> include
+          if (isReactCreateElementCall(p) || isHyperscriptCall(p)) return true;
+
+          // Any other call expression isn't JSX-related, stop climbing here
           break;
         }
       }
     }
-    if (
-      ts.isJsxElement(curr) ||
-      ts.isJsxSelfClosingElement(curr) ||
-      ts.isJsxFragment(curr)
-    ) {
-      return true;
-    }
+
+    // If we directly encounter JSX (without style properties), include it
+    if (isJsxLike(curr)) return true;
   }
+
+  // If we reached here, we never found JSX or JSX-like code outside of styles
   return false;
 }

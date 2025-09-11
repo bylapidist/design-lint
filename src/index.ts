@@ -1,5 +1,10 @@
-import { Linter, type Config, LintService, setupLinter } from './core/index.js';
-import type { Environment } from './core/environment.js';
+import {
+  Linter,
+  LintService,
+  setupLinter,
+  type Config,
+  type Environment,
+} from './core/index.js';
 
 export * from './core/index.js';
 export * from './adapters/node/index.js';
