@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { applyFixes } from '../../src/index.ts';
 
 void test('design-system/component-prefix enforces prefix on components', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-prefix': ['error', { prefix: 'DS' }],
@@ -19,7 +19,7 @@ void test('design-system/component-prefix enforces prefix on components', async 
 });
 
 void test('design-system/component-prefix ignores lowercase tags', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-prefix': ['error', { prefix: 'DS' }],
@@ -32,7 +32,7 @@ void test('design-system/component-prefix ignores lowercase tags', async () => {
 });
 
 void test('design-system/component-prefix fixes self-closing tags', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-prefix': ['error', { prefix: 'DS' }],
@@ -49,7 +49,7 @@ void test('design-system/component-prefix fixes self-closing tags', async () => 
 });
 
 void test('design-system/component-prefix fixes opening and closing tags', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-prefix': ['error', { prefix: 'DS' }],
@@ -66,7 +66,7 @@ void test('design-system/component-prefix fixes opening and closing tags', async
 });
 
 void test('design-system/component-prefix enforces prefix in Vue components', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-prefix': ['error', { prefix: 'DS' }],
@@ -82,7 +82,7 @@ void test('design-system/component-prefix enforces prefix in Vue components', as
 });
 
 void test('design-system/component-prefix enforces prefix in Svelte components', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-prefix': ['error', { prefix: 'DS' }],
@@ -95,7 +95,7 @@ void test('design-system/component-prefix enforces prefix in Svelte components',
 });
 
 void test('design-system/component-prefix enforces prefix on custom elements', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/component-prefix': ['error', { prefix: 'ds-' }],

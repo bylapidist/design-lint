@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 
 function createLinter(rule: unknown = 'error') {
   const tokens = { colors: { $type: 'color', primary: { $value: '#ffffff' } } };
-  return new Linter(
+  return initLinter(
     { tokens, rules: { 'design-token/colors': rule } },
     {
       documentSource: new FileSource(),

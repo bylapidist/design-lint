@@ -95,7 +95,7 @@ import { Linter, FileSource } from '@lapidist/design-lint';
 import plugin from '../index.js';
 
 void test('reports raw colors', async () => {
-  const linter = new Linter({ plugins: [plugin], rules: { 'acme/no-raw-colors': 'error' } }, new FileSource());
+  const linter = initLinter({ plugins: [plugin], rules: { 'acme/no-raw-colors': 'error' } }, new FileSource());
   const res = await linter.lintText('h1 { color: #fff; }', 'file.css');
   assert.equal(res.messages.length, 1);
 });

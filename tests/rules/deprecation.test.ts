@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 
 void test('design-system/deprecation flags deprecated token', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens: {
         colors: {
@@ -30,7 +30,7 @@ void test('design-system/deprecation flags deprecated token', async () => {
 });
 
 void test('design-system/deprecation ignores tokens in non-style jsx attributes', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens: {
         colors: {
@@ -54,7 +54,7 @@ void test('design-system/deprecation ignores tokens in non-style jsx attributes'
 });
 
 void test('design-system/deprecation warns when tokens missing', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: { 'design-system/deprecation': 'warn' },
     },

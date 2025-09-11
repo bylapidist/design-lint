@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
-import { Linter } from '../src/core/linter.ts';
+import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 
 void test('lintTargets uses patterns option to include custom extensions', async () => {
@@ -16,10 +16,10 @@ void test('lintTargets uses patterns option to include custom extensions', async
     },
     rules: { 'design-token/colors': 'error' },
   };
-  const defaultLinter = new Linter(baseConfig, new FileSource());
+  const defaultLinter = initLinter(baseConfig, new FileSource());
   const { results: defaultResults } = await defaultLinter.lintTargets([tmp]);
   assert.equal(defaultResults.length, 0);
-  const customLinter = new Linter(
+  const customLinter = initLinter(
     { ...baseConfig, patterns: ['**/*.foo'] },
     new FileSource(),
   );

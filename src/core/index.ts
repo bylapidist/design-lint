@@ -1,4 +1,6 @@
 export { Linter, type Config } from './linter.js';
+export { LintService } from './lint-service.js';
+export { setupLinter } from './setup.js';
 export { applyFixes } from './apply-fixes.js';
 export { Runner } from './runner.js';
 export { PluginError, ConfigError } from './errors.js';

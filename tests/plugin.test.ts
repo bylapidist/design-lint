@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'path';
-import { Linter } from '../src/core/linter.ts';
+import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 import { loadConfig } from '../src/config/loader.ts';
 import { NodePluginLoader } from '../src/adapters/node/plugin-loader.ts';
@@ -11,7 +11,7 @@ import { PluginError } from '../src/core/errors.ts';
 
 void test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
-  const linter = new Linter(
+  const linter = initLinter(
     {
       plugins: [pluginPath],
       rules: { 'plugin/test': 'error' },
@@ -29,7 +29,7 @@ void test('external plugin rules execute', async () => {
 void test('plugins resolve relative to config file', async () => {
   const dir = path.join(__dirname, 'fixtures', 'plugin-relative');
   const config = await loadConfig(dir);
-  const linter = new Linter(config, {
+  const linter = initLinter(config, {
     documentSource: new FileSource(),
     pluginLoader: new NodePluginLoader(),
   });
@@ -40,7 +40,7 @@ void test('plugins resolve relative to config file', async () => {
 
 void test('loads ESM plugin modules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin-esm.mjs');
-  const linter = new Linter(
+  const linter = initLinter(
     {
       plugins: [pluginPath],
       rules: { 'plugin/esm': 'error' },
@@ -57,7 +57,7 @@ void test('loads ESM plugin modules', async () => {
 
 void test('throws for invalid plugin modules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'invalid-plugin.ts');
-  const linter = new Linter(
+  const linter = initLinter(
     { plugins: [pluginPath] },
     {
       documentSource: new FileSource(),
@@ -77,7 +77,7 @@ void test('throws for invalid plugin modules', async () => {
 
 void test('throws for invalid plugin rules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'invalid-rule-plugin.ts');
-  const linter = new Linter(
+  const linter = initLinter(
     { plugins: [pluginPath] },
     {
       documentSource: new FileSource(),
@@ -100,7 +100,7 @@ void test('throws for invalid plugin rules', async () => {
 
 void test('throws when plugin module missing', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'missing-plugin.js');
-  const linter = new Linter(
+  const linter = initLinter(
     { plugins: [pluginPath] },
     {
       documentSource: new FileSource(),
@@ -123,7 +123,7 @@ void test('throws when plugin module missing', async () => {
 
 void test('throws when plugin rule conflicts with existing rule', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'conflict-plugin.ts');
-  const linter = new Linter(
+  const linter = initLinter(
     { plugins: [pluginPath] },
     new FileSource(),
     new NodePluginLoader(),
@@ -145,7 +145,7 @@ void test('throws when plugin rule conflicts with existing rule', async () => {
 void test('throws when two plugins define the same rule name', async () => {
   const pluginA = path.join(__dirname, 'fixtures', 'test-plugin.ts');
   const pluginB = path.join(__dirname, 'fixtures', 'duplicate-rule-plugin.ts');
-  const linter = new Linter(
+  const linter = initLinter(
     { plugins: [pluginA, pluginB] },
     {
       documentSource: new FileSource(),
@@ -170,7 +170,7 @@ void test('throws when two plugins define the same rule name', async () => {
 
 void test('getPluginPaths returns resolved plugin paths', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
-  const linter = new Linter(
+  const linter = initLinter(
     { plugins: [pluginPath] },
     {
       documentSource: new FileSource(),
@@ -201,7 +201,7 @@ void test('supports custom plugin loaders', async () => {
       return Promise.resolve({ path: 'mock', plugin: { rules: [rule] } });
     }
   }
-  const linter = new Linter(
+  const linter = initLinter(
     { plugins: ['mock'], rules: { 'mock/rule': 'error' } },
     { documentSource: new FileSource(), pluginLoader: new MockLoader() },
   );

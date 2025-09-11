@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { Linter } from '../src/core/linter.ts';
+import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 import { loadConfig } from '../src/config/loader.ts';
 
@@ -9,7 +9,7 @@ const fixtureDir = path.join(__dirname, 'fixtures', 'vue');
 
 async function lint(file: string) {
   const config = await loadConfig(fixtureDir);
-  const linter = new Linter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource() });
   const {
     results: [res],
   } = await linter.lintTargets([path.join(fixtureDir, 'src', file)]);

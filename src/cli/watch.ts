@@ -6,8 +6,9 @@ import chokidar from 'chokidar';
 import chalk from 'chalk';
 import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
 import { loadConfig } from '../config/loader.js';
-import { Linter } from '../core/linter.js';
+import { createLinter } from '../index.js';
 import type { Config } from '../core/linter.js';
+import type { Linter } from '../index.js';
 import { createNodeEnvironment } from '../adapters/node/environment.js';
 import type { CacheProvider } from '../core/cache-provider.js';
 import type { Ignore } from 'ignore';
@@ -193,7 +194,7 @@ export async function startWatch(ctx: WatchOptions) {
         patterns: config.patterns,
       });
       cache = env.cacheProvider;
-      linterRef.current = new Linter(config, env);
+      linterRef.current = createLinter(config, env);
       await refreshIgnore();
       const newPluginPaths = await linterRef.current.getPluginPaths();
       const toRemove = pluginPaths.filter((p) => !newPluginPaths.includes(p));

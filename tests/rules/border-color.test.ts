@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 
@@ -8,7 +8,7 @@ void test('design-token/border-color reports invalid value', async () => {
   const tokens = {
     borderColors: { $type: 'color', primary: { $value: '#ffffff' } },
   };
-  const linter = new Linter(
+  const linter = initLinter(
     { tokens, rules: { 'design-token/border-color': 'error' } },
     {
       documentSource: new FileSource(),
@@ -23,7 +23,7 @@ void test('design-token/border-color accepts valid values', async () => {
   const tokens = {
     borderColors: { $type: 'color', primary: { $value: '#ffffff' } },
   };
-  const linter = new Linter(
+  const linter = initLinter(
     { tokens, rules: { 'design-token/border-color': 'error' } },
     {
       documentSource: new FileSource(),
@@ -35,7 +35,7 @@ void test('design-token/border-color accepts valid values', async () => {
 });
 
 void test('design-token/border-color warns when tokens missing', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     { rules: { 'design-token/border-color': 'warn' } },
     {
       documentSource: new FileSource(),

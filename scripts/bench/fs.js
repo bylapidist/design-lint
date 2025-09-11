@@ -9,7 +9,7 @@ const targets = process.argv.slice(2);
 (async () => {
   const config = await loadConfig(process.cwd());
   const env = createNodeEnvironment(config);
-  const linter = new Linter(config, env);
+  const linter = initLinter(config, env);
   const start = performance.now();
   await linter.lintTargets(targets.length ? targets : ['.']);
   const end = performance.now();

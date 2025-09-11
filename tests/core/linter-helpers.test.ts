@@ -1,23 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import type { Environment } from '../../src/core/environment.ts';
 import type { RuleModule, LintMessage } from '../../src/core/types.ts';
+import type { Linter } from '../../src/core/linter.ts';
 import { parserRegistry } from '../../src/core/parser-registry.ts';
-
-class TestLinter extends Linter {
-  public buildRuleContexts(...args: Parameters<Linter['buildRuleContexts']>) {
-    return super.buildRuleContexts(...args);
-  }
-  public runParser(...args: Parameters<Linter['runParser']>) {
-    return super.runParser(...args);
-  }
-  public filterDisabledMessages(
-    ...args: Parameters<Linter['filterDisabledMessages']>
-  ) {
-    return super.filterDisabledMessages(...args);
-  }
-}
 
 const env: Environment = {
   documentSource: {
@@ -28,7 +15,10 @@ const env: Environment = {
 };
 
 void test('buildRuleContexts records rule metadata and reports messages', () => {
-  const linter = new TestLinter({ tokens: {}, rules: {} }, env);
+  const linter = initLinter({ tokens: {}, rules: {} }, env);
+  const helper = linter as unknown as {
+    buildRuleContexts: Linter['buildRuleContexts'];
+  };
   const rule: RuleModule = {
     name: 'test/rule',
     meta: { description: 'desc', category: 'cat' },
@@ -38,7 +28,7 @@ void test('buildRuleContexts records rule metadata and reports messages', () => 
     },
   };
   const { listeners, ruleDescriptions, ruleCategories, messages } =
-    linter.buildRuleContexts(
+    helper.buildRuleContexts(
       [{ rule, options: undefined, severity: 'warn' }],
       'file.ts',
     );
@@ -57,7 +47,10 @@ void test('buildRuleContexts records rule metadata and reports messages', () => 
 });
 
 void test('runParser executes parser for provided type', async () => {
-  const linter = new TestLinter({ tokens: {}, rules: {} }, env);
+  const linter = initLinter({ tokens: {}, rules: {} }, env);
+  const parserHelper = linter as unknown as {
+    runParser: Linter['runParser'];
+  };
   const messages: LintMessage[] = [];
   const listeners: ReturnType<RuleModule['create']>[] = [];
   parserRegistry.custom = (text, sourceId, l, msgs) => {
@@ -70,7 +63,13 @@ void test('runParser executes parser for provided type', async () => {
     });
   };
   try {
-    await linter.runParser('a', 'file.custom', 'custom', listeners, messages);
+    await parserHelper.runParser(
+      'a',
+      'file.custom',
+      'custom',
+      listeners,
+      messages,
+    );
     assert.equal(messages.length, 1);
   } finally {
     delete parserRegistry.custom;
@@ -78,14 +77,17 @@ void test('runParser executes parser for provided type', async () => {
 });
 
 void test('filterDisabledMessages removes disabled lines', () => {
-  const linter = new TestLinter({ tokens: {}, rules: {} }, env);
+  const linter = initLinter({ tokens: {}, rules: {} }, env);
+  const filterHelper = linter as unknown as {
+    filterDisabledMessages: Linter['filterDisabledMessages'];
+  };
   const messages: LintMessage[] = [
     { ruleId: 'a', message: '', severity: 'error', line: 1, column: 1 },
     { ruleId: 'a', message: '', severity: 'error', line: 3, column: 1 },
     { ruleId: 'a', message: '', severity: 'error', line: 4, column: 1 },
   ];
   const text = 'a\n// design-lint-disable-next-line\nb\nc\n';
-  const filtered = linter.filterDisabledMessages(text, messages);
+  const filtered = filterHelper.filterDisabledMessages(text, messages);
   assert.deepEqual(
     filtered.map((m) => m.line),
     [1, 4],

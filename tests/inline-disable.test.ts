@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
-import { Linter } from '../src/core/linter.ts';
+import { createLinter as initLinter } from '../src/index.ts';
 import { FileSource } from '../src/adapters/node/file-source.ts';
 
 const tokens = {
@@ -26,7 +26,7 @@ void test('inline directives disable linting', async () => {
       '/* design-lint-enable */\n' +
       "const f = 'old';\n",
   );
-  const linter = new Linter(
+  const linter = initLinter(
     { tokens, rules: { 'design-system/deprecation': 'error' } },
     new FileSource(),
   );
@@ -43,7 +43,7 @@ void test('strings resembling directives do not disable next line', async () => 
     file,
     "const a = 'design-lint-disable-next-line';\n" + "const b = 'old';\n",
   );
-  const linter = new Linter(
+  const linter = initLinter(
     { tokens, rules: { 'design-system/deprecation': 'error' } },
     new FileSource(),
   );

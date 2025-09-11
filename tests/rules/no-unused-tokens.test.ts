@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import type { Environment } from '../../src/core/environment.ts';
 
@@ -27,7 +27,7 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
       load: () => Promise.resolve({ default: tokens }),
     },
   };
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens,
       rules: { 'design-system/no-unused-tokens': 'warn' },
@@ -61,7 +61,7 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
       load: () => Promise.resolve({ default: tokens }),
     },
   };
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens,
       rules: { 'design-system/no-unused-tokens': 'warn' },
@@ -92,7 +92,7 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
       load: () => Promise.resolve({ default: tokens }),
     },
   };
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens,
       rules: { 'design-system/no-unused-tokens': 'error' },
@@ -120,7 +120,7 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
       load: () => Promise.resolve({ default: tokens }),
     },
   };
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens,
       rules: {
@@ -147,7 +147,7 @@ void test('design-system/no-unused-tokens matches hex case-insensitively', async
       load: () => Promise.resolve({ default: tokens }),
     },
   };
-  const linter = new Linter(
+  const linter = initLinter(
     {
       tokens,
       rules: { 'design-system/no-unused-tokens': 'warn' },

@@ -23,7 +23,7 @@ Start a new plugin that exposes one rule.
    ```ts
    import { Linter, FileSource } from '@lapidist/design-lint';
    import plugin from './index.js';
-   const linter = new Linter({ plugins: [plugin], rules: { 'demo/no-raw-colors': 'error' } }, new FileSource());
+   const linter = initLinter({ plugins: [plugin], rules: { 'demo/no-raw-colors': 'error' } }, new FileSource());
    ```
 
 ## Next steps

@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 
 void test('design-system/no-inline-styles flags style attribute on components', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: { 'design-system/no-inline-styles': 'error' },
     },
@@ -18,7 +18,7 @@ void test('design-system/no-inline-styles flags style attribute on components', 
 });
 
 void test('design-system/no-inline-styles flags className attribute on components', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: { 'design-system/no-inline-styles': 'error' },
     },
@@ -32,7 +32,7 @@ void test('design-system/no-inline-styles flags className attribute on component
 });
 
 void test('design-system/no-inline-styles ignores className when configured', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: {
         'design-system/no-inline-styles': ['error', { ignoreClassName: true }],
@@ -48,7 +48,7 @@ void test('design-system/no-inline-styles ignores className when configured', as
 });
 
 void test('design-system/no-inline-styles flags inline styles in Vue templates', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: { 'design-system/no-inline-styles': 'error' },
     },
@@ -62,7 +62,7 @@ void test('design-system/no-inline-styles flags inline styles in Vue templates',
 });
 
 void test('design-system/no-inline-styles flags inline styles in Svelte components', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: { 'design-system/no-inline-styles': 'error' },
     },
@@ -76,7 +76,7 @@ void test('design-system/no-inline-styles flags inline styles in Svelte componen
 });
 
 void test('design-system/no-inline-styles flags inline styles on custom elements', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     {
       rules: { 'design-system/no-inline-styles': 'error' },
     },

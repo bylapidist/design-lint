@@ -45,7 +45,7 @@ main().catch(console.error);
 
 ```ts
 import { Linter, FileSource } from '@lapidist/design-lint';
-const linter = new Linter(config, new FileSource());
+const linter = initLinter(config, new FileSource());
 const { results } = await linter.lintTargets(['src/**/*.ts']);
 ```
 

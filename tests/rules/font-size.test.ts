@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from '../../src/core/linter.ts';
+import { createLinter as initLinter } from '../../src/index.ts';
 import { FileSource } from '../../src/adapters/node/file-source.ts';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
 
@@ -13,7 +13,7 @@ const tokens = {
 };
 
 function createLinter() {
-  return new Linter(
+  return initLinter(
     {
       tokens,
       rules: { 'design-token/font-size': 'error' },
@@ -44,7 +44,7 @@ void test('design-token/font-size accepts unit-based font-sizes', async () => {
 });
 
 void test('design-token/font-size warns when tokens missing', async () => {
-  const linter = new Linter(
+  const linter = initLinter(
     { rules: { 'design-token/font-size': 'warn' } },
     {
       documentSource: new FileSource(),
