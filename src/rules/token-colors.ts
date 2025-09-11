@@ -1,39 +1,10 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
-import colorName from 'color-name';
 import { z } from 'zod';
 import { tokenRule } from './utils/token-rule.js';
 import { isStyleValue } from '../utils/style.js';
-
-type ColorFormat =
-  | 'hex'
-  | 'rgb'
-  | 'rgba'
-  | 'hsl'
-  | 'hsla'
-  | 'hwb'
-  | 'lab'
-  | 'lch'
-  | 'color'
-  | 'named';
-
-const namedColors = new Set(Object.keys(colorName));
-
-function detectFormat(value: string): ColorFormat | null {
-  const v = value.toLowerCase();
-  if (v.startsWith('#')) return 'hex';
-  if (v.startsWith('rgba(')) return 'rgba';
-  if (v.startsWith('rgb(')) return 'rgb';
-  if (v.startsWith('hsla(')) return 'hsla';
-  if (v.startsWith('hsl(')) return 'hsl';
-  if (v.startsWith('hwb(')) return 'hwb';
-  if (v.startsWith('lab(')) return 'lab';
-  if (v.startsWith('lch(')) return 'lch';
-  if (v.startsWith('color(')) return 'color';
-  if (namedColors.has(v)) return 'named';
-  return null;
-}
+import { detectColorFormat, type ColorFormat } from './utils/color-format.js';
 
 interface ColorRuleOptions {
   allow?: ColorFormat[];
@@ -97,7 +68,7 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
       const parsed = valueParser(text);
       parsed.walk((node) => {
         const value = valueParser.stringify(node);
-        const format = detectFormat(value);
+        const format = detectColorFormat(value);
         if (!format || allowFormats.has(format)) return;
         if (parserFormats.has(format) && !colorString.get(value)) return;
         if (!allowed.has(value.toLowerCase())) {
