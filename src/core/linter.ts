@@ -8,6 +8,7 @@ import type {
 import { getFlattenedTokens as flattenTokens } from './token-utils.js';
 export { defaultIgnore } from './ignore.js';
 import { RuleRegistry } from './rule-registry.js';
+import type { PluginMeta } from './plugin-manager.js';
 import { TokenTracker } from './token-tracker.js';
 import { Runner } from './runner.js';
 import type {
@@ -91,7 +92,7 @@ export class Linter {
         tokens: inlineTokens ?? {},
       };
       deps = {
-        ruleRegistry: new RuleRegistry(resolvedConfig, env.pluginLoader),
+        ruleRegistry: new RuleRegistry(resolvedConfig, env),
         tokenTracker: new TokenTracker(provider),
         tokensReady: provider.load(),
       };
@@ -174,6 +175,10 @@ export class Linter {
 
   async getPluginPaths(): Promise<string[]> {
     return this.ruleRegistry.getPluginPaths();
+  }
+
+  async getPluginMetadata(): Promise<PluginMeta[]> {
+    return this.ruleRegistry.getPluginMetadata();
   }
 
   /**

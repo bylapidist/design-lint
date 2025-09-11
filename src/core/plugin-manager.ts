@@ -1,11 +1,18 @@
 import type { Config } from './linter.js';
 import type { RuleModule } from './types.js';
 import type { PluginLoader } from './plugin-loader.js';
+import type { Environment } from './environment.js';
 import { PluginError } from './errors.js';
 import { isRecord } from '../utils/type-guards.js';
 
+export interface PluginMeta {
+  path: string;
+  name?: string;
+  version?: string;
+}
+
 export class PluginManager {
-  private pluginPaths: string[] = [];
+  private metadata: PluginMeta[] = [];
 
   constructor(
     private config: Config,
@@ -13,8 +20,8 @@ export class PluginManager {
     private loader: PluginLoader,
   ) {}
 
-  async getPlugins(): Promise<string[]> {
-    if (this.pluginPaths.length > 0) return this.pluginPaths;
+  async getPlugins(env: Environment): Promise<PluginMeta[]> {
+    if (this.metadata.length > 0) return this.metadata;
     const names = this.config.plugins ?? [];
     for (const name of names) {
       const { path: pluginSource, plugin } = await this.loader.load(
@@ -27,6 +34,9 @@ export class PluginManager {
           context: `Plugin "${pluginSource}"`,
           remediation: 'Export an object with a "rules" array.',
         });
+      }
+      if (typeof plugin.init === 'function') {
+        await plugin.init(env);
       }
       for (const rule of plugin.rules) {
         if (!isRuleModule(rule)) {
@@ -50,9 +60,13 @@ export class PluginManager {
         }
         this.ruleMap.set(rule.name, { rule, source: pluginSource });
       }
-      this.pluginPaths.push(pluginSource);
+      this.metadata.push({
+        path: pluginSource,
+        name: plugin.name,
+        version: plugin.version,
+      });
     }
-    return this.pluginPaths;
+    return this.metadata;
   }
 }
 
