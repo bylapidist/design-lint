@@ -25,4 +25,5 @@ void test('namespace members are accessible', () => {
   assert.equal(typeof utils.tokens.wrapTokenError, 'function');
   assert.equal(typeof utils.tokens.parseTokensForTheme, 'function');
   assert.equal(typeof utils.tokens.normalizeTokens, 'function');
+  assert.equal(typeof utils.tokens.toThemeRecord, 'function');
 });

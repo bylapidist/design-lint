@@ -48,9 +48,9 @@ export const boxShadowRule = tokenRule({
       }
       return parts.join(', ');
     };
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('shadows.')) continue;
-      const val = toString(token.$value);
+      const val = toString(value);
       if (val) allowed.add(normalize(val));
     }
     return allowed;

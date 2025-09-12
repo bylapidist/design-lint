@@ -44,8 +44,15 @@ export type DesignTokens = RootTokenGroup;
 
 export interface FlattenedToken {
   path: string;
-  token: Token;
-  loc: { line: number; column: number };
+  value: unknown;
+  type?: string;
+  aliases?: string[];
+  metadata: {
+    description?: string;
+    extensions?: Record<string, unknown>;
+    deprecated?: boolean | string;
+    loc: { line: number; column: number };
+  };
 }
 
 export interface LintMessage {

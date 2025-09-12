@@ -25,9 +25,9 @@ export const durationRule = tokenRule({
       return null;
     };
     const allowed = new Set<number>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('durations.')) continue;
-      const num = parse(token.$value);
+      const num = parse(value);
       if (num !== null) allowed.add(num);
     }
     return allowed;

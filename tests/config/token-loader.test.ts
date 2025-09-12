@@ -74,6 +74,47 @@ void test('parses inline theme record', async () => {
   assert.equal(light.color.primary.$value, '#000');
 });
 
+void test('merges variant tokens over default', async () => {
+  const tmp = makeTmpDir();
+  fs.writeFileSync(
+    path.join(tmp, 'base.tokens.json'),
+    JSON.stringify({
+      $description: 'base',
+      color: {
+        primary: { $type: 'color', $value: '#000' },
+        secondary: { $type: 'color', $value: '#222' },
+      },
+    }),
+  );
+  fs.writeFileSync(
+    path.join(tmp, 'dark.tokens.json'),
+    JSON.stringify({
+      $description: 'dark',
+      color: { primary: { $type: 'color', $value: '#111' } },
+    }),
+  );
+  const tokens = await loadTokens(
+    { default: './base.tokens.json', dark: './dark.tokens.json' },
+    tmp,
+  );
+  const dark = tokens.dark as {
+    $description: string;
+    color: {
+      primary: { $value: string };
+      secondary: { $value: string };
+    };
+  };
+  assert.equal(dark.color.primary.$value, '#111');
+  assert.equal(dark.color.secondary.$value, '#222');
+  assert.equal(dark.$description, 'dark');
+  const base = tokens.default as {
+    $description: string;
+    color: { primary: { $value: string } };
+  };
+  assert.equal(base.color.primary.$value, '#000');
+  assert.equal(base.$description, 'base');
+});
+
 void test('returns empty object for non-record input', async () => {
   const tokens = await loadTokens(null, process.cwd());
   assert.deepEqual(tokens, {});

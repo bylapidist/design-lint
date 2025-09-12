@@ -14,9 +14,9 @@ export const animationRule = tokenRule({
     'design-token/animation requires animation tokens; configure tokens with $type "string" under an "animations" group to enable this rule.',
   getAllowed(tokens) {
     const allowed = new Set<string>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('animations.')) continue;
-      const val = token.$value;
+      const val = value;
       if (typeof val === 'string') {
         allowed.add(normalize(val));
       }

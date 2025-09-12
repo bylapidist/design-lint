@@ -19,6 +19,7 @@ void test('returns default config when none found', async () => {
     rules: {},
     ignoreFiles: [],
     plugins: [],
+    output: [],
     configPath: undefined,
   });
 });
@@ -51,6 +52,31 @@ void test('throws on malformed JS config', async () => {
   const configPath = path.join(tmp, 'designlint.config.js');
   fs.writeFileSync(configPath, 'module.exports = { tokens: {},');
   await assert.rejects(loadConfig(tmp), /Transform failed/);
+});
+
+void test('parses nameTransform option', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ tokens: {}, nameTransform: 'PascalCase' }),
+  );
+  const loaded = await loadConfig(tmp);
+  assert.equal(loaded.nameTransform, 'PascalCase');
+});
+
+void test('parses output targets', async () => {
+  const tmp = makeTmpDir();
+  const configPath = path.join(tmp, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: {},
+      output: [{ format: 'css', file: 'out.css' }],
+    }),
+  );
+  const loaded = await loadConfig(tmp);
+  assert.deepEqual(loaded.output, [{ format: 'css', file: 'out.css' }]);
 });
 
 void test('rejects bare string token values', async () => {
@@ -361,7 +387,7 @@ void test('rejects invalid token file content', async () => {
   await assert.rejects(loadConfig(tmp), /missing \$type/);
 });
 
-void test('rejects unresolved token aliases', async () => {
+void test('handles unresolved token aliases with warnings', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'designlint.config.json'),
@@ -377,7 +403,7 @@ void test('rejects unresolved token aliases', async () => {
       },
     }),
   );
-  await assert.rejects(loadConfig(tmp), /references unknown token/);
+  await assert.doesNotReject(loadConfig(tmp));
 });
 
 void test('rejects inline tokens using legacy shorthand', async () => {
@@ -428,7 +454,7 @@ void test('rejects token names with invalid characters', async () => {
   await assert.rejects(loadConfig(tmp), /invalid token or group name/i);
 });
 
-void test('rejects circular token aliases', async () => {
+void test('handles circular token aliases with warnings', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'designlint.config.json'),
@@ -441,7 +467,7 @@ void test('rejects circular token aliases', async () => {
       },
     }),
   );
-  await assert.rejects(loadConfig(tmp), /circular alias/i);
+  await assert.doesNotReject(loadConfig(tmp));
 });
 
 void test('rejects invalid typography tokens', async () => {

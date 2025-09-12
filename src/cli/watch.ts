@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Watch mode for continuous linting and token generation.
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { once } from 'node:events';
@@ -17,6 +23,8 @@ import {
   type ExecuteServices,
   type ExecuteOptions,
 } from './execute.js';
+import { generateOutputs } from './generate.js';
+import { TOKEN_FILE_GLOB } from '../utils/tokens/index.js';
 
 export interface WatchState {
   pluginPaths: string[];
@@ -55,6 +63,14 @@ export interface WatchServices extends ExecuteServices {
   cacheLocation?: string;
 }
 
+/**
+ * Run the CLI in watch mode, re-linting and regenerating token outputs on
+ * file changes.
+ *
+ * @param targets - Initial lint targets.
+ * @param options - CLI options controlling execution.
+ * @param services - Shared services from {@link prepareEnvironment}.
+ */
 export async function watchMode(
   targets: string[],
   options: WatchCliOptions,
@@ -74,6 +90,7 @@ export async function watchMode(
     process.exitCode = exitCode;
     return ignoreFiles;
   };
+  await generateOutputs({ config: options.config });
   await startWatch({
     targets,
     options,
@@ -92,6 +109,11 @@ export async function watchMode(
   });
 }
 
+/**
+ * Internal helper for file watching and lint regeneration.
+ *
+ * @param ctx - Aggregated watch context including config and callbacks.
+ */
 export async function startWatch(ctx: WatchOptions) {
   let {
     targets,
@@ -113,7 +135,7 @@ export async function startWatch(ctx: WatchOptions) {
 
   console.log('Watching for changes...');
   await refreshIgnore();
-  const watchPaths = [...targets];
+  const watchPaths = [...targets, TOKEN_FILE_GLOB];
   if (config.configPath) watchPaths.push(config.configPath);
   if (fs.existsSync(designIgnore)) watchPaths.push(designIgnore);
   if (fs.existsSync(gitIgnore)) watchPaths.push(gitIgnore);
@@ -164,6 +186,7 @@ export async function startWatch(ctx: WatchOptions) {
   const runAndUpdate = async (paths: string[]) => {
     const prev = ignoreFilePaths;
     const newIgnore = await runLint(paths);
+    await generateOutputs({ config: options.config });
     const toAdd = newIgnore.filter((p) => !prev.includes(p));
     if (toAdd.length) watcher.add(toAdd);
     const toRemove = prev.filter((p) => !newIgnore.includes(p));

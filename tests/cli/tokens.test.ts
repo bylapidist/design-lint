@@ -49,15 +49,12 @@ void test('tokens command exports resolved tokens with extensions', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(
     fs.readFileSync(path.join(dir, 'out.json'), 'utf8'),
-  ) as Record<
-    string,
-    Record<string, { $value: unknown; $extensions?: unknown }>
-  >;
-  assert.equal(out.default['color.red'].$value, '#ff0000');
-  assert.deepEqual(out.default['color.red'].$extensions, {
+  ) as Record<string, Record<string, { value: unknown; extensions?: unknown }>>;
+  assert.equal(out.default['color.red'].value, '#ff0000');
+  assert.deepEqual(out.default['color.red'].extensions, {
     'vendor.ext': { foo: 'bar' },
   });
-  assert.equal(out.default['color.blue'].$value, '#ff0000');
+  assert.equal(out.default['color.blue'].value, '#ff0000');
 });
 
 void test('tokens command reads config from outside cwd', () => {
@@ -89,9 +86,9 @@ void test('tokens command reads config from outside cwd', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(fs.readFileSync(outPath, 'utf8')) as Record<
     string,
-    Record<string, { $value: unknown }>
+    Record<string, { value: unknown }>
   >;
-  assert.equal(out.default['color.red'].$value, '#ff0000');
+  assert.equal(out.default['color.red'].value, '#ff0000');
 });
 
 void test('tokens command exports themes with root tokens', () => {
@@ -118,8 +115,8 @@ void test('tokens command exports themes with root tokens', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(res.stdout) as Record<
     string,
-    Record<string, { $value: unknown }>
+    Record<string, { value: unknown }>
   >;
-  assert.equal(out.light.primary.$value, '#fff');
-  assert.equal(out.dark.primary.$value, '#000');
+  assert.equal(out.light.primary.value, '#fff');
+  assert.equal(out.dark.primary.value, '#000');
 });

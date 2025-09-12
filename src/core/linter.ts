@@ -5,7 +5,8 @@ import type {
   DesignTokens,
   RuleModule,
 } from './types.js';
-import { getFlattenedTokens as flattenTokens } from './token-utils.js';
+import type { NameTransform } from '../utils/tokens/index.js';
+import { TokenRegistry } from './token-registry.js';
 export { defaultIgnore } from './ignore.js';
 import { RuleRegistry } from './rule-registry.js';
 import type { PluginMeta } from './plugin-manager.js';
@@ -21,6 +22,13 @@ import { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
 import { FILE_TYPE_MAP } from './file-types.js';
 
+export interface OutputTarget {
+  format: 'css' | 'js' | 'ts';
+  file: string;
+  nameTransform?: NameTransform;
+  selectors?: Record<string, string>;
+}
+
 export interface Config {
   tokens?:
     | DesignTokens
@@ -33,6 +41,8 @@ export interface Config {
   concurrency?: number;
   patterns?: string[];
   wrapTokensWithVar?: boolean;
+  nameTransform?: NameTransform;
+  output?: OutputTarget[];
 }
 
 interface ResolvedConfig extends Omit<Config, 'tokens'> {
@@ -48,6 +58,7 @@ export class Linter {
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
   private tokensReady: Promise<void>;
+  private tokenRegistry?: TokenRegistry;
   private service?: LintService;
   constructor(
     config: Config,
@@ -58,6 +69,7 @@ export class Linter {
           tokensReady: Promise<Record<string, DesignTokens>>;
         }
       | Environment,
+    onWarn?: (msg: string) => void,
   ) {
     const isEnv = (val: unknown): val is Environment =>
       typeof val === 'object' && val !== null && 'documentSource' in val;
@@ -81,7 +93,7 @@ export class Linter {
       const provider: TokenProvider = env.tokenProvider ?? {
         load: () => {
           if (inlineTokens && isDesignTokens(inlineTokens)) {
-            flattenTokens({ default: inlineTokens });
+            new TokenRegistry({ default: inlineTokens });
             return Promise.resolve({ default: inlineTokens });
           }
           return Promise.resolve({});
@@ -107,6 +119,10 @@ export class Linter {
     this.tokenTracker = deps.tokenTracker;
     this.tokensReady = deps.tokensReady.then((t) => {
       this.tokensByTheme = t;
+      this.tokenRegistry = new TokenRegistry(t, {
+        nameTransform: this.config.nameTransform,
+        onWarn,
+      });
     });
 
     if (env) {
@@ -166,8 +182,9 @@ export class Linter {
    */
   getTokenCompletions(): Record<string, string[]> {
     const completions: Record<string, string[]> = {};
+    if (!this.tokenRegistry) return completions;
     for (const theme of Object.keys(this.tokensByTheme)) {
-      const flat = flattenTokens(this.tokensByTheme, theme);
+      const flat = this.tokenRegistry.getTokens(theme);
       if (flat.length) {
         completions[theme] = flat.map((t) => t.path);
       }
@@ -249,10 +266,8 @@ export class Linter {
         metadata,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
         getFlattenedTokens: (type?: string, theme?: string) => {
-          const tokens = flattenTokens(this.tokensByTheme, theme);
-          return type
-            ? tokens.filter(({ token }) => token.$type === type)
-            : tokens;
+          const tokens = this.tokenRegistry?.getTokens(theme) ?? [];
+          return type ? tokens.filter((t) => t.type === type) : tokens;
         },
       };
       return rule.create(ctx);

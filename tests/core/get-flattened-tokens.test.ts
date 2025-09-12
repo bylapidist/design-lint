@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getFlattenedTokens } from '../../src/core/token-utils.js';
+import { getFlattenedTokens } from '../../src/utils/tokens/index.js';
 import type { DesignTokens } from '../../src/core/types.js';
 
 void test('getFlattenedTokens flattens tokens for specified theme and preserves metadata', () => {
@@ -28,18 +28,25 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
   assert.deepEqual(flat, [
     {
       path: 'palette.primary',
-      token: { $value: '#fff', $type: 'color', $deprecated: 'use new palette' },
-      loc: { line: 1, column: 1 },
+      value: '#fff',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: 'use new palette',
+        loc: { line: 1, column: 1 },
+      },
     },
     {
       path: 'palette.secondary',
-      token: {
-        $value: '#000',
-        $type: 'color',
-        $deprecated: 'use new palette',
-        $extensions: { 'vendor.example': { note: true } },
+      value: '#000',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: { 'vendor.example': { note: true } },
+        deprecated: 'use new palette',
+        loc: { line: 1, column: 1 },
       },
-      loc: { line: 1, column: 1 },
     },
   ]);
 });
@@ -53,13 +60,25 @@ void test('getFlattenedTokens merges tokens from all themes when none is specifi
   assert.deepEqual(flat, [
     {
       path: 'palette.primary',
-      token: { $value: '#fff', $type: 'color' },
-      loc: { line: 1, column: 1 },
+      value: '#fff',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
     {
       path: 'palette.secondary',
-      token: { $value: '#000', $type: 'color' },
-      loc: { line: 1, column: 1 },
+      value: '#000',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
   ]);
 });
@@ -78,13 +97,53 @@ void test('getFlattenedTokens resolves aliases', () => {
   assert.deepEqual(flat, [
     {
       path: 'palette.base',
-      token: { $value: '#f00', $type: 'color' },
-      loc: { line: 1, column: 1 },
+      value: '#f00',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
     {
       path: 'palette.primary',
-      token: { $value: '#f00', $type: 'color', aliasOf: ['palette.base'] },
-      loc: { line: 1, column: 1 },
+      value: '#f00',
+      type: 'color',
+      aliases: ['palette.base'],
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
+    },
+  ]);
+});
+
+void test('getFlattenedTokens applies name transforms', () => {
+  const tokens: Record<string, DesignTokens> = {
+    light: {
+      ColorGroup: { $type: 'color', primaryColor: { $value: '#fff' } },
+    },
+    dark: {
+      ColorGroup: { $type: 'color', primaryColor: { $value: '#000' } },
+    },
+  };
+  const flat = getFlattenedTokens(tokens, undefined, {
+    nameTransform: 'camelCase',
+  });
+  assert.deepEqual(flat, [
+    {
+      path: 'colorGroup.primaryColor',
+      value: '#fff',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
   ]);
 });

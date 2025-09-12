@@ -1,8 +1,13 @@
 #!/usr/bin/env node
+/**
+ * @packageDocumentation
+ *
+ * Command-line interface entry point for design-lint.
+ */
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
-import chalk, { supportsColor } from 'chalk';
+import { supportsColor } from 'chalk';
 import { TokenParseError } from '../adapters/node/token-parser.js';
 import { guards } from '../utils/index.js';
 
@@ -14,6 +19,8 @@ import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
 import { initConfig } from './init-config.js';
 import { exportTokens } from './tokens.js';
+import { generateOutputs } from './generate.js';
+import { createLogger, type Logger } from './logger.js';
 
 type CliOptions = ExecuteOptions &
   PrepareEnvironmentOptions & {
@@ -25,7 +32,14 @@ function hasVersion(value: unknown): value is { version: string } {
   return isRecord(value) && typeof value.version === 'string';
 }
 
-function createProgram(version: string) {
+/**
+ * Configure the CLI program with global options and subcommands.
+ *
+ * @param version - Package version for display in `--version` output.
+ * @param logger - Logger used for error reporting in command handlers.
+ * @returns Configured commander instance.
+ */
+function createProgram(version: string, logger: Logger) {
   const program = new Command();
   program
     .name('design-lint')
@@ -81,7 +95,11 @@ function createProgram(version: string) {
       "Config format for 'init' (js, cjs, mjs, ts, mts, json)",
     )
     .action((opts: { initFormat?: string }) => {
-      initConfig(opts.initFormat);
+      try {
+        initConfig(opts.initFormat);
+      } catch (err) {
+        logger.error(err);
+      }
     });
 
   program
@@ -95,17 +113,54 @@ function createProgram(version: string) {
         opts: { theme?: string; out?: string; config?: string },
         cmd: Command,
       ) => {
-        const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
-        await exportTokens({
-          ...opts,
-          config: opts.config ?? parent.config,
-        });
+        try {
+          const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+          await exportTokens(
+            {
+              ...opts,
+              config: opts.config ?? parent.config,
+            },
+            logger.warn,
+          );
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
+
+  program
+    .command('generate')
+    .description('Generate token outputs as configured')
+    .option('--config <path>', 'Path to configuration file')
+    .option('--watch', 'Watch token files and regenerate on changes')
+    .action(
+      async (opts: { config?: string; watch?: boolean }, cmd: Command) => {
+        try {
+          const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+          await generateOutputs(
+            {
+              ...opts,
+              config: opts.config ?? parent.config,
+            },
+            logger,
+          );
+        } catch (err) {
+          logger.error(err);
+        }
       },
     );
   return program;
 }
 
-export async function run(argv = process.argv.slice(2)) {
+/**
+ * Entry point for the design-lint CLI.
+ *
+ * Parses command-line arguments, initializes the program, and executes the
+ * lint or subcommand workflows.
+ *
+ * @param argv - Command-line arguments excluding the node and script path.
+ */
+export async function run(argv = process.argv.slice(2)): Promise<void> {
   const current = process.versions.node;
   const [major] = current.split('.').map(Number);
   if (major < 22) {
@@ -124,26 +179,23 @@ export async function run(argv = process.argv.slice(2)) {
   }
   const pkg = pkgRaw;
 
-  const program = createProgram(pkg.version);
+  const logger = createLogger(() => useColor);
+  const program = createProgram(pkg.version, logger);
 
   program.action(async (files: string[], options: CliOptions) => {
     if (options.color === false) useColor = false;
     const patterns = files.length ? files : ['.'];
     try {
-      const env = await prepareEnvironment({ ...options, patterns });
+      const env = await prepareEnvironment(
+        { ...options, patterns },
+        logger.warn,
+      );
       const services = { ...env, useColor };
       const { exitCode } = await executeLint(patterns, options, services);
       process.exitCode = exitCode;
       if (options.watch) await watchMode(patterns, options, services);
     } catch (err) {
-      if (err instanceof TokenParseError) {
-        const out = err.format();
-        console.error(useColor ? chalk.red(out) : out);
-      } else {
-        const message = err instanceof Error ? err.message : String(err);
-        console.error(useColor ? chalk.red(message) : message);
-      }
-      process.exitCode = 1;
+      logger.error(err instanceof TokenParseError ? err.format() : err);
     }
   });
 
