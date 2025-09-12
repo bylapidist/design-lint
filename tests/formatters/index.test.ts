@@ -10,6 +10,7 @@ void test('formatters expose built-in formatters and helper namespace', () => {
   assert.equal(typeof formatters.resolveFormatter, 'function');
   assert.equal(typeof formatters.isFormatter, 'function');
   assert.equal(typeof formatters.isBuiltInFormatterName, 'function');
+  assert.ok(Array.isArray(formatters.builtInFormatterNames));
   assert.equal(typeof formatters.jsonFormatter, 'function');
   assert.equal(typeof formatters.sarifFormatter, 'function');
   assert.equal(typeof formatters.stylishFormatter, 'function');
@@ -17,6 +18,7 @@ void test('formatters expose built-in formatters and helper namespace', () => {
   assert.equal(typeof formatters.helpers.resolveFormatter, 'function');
   assert.equal(typeof formatters.helpers.isFormatter, 'function');
   assert.equal(typeof formatters.helpers.isBuiltInFormatterName, 'function');
+  assert.ok(Array.isArray(formatters.helpers.builtInFormatterNames));
   assert.equal(
     formatters.helpers.builtInFormatters.get('json'),
     formatters.jsonFormatter,
@@ -25,6 +27,10 @@ void test('formatters expose built-in formatters and helper namespace', () => {
     typeof formatters.helpers.builtins.isBuiltInFormatterName,
     'function',
   );
+  assert.deepEqual(
+    formatters.helpers.builtins.builtInFormatterNames,
+    formatters.builtInFormatterNames,
+  );
   assert.equal(typeof formatters.json.jsonFormatter, 'function');
   assert.equal(typeof formatters.sarif.sarifFormatter, 'function');
   assert.equal(typeof formatters.stylish.stylishFormatter, 'function');
@@ -32,6 +38,7 @@ void test('formatters expose built-in formatters and helper namespace', () => {
 
 void test('formatters expose expected keys', () => {
   assert.deepEqual(Object.keys(formatters).sort(), [
+    'builtInFormatterNames',
     'builtInFormatters',
     'getFormatter',
     'helpers',

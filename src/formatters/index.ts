@@ -10,19 +10,29 @@
  * - `sarif` – [SARIF](https://sarifweb.azurewebsites.net/) log generator
  * - `stylish` – human-friendly text formatter
  * - `helpers` – utilities such as {@link getFormatter} and
- *   {@link isBuiltInFormatterName}, including the {@link builtInFormatters} map
- *   and {@link BuiltInFormatterName} type
+ *   {@link isBuiltInFormatterName}, including the {@link builtInFormatters} map,
+ *   {@link builtInFormatterNames} array, and {@link BuiltInFormatterName} type
+ *
+ * @example
+ * ```ts
+ * import { getFormatter, jsonFormatter } from '@lapidist/design-lint/formatters';
+ *
+ * const json = jsonFormatter(results);
+ * const stylish = await getFormatter('stylish');
+ * console.log(stylish(results));
+ * ```
  */
 export {
   getFormatter,
   resolveFormatter,
   isFormatter,
   builtInFormatters,
+  builtInFormatterNames,
   isBuiltInFormatterName,
   type Formatter,
   type BuiltInFormatterName,
-} from './get-formatter/index.js';
-export * as helpers from './get-formatter/index.js';
+} from './helpers/index.js';
+export * as helpers from './helpers/index.js';
 
 export { jsonFormatter } from './json/index.js';
 export { sarifFormatter } from './sarif/index.js';

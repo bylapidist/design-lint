@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Type guard for formatter functions.
+ */
+
 import type { Formatter } from './types.js';
 
 /**
@@ -5,6 +11,12 @@ import type { Formatter } from './types.js';
  *
  * @param value - Value to test.
  * @returns Whether the value is a formatter function.
+ *
+ * @example
+ * isFormatter(() => '');
+ * // => true
+ * isFormatter('not a function');
+ * // => false
  */
 export function isFormatter(value: unknown): value is Formatter {
   return typeof value === 'function';
