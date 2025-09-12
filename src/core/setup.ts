@@ -3,7 +3,7 @@ import type { Environment, TokenProvider } from './environment.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
 import { LintService } from './lint-service.js';
-import { getFlattenedTokens as flattenTokens } from './token-utils.js';
+import { getFlattenedTokens as flattenTokens } from '../utils/tokens/index.js';
 import type { DesignTokens } from './types.js';
 
 function isDesignTokens(val: unknown): val is DesignTokens {

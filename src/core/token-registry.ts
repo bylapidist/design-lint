@@ -3,17 +3,28 @@ import {
   flattenDesignTokens,
   normalizePath,
   type NameTransform,
-} from './token-utils.js';
+} from '../utils/tokens/index.js';
 
 export interface TokenRegistryOptions {
   nameTransform?: NameTransform;
   onWarn?: (msg: string) => void;
 }
 
+/**
+ * Registry for flattened design tokens keyed by theme and normalized path.
+ *
+ * Provides lookup and aggregation utilities used by the linter and generators.
+ */
 export class TokenRegistry {
   private tokens = new Map<string, Map<string, FlattenedToken>>();
   private transform?: NameTransform;
 
+  /**
+   * Create a token registry from a record of theme token objects.
+   *
+   * @param tokensByTheme - Mapping of theme names to design tokens.
+   * @param options - Optional configuration controlling name transforms and warnings.
+   */
   constructor(
     tokensByTheme: Record<string, DesignTokens>,
     options?: TokenRegistryOptions,
@@ -33,6 +44,13 @@ export class TokenRegistry {
     }
   }
 
+  /**
+   * Retrieve a flattened token by name and optional theme.
+   *
+   * @param name - Token path to locate.
+   * @param theme - Theme name to query; searches all themes when omitted.
+   * @returns The matching token or `undefined` if none exists.
+   */
   getToken(name: string, theme?: string): FlattenedToken | undefined {
     const key = normalizePath(name, this.transform);
     if (theme) return this.tokens.get(theme)?.get(key);
@@ -47,6 +65,12 @@ export class TokenRegistry {
     return undefined;
   }
 
+  /**
+   * Retrieve all tokens for a theme or deduplicated across themes.
+   *
+   * @param theme - Theme name to filter by; when omitted, tokens from all themes are merged.
+   * @returns Array of flattened tokens.
+   */
   getTokens(theme?: string): FlattenedToken[] {
     if (theme) {
       return Array.from(this.tokens.get(theme)?.values() ?? []);

@@ -1,5 +1,8 @@
 import type { DesignTokens } from '../core/types.js';
-import { getFlattenedTokens, type NameTransform } from '../core/token-utils.js';
+import {
+  getFlattenedTokens,
+  type NameTransform,
+} from '../utils/tokens/index.js';
 
 export interface TsOutputOptions {
   /** Optional transform applied to token path segments before generating declarations */

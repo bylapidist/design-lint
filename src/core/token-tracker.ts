@@ -1,7 +1,7 @@
 import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
 import { guards, collections } from '../utils/index.js';
-import { getFlattenedTokens, extractVarName } from './token-utils.js';
+import { getFlattenedTokens, extractVarName } from '../utils/tokens/index.js';
 
 const {
   data: { isRecord },

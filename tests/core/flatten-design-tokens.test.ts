@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { flattenDesignTokens } from '../../src/core/token-utils.js';
+import { flattenDesignTokens } from '../../src/utils/tokens/index.js';
 import type { DesignTokens } from '../../src/core/types.js';
 import { registerTokenValidator } from '../../src/core/token-validators/index.js';
 

@@ -1,5 +1,12 @@
+/**
+ * @packageDocumentation
+ *
+ * Utilities for normalizing design token paths and applying name transforms.
+ */
+
 export type NameTransform = 'kebab-case' | 'camelCase' | 'PascalCase';
 
+/** @internal */
 function transformSegment(seg: string, transform?: NameTransform): string {
   if (!transform) return seg;
   switch (transform) {
@@ -21,6 +28,13 @@ function transformSegment(seg: string, transform?: NameTransform): string {
   }
 }
 
+/**
+ * Normalize a token path to dot notation with optional case transforms.
+ *
+ * @param path - Original token path using dot or slash separators.
+ * @param transform - Optional casing applied to each path segment.
+ * @returns Normalized dot-notation path.
+ */
 export function normalizePath(path: string, transform?: NameTransform): string {
   const parts = path.split(/[./]/).filter(Boolean);
   return parts.map((p) => transformSegment(p, transform)).join('.');

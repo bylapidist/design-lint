@@ -5,7 +5,8 @@ import {
   closestToken,
   extractVarName,
   flattenDesignTokens,
-} from '../src/core/token-utils.js';
+  normalizePath,
+} from '../src/utils/tokens/index.js';
 
 void test('matchToken handles regexp and glob patterns and missing matches', () => {
   assert.equal(matchToken('--brand-primary', [/^--brand-/]), '--brand-primary');
@@ -36,4 +37,11 @@ void test('flattenDesignTokens provides location information', () => {
   };
   const result = flattenDesignTokens(tokens);
   assert.deepEqual(result[0].metadata.loc, { line: 1, column: 1 });
+});
+
+void test('normalizePath converts separators and applies case transforms', () => {
+  assert.equal(normalizePath('foo/bar-baz'), 'foo.bar-baz');
+  assert.equal(normalizePath('foo/barBaz', 'kebab-case'), 'foo.bar-baz');
+  assert.equal(normalizePath('foo/bar-baz', 'camelCase'), 'foo.barBaz');
+  assert.equal(normalizePath('foo/bar-baz', 'PascalCase'), 'foo.BarBaz');
 });

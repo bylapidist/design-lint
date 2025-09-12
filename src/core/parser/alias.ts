@@ -1,5 +1,5 @@
 import type { FlattenedToken } from '../types.js';
-import { normalizePath } from '../path-utils.js';
+import { normalizePath } from '../../utils/tokens/index.js';
 import { collections } from '../../utils/index.js';
 
 const { isArray } = collections;

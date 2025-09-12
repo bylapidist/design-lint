@@ -39,7 +39,7 @@ export {
   type TokenPattern,
   type NameTransform,
   type FlattenOptions,
-} from './token-utils.js';
+} from '../utils/tokens/index.js';
 export {
   parseDesignTokens,
   getTokenLocation,

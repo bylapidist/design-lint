@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getFlattenedTokens } from '../../src/core/token-utils.js';
+import { getFlattenedTokens } from '../../src/utils/tokens/index.js';
 import type { DesignTokens } from '../../src/core/types.js';
 
 void test('getFlattenedTokens flattens tokens for specified theme and preserves metadata', () => {

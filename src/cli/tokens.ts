@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { loadConfig } from '../config/loader.js';
-import { getFlattenedTokens } from '../core/token-utils.js';
+import { getFlattenedTokens } from '../utils/tokens/index.js';
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
 import { guards } from '../utils/index.js';

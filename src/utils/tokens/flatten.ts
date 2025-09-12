@@ -1,51 +1,27 @@
-import type { DesignTokens, FlattenedToken } from './types.js';
-import picomatch from 'picomatch';
-import leven from 'leven';
-import { parseDesignTokens } from './parser/index.js';
-import { normalizePath, type NameTransform } from './path-utils.js';
+/**
+ * @packageDocumentation
+ *
+ * Helpers for flattening design token objects and aggregating them across themes.
+ */
 
-export type TokenPattern = string | RegExp;
-
-export { normalizePath };
-export type { NameTransform };
-
-export function matchToken(
-  name: string,
-  patterns: TokenPattern[],
-): string | null {
-  for (const p of patterns) {
-    if (p instanceof RegExp) {
-      if (p.test(name)) return name;
-    } else if (picomatch.isMatch(name, p, { nocase: true })) {
-      return name;
-    }
-  }
-  return null;
-}
-
-export function closestToken(
-  name: string,
-  patterns: TokenPattern[],
-): string | null {
-  const tokens = patterns.filter((p): p is string => typeof p === 'string');
-  if (tokens.length === 0) return null;
-  let best = tokens[0];
-  let bestDistance = leven(name, best);
-  for (const token of tokens.slice(1)) {
-    const distance = leven(name, token);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      best = token;
-    }
-  }
-  return best;
-}
+import { parseDesignTokens } from '../../core/parser/index.js';
+import type { DesignTokens, FlattenedToken } from '../../core/types.js';
+import { normalizePath, type NameTransform } from './path.js';
 
 export interface FlattenOptions {
+  /** Optional transform applied to each path segment */
   nameTransform?: NameTransform;
+  /** Warning callback for parse or alias issues */
   onWarn?: (msg: string) => void;
 }
 
+/**
+ * Flatten a nested design token object into an array of tokens.
+ *
+ * @param tokens - Nested design token structure.
+ * @param options - Optional normalization settings.
+ * @returns Array of flattened tokens including metadata and resolved aliases.
+ */
 export function flattenDesignTokens(
   tokens: DesignTokens,
   options?: FlattenOptions,
@@ -63,6 +39,14 @@ export function flattenDesignTokens(
   }));
 }
 
+/**
+ * Collect flattened tokens from a set of themes with optional aggregation.
+ *
+ * @param tokensByTheme - Record of theme names to token objects.
+ * @param theme - Specific theme to flatten; when omitted all themes are merged.
+ * @param options - Optional normalization settings.
+ * @returns Array of flattened tokens.
+ */
 export function getFlattenedTokens(
   tokensByTheme: Record<string, DesignTokens>,
   theme?: string,
@@ -79,7 +63,6 @@ export function getFlattenedTokens(
     }
     return [];
   }
-  // dedupe tokens by their path across themes
   const seen = new Map<string, FlattenedToken>();
   for (const tokens of Object.values(tokensByTheme)) {
     for (const flat of flattenDesignTokens(tokens, {
@@ -92,9 +75,4 @@ export function getFlattenedTokens(
     }
   }
   return [...seen.values()];
-}
-
-export function extractVarName(value: string): string | null {
-  const m = /^var\(\s*(--[A-Za-z0-9_-]+)\s*(?:,.*)?\)$/.exec(value.trim());
-  return m ? m[1] : null;
 }

@@ -5,7 +5,7 @@ import type {
   DesignTokens,
   RuleModule,
 } from './types.js';
-import type { NameTransform } from './token-utils.js';
+import type { NameTransform } from '../utils/tokens/index.js';
 import { TokenRegistry } from './token-registry.js';
 export { defaultIgnore } from './ignore.js';
 import { RuleRegistry } from './rule-registry.js';
