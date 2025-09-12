@@ -1,5 +1,32 @@
 # @lapidist/design-lint
 
+## 5.4.0
+
+### Minor Changes
+
+- 38331f3: add CSS variable output generator
+- 38331f3: add generate CLI command to emit token outputs from config
+- 38331f3: add JavaScript and TypeScript token output generators
+- 38331f3: support loading a default token set with variant files merged over it
+- 38331f3: add token name transforms and path normalization
+
+### Patch Changes
+
+- 38331f3: centralize token file glob constant and document CLI utilities
+- 38331f3: unify CLI error handling with shared logger and deduped warnings
+- 38331f3: centralize token constant naming in a shared utility and reorganize token tests
+- 38331f3: fix linting and formatting issues in tokens command and tests
+- 38331f3: reuse token registry for lint command to avoid redundant token flattening
+- 38331f3: allow custom warning handlers when resolving token aliases
+- 38331f3: refactor: consolidate token helpers into shared utils module with JSDoc coverage
+- 38331f3: refactor alias resolution to use shared normalizePath utility
+- 38331f3: refactor: centralize flattened token sorting utility
+- 38331f3: fix css output generator to sort theme blocks with default first
+- 38331f3: refactor to centralize theme record helper and document CLI commands
+- 38331f3: add token ingestion pipeline with alias resolution and flattened metadata
+- 38331f3: add token registry for theme-based lookup
+- 38331f3: generate token outputs during watch mode
+
 ## 5.3.0
 
 ### Minor Changes
