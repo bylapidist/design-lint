@@ -1,33 +1,49 @@
+/**
+ * @packageDocumentation
+ *
+ * Token provider for design tokens declared directly within a
+ * {@link Config} object.
+ */
 import type { Config } from '../core/linter.js';
-import { parseDesignTokens } from '../core/parser/index.js';
-import { guards } from '../utils/index.js';
+import type { DesignTokens } from '../core/types.js';
+import { normalizeTokens } from './normalize-tokens.js';
 
-const {
-  domain: { isDesignTokens, isThemeRecord },
-} = guards;
-
+/**
+ * Provides design tokens declared directly in a {@link Config} object.
+ *
+ * The provider normalizes the `tokens` property to a consistent theme record
+ * and validates each token set using {@link parseDesignTokens}.
+ *
+ * @example
+ * ```ts
+ * import { ConfigTokenProvider } from '@lapidist/design-lint/config';
+ * const provider = new ConfigTokenProvider({ tokens: {} });
+ * const themes = provider.load();
+ * ```
+ */
 export class ConfigTokenProvider {
-  private config: Config;
+  /**
+   * Resolved configuration containing token definitions.
+   */
+  private readonly config: Config;
 
+  /**
+   * Creates a token provider from a resolved configuration.
+   *
+   * @param config - Parsed linter configuration.
+   */
   constructor(config: Config) {
     this.config = config;
   }
 
-  load() {
-    const tokens = this.config.tokens;
-    if (!tokens || typeof tokens !== 'object') {
-      return Promise.resolve({});
-    }
-    if (isThemeRecord(tokens)) {
-      for (const t of Object.values(tokens)) {
-        parseDesignTokens(t);
-      }
-      return Promise.resolve(tokens);
-    }
-    if (isDesignTokens(tokens)) {
-      parseDesignTokens(tokens);
-      return Promise.resolve({ default: tokens });
-    }
-    return Promise.resolve({});
+  /**
+   * Load and validate tokens from the configuration.
+   *
+   * @returns A theme record keyed by theme name.
+   * @throws {TokenParseError} When token parsing fails.
+   * @throws {Error} When token definitions are invalid.
+   */
+  load(): Record<string, DesignTokens> {
+    return normalizeTokens(this.config.tokens);
   }
 }

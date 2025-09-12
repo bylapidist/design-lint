@@ -1,13 +1,29 @@
+/**
+ * @packageDocumentation
+ *
+ * Zod schemas describing the structure of configuration and design tokens.
+ */
 import path from 'node:path';
 import { z } from 'zod';
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
 import { guards } from '../utils/index.js';
 
+/**
+ * Validation schema for configuration files.
+ *
+ * Uses [Zod](https://zod.dev/) to ensure user-supplied configuration matches
+ * expected shapes and that token definitions adhere to the W3C Design Tokens
+ * format.
+ */
+
 const {
-  data: { isRecord },
+  domain: { isTokenGroup },
 } = guards;
 
+/**
+ * Allowed rule severity values like `'error'` or numeric levels.
+ */
 const severitySchema = z.union([
   z.literal('error'),
   z.literal('warn'),
@@ -17,28 +33,24 @@ const severitySchema = z.union([
   z.literal(0),
 ]);
 
+/**
+ * Schema describing the configuration of an individual rule.
+ */
 const ruleSettingSchema = z.union([
   severitySchema,
   z.tuple([severitySchema, z.unknown()]),
 ]);
 
-function isToken(value: unknown): boolean {
-  return isRecord(value) && '$value' in value;
-}
-
-function isTokenGroup(value: unknown): boolean {
-  if (!isRecord(value)) return false;
-  for (const [key, val] of Object.entries(value)) {
-    if (key.startsWith('$')) continue;
-    if (!isToken(val) && !isTokenGroup(val)) return false;
-  }
-  return true;
-}
-
+/**
+ * Schema ensuring a value follows the W3C Design Tokens format.
+ */
 const designTokensSchema = z.custom<DesignTokens>(isTokenGroup, {
   message: 'Tokens must be W3C Design Tokens objects',
 });
 
+/**
+ * Schema validating token file path references.
+ */
 const tokenFileSchema = z
   .string()
   .refine(
@@ -54,11 +66,17 @@ const tokenFileSchema = z
     },
   );
 
+/**
+ * Schema describing the `tokens` property of configuration objects.
+ */
 const tokensSchema = z.union([
   designTokensSchema,
   z.record(z.string(), z.union([designTokensSchema, tokenFileSchema])),
 ]);
 
+/**
+ * Zod schema describing a valid linter configuration.
+ */
 export const configSchema: z.ZodType<Config> = z
   .object({
     tokens: tokensSchema.optional(),
@@ -72,4 +90,7 @@ export const configSchema: z.ZodType<Config> = z
   })
   .strict();
 
+/**
+ * Type representing configuration validated by {@link configSchema}.
+ */
 export type ConfigWithSchema = z.infer<typeof configSchema>;

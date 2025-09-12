@@ -9,4 +9,6 @@ void test('domain guards export token and rule checks', () => {
   assert.equal(typeof domainGuards.isDesignTokens, 'function');
   assert.equal(typeof domainGuards.isRuleModule, 'function');
   assert.equal(typeof domainGuards.isThemeRecord, 'function');
+  assert.equal(typeof domainGuards.isToken, 'function');
+  assert.equal(typeof domainGuards.isTokenGroup, 'function');
 });

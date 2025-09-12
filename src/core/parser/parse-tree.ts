@@ -8,6 +8,7 @@ import { guards } from '../../utils/index.js';
 
 const {
   data: { isRecord },
+  domain: { isToken, isTokenGroup },
 } = guards;
 
 const tokenLocations = new Map<string, { line: number; column: number }>();
@@ -27,14 +28,6 @@ const GROUP_PROPS = new Set([
   '$metadata',
 ]);
 const INVALID_NAME_CHARS = /[{}\.]/;
-
-function isToken(node: unknown): node is Token {
-  return isRecord(node) && '$value' in node;
-}
-
-function isTokenGroup(node: unknown): node is TokenGroup {
-  return isRecord(node) && !isToken(node);
-}
 
 function validateExtensions(value: unknown, path: string): void {
   if (value === undefined) return;
