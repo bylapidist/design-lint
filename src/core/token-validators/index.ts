@@ -15,6 +15,7 @@ export type TokenValidator = (
   value: unknown,
   path: string,
   tokenMap: Map<string, Token>,
+  warn?: (msg: string) => void,
 ) => void;
 
 export const validatorRegistry = new Map<string, TokenValidator>([

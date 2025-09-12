@@ -47,7 +47,9 @@ export const spacingRule = tokenRule<SpacingOptions>({
     const base = opts.base ?? 4;
     const isAllowed = (n: number) => allowed.has(n) || n % base === 0;
     const allowedUnits = new Set(
-      (opts.units ?? ['px', 'rem', 'em']).map((u) => u.toLowerCase()),
+      (opts.units ?? ['px', 'rem', 'em', 'vh', 'vw', 'vmin', 'vmax', 'ch']).map(
+        (u) => u.toLowerCase(),
+      ),
     );
     const parse = (text: string): number | null => {
       const trimmed = text.trim();

@@ -39,6 +39,7 @@ function validateToken(
   path: string,
   token: Token,
   tokenMap: Map<string, Token>,
+  warn?: (msg: string) => void,
 ): void {
   validateMetadata(token, path);
   if (token.$value === undefined) {
@@ -54,10 +55,13 @@ function validateToken(
   if (!validator) {
     throw new Error(`Token ${path} has unknown $type ${token.$type}`);
   }
-  validator(token.$value, path, tokenMap);
+  validator(token.$value, path, tokenMap, warn);
 }
 
-export function validateTokens(tokens: FlattenedToken[]): void {
+export function validateTokens(
+  tokens: FlattenedToken[],
+  warn?: (msg: string) => void,
+): void {
   const tokenMap = new Map<string, Token>(
     tokens.map((t) => [
       t.path,
@@ -78,6 +82,6 @@ export function validateTokens(tokens: FlattenedToken[]): void {
       $extensions: t.metadata.extensions,
       $deprecated: t.metadata.deprecated,
     };
-    validateToken(t.path, token, tokenMap);
+    validateToken(t.path, token, tokenMap, warn);
   }
 }

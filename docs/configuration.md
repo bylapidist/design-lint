@@ -70,6 +70,8 @@ Inline example:
 }
 ```
 
+Dimension tokens use objects with numeric `value` and a CSS length `unit` such as `px`, `rem`, `em`, `vh`, `vw`, `vmin`, `vmax`, or `ch`. Unknown units are preserved but emit a warning.
+
 Organise tokens by category—such as `color`, `space`, or `typography`—to mirror your design language. To support light and dark themes, supply an object keyed by theme name. Each theme may contain an inline token tree or a path to an external token file. Paths resolve relative to the configuration file:
 
 ```json

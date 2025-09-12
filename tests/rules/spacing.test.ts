@@ -67,7 +67,7 @@ void test('design-token/spacing handles multi-line CSS', async () => {
 
 void test('design-token/spacing ignores unsupported units', async () => {
   const linter = createLinter(['error', { base: 4 }]);
-  const res = await linter.lintText('.a{margin:5.5vw 10%;}', 'file.css');
+  const res = await linter.lintText('.a{margin:5.5pc 10%;}', 'file.css');
   assert.equal(res.messages.length, 0);
 });
 
@@ -109,8 +109,8 @@ void test('design-token/spacing ignores nested var() fallbacks', async () => {
 });
 
 void test('design-token/spacing supports custom units', async () => {
-  const linter = createLinter(['error', { base: 4, units: ['vw'] }]);
-  const res = await linter.lintText('.a{margin:5vw;}', 'file.css');
+  const linter = createLinter(['error', { base: 4, units: ['pc'] }]);
+  const res = await linter.lintText('.a{margin:5pc;}', 'file.css');
   assert.equal(res.messages.length, 1);
 });
 

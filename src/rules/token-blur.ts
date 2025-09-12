@@ -34,9 +34,18 @@ export const blurRule = tokenRule<BlurRuleOptions>({
   },
   create(context, allowed) {
     const allowedUnits = new Set(
-      (context.options?.units ?? ['px', 'rem', 'em']).map((u) =>
-        u.toLowerCase(),
-      ),
+      (
+        context.options?.units ?? [
+          'px',
+          'rem',
+          'em',
+          'vh',
+          'vw',
+          'vmin',
+          'vmax',
+          'ch',
+        ]
+      ).map((u) => u.toLowerCase()),
     );
     return {
       onCSSDeclaration(decl) {

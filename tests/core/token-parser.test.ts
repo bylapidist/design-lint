@@ -212,10 +212,14 @@ void test('parseDesignTokens resolves alias token types', () => {
 
 void test('parseDesignTokens validates dimension tokens', () => {
   const tokens = {
-    size: { $type: 'dimension', sm: { $value: { value: 4, unit: 'px' } } },
+    size: { $type: 'dimension', sm: { $value: { value: 4, unit: 'vh' } } },
   } as unknown as DesignTokens;
-  const result = parseDesignTokens(tokens);
+  const warnings: string[] = [];
+  const result = parseDesignTokens(tokens, undefined, {
+    onWarn: (m) => warnings.push(m),
+  });
   assert.equal(result[0].type, 'dimension');
+  assert.equal(warnings.length, 0);
 
   const invalid = {
     size: { $type: 'dimension', sm: { $value: { value: 0 } } },
@@ -223,9 +227,15 @@ void test('parseDesignTokens validates dimension tokens', () => {
   assert.throws(() => parseDesignTokens(invalid), /invalid dimension value/i);
 
   const badUnit = {
-    size: { $type: 'dimension', sm: { $value: { value: 1, unit: 'em' } } },
+    size: { $type: 'dimension', sm: { $value: { value: 1, unit: 'pc' } } },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(badUnit), /invalid dimension value/i);
+  const badWarnings: string[] = [];
+  const res = parseDesignTokens(badUnit, undefined, {
+    onWarn: (m) => badWarnings.push(m),
+  });
+  assert.equal(res.length, 1);
+  assert.equal(badWarnings.length, 1);
+  assert.match(badWarnings[0], /unknown unit/i);
 });
 
 void test('parseDesignTokens validates duration tokens', () => {

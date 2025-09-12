@@ -24,7 +24,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```
 
 ## Options
-No additional options.
+- `units` (`string[]`): CSS units to validate. Defaults to `['px', 'rem', 'em', 'vh', 'vw', 'vmin', 'vmax', 'ch']`.
 
 This rule is not auto-fixable.
 

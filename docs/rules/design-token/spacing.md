@@ -29,7 +29,7 @@ Spacing tokens use the `dimension` type.
 
 ## Options
 - `base` (`number`): values must be multiples of this number. Defaults to `4`.
-- `units` (`string[]`): CSS units to validate. Defaults to `['px', 'rem', 'em']`.
+- `units` (`string[]`): CSS units to validate. Defaults to `['px', 'rem', 'em', 'vh', 'vw', 'vmin', 'vmax', 'ch']`.
 
 Numbers that appear inside CSS functions (e.g., `calc()`, `var()`) are ignored.
 
