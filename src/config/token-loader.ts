@@ -10,13 +10,12 @@ import {
 } from '../adapters/node/token-parser.js';
 import type { DesignTokens } from '../core/types.js';
 import { guards, tokens } from '../utils/index.js';
-import { normalizeTokens } from './normalize-tokens.js';
 
 const {
   data: { isRecord },
   domain: { isDesignTokens, isThemeRecord },
 } = guards;
-const { wrapTokenError } = tokens;
+const { wrapTokenError, normalizeTokens } = tokens;
 
 /**
  * Load and validate design tokens defined in configuration.

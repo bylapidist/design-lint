@@ -3,13 +3,9 @@
  *
  * Helpers for normalizing design token inputs into theme records.
  */
-import type { DesignTokens } from '../core/types.js';
-import { guards, tokens } from '../utils/index.js';
-
-const {
-  domain: { isDesignTokens, isThemeRecord },
-} = guards;
-const { parseTokensForTheme } = tokens;
+import type { DesignTokens } from '../../core/types.js';
+import { isDesignTokens, isThemeRecord } from '../guards/domain/index.js';
+import { parseTokensForTheme } from './parse-tokens-for-theme.js';
 
 /**
  * Normalize and validate design token input.
@@ -25,7 +21,7 @@ const { parseTokensForTheme } = tokens;
  *
  * @example
  * ```ts
- * import { normalizeTokens } from '@lapidist/design-lint/config';
+ * import { normalizeTokens } from '@lapidist/design-lint/utils';
  * const themes = normalizeTokens({
  *   light: { color: { primary: { $type: 'color', $value: '#000' } } },
  * });

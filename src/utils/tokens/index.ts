@@ -5,3 +5,4 @@
  */
 export { wrapTokenError } from './wrap-token-error.js';
 export { parseTokensForTheme } from './parse-tokens-for-theme.js';
+export { normalizeTokens } from './normalize-tokens.js';

@@ -6,7 +6,9 @@
  */
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
-import { normalizeTokens } from './normalize-tokens.js';
+import { tokens } from '../utils/index.js';
+
+const { normalizeTokens } = tokens;
 
 /**
  * Provides design tokens declared directly in a {@link Config} object.

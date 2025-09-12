@@ -3,7 +3,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeTokens } from '../../src/config/normalize-tokens.js';
+import { normalizeTokens } from '../../../src/utils/tokens/normalize-tokens.js';
 
 void test('normalizes design tokens to default theme', () => {
   const tokens = { color: { primary: { $type: 'color', $value: '#000' } } };
