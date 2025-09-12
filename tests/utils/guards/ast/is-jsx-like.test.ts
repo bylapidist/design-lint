@@ -1,30 +1,14 @@
+/**
+ * Unit tests for {@link isJsxLike} AST guard.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  createSourceFile,
-  isExpressionStatement,
-  ScriptKind,
-  ScriptTarget,
-  type Expression,
-} from 'typescript';
-import { guards } from '../../src/utils/index.js';
+import { getExpression } from '../../ast.js';
+import { guards } from '../../../../src/utils/index.js';
 
 const {
   ast: { isJsxLike },
 } = guards;
-
-function getExpression(code: string): Expression {
-  const sf = createSourceFile(
-    'x.tsx',
-    code,
-    ScriptTarget.Latest,
-    true,
-    ScriptKind.TSX,
-  );
-  const stmt = sf.statements[0];
-  if (!isExpressionStatement(stmt)) throw new Error('not expression');
-  return stmt.expression;
-}
 
 void test('isJsxLike detects JSX element', () => {
   const node = getExpression('<div></div>');

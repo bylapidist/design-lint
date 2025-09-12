@@ -1,7 +1,10 @@
+/**
+ * Unit tests for {@link tokenRule}.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rules } from '../../src/utils/index.js';
-import type { RuleContext } from '../../src/core/types.js';
+import { rules } from '../../../src/utils/index.js';
+import type { RuleContext } from '../../../src/core/types.js';
 
 const { tokenRule } = rules;
 
