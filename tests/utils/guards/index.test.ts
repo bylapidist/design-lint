@@ -3,6 +3,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import ts from 'typescript';
 import * as guards from '../../../src/utils/guards/index.js';
 
 void test('guards expose grouped namespaces', () => {
@@ -18,8 +19,7 @@ void test('guard members are directly exported', () => {
 });
 
 void test('guards execute without throwing', () => {
-  const node = guards.isJsxLike ? guards.isJsxLike : () => false;
-  node(null as unknown as any); // trivial call to avoid unused variable
+  guards.isJsxLike(ts.factory.createIdentifier('div'));
   guards.isObject(null);
   guards.isDesignTokens(null);
 });
