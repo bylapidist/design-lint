@@ -1,7 +1,10 @@
 import type { FlattenedToken } from '../types.js';
 import { resolveAliases } from './alias.js';
 
-export function normalizeTokens(tokens: FlattenedToken[]): FlattenedToken[] {
+export function normalizeTokens(
+  tokens: FlattenedToken[],
+  warn: (msg: string) => void = console.warn,
+): FlattenedToken[] {
   const tokenMap = new Map(tokens.map((t) => [t.path, t]));
   const warnings: string[] = [];
   for (const token of tokens) {
@@ -17,8 +20,6 @@ export function normalizeTokens(tokens: FlattenedToken[]): FlattenedToken[] {
       token.aliases = Array.from(new Set(refs));
     }
   }
-  for (const w of warnings) {
-    console.warn(w);
-  }
+  for (const w of warnings) warn(w);
   return tokens;
 }

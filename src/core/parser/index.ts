@@ -21,6 +21,7 @@ export { getTokenLocation } from './parse-tree.js';
 export interface ParseDesignTokensOptions {
   colorSpace?: ColorSpace;
   transforms?: TokenTransform[];
+  onWarn?: (msg: string) => void;
 }
 
 export function parseDesignTokens(
@@ -37,7 +38,7 @@ export function parseDesignTokens(
     transformed = transform(transformed);
   }
   const tree = buildParseTree(transformed, getLoc);
-  normalizeTokens(tree);
+  normalizeTokens(tree, options?.onWarn);
   if (options?.colorSpace) {
     normalizeColorValues(tree, options.colorSpace);
   }

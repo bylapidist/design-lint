@@ -299,6 +299,16 @@ void test('parseDesignTokens handles aliases referencing unknown tokens', () => 
   assert.deepEqual(brand.aliases, ['color.missing']);
 });
 
+void test('parseDesignTokens emits warnings via onWarn option', () => {
+  const tokens = {
+    color: { $type: 'color', brand: { $value: '{color.missing}' } },
+  } as unknown as DesignTokens;
+  const warnings: string[] = [];
+  parseDesignTokens(tokens, undefined, { onWarn: (m) => warnings.push(m) });
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /references unknown token/i);
+});
+
 void test('parseDesignTokens normalizes slash-separated aliases', () => {
   const tokens: DesignTokens = {
     color: {
