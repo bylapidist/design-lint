@@ -11,6 +11,7 @@ void test('config exposes expected members', () => {
     [
       'ConfigTokenProvider',
       'configSchema',
+      'CONFIG_SEARCH_PLACES',
       'defineConfig',
       'loadConfig',
       'loadTokens',
@@ -29,4 +30,5 @@ void test('members are usable', () => {
   assert.equal(typeof config.normalizeTokens, 'function');
   assert.equal(typeof config.ConfigTokenProvider, 'function');
   assert.ok(config.configSchema instanceof Object);
+  assert.ok(Array.isArray(config.CONFIG_SEARCH_PLACES));
 });
