@@ -65,3 +65,36 @@ void test('validate command fails on invalid tokens', () => {
   assert.notEqual(res.status, 0);
   assert.match(res.stderr, /unknown \$type/i);
 });
+
+void test('validate command emits warnings without failing', () => {
+  const dir = makeTmpDir();
+  const tokensPath = path.join(dir, 'tokens.tokens.json');
+  fs.writeFileSync(
+    tokensPath,
+    JSON.stringify({
+      color: {
+        red: { $type: 'color', $value: '{color.green}' },
+        green: { $type: 'color', $value: '{color.red}' },
+      },
+    }),
+  );
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: { default: './tokens.tokens.json' }, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      'validate',
+      '--config',
+      'designlint.config.json',
+    ],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  assert.equal(res.status, 0);
+  assert.match(res.stderr, /circular alias reference/i);
+});
