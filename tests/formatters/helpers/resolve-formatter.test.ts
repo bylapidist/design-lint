@@ -3,10 +3,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  resolveFormatter,
-  type Formatter,
-} from '../../../src/formatters/get-formatter/index.js';
+import { helpers, type Formatter } from '../../../src/formatters/index.js';
+
+const { resolveFormatter } = helpers;
 
 void test('resolveFormatter returns module itself when function', () => {
   const fn: Formatter = () => '';

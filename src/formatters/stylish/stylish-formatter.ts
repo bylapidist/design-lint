@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Stylish formatter implementation.
+ */
+
 import type { LintResult } from '../../core/types.js';
 import { relFromCwd } from '../../adapters/node/utils/paths.js';
 
@@ -17,6 +23,12 @@ const codes = {
  * @param results - Lint results to format.
  * @param useColor - Whether ANSI color codes should be applied.
  * @returns A formatted string for console output.
+ *
+ * @example
+ * ```ts
+ * const text = stylishFormatter(results, true);
+ * console.log(text);
+ * ```
  */
 export function stylishFormatter(
   results: LintResult[],

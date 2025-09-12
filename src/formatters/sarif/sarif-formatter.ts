@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * SARIF formatter implementation.
+ */
+
 import type { LintResult } from '../../core/types.js';
 
 /**
@@ -27,6 +33,12 @@ interface SarifLog {
  * @param results - Linting outcomes to serialize.
  * @param _useColor - Ignored. Present for API parity with other formatters.
  * @returns A JSON string containing a SARIF log.
+ *
+ * @example
+ * ```ts
+ * const log = sarifFormatter(results);
+ * console.log(log);
+ * ```
  */
 export function sarifFormatter(
   results: LintResult[],

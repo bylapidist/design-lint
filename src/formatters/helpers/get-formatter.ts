@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Retrieve formatter implementations by name or path.
+ */
+
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Formatter } from './types.js';
@@ -9,6 +15,18 @@ import { builtInFormatters, isBuiltInFormatterName } from './builtins.js';
  *
  * @param name - Formatter identifier or module path.
  * @returns Promise resolving to a formatter function.
+ *
+ * @example
+ * ```ts
+ * const formatter = await getFormatter('json');
+ * const out = formatter(results);
+ * ```
+ *
+ * @example
+ * ```ts
+ * const formatter = await getFormatter('./custom-formatter.js');
+ * const out = formatter(results);
+ * ```
  */
 export async function getFormatter(name: string): Promise<Formatter> {
   if (isBuiltInFormatterName(name)) {

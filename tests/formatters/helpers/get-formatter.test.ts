@@ -5,7 +5,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getFormatter, jsonFormatter } from '../../../src/formatters/index.js';
+import { helpers, jsonFormatter } from '../../../src/formatters/index.js';
+
+const { getFormatter } = helpers;
 
 void test('getFormatter returns formatter for valid name', async () => {
   assert.equal(await getFormatter('json'), jsonFormatter);

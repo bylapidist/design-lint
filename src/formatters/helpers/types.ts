@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Shared formatter type declarations.
+ */
+
 import type { LintResult } from '../../core/types.js';
 
 /**

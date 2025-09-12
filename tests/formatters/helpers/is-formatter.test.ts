@@ -3,7 +3,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isFormatter } from '../../../src/formatters/get-formatter/index.js';
+import { helpers } from '../../../src/formatters/index.js';
+
+const { isFormatter } = helpers;
 
 void test('isFormatter detects functions', () => {
   assert.equal(
