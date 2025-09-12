@@ -3,7 +3,7 @@ import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import { z } from 'zod';
 import { rules, guards, color } from '../utils/index.js';
-import type { ColorFormat } from '../utils/index.js';
+import type { ColorFormat } from '../core/index.js';
 
 const { tokenRule } = rules;
 const {

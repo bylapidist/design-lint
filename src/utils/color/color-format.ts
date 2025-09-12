@@ -5,21 +5,7 @@
  */
 import colorName from 'color-name';
 
-/**
- * List of supported CSS color formats that {@link detectColorFormat} can
- * recognize.
- */
-export type ColorFormat =
-  | 'hex'
-  | 'rgb'
-  | 'rgba'
-  | 'hsl'
-  | 'hsla'
-  | 'hwb'
-  | 'lab'
-  | 'lch'
-  | 'color'
-  | 'named';
+import type { ColorFormat } from '../../core/types.js';
 
 /**
  * Set of CSS color names supported by the `color-name` package.
