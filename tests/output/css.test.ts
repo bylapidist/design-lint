@@ -29,3 +29,39 @@ void test('generateCssVariables emits blocks for each theme with transformed nam
   ].join('\n');
   assert.equal(css, expected);
 });
+
+void test('generateCssVariables sorts themes with default first', () => {
+  const tokens: Record<string, DesignTokens> = {
+    dark: {
+      color: {
+        primary: { $type: 'color', $value: '#000' },
+      },
+    },
+    default: {
+      color: {
+        primary: { $type: 'color', $value: '#fff' },
+      },
+    },
+    light: {
+      color: {
+        primary: { $type: 'color', $value: '#eee' },
+      },
+    },
+  };
+
+  const css = generateCssVariables(tokens);
+  const expected = [
+    ':root {',
+    '  --color-primary: #fff;',
+    '}',
+    '',
+    "[data-theme='dark'] {",
+    '  --color-primary: #000;',
+    '}',
+    '',
+    "[data-theme='light'] {",
+    '  --color-primary: #eee;',
+    '}',
+  ].join('\n');
+  assert.equal(css, expected);
+});

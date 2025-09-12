@@ -21,7 +21,11 @@ export function generateCssVariables(
   options: CssOutputOptions = {},
 ): string {
   const { nameTransform, selectors } = options;
-  const themes = Object.keys(tokensByTheme);
+  const themes = Object.keys(tokensByTheme).sort((a, b) => {
+    if (a === 'default') return -1;
+    if (b === 'default') return 1;
+    return a.localeCompare(b);
+  });
   const blocks: string[] = [];
 
   for (const theme of themes) {
