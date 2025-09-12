@@ -35,6 +35,9 @@ function mergeTokens(
   override: Record<string, unknown>,
 ): Record<string, unknown> {
   for (const [k, v] of Object.entries(override)) {
+    if (k === "__proto__" || k === "constructor" || k === "prototype") {
+      continue;
+    }
     if (isRecord(v) && isRecord(base[k])) {
       mergeTokens(base[k], v);
     } else {
