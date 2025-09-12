@@ -14,6 +14,7 @@ This guide walks you through installing and running @lapidist/design-lint for th
 - [Initial configuration](#initial-configuration)
 - [Run the linter](#run-the-linter)
 - [Autofix workflow](#autofix-workflow)
+- [Validate configuration](#validate-configuration)
 - [Export resolved tokens](#export-resolved-tokens)
 - [Generate token outputs](#generate-token-outputs)
 - [Watch mode and caching](#watch-mode-and-caching)
@@ -79,6 +80,21 @@ npx design-lint "src/**/*" --fix
 ```
 
 Run `--fix` locally before committing to keep diffs small and intentional. In CI environments, avoid `--fix`; instead run design-lint in read-only mode and fail the build if fixes are required. There is currently no dry-run mode for previewing changes.
+
+## Validate configuration
+Use the `validate` subcommand to verify that your configuration and tokens parse
+correctly. The command exits with `0` when the configuration is valid and non-zero
+on errors.
+
+```bash
+npx design-lint validate
+```
+
+Pass `--config` to specify a configuration file:
+
+```bash
+npx design-lint validate --config designlint.config.json
+```
 
 ## Export resolved tokens
 Use the `tokens` subcommand to write flattened tokens to a file or stdout. Alias references are resolved and metadata like `$extensions` is preserved:

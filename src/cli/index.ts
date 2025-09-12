@@ -20,6 +20,7 @@ import { watchMode } from './watch.js';
 import { initConfig } from './init-config.js';
 import { exportTokens } from './tokens.js';
 import { generateOutputs } from './generate.js';
+import { validateConfig } from './validate-config.js';
 import { createLogger, type Logger } from './logger.js';
 
 type CliOptions = ExecuteOptions &
@@ -97,6 +98,19 @@ function createProgram(version: string, logger: Logger) {
     .action((opts: { initFormat?: string }) => {
       try {
         initConfig(opts.initFormat);
+      } catch (err) {
+        logger.error(err);
+      }
+    });
+
+  program
+    .command('validate')
+    .description('Validate configuration and tokens')
+    .option('--config <path>', 'Path to configuration file')
+    .action(async (opts: { config?: string }, cmd: Command) => {
+      try {
+        const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+        await validateConfig({ config: opts.config ?? parent.config }, logger);
       } catch (err) {
         logger.error(err);
       }
