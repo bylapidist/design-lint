@@ -1,5 +1,8 @@
-import type { LintResult } from '../core/types.js';
+import type { LintResult } from '../../core/types.js';
 
+/**
+ * Minimal SARIF log structure used by {@link sarifFormatter}.
+ */
 interface SarifLog {
   version: string;
   runs: {
@@ -18,6 +21,13 @@ interface SarifLog {
   }[];
 }
 
+/**
+ * Convert lint results into a SARIF log.
+ *
+ * @param results - Linting outcomes to serialize.
+ * @param _useColor - Ignored. Present for API parity with other formatters.
+ * @returns A JSON string containing a SARIF log.
+ */
 export function sarifFormatter(
   results: LintResult[],
   _useColor = true,

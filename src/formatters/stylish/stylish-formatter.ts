@@ -1,6 +1,9 @@
-import type { LintResult } from '../core/types.js';
-import { relFromCwd } from '../adapters/node/utils/paths.js';
+import type { LintResult } from '../../core/types.js';
+import { relFromCwd } from '../../adapters/node/utils/paths.js';
 
+/**
+ * ANSI color code helpers for terminal styling.
+ */
 const codes = {
   red: (s: string) => `\x1b[31m${s}\x1b[0m`,
   yellow: (s: string) => `\x1b[33m${s}\x1b[0m`,
@@ -8,7 +11,17 @@ const codes = {
   underline: (s: string) => `\x1b[4m${s}\x1b[0m`,
 };
 
-export function stylish(results: LintResult[], useColor = true): string {
+/**
+ * Render lint results in a human-friendly text format.
+ *
+ * @param results - Lint results to format.
+ * @param useColor - Whether ANSI color codes should be applied.
+ * @returns A formatted string for console output.
+ */
+export function stylishFormatter(
+  results: LintResult[],
+  useColor = true,
+): string {
   const lines: string[] = [];
   let errorCount = 0;
   let warnCount = 0;
@@ -32,7 +45,9 @@ export function stylish(results: LintResult[], useColor = true): string {
       const suggestion = msg.suggest ? ` Did you mean \`${msg.suggest}\`?` : '';
       const category = res.ruleCategories?.[msg.ruleId];
       lines.push(
-        `  ${String(msg.line)}:${String(msg.column)}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}${category ? ` (${category})` : ''}`,
+        `  ${String(msg.line)}:${String(msg.column)}  ${sev}  ${msg.message}${suggestion}  ${msg.ruleId}${
+          category ? ` (${category})` : ''
+        }`,
       );
     }
   }
