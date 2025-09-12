@@ -27,6 +27,7 @@ export type {
   CSSDeclaration,
   Fix,
   FlattenedToken,
+  ColorFormat,
 } from './types.js';
 export {
   matchToken,
