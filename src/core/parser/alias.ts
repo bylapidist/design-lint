@@ -1,4 +1,5 @@
 import type { FlattenedToken } from '../types.js';
+import { normalizePath } from '../path-utils.js';
 import { collections } from '../../utils/index.js';
 
 const { isArray } = collections;
@@ -6,17 +7,13 @@ const { isArray } = collections;
 const ALIAS_GLOBAL = /\{([^}]+)\}/g;
 const ALIAS_EXACT = /^\{([^}]+)\}$/;
 
-function normalizeAliasPath(path: string): string {
-  return path.split(/[./]/).filter(Boolean).join('.');
-}
-
 function resolveAlias(
   rawPath: string,
   tokenMap: Map<string, FlattenedToken>,
   stack: string[],
   warnings: string[],
 ): FlattenedToken | undefined {
-  const targetPath = normalizeAliasPath(rawPath);
+  const targetPath = normalizePath(rawPath);
   if (stack.includes(targetPath)) {
     warnings.push(
       `Circular alias reference: ${[...stack, targetPath].join(' -> ')}`,
@@ -69,7 +66,7 @@ export function resolveAliases(
     if (typeof val === 'string') {
       const exact = ALIAS_EXACT.exec(val);
       if (exact) {
-        const ref = normalizeAliasPath(exact[1]);
+        const ref = normalizePath(exact[1]);
         refs.push(ref);
         const target = resolveAlias(ref, tokenMap, [path], warnings);
         if (target) {
@@ -95,7 +92,7 @@ export function resolveAliases(
         return val;
       }
       return val.replace(ALIAS_GLOBAL, (_, ref: string) => {
-        const norm = normalizeAliasPath(ref);
+        const norm = normalizePath(ref);
         refs.push(norm);
         const target = resolveAlias(norm, tokenMap, [path], warnings);
         return target ? String(target.value) : `{${norm}}`;

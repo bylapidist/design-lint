@@ -35,6 +35,7 @@ export {
   extractVarName,
   flattenDesignTokens,
   getFlattenedTokens,
+  normalizePath,
   type TokenPattern,
   type NameTransform,
   type FlattenOptions,
