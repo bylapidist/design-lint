@@ -203,3 +203,25 @@ jobs:
           npx design-lint suggestion.css --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt || true
           grep -Fq "Unexpected spacing 5px" suggestion.txt
           npx design-lint file.ts --format json || true
+          cat > gen.tokens.json <<'EOF'
+          {
+            "color": {
+              "red": { "$type": "color", "$value": "#ff0000" }
+            }
+          }
+          EOF
+          cat > gen.config.json <<'EOF'
+          {
+            "tokens": { "default": "./gen.tokens.json" },
+            "rules": {},
+            "output": [
+              { "format": "css", "file": "tokens.css" }
+            ]
+          }
+          EOF
+          npx design-lint generate --config gen.config.json
+          test -f tokens.css
+          cat tokens.css
+          npx design-lint tokens --config gen.config.json --out tokens.out.json
+          test -f tokens.out.json
+          cat tokens.out.json
