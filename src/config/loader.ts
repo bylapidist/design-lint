@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * High-level loader for resolving and validating configuration files.
+ */
 import path from 'node:path';
 import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
@@ -13,9 +18,21 @@ const {
 
 /**
  * Resolve and load configuration for the linter.
- * @param cwd Current working directory.
- * @param configPath Optional explicit config path.
+ *
+ * Combines the base defaults with any discovered configuration file, validates
+ * the result against {@link configSchema} and normalizes token references.
+ *
+ * @param cwd - Current working directory.
+ * @param configPath - Optional explicit config path.
  * @returns Parsed and validated config object.
+ * @throws {ConfigError} If the configuration fails validation.
+ * @throws {Error} If token loading fails.
+ *
+ * @example
+ * ```ts
+ * const config = await loadConfig(process.cwd());
+ * console.log(config.rules);
+ * ```
  */
 export async function loadConfig(
   cwd: string,
@@ -46,7 +63,7 @@ export async function loadConfig(
     });
   }
   const config = parsed.data;
-  if (config.tokens && typeof config.tokens === 'object') {
+  if (isRecord(config.tokens) && Object.keys(config.tokens).length > 0) {
     const baseDir = config.configPath ? path.dirname(config.configPath) : cwd;
     config.tokens = await loadTokens(config.tokens, baseDir);
   }

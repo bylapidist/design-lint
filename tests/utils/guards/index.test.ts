@@ -9,10 +9,14 @@ void test('guards expose grouped namespaces', () => {
   assert.equal(typeof guards.ast.isJsxLike, 'function');
   assert.equal(typeof guards.data.isObject, 'function');
   assert.equal(typeof guards.domain.isDesignTokens, 'function');
+  assert.equal(typeof guards.domain.isToken, 'function');
+  assert.equal(typeof guards.domain.isTokenGroup, 'function');
 });
 
 void test('guard members are directly exported', () => {
   assert.equal(typeof guards.isJsxLike, 'function');
   assert.equal(typeof guards.isObject, 'function');
   assert.equal(typeof guards.isDesignTokens, 'function');
+  assert.equal(typeof guards.isToken, 'function');
+  assert.equal(typeof guards.isTokenGroup, 'function');
 });

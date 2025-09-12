@@ -1,21 +1,62 @@
+/**
+ * @packageDocumentation
+ *
+ * Helper for loading and validating design token definitions.
+ */
 import path from 'node:path';
 import {
   readDesignTokensFile,
   TokenParseError,
 } from '../adapters/node/token-parser.js';
-import { parseDesignTokens } from '../core/parser/index.js';
-import { guards } from '../utils/index.js';
+import type { DesignTokens } from '../core/types.js';
+import { guards, tokens } from '../utils/index.js';
 
 const {
-  domain: { isDesignTokens, isThemeRecord },
   data: { isRecord },
+  domain: { isDesignTokens, isThemeRecord },
 } = guards;
+const { wrapTokenError, normalizeTokens } = tokens;
 
+/**
+ * Load and validate design tokens defined in configuration.
+ *
+ * Token groups or entire design token objects may be provided inline as
+ * objects, or as file paths relative to a base directory. Each token set is
+ * parsed and validated using {@link parseDesignTokens}.
+ *
+ * @param tokens - Token definitions or file path references keyed by theme.
+ * @param baseDir - Directory used to resolve token file paths.
+ * @returns A theme record or single design token object.
+ * @throws {TokenParseError} When token parsing fails.
+ * @throws {Error} When token files cannot be read.
+ *
+ * @example
+ * ```ts
+ * const tokens = await loadTokens({ light: './light.tokens.json' }, process.cwd());
+ * console.log(Object.keys(tokens));
+ * ```
+ */
 export async function loadTokens(
   tokens: unknown,
   baseDir: string,
-): Promise<Record<string, unknown>> {
+): Promise<DesignTokens | Record<string, DesignTokens>> {
   if (!isRecord(tokens)) return {};
+
+  // If a design token object is provided directly (i.e. all entries are objects
+  // and none are file path strings aside from metadata keys), normalize it and
+  // return the single theme result. This preserves any root-level metadata such
+  // as `$schema` declarations.
+  if (
+    isDesignTokens(tokens) &&
+    !isThemeRecord(tokens) &&
+    !Object.entries(tokens).some(
+      ([k, v]) => typeof v === 'string' && !k.startsWith('$'),
+    )
+  ) {
+    const normalized = normalizeTokens(tokens);
+    return normalized.default;
+  }
+
   const themes: Record<string, unknown> = {};
   for (const [theme, val] of Object.entries(tokens)) {
     if (typeof val === 'string') {
@@ -24,40 +65,15 @@ export async function loadTokens(
         themes[theme] = await readDesignTokensFile(filePath);
       } catch (err) {
         if (err instanceof TokenParseError) throw err;
-        const message = err instanceof Error ? err.message : String(err);
-        throw new Error(
-          `Failed to read tokens for theme "${theme}": ${message}`,
-        );
+        throw wrapTokenError(theme, err, 'read');
       }
     } else {
       themes[theme] = val;
     }
   }
 
-  if (isThemeRecord(themes)) {
-    for (const [theme, t] of Object.entries(themes)) {
-      try {
-        parseDesignTokens(t);
-      } catch (err) {
-        if (err instanceof TokenParseError) throw err;
-        const message = err instanceof Error ? err.message : String(err);
-        throw new Error(
-          `Failed to parse tokens for theme "${theme}": ${message}`,
-        );
-      }
-    }
-    return themes;
-  }
-
-  if (isDesignTokens(themes)) {
-    try {
-      parseDesignTokens(themes);
-    } catch (err) {
-      if (err instanceof TokenParseError) throw err;
-      throw err instanceof Error ? err : new Error(String(err));
-    }
-    return themes;
-  }
-
-  return tokens;
+  const normalized = normalizeTokens(themes);
+  return 'default' in normalized && Object.keys(normalized).length === 1
+    ? normalized.default
+    : normalized;
 }

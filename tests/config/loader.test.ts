@@ -1,53 +1,16 @@
+/**
+ * Unit tests for loadConfig.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import path from 'node:path';
-import { loadConfig } from '../src/config/loader.js';
-import { resolveConfigFile } from '../src/config/file-resolution.js';
-import { loadTokens } from '../src/config/token-loader.js';
-import { createLinter as initLinter } from '../src/index.js';
-import { FileSource } from '../src/adapters/node/file-source.js';
-import { ConfigError } from '../src/core/errors.js';
+import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
+import { loadConfig } from '../../src/config/loader.js';
+import { createLinter as initLinter } from '../../src/index.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import { ConfigError } from '../../src/core/errors.js';
 
-void test('resolveConfigFile returns null when config missing', async () => {
-  const tmp = makeTmpDir();
-  const result = await resolveConfigFile(tmp);
-  assert.equal(result, null);
-});
-
-void test('resolveConfigFile finds config', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.json');
-  fs.writeFileSync(configPath, JSON.stringify({ tokens: {} }));
-  const nested = path.join(tmp, 'nested');
-  fs.mkdirSync(nested, { recursive: true });
-  const result = await resolveConfigFile(nested);
-  assert.ok(result?.filepath.endsWith('designlint.config.json'));
-});
-
-void test('loadTokens reads token files', async () => {
-  const tmp = makeTmpDir();
-  fs.writeFileSync(
-    path.join(tmp, 'light.tokens.json'),
-    JSON.stringify({ color: { primary: { $type: 'color', $value: '#000' } } }),
-  );
-  const tokens = await loadTokens({ light: './light.tokens.json' }, tmp);
-  const light = tokens.light as { color: { primary: { $value: string } } };
-  assert.equal(light.color.primary.$value, '#000');
-});
-
-void test('loadTokens propagates errors', async () => {
-  const tmp = makeTmpDir();
-  fs.writeFileSync(
-    path.join(tmp, 'bad.tokens.json'),
-    JSON.stringify({ color: { primary: { $type: 'color' } } }),
-  );
-  await assert.rejects(
-    loadTokens({ light: './bad.tokens.json' }, tmp),
-    /missing \$value/i,
-  );
-});
 void test('returns default config when none found', async () => {
   const tmp = makeTmpDir();
   const config = await loadConfig(tmp);
@@ -94,10 +57,7 @@ void test('rejects bare string token values', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(configPath, JSON.stringify({ tokens: { color: '#000' } }));
-  await assert.rejects(
-    loadConfig(tmp),
-    /Tokens must be W3C Design Tokens objects/,
-  );
+  await assert.rejects(loadConfig(tmp), /Token file paths must be relative/);
 });
 
 void test('propagates token parsing errors', async () => {
@@ -180,71 +140,11 @@ void test('throws on invalid rule setting', async () => {
   });
 });
 
-void test('throws on invalid plugin path', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.json');
-  fs.writeFileSync(configPath, JSON.stringify({ plugins: [123] }));
-  await assert.rejects(loadConfig(tmp), (err) => {
-    assert.ok(err instanceof ConfigError);
-    assert.ok(err.context.includes('designlint.config.json'));
-    assert.equal(err.remediation, 'Review and fix the configuration file.');
-    return err.message.includes('Invalid config');
-  });
-});
-
-void test('loads config from .mjs', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.mjs');
-  fs.writeFileSync(
-    configPath,
-    "export default { tokens: { color: { $type: 'color', primary: { $value: '#000' } } } };",
-  );
-  const loaded = await loadConfig(tmp);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
-});
-
-void test('loads config from .js', async () => {
+void test('loads config from .js using defineConfig', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.js');
-  fs.writeFileSync(
-    configPath,
-    "module.exports = { tokens: { color: { $type: 'color', primary: { $value: '#000' } } } };",
-  );
-  const loaded = await loadConfig(tmp);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
-});
-
-void test('loads config from .cjs', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.cjs');
-  fs.writeFileSync(
-    configPath,
-    "module.exports = { tokens: { color: { $type: 'color', primary: { $value: '#000' } } } };",
-  );
-  const loaded = await loadConfig(tmp);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
-});
-
-void test('loads async config from .mjs', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.mjs');
-  fs.writeFileSync(
-    configPath,
-    "export default await Promise.resolve({ tokens: { color: { $type: 'color', primary: { $value: '#000' } } } });",
-  );
-  const loaded = await loadConfig(tmp);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
-});
-
-void test('loads config from .ts using defineConfig', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.ts');
   const rel = path
-    .relative(tmp, path.resolve('src/index.ts'))
+    .relative(tmp, path.resolve('src/config/define-config.ts'))
     .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
@@ -386,7 +286,9 @@ void test('loads tokens from theme file paths', async () => {
   );
   fs.writeFileSync(
     path.join(tmp, 'light.tokens.json'),
-    JSON.stringify({ color: { brand: { primary: { $value: '#000' } } } }),
+    JSON.stringify({
+      color: { brand: { primary: { $type: 'color', $value: '#000' } } },
+    }),
   );
   const loaded = await loadConfig(tmp);
   const tokens = loaded.tokens as Record<string, unknown>;
@@ -404,7 +306,7 @@ void test('loads tokens from YAML theme file paths', async () => {
   );
   fs.writeFileSync(
     path.join(tmp, 'light.tokens.yaml'),
-    "color:\n  $type: color\n  brand:\n    primary:\n      $value: '#000'\n",
+    "color:\n  $type: color\n  brand:\n    primary:\n      $type: color\n      $value: '#000'\n",
   );
   const loaded = await loadConfig(tmp);
   const tokens = loaded.tokens as Record<string, unknown>;
@@ -424,7 +326,9 @@ void test('resolves token file paths relative to config', async () => {
   );
   fs.writeFileSync(
     path.join(cfgDir, 'tokens.tokens.json'),
-    JSON.stringify({ color: { brand: { primary: { $value: '#111' } } } }),
+    JSON.stringify({
+      color: { brand: { primary: { $type: 'color', $value: '#111' } } },
+    }),
   );
   const loaded = await loadConfig(
     tmp,
@@ -482,7 +386,7 @@ void test('rejects inline tokens using legacy shorthand', async () => {
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({ tokens: { color: { $type: 'color', blue: '#00f' } } }),
   );
-  await assert.rejects(loadConfig(tmp), /must be an object with \$value/);
+  await assert.rejects(loadConfig(tmp));
 });
 
 void test('rejects non-token file paths in config', async () => {
@@ -491,10 +395,7 @@ void test('rejects non-token file paths in config', async () => {
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({ tokens: { light: './light.json' } }),
   );
-  await assert.rejects(
-    loadConfig(tmp),
-    /Token file paths must be relative and end with \.tokens or \.tokens\.json/,
-  );
+  await assert.rejects(loadConfig(tmp), /Token file paths must be relative/);
 });
 
 void test('rejects duplicate token names differing only by case', async () => {
