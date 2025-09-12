@@ -13,6 +13,5 @@
  */
 export * as collections from './collections/index.js';
 export * as color from './color/index.js';
-export { detectColorFormat, namedColors } from './color/color-format.js';
 export * as guards from './guards/index.js';
 export * as rules from './rules/index.js';

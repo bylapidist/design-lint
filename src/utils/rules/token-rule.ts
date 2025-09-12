@@ -10,6 +10,9 @@ import { toArray } from '../collections/index.js';
 
 /**
  * Configuration for creating a token-based rule via {@link tokenRule}.
+ *
+ * @typeParam TOptions - Shape of the rule options.
+ * @typeParam TAllowed - Structure representing the computed allowed values.
  */
 interface TokenRuleConfig<TOptions, TAllowed> {
   /** The rule name, e.g. `design-token/example`. */
@@ -52,6 +55,9 @@ const hasSize = (value: unknown): value is { size: number } =>
  * Simplifies writing rules that operate on design tokens by handling token
  * collection, allowed-value preparation, and empty-state reporting.
  *
+ * @typeParam TOptions - Shape of the rule options.
+ * @typeParam TAllowed - Structure representing the computed allowed values.
+ *
  * @example
  * const myRule = tokenRule({
  *   name: 'example/no-red',
@@ -77,13 +83,24 @@ export function tokenRule<TOptions = unknown, TAllowed = Set<unknown>>(
     name: config.name,
     meta: { ...config.meta, schema: config.meta.schema ?? z.void() },
     create(context) {
+      // Normalize `tokens` to an array so rule authors can supply either a
+      // single token type or multiple types.
       const types = toArray(config.tokens);
+
+      // Retrieve and flatten the available tokens for each requested type.
       const tokens = types.flatMap((t) => context.getFlattenedTokens(t));
+
+      // Compute the set of allowed values using the rule's callback.
       const allowed = config.getAllowed(tokens, context);
+
+      // Determine whether the allowed set is effectively empty, either via a
+      // custom `isEmpty` check or by inspecting a `size` property when present.
       const empty = config.isEmpty
         ? config.isEmpty(allowed)
         : hasSize(allowed) && allowed.size === 0;
       if (empty) {
+        // Report an informative message and exit early when no allowed tokens
+        // exist to lint against.
         context.report({
           message: config.message,
           line: 1,
@@ -91,6 +108,8 @@ export function tokenRule<TOptions = unknown, TAllowed = Set<unknown>>(
         });
         return {};
       }
+
+      // Delegate to the rule-specific factory with the prepared allowed set.
       return config.create(context, allowed);
     },
   };

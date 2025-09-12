@@ -33,6 +33,7 @@ export const detectColorFormat = (value: string): ColorFormat | null => {
   if (v.startsWith('lab(')) return 'lab';
   if (v.startsWith('lch(')) return 'lch';
   if (v.startsWith('color(')) return 'color';
+  // Fall back to matching named colors like "red" or "rebeccapurple".
   if (namedColors.has(v)) return 'named';
   return null;
 };

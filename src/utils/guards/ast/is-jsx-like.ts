@@ -13,6 +13,17 @@ import {
  * - JSX self-closing elements (`<div />`)
  * - JSX fragments (`<>...</>`)
  *
+ * @example
+ * ```ts
+ * import ts from 'typescript';
+ * const node = ts.factory.createJsxSelfClosingElement(
+ *   ts.factory.createIdentifier('div'),
+ *   [],
+ *   ts.factory.createJsxAttributes([]),
+ * );
+ * isJsxLike(node); // => true
+ * ```
+ *
  * @param n - The TypeScript AST node to check.
  * @returns `true` if the node is JSX-like, `false` otherwise.
  */
