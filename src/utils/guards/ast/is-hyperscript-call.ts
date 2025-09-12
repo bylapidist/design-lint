@@ -20,7 +20,8 @@ import { isCallExpression, isIdentifier, type Node } from 'typescript';
  * @param n - The TypeScript AST node to check.
  * @returns `true` if the node is a call to `h(...)`.
  */
-export const isHyperscriptCall = (n: Node): boolean =>
-  isCallExpression(n) &&
-  isIdentifier(n.expression) &&
-  n.expression.text === 'h';
+export function isHyperscriptCall(n: Node): boolean {
+  if (!isCallExpression(n)) return false;
+  if (!isIdentifier(n.expression)) return false;
+  return n.expression.text === 'h';
+}

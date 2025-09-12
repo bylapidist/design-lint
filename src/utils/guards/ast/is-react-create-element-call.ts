@@ -13,8 +13,9 @@ import {
  * @param n - The TypeScript AST node to check.
  * @returns `true` if the node is a call to `React.createElement`.
  */
-export const isReactCreateElementCall = (n: Node): boolean =>
-  isCallExpression(n) &&
-  isPropertyAccessExpression(n.expression) &&
-  n.expression.name.getText() === 'createElement' &&
-  n.expression.expression.getText() === 'React';
+export function isReactCreateElementCall(n: Node): boolean {
+  if (!isCallExpression(n)) return false;
+  if (!isPropertyAccessExpression(n.expression)) return false;
+  if (n.expression.name.getText() !== 'createElement') return false;
+  return n.expression.expression.getText() === 'React';
+}

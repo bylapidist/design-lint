@@ -4,11 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getCallExpression, getExpression } from '../../ast.js';
-import { guards } from '../../../../src/utils/index.js';
-
-const {
-  ast: { isHyperscriptCall },
-} = guards;
+import { isHyperscriptCall } from '../../../../src/utils/guards/ast/is-hyperscript-call.js';
 
 void test('isHyperscriptCall detects h() calls', () => {
   const node = getCallExpression("h('div')");
@@ -17,6 +13,11 @@ void test('isHyperscriptCall detects h() calls', () => {
 
 void test('isHyperscriptCall ignores other calls', () => {
   const node = getCallExpression('foo()');
+  assert.equal(isHyperscriptCall(node), false);
+});
+
+void test('isHyperscriptCall ignores property access calls', () => {
+  const node = getCallExpression('obj.h()');
   assert.equal(isHyperscriptCall(node), false);
 });
 

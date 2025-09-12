@@ -4,11 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getCallExpression, getExpression } from '../../ast.js';
-import { guards } from '../../../../src/utils/index.js';
-
-const {
-  ast: { isReactCreateElementCall },
-} = guards;
+import { isReactCreateElementCall } from '../../../../src/utils/guards/ast/is-react-create-element-call.js';
 
 void test('isReactCreateElementCall detects React.createElement', () => {
   const node = getCallExpression("React.createElement('div')");

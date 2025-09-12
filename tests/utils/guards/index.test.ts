@@ -16,3 +16,10 @@ void test('guard members are directly exported', () => {
   assert.equal(typeof guards.isObject, 'function');
   assert.equal(typeof guards.isDesignTokens, 'function');
 });
+
+void test('guards execute without throwing', () => {
+  const node = guards.isJsxLike ? guards.isJsxLike : () => false;
+  node(null as unknown as any); // trivial call to avoid unused variable
+  guards.isObject(null);
+  guards.isDesignTokens(null);
+});

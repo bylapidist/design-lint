@@ -10,3 +10,9 @@ void test('domain guards export token and rule checks', () => {
   assert.equal(typeof domainGuards.isRuleModule, 'function');
   assert.equal(typeof domainGuards.isThemeRecord, 'function');
 });
+
+void test('domain guards execute without throwing', () => {
+  domainGuards.isDesignTokens(null);
+  domainGuards.isRuleModule({});
+  domainGuards.isThemeRecord(null);
+});

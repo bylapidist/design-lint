@@ -4,11 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getStrings } from '../../ast.js';
-import { guards } from '../../../../src/utils/index.js';
-
-const {
-  ast: { isInNonStyleJsx },
-} = guards;
+import { isInNonStyleJsx } from '../../../../src/utils/guards/ast/is-in-non-style-jsx.js';
 
 void test('isInNonStyleJsx handles React.createElement props', () => {
   const [, title, color] = getStrings(
@@ -42,4 +38,19 @@ void test('isInNonStyleJsx rejects non-JSX calls', () => {
 void test('isInNonStyleJsx handles object properties in JSX attributes', () => {
   const [val] = getStrings("<div foo={{ bar: 'baz' }} />");
   assert.equal(isInNonStyleJsx(val), true);
+});
+
+void test('isInNonStyleJsx detects nested props in h() calls', () => {
+  const [, val] = getStrings("h('div', { foo: { bar: 'baz' } })");
+  assert.equal(isInNonStyleJsx(val), true);
+});
+
+void test('isInNonStyleJsx rejects style properties in non-JSX calls', () => {
+  const [val] = getStrings("foo({ style: { color: 'red' } })");
+  assert.equal(isInNonStyleJsx(val), false);
+});
+
+void test('isInNonStyleJsx rejects nested style properties', () => {
+  const [, val] = getStrings("<div style={{ style: { color: 'red' } }} />");
+  assert.equal(isInNonStyleJsx(val), false);
 });
