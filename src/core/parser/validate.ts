@@ -44,6 +44,9 @@ function validateToken(
   if (token.$value === undefined) {
     throw new Error(`Token ${path} is missing $value`);
   }
+  if (typeof token.$value === 'string' && /\{[^}]+\}/.test(token.$value)) {
+    return;
+  }
   if (!token.$type) {
     throw new Error(`Token ${path} is missing $type`);
   }
@@ -55,8 +58,26 @@ function validateToken(
 }
 
 export function validateTokens(tokens: FlattenedToken[]): void {
-  const tokenMap = new Map(tokens.map((t) => [t.path, t.token]));
-  for (const { path, token } of tokens) {
-    validateToken(path, token, tokenMap);
+  const tokenMap = new Map<string, Token>(
+    tokens.map((t) => [
+      t.path,
+      {
+        $value: t.value,
+        $type: t.type,
+        $description: t.metadata.description,
+        $extensions: t.metadata.extensions,
+        $deprecated: t.metadata.deprecated,
+      },
+    ]),
+  );
+  for (const t of tokens) {
+    const token: Token = {
+      $value: t.value,
+      $type: t.type,
+      $description: t.metadata.description,
+      $extensions: t.metadata.extensions,
+      $deprecated: t.metadata.deprecated,
+    };
+    validateToken(t.path, token, tokenMap);
   }
 }

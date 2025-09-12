@@ -25,9 +25,9 @@ export const blurRule = tokenRule<BlurRuleOptions>({
     const parse = (val: unknown): number | null =>
       isRecord(val) && typeof val.value === 'number' ? val.value : null;
     const allowed = new Set<number>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('blurs.')) continue;
-      const num = parse(token.$value);
+      const num = parse(value);
       if (num !== null) allowed.add(num);
     }
     return allowed;

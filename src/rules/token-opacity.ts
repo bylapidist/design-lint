@@ -15,10 +15,10 @@ export const opacityRule = tokenRule({
     'design-token/opacity requires opacity tokens; configure tokens with $type "number" under an "opacity" group to enable this rule.',
   getAllowed(tokens) {
     const allowed = new Set<number>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('opacity.')) continue;
-      if (typeof token.$value === 'number') {
-        allowed.add(token.$value);
+      if (typeof value === 'number') {
+        allowed.add(value);
       }
     }
     return allowed;

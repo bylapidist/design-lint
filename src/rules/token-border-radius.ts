@@ -24,9 +24,9 @@ export const borderRadiusRule = tokenRule<BorderRadiusOptions>({
     'design-token/border-radius requires radius tokens; configure tokens with $type "dimension" under a "radius" group to enable this rule.',
   getAllowed(tokens) {
     const allowed = new Set<number>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('radius.')) continue;
-      const val = token.$value;
+      const val = value;
       if (val && typeof val === 'object') {
         const num: unknown = Reflect.get(val, 'value');
         if (typeof num === 'number') {

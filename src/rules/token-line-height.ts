@@ -29,9 +29,9 @@ export const lineHeightRule = tokenRule({
     'design-token/line-height requires line height tokens; configure tokens with $type "number" under a "lineHeights" group to enable this rule.',
   getAllowed(tokens) {
     const allowed = new Set<number>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('lineHeights.')) continue;
-      const val = token.$value;
+      const val = value;
       if (typeof val === 'number') allowed.add(val);
     }
     return allowed;

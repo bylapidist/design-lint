@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Helpers for constructing the CLI's execution environment.
+ */
+
 import fs from 'fs';
 import path from 'path';
 import ignore, { type Ignore } from 'ignore';
@@ -9,19 +15,37 @@ import type { LintResult } from '../core/types.js';
 import { createNodeEnvironment } from '../adapters/node/environment.js';
 import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
 
+/**
+ * Represents the prepared environment used by CLI commands.
+ *
+ * Includes shared configuration, linter instance, cache handles, and ignore
+ * file tracking utilities.
+ */
 export interface Environment {
+  /** Format lint results for console output. */
   formatter: (results: LintResult[], useColor?: boolean) => string;
+  /** Loaded configuration for the current project. */
   config: Config;
+  /** Mutable reference to the active linter instance. */
   linterRef: { current: Linter };
+  /** Resolved plugin module paths. */
   pluginPaths: string[];
+  /** Optional cache provider instance. */
   cache?: CacheProvider;
+  /** Location of the cache file, when enabled. */
   cacheLocation?: string;
+  /** Path to a user-specified ignore file. */
   ignorePath?: string;
+  /** Resolved path to .designlintignore if present. */
   designIgnore: string;
+  /** Resolved path to .gitignore if present. */
   gitIgnore: string;
   refreshIgnore: () => Promise<void>;
+  /** Internal state tracking plugin and ignore file paths. */
   state: { pluginPaths: string[]; ignoreFilePaths: string[] };
+  /** Retrieve the active ignore matcher. */
   getIg: () => Ignore;
+  /** Options used when creating the environment. */
   envOptions: {
     cacheLocation?: string;
     configPath?: string;
@@ -29,18 +53,37 @@ export interface Environment {
   };
 }
 
+/**
+ * Options for preparing the CLI execution environment.
+ */
 export interface PrepareEnvironmentOptions {
+  /** Formatter name or module path. */
   format: string;
+  /** Optional configuration file path. */
   config?: string;
+  /** Maximum concurrent linted files. */
   concurrency?: number;
+  /** Enable persistent caching. */
   cache?: boolean;
+  /** Custom cache file location. */
   cacheLocation?: string;
+  /** Additional ignore file path. */
   ignorePath?: string;
+  /** File patterns to lint. */
   patterns?: string[];
 }
 
+/**
+ * Prepare the environment for CLI execution by loading configuration, cache,
+ * and ignore settings.
+ *
+ * @param options - Runtime options controlling config, caching, and patterns.
+ * @param onWarn - Optional warning callback for token parsing.
+ * @returns Fully prepared environment state.
+ */
 export async function prepareEnvironment(
   options: PrepareEnvironmentOptions,
+  onWarn?: (msg: string) => void,
 ): Promise<Environment> {
   const [{ loadConfig }, { createLinter }, { loadIgnore }] = await Promise.all([
     import('../config/loader.js'),
@@ -66,7 +109,7 @@ export async function prepareEnvironment(
   });
   const cache = env.cacheProvider;
   const linterRef = {
-    current: createLinter(config, env),
+    current: createLinter(config, env, onWarn),
   };
   const pluginPaths = await linterRef.current.getPluginPaths();
 

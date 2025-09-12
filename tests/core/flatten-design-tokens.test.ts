@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { flattenDesignTokens } from '../../src/core/token-utils.js';
+import { flattenDesignTokens } from '../../src/utils/tokens/index.js';
 import type { DesignTokens } from '../../src/core/types.js';
 import { registerTokenValidator } from '../../src/core/token-validators/index.js';
 
@@ -26,23 +26,47 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
   assert.deepEqual(flat, [
     {
       path: 'colors.red',
-      token: { $value: '#ff0000', $type: 'color' },
-      loc: { line: 1, column: 1 },
+      value: '#ff0000',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
     {
       path: 'colors.accent',
-      token: { $value: '#00ff00', $type: 'special' },
-      loc: { line: 1, column: 1 },
+      value: '#00ff00',
+      type: 'special',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
     {
       path: 'colors.nested.green',
-      token: { $value: '#00ff00', $type: 'color' },
-      loc: { line: 1, column: 1 },
+      value: '#00ff00',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
     {
       path: 'size.spacing.small',
-      token: { $value: { value: 4, unit: 'px' }, $type: 'dimension' },
-      loc: { line: 1, column: 1 },
+      value: { value: 4, unit: 'px' },
+      type: 'dimension',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
   ]);
 });
@@ -59,15 +83,15 @@ void test('flattenDesignTokens preserves $extensions and inherits $deprecated', 
   };
   const flat = flattenDesignTokens(tokens);
   assert.deepEqual(
-    flat.find((t) => t.path === 'theme.base')?.token.$extensions,
+    flat.find((t) => t.path === 'theme.base')?.metadata.extensions,
     ext,
   );
   assert.equal(
-    flat.find((t) => t.path === 'theme.base')?.token.$deprecated,
+    flat.find((t) => t.path === 'theme.base')?.metadata.deprecated,
     true,
   );
   assert.equal(
-    flat.find((t) => t.path === 'theme.active')?.token.$deprecated,
+    flat.find((t) => t.path === 'theme.active')?.metadata.deprecated,
     false,
   );
 });
@@ -84,13 +108,26 @@ void test('flattenDesignTokens resolves alias references', () => {
   assert.deepEqual(flat, [
     {
       path: 'color.base',
-      token: { $value: '#fff', $type: 'color' },
-      loc: { line: 1, column: 1 },
+      value: '#fff',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
     {
       path: 'color.primary',
-      token: { $value: '#fff', $type: 'color', aliasOf: ['color.base'] },
-      loc: { line: 1, column: 1 },
+      value: '#fff',
+      type: 'color',
+      aliases: ['color.base'],
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
     },
   ]);
 });
@@ -103,7 +140,14 @@ void test('flattenDesignTokens detects circular aliases', () => {
       b: { $value: '{color.a}' },
     },
   };
-  assert.throws(() => flattenDesignTokens(tokens), /Circular alias reference/);
+  const result = flattenDesignTokens(tokens);
+  const a = result.find((t) => t.path === 'color.a');
+  const b = result.find((t) => t.path === 'color.b');
+  assert(a && b);
+  assert.equal(a.value, '{color.b}');
+  assert.deepEqual(a.aliases, ['color.b']);
+  assert.equal(b.value, '{color.a}');
+  assert.deepEqual(b.aliases, ['color.a']);
 });
 
 void test('flattenDesignTokens errors on unknown alias', () => {
@@ -113,5 +157,60 @@ void test('flattenDesignTokens errors on unknown alias', () => {
       a: { $value: '{color.missing}' },
     },
   };
-  assert.throws(() => flattenDesignTokens(tokens), /references unknown token/);
+  const result = flattenDesignTokens(tokens);
+  const a = result.find((t) => t.path === 'color.a');
+  assert(a);
+  assert.equal(a.value, '{color.missing}');
+  assert.deepEqual(a.aliases, ['color.missing']);
+});
+
+void test('flattenDesignTokens normalizes slash-separated aliases', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      base: { $value: '#fff' },
+      primary: { $value: '{color/base}' },
+    },
+  };
+  const flat = flattenDesignTokens(tokens);
+  const primary = flat.find((t) => t.path === 'color.primary');
+  assert(primary);
+  assert.equal(primary.value, '#fff');
+  assert.deepEqual(primary.aliases, ['color.base']);
+});
+
+void test('flattenDesignTokens applies name transforms', () => {
+  const tokens: DesignTokens = {
+    ColorGroup: {
+      $type: 'color',
+      primaryColor: { $value: '#000' },
+      secondaryColor: { $value: '{ColorGroup.primaryColor}' },
+    },
+  };
+  const flat = flattenDesignTokens(tokens, { nameTransform: 'kebab-case' });
+  assert.deepEqual(flat, [
+    {
+      path: 'color-group.primary-color',
+      value: '#000',
+      type: 'color',
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
+    },
+    {
+      path: 'color-group.secondary-color',
+      value: '#000',
+      type: 'color',
+      aliases: ['color-group.primary-color'],
+      metadata: {
+        description: undefined,
+        extensions: undefined,
+        deprecated: undefined,
+        loc: { line: 1, column: 1 },
+      },
+    },
+  ]);
 });

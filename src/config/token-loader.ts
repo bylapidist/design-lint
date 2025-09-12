@@ -17,6 +17,33 @@ const {
 } = guards;
 const { wrapTokenError, normalizeTokens } = tokens;
 
+function splitMeta(tokens: DesignTokens): {
+  meta: Record<string, unknown>;
+  tokens: Record<string, unknown>;
+} {
+  const meta: Record<string, unknown> = {};
+  const tokenPart: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(tokens)) {
+    if (k.startsWith('$')) meta[k] = v;
+    else tokenPart[k] = v;
+  }
+  return { meta, tokens: tokenPart };
+}
+
+function mergeTokens(
+  base: Record<string, unknown>,
+  override: Record<string, unknown>,
+): Record<string, unknown> {
+  for (const [k, v] of Object.entries(override)) {
+    if (isRecord(v) && isRecord(base[k])) {
+      mergeTokens(base[k], v);
+    } else {
+      base[k] = v;
+    }
+  }
+  return base;
+}
+
 /**
  * Load and validate design tokens defined in configuration.
  *
@@ -73,6 +100,19 @@ export async function loadTokens(
   }
 
   const normalized = normalizeTokens(themes);
+
+  if ('default' in normalized && Object.keys(normalized).length > 1) {
+    const { default: base, ...variants } = normalized;
+    const { tokens: baseTokens } = splitMeta(base);
+    const merged: Record<string, unknown> = { default: base };
+    for (const [theme, t] of Object.entries(variants)) {
+      const { meta, tokens: part } = splitMeta(t);
+      const clone = mergeTokens(structuredClone(baseTokens), part);
+      merged[theme] = { ...meta, ...clone };
+    }
+    return normalizeTokens(merged);
+  }
+
   return 'default' in normalized && Object.keys(normalized).length === 1
     ? normalized.default
     : normalized;

@@ -1,7 +1,7 @@
 import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
 import { guards, collections } from '../utils/index.js';
-import { getFlattenedTokens, extractVarName } from './token-utils.js';
+import { getFlattenedTokens, extractVarName } from '../utils/tokens/index.js';
 
 const {
   data: { isRecord },
@@ -103,8 +103,8 @@ export class TokenTracker {
             column: 1,
             metadata: {
               path: info.path,
-              deprecated: info.token.$deprecated,
-              extensions: info.token.$extensions,
+              deprecated: info.metadata.deprecated,
+              extensions: info.metadata.extensions,
             },
           })),
         });
@@ -122,7 +122,7 @@ function collectTokenValues(
   for (const theme of Object.keys(tokensByTheme)) {
     if (theme.startsWith('$')) continue;
     for (const flat of getFlattenedTokens(tokensByTheme, theme)) {
-      const val = flat.token.$value;
+      const val = flat.value;
       if (typeof val === 'string') {
         if (val.includes('*')) continue;
         const name = extractVarName(val);

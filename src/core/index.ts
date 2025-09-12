@@ -35,11 +35,15 @@ export {
   extractVarName,
   flattenDesignTokens,
   getFlattenedTokens,
+  normalizePath,
   type TokenPattern,
-} from './token-utils.js';
+  type NameTransform,
+  type FlattenOptions,
+} from '../utils/tokens/index.js';
 export {
   parseDesignTokens,
   getTokenLocation,
   registerTokenTransform,
   type TokenTransform,
 } from './parser/index.js';
+export { TokenRegistry, type TokenRegistryOptions } from './token-registry.js';

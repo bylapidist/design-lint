@@ -15,9 +15,9 @@ export const fontWeightRule = tokenRule({
   getAllowed(tokens) {
     const numeric = new Set<number>();
     const values = new Set<string>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('fontWeights.')) continue;
-      const val = token.$value;
+      const val = value;
       if (typeof val === 'number') {
         numeric.add(val);
         values.add(String(val));
