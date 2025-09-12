@@ -3,11 +3,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { guards } from '../../../../src/utils/index.js';
-
-const {
-  domain: { isThemeRecord },
-} = guards;
+import { isThemeRecord } from '../../../../src/utils/guards/domain/is-theme-record.js';
 
 void test('isThemeRecord detects multiple themes with shared tokens', () => {
   const themes = {
@@ -29,6 +25,7 @@ void test('isThemeRecord detects single theme with nested group', () => {
 
 void test('isThemeRecord rejects invalid structures', () => {
   assert.equal(isThemeRecord(null), false);
+  assert.equal(isThemeRecord({ $schema: '1.0' }), false);
   const single = {
     light: {
       color: { $value: '#fff' },

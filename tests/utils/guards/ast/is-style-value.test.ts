@@ -4,11 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { findStringLiteral } from '../../ast.js';
-import { guards } from '../../../../src/utils/index.js';
-
-const {
-  ast: { isStyleValue },
-} = guards;
+import { isStyleValue } from '../../../../src/utils/guards/ast/is-style-value.js';
 
 void test('detects style values in JSX style attribute', () => {
   const node = findStringLiteral(`<div style={{ color: 'red' }} />`, 'red');
@@ -45,6 +41,19 @@ void test('detects style prop in h()', () => {
     'red',
   );
   assert.equal(isStyleValue(node), true);
+});
+
+void test('detects string style prop in React.createElement', () => {
+  const node = findStringLiteral(
+    `React.createElement('div', { style: 'color: red' });`,
+    'color: red',
+  );
+  assert.equal(isStyleValue(node), true);
+});
+
+void test('rejects string style prop in non-style calls', () => {
+  const node = findStringLiteral(`foo({ style: 'color: red' })`, 'color: red');
+  assert.equal(isStyleValue(node), false);
 });
 
 void test('ignores non-style contexts', () => {

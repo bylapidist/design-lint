@@ -3,6 +3,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { getExpression } from '../../ast.js';
 import * as astGuards from '../../../../src/utils/guards/ast/index.js';
 
 void test('AST guards export expected functions', () => {
@@ -12,4 +13,14 @@ void test('AST guards export expected functions', () => {
   assert.equal(typeof astGuards.isReactCreateElementCall, 'function');
   assert.equal(typeof astGuards.isStyleName, 'function');
   assert.equal(typeof astGuards.isStyleValue, 'function');
+});
+
+void test('AST guards execute without throwing', () => {
+  const node = getExpression('1');
+  astGuards.isJsxLike(node);
+  astGuards.isInNonStyleJsx(node);
+  astGuards.isHyperscriptCall(node);
+  astGuards.isReactCreateElementCall(node);
+  astGuards.isStyleName(node);
+  astGuards.isStyleValue(node);
 });
