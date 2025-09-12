@@ -4,6 +4,8 @@ import { getFlattenedTokens, type NameTransform } from '../core/token-utils.js';
 export interface TsOutputOptions {
   /** Optional transform applied to token path segments before generating declarations */
   nameTransform?: NameTransform;
+  /** Optional warning callback for alias resolution or other notices */
+  onWarn?: (msg: string) => void;
 }
 
 /**
@@ -21,6 +23,7 @@ export function generateTsDeclarations(
     lines.push(`  ${JSON.stringify(theme)}: {`);
     const flat = getFlattenedTokens(tokensByTheme, theme, {
       nameTransform,
+      onWarn: options.onWarn,
     }).sort((a, b) => a.path.localeCompare(b.path));
     for (const t of flat) {
       const key = t.path.replace(/\./g, '_').replace(/-/g, '_').toUpperCase();

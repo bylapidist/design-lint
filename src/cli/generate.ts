@@ -14,7 +14,10 @@ interface GenerateCommandOptions {
   watch?: boolean;
 }
 
-export async function generateOutputs(options: GenerateCommandOptions) {
+export async function generateOutputs(
+  options: GenerateCommandOptions,
+  logger?: { warn: (msg: string) => void; error: (err: unknown) => void },
+) {
   const cwd = process.cwd();
 
   async function build(): Promise<string | undefined> {
@@ -29,13 +32,20 @@ export async function generateOutputs(options: GenerateCommandOptions) {
           content = generateCssVariables(tokensByTheme, {
             nameTransform,
             selectors: target.selectors,
+            onWarn: logger?.warn,
           });
           break;
         case 'js':
-          content = generateJsConstants(tokensByTheme, { nameTransform });
+          content = generateJsConstants(tokensByTheme, {
+            nameTransform,
+            onWarn: logger?.warn,
+          });
           break;
         case 'ts':
-          content = generateTsDeclarations(tokensByTheme, { nameTransform });
+          content = generateTsDeclarations(tokensByTheme, {
+            nameTransform,
+            onWarn: logger?.warn,
+          });
           break;
         default:
           continue;
@@ -55,8 +65,11 @@ export async function generateOutputs(options: GenerateCommandOptions) {
     const watcher = chokidar.watch(watchPaths, { ignoreInitial: true });
     const run = () => {
       void build().catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(msg);
+        if (logger) logger.error(err);
+        else {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(msg);
+        }
       });
     };
     watcher.on('add', run);

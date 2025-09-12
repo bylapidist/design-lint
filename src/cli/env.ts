@@ -41,6 +41,7 @@ export interface PrepareEnvironmentOptions {
 
 export async function prepareEnvironment(
   options: PrepareEnvironmentOptions,
+  onWarn?: (msg: string) => void,
 ): Promise<Environment> {
   const [{ loadConfig }, { createLinter }, { loadIgnore }] = await Promise.all([
     import('../config/loader.js'),
@@ -66,7 +67,7 @@ export async function prepareEnvironment(
   });
   const cache = env.cacheProvider;
   const linterRef = {
-    current: createLinter(config, env),
+    current: createLinter(config, env, onWarn),
   };
   const pluginPaths = await linterRef.current.getPluginPaths();
 

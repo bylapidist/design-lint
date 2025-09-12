@@ -69,6 +69,7 @@ export class Linter {
           tokensReady: Promise<Record<string, DesignTokens>>;
         }
       | Environment,
+    onWarn?: (msg: string) => void,
   ) {
     const isEnv = (val: unknown): val is Environment =>
       typeof val === 'object' && val !== null && 'documentSource' in val;
@@ -120,6 +121,7 @@ export class Linter {
       this.tokensByTheme = t;
       this.tokenRegistry = new TokenRegistry(t, {
         nameTransform: this.config.nameTransform,
+        onWarn,
       });
     });
 

@@ -6,6 +6,8 @@ export interface CssOutputOptions {
   nameTransform?: NameTransform;
   /** Mapping of theme names to CSS selectors. Defaults to :root and [data-theme="theme"]. */
   selectors?: Record<string, string>;
+  /** Optional warning callback for alias resolution or other notices */
+  onWarn?: (msg: string) => void;
 }
 
 /**
@@ -28,6 +30,7 @@ export function generateCssVariables(
       (theme === 'default' ? ':root' : `[data-theme='${theme}']`);
     const flat = getFlattenedTokens(tokensByTheme, theme, {
       nameTransform,
+      onWarn: options.onWarn,
     }).sort((a, b) => a.path.localeCompare(b.path));
     const lines: string[] = [`${selector} {`];
     for (const t of flat) {

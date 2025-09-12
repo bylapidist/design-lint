@@ -43,13 +43,16 @@ export function closestToken(
 
 export interface FlattenOptions {
   nameTransform?: NameTransform;
+  onWarn?: (msg: string) => void;
 }
 
 export function flattenDesignTokens(
   tokens: DesignTokens,
   options?: FlattenOptions,
 ): FlattenedToken[] {
-  const flat = parseDesignTokens(tokens);
+  const flat = parseDesignTokens(tokens, undefined, {
+    onWarn: options?.onWarn,
+  });
   const transform = options?.nameTransform;
   return flat.map(({ path, aliases, ...rest }) => ({
     ...rest,
@@ -66,10 +69,12 @@ export function getFlattenedTokens(
   options?: FlattenOptions,
 ): FlattenedToken[] {
   const transform = options?.nameTransform;
+  const warn = options?.onWarn;
   if (theme) {
     if (Object.prototype.hasOwnProperty.call(tokensByTheme, theme)) {
       return flattenDesignTokens(tokensByTheme[theme], {
         nameTransform: transform,
+        onWarn: warn,
       });
     }
     return [];
@@ -79,6 +84,7 @@ export function getFlattenedTokens(
   for (const tokens of Object.values(tokensByTheme)) {
     for (const flat of flattenDesignTokens(tokens, {
       nameTransform: transform,
+      onWarn: warn,
     })) {
       if (!seen.has(flat.path)) {
         seen.set(flat.path, flat);

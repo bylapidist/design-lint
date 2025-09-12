@@ -4,6 +4,8 @@ import { getFlattenedTokens, type NameTransform } from '../core/token-utils.js';
 export interface JsOutputOptions {
   /** Optional transform applied to token path segments before generating constants */
   nameTransform?: NameTransform;
+  /** Optional warning callback for alias resolution or other notices */
+  onWarn?: (msg: string) => void;
 }
 
 /**
@@ -23,6 +25,7 @@ export function generateJsConstants(
   for (const theme of themes) {
     const flat = getFlattenedTokens(tokensByTheme, theme, {
       nameTransform,
+      onWarn: options.onWarn,
     }).sort((a, b) => a.path.localeCompare(b.path));
     for (const t of flat) {
       const base = t.path.replace(/\./g, '_').replace(/-/g, '_').toUpperCase();

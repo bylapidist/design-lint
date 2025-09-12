@@ -7,6 +7,7 @@ import {
 
 export interface TokenRegistryOptions {
   nameTransform?: NameTransform;
+  onWarn?: (msg: string) => void;
 }
 
 export class TokenRegistry {
@@ -18,11 +19,13 @@ export class TokenRegistry {
     options?: TokenRegistryOptions,
   ) {
     this.transform = options?.nameTransform;
+    const warn = options?.onWarn;
     for (const [theme, tokens] of Object.entries(tokensByTheme)) {
       if (theme.startsWith('$')) continue;
       const map = new Map<string, FlattenedToken>();
       for (const token of flattenDesignTokens(tokens, {
         nameTransform: this.transform,
+        onWarn: warn,
       })) {
         map.set(token.path, token);
       }

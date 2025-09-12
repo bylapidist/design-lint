@@ -18,13 +18,18 @@ export {
 } from './core/token-registry.js';
 export * from './output/index.js';
 
-export function createLinter(config: Config, env: Environment): Linter {
-  return setupLinter(config, env).linter;
+export function createLinter(
+  config: Config,
+  env: Environment,
+  onWarn?: (msg: string) => void,
+): Linter {
+  return setupLinter(config, env, onWarn).linter;
 }
 
 export function createLintService(
   config: Config,
   env: Environment,
+  onWarn?: (msg: string) => void,
 ): LintService {
-  return setupLinter(config, env).service;
+  return setupLinter(config, env, onWarn).service;
 }

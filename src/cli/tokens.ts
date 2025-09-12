@@ -16,7 +16,10 @@ interface TokensCommandOptions {
   config?: string;
 }
 
-export async function exportTokens(options: TokensCommandOptions) {
+export async function exportTokens(
+  options: TokensCommandOptions,
+  onWarn?: (msg: string) => void,
+) {
   const config = await loadConfig(process.cwd(), options.config);
   const tokensByTheme = toThemeRecord(config.tokens);
   const themes = options.theme ? [options.theme] : Object.keys(tokensByTheme);
@@ -25,6 +28,7 @@ export async function exportTokens(options: TokensCommandOptions) {
   for (const theme of themes) {
     const flat = getFlattenedTokens(tokensByTheme, theme, {
       nameTransform: config.nameTransform,
+      onWarn,
     });
     output[theme] = {};
     for (const { path: p, value, type, aliases, metadata } of flat) {
