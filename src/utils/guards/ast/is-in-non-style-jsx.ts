@@ -23,6 +23,15 @@ import { isHyperscriptCall } from './is-hyperscript-call.js';
  * - Returns `true` if it detects the node is inside JSX, a React `createElement` call,
  *   or a `h()` hyperscript call. Otherwise, returns `false`.
  *
+ * @example
+ * ```tsx
+ * const element = <div title="a" style={{ color: 'red' }} />;
+ * // Given a reference to the `title` attribute node:
+ * isInNonStyleJsx(titleNode); // => true
+ * // For the `color` property inside the style object:
+ * isInNonStyleJsx(colorProp); // => false
+ * ```
+ *
  * @param node - The TypeScript AST node to start from.
  * @returns `true` if the node is inside non-style JSX (or JSX-like code), `false` otherwise.
  */
