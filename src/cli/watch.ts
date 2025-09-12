@@ -17,6 +17,7 @@ import {
   type ExecuteServices,
   type ExecuteOptions,
 } from './execute.js';
+import { generateOutputs } from './generate.js';
 
 export interface WatchState {
   pluginPaths: string[];
@@ -74,6 +75,7 @@ export async function watchMode(
     process.exitCode = exitCode;
     return ignoreFiles;
   };
+  await generateOutputs({ config: options.config });
   await startWatch({
     targets,
     options,
@@ -113,7 +115,7 @@ export async function startWatch(ctx: WatchOptions) {
 
   console.log('Watching for changes...');
   await refreshIgnore();
-  const watchPaths = [...targets];
+  const watchPaths = [...targets, '**/*.tokens.*'];
   if (config.configPath) watchPaths.push(config.configPath);
   if (fs.existsSync(designIgnore)) watchPaths.push(designIgnore);
   if (fs.existsSync(gitIgnore)) watchPaths.push(gitIgnore);
@@ -164,6 +166,7 @@ export async function startWatch(ctx: WatchOptions) {
   const runAndUpdate = async (paths: string[]) => {
     const prev = ignoreFilePaths;
     const newIgnore = await runLint(paths);
+    await generateOutputs({ config: options.config });
     const toAdd = newIgnore.filter((p) => !prev.includes(p));
     if (toAdd.length) watcher.add(toAdd);
     const toRemove = prev.filter((p) => !newIgnore.includes(p));

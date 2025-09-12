@@ -47,10 +47,9 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
   getAllowed(tokens) {
     return new Set(
       tokens
-        .map(({ token }) => {
-          const v = token.$value;
-          return typeof v === 'string' && !v.startsWith('{')
-            ? v.toLowerCase()
+        .map(({ value }) => {
+          return typeof value === 'string' && !value.startsWith('{')
+            ? value.toLowerCase()
             : null;
         })
         .filter((v): v is string => v !== null),

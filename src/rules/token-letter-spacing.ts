@@ -42,9 +42,9 @@ export const letterSpacingRule = tokenRule({
   getAllowed(tokens) {
     const numeric = new Set<number>();
     const values = new Set<string>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('letterSpacings.')) continue;
-      const val = token.$value;
+      const val = value;
       const num = parse(val);
       if (num !== null) numeric.add(num);
       if (

@@ -55,3 +55,4 @@ See the [CHANGELOG](https://github.com/bylapidist/design-lint/blob/main/CHANGELO
 - [Glossary](./glossary.md)
 - [Troubleshooting](./troubleshooting.md)
 - [Contributing](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md)
+- [Migration from Style Dictionary](./migration.md)

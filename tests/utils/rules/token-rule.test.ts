@@ -37,8 +37,8 @@ void test('tokenRule passes allowed values to create', () => {
     message: 'no tokens',
     getAllowed(tokens) {
       const s = new Set<number>();
-      for (const { token } of tokens) {
-        if (typeof token.$value === 'number') s.add(token.$value);
+      for (const t of tokens) {
+        if (typeof t.value === 'number') s.add(t.value);
       }
       return s;
     },
@@ -50,7 +50,18 @@ void test('tokenRule passes allowed values to create', () => {
   const reports: unknown[] = [];
   const ctx: RuleContext = {
     report: (m) => reports.push(m),
-    getFlattenedTokens: () => [{ path: 'a', token: { $value: 2 } }],
+    getFlattenedTokens: () => [
+      {
+        path: 'a',
+        value: 2,
+        metadata: {
+          description: undefined,
+          extensions: undefined,
+          deprecated: undefined,
+          loc: { line: 1, column: 1 },
+        },
+      },
+    ],
     sourceId: 'x',
   };
   rule.create(ctx);

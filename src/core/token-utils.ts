@@ -5,6 +5,34 @@ import { parseDesignTokens } from './parser/index.js';
 
 export type TokenPattern = string | RegExp;
 
+export type NameTransform = 'kebab-case' | 'camelCase' | 'PascalCase';
+
+function transformSegment(seg: string, transform?: NameTransform): string {
+  if (!transform) return seg;
+  switch (transform) {
+    case 'kebab-case':
+      return seg
+        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .replace(/[_\s]+/g, '-')
+        .toLowerCase();
+    case 'camelCase':
+      return seg
+        .replace(/[-_\s]+(.)?/g, (_, c: string) => (c ? c.toUpperCase() : ''))
+        .replace(/^[A-Z]/, (s) => s.toLowerCase());
+    case 'PascalCase':
+      return seg
+        .replace(/[-_\s]+(.)?/g, (_, c: string) => (c ? c.toUpperCase() : ''))
+        .replace(/^[a-z]/, (s) => s.toUpperCase());
+    default:
+      return seg;
+  }
+}
+
+export function normalizePath(path: string, transform?: NameTransform): string {
+  const parts = path.split(/[./]/).filter(Boolean);
+  return parts.map((p) => transformSegment(p, transform)).join('.');
+}
+
 export function matchToken(
   name: string,
   patterns: TokenPattern[],
@@ -37,24 +65,45 @@ export function closestToken(
   return best;
 }
 
-export function flattenDesignTokens(tokens: DesignTokens): FlattenedToken[] {
-  return parseDesignTokens(tokens);
+export interface FlattenOptions {
+  nameTransform?: NameTransform;
+}
+
+export function flattenDesignTokens(
+  tokens: DesignTokens,
+  options?: FlattenOptions,
+): FlattenedToken[] {
+  const flat = parseDesignTokens(tokens);
+  const transform = options?.nameTransform;
+  return flat.map(({ path, aliases, ...rest }) => ({
+    ...rest,
+    path: normalizePath(path, transform),
+    ...(aliases
+      ? { aliases: aliases.map((a) => normalizePath(a, transform)) }
+      : {}),
+  }));
 }
 
 export function getFlattenedTokens(
   tokensByTheme: Record<string, DesignTokens>,
   theme?: string,
+  options?: FlattenOptions,
 ): FlattenedToken[] {
+  const transform = options?.nameTransform;
   if (theme) {
     if (Object.prototype.hasOwnProperty.call(tokensByTheme, theme)) {
-      return parseDesignTokens(tokensByTheme[theme]);
+      return flattenDesignTokens(tokensByTheme[theme], {
+        nameTransform: transform,
+      });
     }
     return [];
   }
   // dedupe tokens by their path across themes
   const seen = new Map<string, FlattenedToken>();
   for (const tokens of Object.values(tokensByTheme)) {
-    for (const flat of parseDesignTokens(tokens)) {
+    for (const flat of flattenDesignTokens(tokens, {
+      nameTransform: transform,
+    })) {
       if (!seen.has(flat.path)) {
         seen.set(flat.path, flat);
       }

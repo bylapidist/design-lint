@@ -14,6 +14,8 @@ This guide walks you through installing and running @lapidist/design-lint for th
 - [Initial configuration](#initial-configuration)
 - [Run the linter](#run-the-linter)
 - [Autofix workflow](#autofix-workflow)
+- [Export resolved tokens](#export-resolved-tokens)
+- [Generate token outputs](#generate-token-outputs)
 - [Watch mode and caching](#watch-mode-and-caching)
 - [Target files and directories](#target-files-and-directories)
 - [Exit codes](#exit-codes)
@@ -86,6 +88,15 @@ npx design-lint tokens --out tokens.json
 ```
 
 Use `--theme` to export tokens for a specific theme.
+
+## Generate token outputs
+Use the `generate` subcommand to produce CSS variables, JavaScript constants or TypeScript declarations as defined by the `output` configuration.
+
+```bash
+npx design-lint generate
+```
+
+Pass `--watch` to regenerate when token files or the configuration change.
 
 ## Watch mode and caching
 Use `--watch` to rerun the linter when files change. design-lint caches results to speed up subsequent runs. Cache data lives in `.designlintcache` and is safe to commit to CI caches.

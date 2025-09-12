@@ -34,9 +34,9 @@ export const fontSizeRule = tokenRule({
     'design-token/font-size requires font size tokens; configure tokens with $type "dimension" under a "fontSizes" group to enable this rule.',
   getAllowed(tokens) {
     const sizes = new Set<number>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('fontSizes.')) continue;
-      const num = parseSize(token.$value);
+      const num = parseSize(value);
       if (num !== null) sizes.add(num);
     }
     return sizes;

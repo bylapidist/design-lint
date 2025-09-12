@@ -132,7 +132,17 @@ export function buildParseTree(
             token.$deprecated = tokenDeprecated;
           const loc = getLoc ? getLoc(pathId) : { line: 1, column: 1 };
           tokenLocations.set(pathId, loc);
-          result.push({ path: pathId, token, loc });
+          result.push({
+            path: pathId,
+            value: token.$value,
+            type: token.$type,
+            metadata: {
+              description: token.$description,
+              extensions: token.$extensions,
+              deprecated: token.$deprecated,
+              loc,
+            },
+          });
         } else if (isTokenGroup(node)) {
           const childKeys = Object.keys(node).filter(
             (k) => !GROUP_PROPS.has(k),

@@ -14,9 +14,9 @@ export const outlineRule = tokenRule({
     'design-token/outline requires outline tokens; configure tokens with $type "string" under an "outlines" group to enable this rule.',
   getAllowed(tokens) {
     const allowed = new Set<string>();
-    for (const { path, token } of tokens) {
+    for (const { path, value } of tokens) {
       if (!path.startsWith('outlines.')) continue;
-      const val = token.$value;
+      const val = value;
       if (typeof val === 'string') allowed.add(normalize(val));
     }
     return allowed;

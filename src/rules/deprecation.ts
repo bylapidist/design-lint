@@ -16,8 +16,8 @@ export const deprecationRule: RuleModule = {
   },
   create(context) {
     const deprecated = new Map<string, { reason?: string; suggest?: string }>();
-    for (const { path, token } of context.getFlattenedTokens()) {
-      const dep = token.$deprecated;
+    for (const { path, metadata } of context.getFlattenedTokens()) {
+      const dep = metadata.deprecated;
       if (!dep) continue;
       let reason: string | undefined;
       let suggest: string | undefined;

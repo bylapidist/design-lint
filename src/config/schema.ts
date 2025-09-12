@@ -69,10 +69,27 @@ const tokenFileSchema = z
 /**
  * Schema describing the `tokens` property of configuration objects.
  */
+const themeNameSchema = z.string().refine((n) => !n.startsWith('$'), {
+  message: 'Theme names must not start with $',
+});
+
 const tokensSchema = z.union([
   designTokensSchema,
-  z.record(z.string(), z.union([designTokensSchema, tokenFileSchema])),
+  z.record(themeNameSchema, z.union([designTokensSchema, tokenFileSchema])),
 ]);
+
+const nameTransformSchema = z
+  .enum(['kebab-case', 'camelCase', 'PascalCase'])
+  .optional();
+
+const outputTargetSchema = z
+  .object({
+    format: z.enum(['css', 'js', 'ts']),
+    file: z.string(),
+    nameTransform: nameTransformSchema,
+    selectors: z.record(z.string(), z.string()).optional(),
+  })
+  .strict();
 
 /**
  * Zod schema describing a valid linter configuration.
@@ -87,6 +104,8 @@ export const configSchema: z.ZodType<Config> = z
     concurrency: z.number().int().positive().optional(),
     patterns: z.array(z.string()).optional(),
     wrapTokensWithVar: z.boolean().optional(),
+    nameTransform: nameTransformSchema,
+    output: z.array(outputTargetSchema).optional(),
   })
   .strict();
 

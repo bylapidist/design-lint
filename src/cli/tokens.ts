@@ -23,10 +23,17 @@ export async function exportTokens(options: TokensCommandOptions) {
   const output: Record<string, Record<string, unknown>> = {};
 
   for (const theme of themes) {
-    const flat = getFlattenedTokens(tokensByTheme, theme);
+    const flat = getFlattenedTokens(tokensByTheme, theme, {
+      nameTransform: config.nameTransform,
+    });
     output[theme] = {};
-    for (const { path: p, token } of flat) {
-      output[theme][p] = token;
+    for (const { path: p, value, type, aliases, metadata } of flat) {
+      output[theme][p] = {
+        value,
+        type,
+        ...(aliases ? { aliases } : {}),
+        ...metadata,
+      };
     }
   }
 
@@ -39,7 +46,9 @@ export async function exportTokens(options: TokensCommandOptions) {
   }
 }
 
-function toThemeRecord(tokens: Config['tokens']): Record<string, DesignTokens> {
+export function toThemeRecord(
+  tokens: Config['tokens'],
+): Record<string, DesignTokens> {
   if (!tokens) return {};
   if (isThemeRecord(tokens)) return tokens;
   if (isDesignTokens(tokens)) return { default: tokens };

@@ -36,6 +36,8 @@ export {
   flattenDesignTokens,
   getFlattenedTokens,
   type TokenPattern,
+  type NameTransform,
+  type FlattenOptions,
 } from './token-utils.js';
 export {
   parseDesignTokens,
@@ -43,3 +45,4 @@ export {
   registerTokenTransform,
   type TokenTransform,
 } from './parser/index.js';
+export { TokenRegistry, type TokenRegistryOptions } from './token-registry.js';

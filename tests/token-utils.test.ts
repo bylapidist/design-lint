@@ -35,5 +35,5 @@ void test('flattenDesignTokens provides location information', () => {
     color: { $type: 'color', blue: { $value: '#00f' } },
   };
   const result = flattenDesignTokens(tokens);
-  assert.deepEqual(result[0].loc, { line: 1, column: 1 });
+  assert.deepEqual(result[0].metadata.loc, { line: 1, column: 1 });
 });

@@ -14,6 +14,7 @@ import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
 import { initConfig } from './init-config.js';
 import { exportTokens } from './tokens.js';
+import { generateOutputs } from './generate.js';
 
 type CliOptions = ExecuteOptions &
   PrepareEnvironmentOptions & {
@@ -97,6 +98,21 @@ function createProgram(version: string) {
       ) => {
         const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
         await exportTokens({
+          ...opts,
+          config: opts.config ?? parent.config,
+        });
+      },
+    );
+
+  program
+    .command('generate')
+    .description('Generate token outputs as configured')
+    .option('--config <path>', 'Path to configuration file')
+    .option('--watch', 'Watch token files and regenerate on changes')
+    .action(
+      async (opts: { config?: string; watch?: boolean }, cmd: Command) => {
+        const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+        await generateOutputs({
           ...opts,
           config: opts.config ?? parent.config,
         });

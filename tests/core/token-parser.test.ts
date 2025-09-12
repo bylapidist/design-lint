@@ -118,9 +118,10 @@ void test('parseDesignTokensFile reads a .tokens.json file', async () => {
 
   const result = await parseDesignTokensFile(file);
   assert.equal(result[0].path, 'color.blue');
-  assert.deepEqual(result[0].token, { $value: '#00f', $type: 'color' });
-  assert.equal(typeof result[0].loc.line, 'number');
-  assert.equal(typeof result[0].loc.column, 'number');
+  assert.equal(result[0].value, '#00f');
+  assert.equal(result[0].type, 'color');
+  assert.equal(typeof result[0].metadata.loc.line, 'number');
+  assert.equal(typeof result[0].metadata.loc.column, 'number');
 });
 
 void test('parseDesignTokensFile reads a .tokens.yaml file', async () => {
@@ -131,9 +132,10 @@ void test('parseDesignTokensFile reads a .tokens.yaml file', async () => {
 
   const result = await parseDesignTokensFile(file);
   assert.equal(result[0].path, 'color.blue');
-  assert.deepEqual(result[0].token, { $value: '#00f', $type: 'color' });
-  assert.equal(typeof result[0].loc.line, 'number');
-  assert.equal(typeof result[0].loc.column, 'number');
+  assert.equal(result[0].value, '#00f');
+  assert.equal(result[0].type, 'color');
+  assert.equal(typeof result[0].metadata.loc.line, 'number');
+  assert.equal(typeof result[0].metadata.loc.column, 'number');
 });
 
 void test('parseDesignTokensFile reports location on parse error', async () => {
@@ -183,14 +185,18 @@ void test('parseDesignTokens rejects tokens with mismatched $type and value', ()
   assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
 });
 
-void test('parseDesignTokens rejects aliases with mismatched types', () => {
+void test('parseDesignTokens handles aliases with mismatched types', () => {
   const tokens = {
     color: { base: { $value: '#00f', $type: 'color' } },
     size: { sm: { $value: { value: 4, unit: 'px' }, $type: 'dimension' } },
     alias: { wrong: { $type: 'color', $value: '{size.sm}' } },
   } as unknown as DesignTokens;
 
-  assert.throws(() => parseDesignTokens(tokens), /mismatched \$type/i);
+  const result = parseDesignTokens(tokens);
+  const wrong = result.find((t) => t.path === 'alias.wrong');
+  assert.ok(wrong);
+  assert.equal(wrong.value, '{size.sm}');
+  assert.deepEqual(wrong.aliases, ['size.sm']);
 });
 
 void test('parseDesignTokens resolves alias token types', () => {
@@ -201,10 +207,7 @@ void test('parseDesignTokens resolves alias token types', () => {
     },
   };
   const result = parseDesignTokens(tokens);
-  assert.equal(
-    result.find((t) => t.path === 'color.brand')?.token.$type,
-    'color',
-  );
+  assert.equal(result.find((t) => t.path === 'color.brand')?.type, 'color');
 });
 
 void test('parseDesignTokens validates dimension tokens', () => {
@@ -212,7 +215,7 @@ void test('parseDesignTokens validates dimension tokens', () => {
     size: { $type: 'dimension', sm: { $value: { value: 4, unit: 'px' } } },
   } as unknown as DesignTokens;
   const result = parseDesignTokens(tokens);
-  assert.equal(result[0].token.$type, 'dimension');
+  assert.equal(result[0].type, 'dimension');
 
   const invalid = {
     size: { $type: 'dimension', sm: { $value: { value: 0 } } },
@@ -233,7 +236,7 @@ void test('parseDesignTokens validates duration tokens', () => {
     },
   } as unknown as DesignTokens;
   const result = parseDesignTokens(tokens);
-  assert.equal(result[0].token.$type, 'duration');
+  assert.equal(result[0].type, 'duration');
 
   const invalid = {
     durations: {
@@ -249,7 +252,7 @@ void test('parseDesignTokens validates cubicBezier tokens', () => {
     easing: { $type: 'cubicBezier', ease: { $value: [0.25, 0.1, 0.25, 1] } },
   } as unknown as DesignTokens;
   const result = parseDesignTokens(tokens);
-  assert.equal(result[0].token.$type, 'cubicBezier');
+  assert.equal(result[0].type, 'cubicBezier');
 
   const invalid = {
     easing: { $type: 'cubicBezier', bad: { $value: [0, 0, 1] } },
@@ -271,28 +274,44 @@ void test('parseDesignTokens inherits types from parent groups', () => {
     },
   };
   const result = parseDesignTokens(tokens);
+  assert.equal(result.find((t) => t.path === 'theme.brand')?.type, 'color');
   assert.equal(
-    result.find((t) => t.path === 'theme.brand')?.token.$type,
+    result.find((t) => t.path === 'theme.nested.accent')?.type,
     'color',
   );
   assert.equal(
-    result.find((t) => t.path === 'theme.nested.accent')?.token.$type,
-    'color',
-  );
-  assert.equal(
-    result.find((t) => t.path === 'theme.nested.size.sm')?.token.$type,
+    result.find((t) => t.path === 'theme.nested.size.sm')?.type,
     'dimension',
   );
 });
 
-void test('parseDesignTokens rejects aliases referencing unknown tokens', () => {
+void test('parseDesignTokens handles aliases referencing unknown tokens', () => {
   const tokens = {
     color: {
       $type: 'color',
       brand: { $value: '{color.missing}' },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /references unknown token/i);
+  const result = parseDesignTokens(tokens);
+  const brand = result.find((t) => t.path === 'color.brand');
+  assert.ok(brand);
+  assert.equal(brand.value, '{color.missing}');
+  assert.deepEqual(brand.aliases, ['color.missing']);
+});
+
+void test('parseDesignTokens normalizes slash-separated aliases', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      base: { $value: '#fff' },
+      primary: { $value: '{color/base}' },
+    },
+  } as unknown as DesignTokens;
+  const result = parseDesignTokens(tokens);
+  const primary = result.find((t) => t.path === 'color.primary');
+  assert.ok(primary);
+  assert.equal(primary.value, '#fff');
+  assert.deepEqual(primary.aliases, ['color.base']);
 });
 
 void test('parseDesignTokens resolves alias chains', () => {
@@ -304,13 +323,10 @@ void test('parseDesignTokens resolves alias chains', () => {
     },
   };
   const result = parseDesignTokens(tokens);
-  assert.equal(
-    result.find((t) => t.path === 'color.top')?.token.$type,
-    'color',
-  );
+  assert.equal(result.find((t) => t.path === 'color.top')?.type, 'color');
 });
 
-void test('parseDesignTokens detects circular aliases', () => {
+void test('parseDesignTokens handles circular aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
@@ -318,10 +334,17 @@ void test('parseDesignTokens detects circular aliases', () => {
       b: { $value: '{color.a}' },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /circular alias/i);
+  const result = parseDesignTokens(tokens);
+  const a = result.find((t) => t.path === 'color.a');
+  const b = result.find((t) => t.path === 'color.b');
+  assert.ok(a && b);
+  assert.equal(a.value, '{color.b}');
+  assert.deepEqual(a.aliases, ['color.b']);
+  assert.equal(b.value, '{color.a}');
+  assert.deepEqual(b.aliases, ['color.a']);
 });
 
-void test('parseDesignTokens rejects alias chains with unknown targets', () => {
+void test('parseDesignTokens handles alias chains with unknown targets', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
@@ -329,7 +352,14 @@ void test('parseDesignTokens rejects alias chains with unknown targets', () => {
       b: { $value: '{color.missing}' },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /references unknown token/i);
+  const result = parseDesignTokens(tokens);
+  const a = result.find((t) => t.path === 'color.a');
+  const b = result.find((t) => t.path === 'color.b');
+  assert.ok(a && b);
+  assert.equal(a.value, '{color.b}');
+  assert.deepEqual(a.aliases, ['color.b']);
+  assert.equal(b.value, '{color.missing}');
+  assert.deepEqual(b.aliases, ['color.missing']);
 });
 
 void test('parseDesignTokens rejects alias chains when final target lacks $type', () => {
@@ -337,7 +367,7 @@ void test('parseDesignTokens rejects alias chains when final target lacks $type'
     a: { $value: '{b}' },
     b: { $value: '#00f' },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /without \$type/i);
+  assert.throws(() => parseDesignTokens(tokens), /missing \$type/i);
 });
 
 void test('parseDesignTokens validates shadow composite tokens', () => {
@@ -357,10 +387,7 @@ void test('parseDesignTokens validates shadow composite tokens', () => {
     },
   };
   const result = parseDesignTokens(tokens);
-  assert.equal(
-    result.find((t) => t.path === 'shadow.small')?.token.$type,
-    'shadow',
-  );
+  assert.equal(result.find((t) => t.path === 'shadow.small')?.type, 'shadow');
 
   const invalid = {
     shadow: {
@@ -405,7 +432,7 @@ void test('parseDesignTokens validates strokeStyle composite tokens', () => {
   };
   const result = parseDesignTokens(tokens);
   assert.equal(
-    result.find((t) => t.path === 'stroke.custom')?.token.$type,
+    result.find((t) => t.path === 'stroke.custom')?.type,
     'strokeStyle',
   );
 
@@ -449,7 +476,7 @@ void test('parseDesignTokens validates gradient composite tokens', () => {
   };
   const result = parseDesignTokens(tokens);
   assert.equal(
-    result.find((t) => t.path === 'gradient.primary')?.token.$type,
+    result.find((t) => t.path === 'gradient.primary')?.type,
     'gradient',
   );
 
@@ -492,11 +519,11 @@ void test('parseDesignTokens resolves aliases inside gradient stops', () => {
   const result = parseDesignTokens(tokens);
   const grad = result.find((t) => t.path === 'gradient.hero');
   assert(grad);
-  assert.deepEqual(grad.token.$value, [
+  assert.deepEqual(grad.value, [
     { color: '#fff', position: 0 },
     { color: '#000', position: 1 },
   ]);
-  assert.deepEqual(grad.token.aliasOf, ['color.base', 'color.dark']);
+  assert.deepEqual(grad.aliases, ['color.base', 'color.dark']);
 });
 
 void test('parseDesignTokens resolves aliases inside shadow segments', () => {
@@ -519,7 +546,7 @@ void test('parseDesignTokens resolves aliases inside shadow segments', () => {
   const result = parseDesignTokens(tokens);
   const subtle = result.find((t) => t.path === 'shadow.subtle');
   assert(subtle);
-  assert.deepEqual(subtle.token.$value, [
+  assert.deepEqual(subtle.value, [
     {
       color: '#00000080',
       offsetX: { value: 0, unit: 'px' },
@@ -527,7 +554,7 @@ void test('parseDesignTokens resolves aliases inside shadow segments', () => {
       blur: { value: 2, unit: 'px' },
     },
   ]);
-  assert.deepEqual(subtle.token.aliasOf, ['color.shadow']);
+  assert.deepEqual(subtle.aliases, ['color.shadow']);
 });
 
 void test('parseDesignTokens validates typography composite tokens', () => {
@@ -546,7 +573,7 @@ void test('parseDesignTokens validates typography composite tokens', () => {
   };
   const result = parseDesignTokens(tokens);
   assert.equal(
-    result.find((t) => t.path === 'typography.body')?.token.$type,
+    result.find((t) => t.path === 'typography.body')?.type,
     'typography',
   );
 
@@ -589,15 +616,15 @@ void test('parseDesignTokens preserves $extensions and $deprecated metadata', ()
   };
   const result = parseDesignTokens(tokens);
   assert.deepEqual(
-    result.find((t) => t.path === 'theme.brand')?.token.$extensions,
+    result.find((t) => t.path === 'theme.brand')?.metadata.extensions,
     ext,
   );
   assert.equal(
-    result.find((t) => t.path === 'theme.brand')?.token.$deprecated,
+    result.find((t) => t.path === 'theme.brand')?.metadata.deprecated,
     'use new theme',
   );
   assert.equal(
-    result.find((t) => t.path === 'theme.active')?.token.$deprecated,
+    result.find((t) => t.path === 'theme.active')?.metadata.deprecated,
     false,
   );
 });
@@ -634,7 +661,7 @@ void test('parseDesignTokens normalizes colors to rgb when configured', () => {
     color: { $type: 'color', green: { $value: 'hsl(120, 100%, 50%)' } },
   };
   const result = parseDesignTokens(tokens, undefined, { colorSpace: 'rgb' });
-  assert.equal(result[0].token.$value, 'rgb(0, 255, 0)');
+  assert.equal(result[0].value, 'rgb(0, 255, 0)');
 });
 
 void test('parseDesignTokens applies custom transforms', () => {
