@@ -1,16 +1,24 @@
 import type { VariableProvider } from '../../core/environment.js';
 import type { DesignTokens } from '../../core/types.js';
 import type { Config } from '../../core/linter.js';
-import { isDesignTokens, isThemeRecord } from '../../utils/type-guards.js';
+import { guards } from '../../utils/index.js';
+
+const {
+  domain: { isDesignTokens, isThemeRecord },
+} = guards;
 
 export class NodeTokenProvider implements VariableProvider {
   private tokens: Record<string, DesignTokens>;
 
   constructor(tokens?: Config['tokens']) {
-    if (tokens && isThemeRecord(tokens)) {
-      this.tokens = tokens;
-    } else if (tokens && isDesignTokens(tokens)) {
-      this.tokens = { default: tokens };
+    if (tokens) {
+      if (isThemeRecord(tokens)) {
+        this.tokens = tokens;
+      } else if (isDesignTokens(tokens)) {
+        this.tokens = { default: tokens };
+      } else {
+        this.tokens = {};
+      }
     } else {
       this.tokens = {};
     }

@@ -2,7 +2,12 @@ import ts from 'typescript';
 import { parseCSS } from './css-parser.js';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
 import type { parse as svelteParse } from 'svelte/compiler';
-import { isRecord } from '../../utils/type-guards.js';
+import { guards, collections } from '../../utils/index.js';
+
+const {
+  data: { isRecord },
+} = guards;
+const { isArray } = collections;
 
 export async function lintSvelte(
   text: string,
@@ -71,7 +76,7 @@ export async function lintSvelte(
     return decls;
   };
   const toNodesArray = (value: unknown): unknown[] =>
-    Array.isArray(value) ? value : [];
+    isArray(value) ? value : [];
   const getNodes = (node: Record<string, unknown>): unknown[] => {
     const nodes: unknown[] = [];
     nodes.push(...toNodesArray(node.nodes));
@@ -94,7 +99,7 @@ export async function lintSvelte(
   };
   const walk = (node: unknown): void => {
     if (!isRecord(node)) return;
-    const attrs = Array.isArray(node.attributes) ? node.attributes : [];
+    const attrs = isArray(node.attributes) ? node.attributes : [];
     for (const attrRaw of attrs) {
       if (!isSvelteAttr(attrRaw)) continue;
       if (attrRaw.type === 'Attribute' && attrRaw.name === 'style') {
@@ -154,7 +159,7 @@ export async function lintSvelte(
   if (ast.css) {
     const styleText = text.slice(ast.css.content.start, ast.css.content.end);
     const langAttr =
-      isRecord(ast.css) && Array.isArray(ast.css.attributes)
+      isRecord(ast.css) && isArray(ast.css.attributes)
         ? ast.css.attributes.find(
             (a): a is { name: string; value?: { data?: string }[] } =>
               isRecord(a) && typeof a.name === 'string' && a.name === 'lang',
@@ -162,7 +167,7 @@ export async function lintSvelte(
         : undefined;
     const lang =
       langAttr &&
-      Array.isArray(langAttr.value) &&
+      isArray(langAttr.value) &&
       typeof langAttr.value[0]?.data === 'string'
         ? langAttr.value[0].data
         : undefined;
@@ -190,6 +195,6 @@ function isSvelteAttr(value: unknown): value is {
     typeof value.name === 'string' &&
     typeof value.start === 'number' &&
     typeof value.end === 'number' &&
-    Array.isArray(value.value)
+    isArray(value.value)
   );
 }

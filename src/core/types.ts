@@ -110,3 +110,18 @@ export interface Fix {
   range: [number, number];
   text: string;
 }
+
+/**
+ * Supported CSS color formats.
+ */
+export type ColorFormat =
+  | 'hex'
+  | 'rgb'
+  | 'rgba'
+  | 'hsl'
+  | 'hsla'
+  | 'hwb'
+  | 'lab'
+  | 'lch'
+  | 'color'
+  | 'named';

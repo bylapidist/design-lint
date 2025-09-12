@@ -5,7 +5,7 @@ import {
   closestToken,
   extractVarName,
   flattenDesignTokens,
-} from '../src/core/token-utils.ts';
+} from '../src/core/token-utils.js';
 
 void test('matchToken handles regexp and glob patterns and missing matches', () => {
   assert.equal(matchToken('--brand-primary', [/^--brand-/]), '--brand-primary');

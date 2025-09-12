@@ -1,7 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import writeFileAtomic from 'write-file-atomic';
-import { isRecord } from '../utils/type-guards.js';
+import { guards } from '../utils/index.js';
+
+const {
+  data: { isRecord },
+} = guards;
 
 const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
 

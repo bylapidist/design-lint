@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLinter as initLinter } from '../../src/index.ts';
-import { FileSource } from '../../src/adapters/node/file-source.ts';
-import { NodeTokenProvider } from '../../src/adapters/node/token-provider.ts';
+import { createLinter as initLinter } from '../../src/index.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
   zIndex: { $type: 'number', modal: { $value: 100 } },

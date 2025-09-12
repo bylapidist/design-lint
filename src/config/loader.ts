@@ -4,8 +4,12 @@ import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
 import { resolveConfigFile } from './file-resolution.js';
 import { loadTokens } from './token-loader.js';
-import { isRecord } from '../utils/type-guards.js';
+import { guards } from '../utils/index.js';
 import { ConfigError } from '../core/errors.js';
+
+const {
+  data: { isRecord },
+} = guards;
 
 /**
  * Resolve and load configuration for the linter.

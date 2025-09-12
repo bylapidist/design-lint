@@ -5,8 +5,8 @@ import path from 'node:path';
 import {
   detectInitFormat,
   renderConfigTemplate,
-} from '../../src/cli/init-config.ts';
-import { makeTmpDir } from '../../src/adapters/node/utils/tmp.ts';
+} from '../../src/cli/init-config.js';
+import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
 
 void test('detectInitFormat infers ts when tsconfig exists', () => {
   const dir = makeTmpDir();

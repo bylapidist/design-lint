@@ -2,8 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { loadConfig } from '../config/loader.js';
 import { getFlattenedTokens } from '../core/token-utils.js';
+import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
-import { isDesignTokens, isThemeRecord } from '../utils/type-guards.js';
+import { guards } from '../utils/index.js';
+
+const {
+  domain: { isDesignTokens, isThemeRecord },
+} = guards;
 
 interface TokensCommandOptions {
   theme?: string;
@@ -34,12 +39,9 @@ export async function exportTokens(options: TokensCommandOptions) {
   }
 }
 
-function toThemeRecord(tokens: unknown): Record<string, DesignTokens> {
-  if (isThemeRecord(tokens)) {
-    return tokens;
-  }
-  if (isDesignTokens(tokens)) {
-    return { default: tokens };
-  }
+function toThemeRecord(tokens: Config['tokens']): Record<string, DesignTokens> {
+  if (!tokens) return {};
+  if (isThemeRecord(tokens)) return tokens;
+  if (isDesignTokens(tokens)) return { default: tokens };
   return {};
 }

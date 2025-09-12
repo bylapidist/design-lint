@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLinter as initLinter } from '../../src/index.ts';
-import { FileSource } from '../../src/adapters/node/file-source.ts';
-import type { PluginLoader } from '../../src/core/plugin-loader.ts';
-import type { PluginModule, RuleModule } from '../../src/core/types.ts';
+import { createLinter as initLinter } from '../../src/index.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import type { PluginLoader } from '../../src/core/plugin-loader.js';
+import type { PluginModule, RuleModule } from '../../src/core/types.js';
 
 void test('metadata propagates through report', async () => {
   class MockLoader implements PluginLoader {

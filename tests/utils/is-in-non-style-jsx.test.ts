@@ -1,20 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import ts from 'typescript';
-import { isInNonStyleJsx } from '../../src/utils/jsx.ts';
+import {
+  createSourceFile,
+  forEachChild,
+  isStringLiteral,
+  ScriptKind,
+  ScriptTarget,
+  type Node,
+  type StringLiteral,
+} from 'typescript';
+import { guards } from '../../src/utils/index.js';
 
-function getStrings(code: string): ts.StringLiteral[] {
-  const sf = ts.createSourceFile(
+const {
+  ast: { isInNonStyleJsx },
+} = guards;
+
+function getStrings(code: string): StringLiteral[] {
+  const sf = createSourceFile(
     'x.tsx',
     code,
-    ts.ScriptTarget.Latest,
+    ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TSX,
+    ScriptKind.TSX,
   );
-  const nodes: ts.StringLiteral[] = [];
-  const walk = (node: ts.Node) => {
-    if (ts.isStringLiteral(node)) nodes.push(node);
-    ts.forEachChild(node, walk);
+  const nodes: StringLiteral[] = [];
+  const walk = (node: Node) => {
+    if (isStringLiteral(node)) nodes.push(node);
+    forEachChild(node, walk);
   };
   walk(sf);
   return nodes;

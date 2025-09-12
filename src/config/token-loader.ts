@@ -4,11 +4,12 @@ import {
   TokenParseError,
 } from '../adapters/node/token-parser.js';
 import { parseDesignTokens } from '../core/parser/index.js';
-import {
-  isDesignTokens,
-  isThemeRecord,
-  isRecord,
-} from '../utils/type-guards.js';
+import { guards } from '../utils/index.js';
+
+const {
+  domain: { isDesignTokens, isThemeRecord },
+  data: { isRecord },
+} = guards;
 
 export async function loadTokens(
   tokens: unknown,

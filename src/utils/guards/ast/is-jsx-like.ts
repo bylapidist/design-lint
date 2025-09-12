@@ -1,0 +1,31 @@
+import {
+  isJsxElement,
+  isJsxSelfClosingElement,
+  isJsxFragment,
+  type Node,
+} from 'typescript';
+
+/**
+ * Determines whether a node is any JSX-like construct.
+ *
+ * Specifically checks for:
+ * - JSX elements (`<div>...</div>`)
+ * - JSX self-closing elements (`<div />`)
+ * - JSX fragments (`<>...</>`)
+ *
+ * @example
+ * ```ts
+ * import ts from 'typescript';
+ * const node = ts.factory.createJsxSelfClosingElement(
+ *   ts.factory.createIdentifier('div'),
+ *   [],
+ *   ts.factory.createJsxAttributes([]),
+ * );
+ * isJsxLike(node); // => true
+ * ```
+ *
+ * @param n - The TypeScript AST node to check.
+ * @returns `true` if the node is JSX-like, `false` otherwise.
+ */
+export const isJsxLike = (n: Node): boolean =>
+  isJsxElement(n) || isJsxSelfClosingElement(n) || isJsxFragment(n);

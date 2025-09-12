@@ -1,6 +1,11 @@
-import { isRecord, toArray } from './utils.js';
+import { guards, collections } from '../../utils/index.js';
 import { validateColor } from './color.js';
 import { validateDimension } from './dimension.js';
+
+const {
+  data: { isRecord },
+} = guards;
+const { toArray } = collections;
 
 export function validateShadow(value: unknown, path: string): void {
   const items = toArray(value);

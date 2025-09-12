@@ -3,21 +3,21 @@ import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
-import { readWhenReady } from './helpers/fs.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
+import { readWhenReady } from './helpers/fs.js';
 import {
   createLinter as initLinter,
   FileSource,
   type Linter,
-} from '../src/index.ts';
-import type { LintResult } from '../src/core/types.ts';
+} from '../src/index.js';
+import type { LintResult } from '../src/core/types.js';
 import ignore from 'ignore';
 
 const tsxLoader = require.resolve('tsx/esm');
 const WATCH_TIMEOUT = 2000;
 
 void test('CLI aborts on unsupported Node versions', async () => {
-  const { run } = await import('../src/cli/index.ts');
+  const { run } = await import('../src/cli/index.js');
   const original = process.versions.node;
   Object.defineProperty(process.versions, 'node', { value: '21.0.0' });
   const originalError = console.error;
@@ -35,8 +35,8 @@ void test('CLI aborts on unsupported Node versions', async () => {
 });
 
 void test('CLI passes targets to environment factory', async () => {
-  const { run } = await import('../src/cli/index.ts');
-  const envMod = await import('../src/cli/env.ts');
+  const { run } = await import('../src/cli/index.js');
+  const envMod = await import('../src/cli/env.js');
   const mock = test.mock.method(envMod, 'prepareEnvironment', () =>
     Promise.resolve({
       formatter: () => '',

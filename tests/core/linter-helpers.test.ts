@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createLinter as initLinter } from '../../src/index.ts';
-import type { Environment } from '../../src/core/environment.ts';
-import type { RuleModule, LintMessage } from '../../src/core/types.ts';
-import type { Linter } from '../../src/core/linter.ts';
-import { parserRegistry } from '../../src/core/parser-registry.ts';
+import { createLinter as initLinter } from '../../src/index.js';
+import type { Environment } from '../../src/core/environment.js';
+import type { RuleModule, LintMessage } from '../../src/core/types.js';
+import type { Linter } from '../../src/core/linter.js';
+import { parserRegistry } from '../../src/core/parser-registry.js';
 
 const env: Environment = {
   documentSource: {

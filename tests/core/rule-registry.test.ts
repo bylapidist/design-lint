@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RuleRegistry } from '../../src/core/rule-registry.ts';
-import type { Config } from '../../src/core/linter.ts';
-import { ConfigError } from '../../src/core/errors.ts';
+import { RuleRegistry } from '../../src/core/rule-registry.js';
+import type { Config } from '../../src/core/linter.js';
+import { ConfigError } from '../../src/core/errors.js';
 
 void test('RuleRegistry enables configured rules', async () => {
   const config: Config = {

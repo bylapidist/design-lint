@@ -1,5 +1,10 @@
-import { isRecord } from './utils.js';
+import { guards, collections } from '../../utils/index.js';
 import { validateDimension } from './dimension.js';
+
+const {
+  data: { isRecord },
+} = guards;
+const { isArray } = collections;
 
 const STROKE_STYLE_KEYWORDS = new Set([
   'solid',
@@ -27,7 +32,7 @@ export function validateStrokeStyle(value: unknown, path: string): void {
         throw new Error(`Token ${path} has invalid strokeStyle value`);
       }
     }
-    if (!Array.isArray(value.dashArray) || value.dashArray.length === 0) {
+    if (!isArray(value.dashArray) || value.dashArray.length === 0) {
       throw new Error(`Token ${path} has invalid strokeStyle value`);
     }
     for (let i = 0; i < value.dashArray.length; i++) {

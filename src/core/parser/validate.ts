@@ -1,6 +1,10 @@
 import type { Token, FlattenedToken } from '../types.js';
 import { validatorRegistry } from '../token-validators/index.js';
-import { isRecord } from '../../utils/type-guards.js';
+import { guards } from '../../utils/index.js';
+
+const {
+  data: { isRecord },
+} = guards;
 
 function validateExtensions(value: unknown, path: string): void {
   if (value === undefined) return;

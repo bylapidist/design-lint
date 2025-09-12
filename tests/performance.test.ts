@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { makeTmpDir } from '../src/adapters/node/utils/tmp.ts';
+import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import path from 'node:path';
-import { loadConfig } from '../src/config/loader.ts';
-import { createLinter as initLinter } from '../src/index.ts';
-import { FileSource } from '../src/adapters/node/file-source.ts';
+import { loadConfig } from '../src/config/loader.js';
+import { createLinter as initLinter } from '../src/index.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
 
 void test('lints large projects without crashing', async () => {
   const dir = path.join(__dirname, 'fixtures', 'large-project');

@@ -1,4 +1,6 @@
-import { tokenRule } from './utils/token-rule.js';
+import { rules } from '../utils/index.js';
+
+const { tokenRule } = rules;
 
 export const fontFamilyRule = tokenRule({
   name: 'design-token/font-family',
