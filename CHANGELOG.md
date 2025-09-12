@@ -1,5 +1,70 @@
 # @lapidist/design-lint
 
+## 5.3.0
+
+### Minor Changes
+
+- 6a0460b: extract token setup and scanning into dedicated factory and service
+- 6a12102: add plugin init hook and metadata support
+- 975590c: add option schema validation for rules
+
+### Patch Changes
+
+- d0cd02c: refactor: add isObject helper and reuse type guards
+- 5f612aa: fix compiled imports to include .js extensions so CLI runs in Node
+- 21f2d09: feat: make ConfigTokenProvider async and expand config utility tests
+- 9c37118: auto-generate built-in rule list from rule modules
+- 5f612aa: avoid writing files during tests
+- c955e3a: expose builtInFormatterNames alongside built-in formatter utilities
+- 242f688: refactor: centralize isRecord type guard
+- 307fb66: refactor: centralize isRuleModule helper
+- 676e8c8: refactor ast guard implementations and expand tests to achieve full utility coverage
+- c955e3a: refactor built-in formatter map and document formatter entry usage
+- 21f2d09: deduplicate token parsing in config normalizer and expand tests
+- 5f612aa: document utility barrels with package-level JSDoc and add usage examples
+- 5f612aa: export color-format helpers from utils index and move ColorFormat type to core
+- 21f2d09: extract config search places constant for reuse
+- 21f2d09: refactor token guards into shared utilities and update schema usage
+- dd4414e: export file type mappings and glob patterns from dedicated module
+- c955e3a: add module-level documentation to formatter implementations
+- 5f612aa: organize guard utilities by domain-specific barrels and update imports
+- c955e3a: refactor formatter helpers into dedicated module and align tests with utils structure
+- 6a12102: ensure plugin init runs before token loading
+- 5f612aa: move array utilities into collections folder
+- 21f2d09: refactor: move token normalization helper to shared utils tokens namespace
+- 5f612aa: move rule utilities into shared utils with tests
+- 21f2d09: refactor: move token helpers to shared utils and expand tests
+- 5f612aa: refactor token validator helpers into shared utils
+- 5f612aa: refactor util imports to use namespaced `utils` barrel
+- dd0019f: reuse shared isRecord utility in node plugin loader
+- 21f2d09: refactor token utilities to deduplicate normalization logic
+- 21f2d09: refactor config utilities with comprehensive documentation and test coverage
+- 5f612aa: refactor utils into categorized barrels and update imports
+- 21f2d09: fix loadTokens to retain inline token metadata
+- 5f612aa: refactor style util to reuse helpers
+- 21f2d09: refine ConfigTokenProvider loading and export defineConfig as a function
+- 21f2d09: refine token utilities with explicit typing and documentation examples
+- 5f612aa: refine utility guards with explicit return types and document barrel modules
+- 2373389: refactor svelte parser to use official compiler types
+- 5f612aa: use bundler module resolution and drop .js extensions from imports
+- b23c171: restore Linter constructor overload for backward compatibility
+- 288b9b6: refactor formatters into structured modules with comprehensive tests
+- bd4c147: refactor color format utilities into shared module
+- 601dacc: refactor token tracker to use shared unit helper
+- 21f2d09: document token error helper example and sort config exports
+- 5f612aa: split jsx utilities into separate modules and add tests
+- 5f612aa: refactor type guards into separate modules and add tests
+- 5f612aa: refactor(utils): remove redundant color exports and document tokenRule generics
+
+  Improve JSDoc coverage for AST guard helpers with usage examples.
+
+  Clarify color format detection internals and annotate complex rule utilities with inline comments.
+
+- 5f612aa: refine array helpers and replace scattered `Array.isArray` checks with typed `isArray`
+- 4a4de7c: fix Svelte parser to traverse fragments inside control-flow blocks
+- 21f2d09: tighten token parsing helper and expand schema coverage
+- 21f2d09: deduplicate token error handling with `wrapTokenError` helper
+
 ## 5.2.0
 
 ### Minor Changes
