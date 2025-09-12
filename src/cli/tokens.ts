@@ -35,17 +35,18 @@ export async function exportTokens(
   const config = await loadConfig(process.cwd(), options.config);
   const tokensByTheme = toThemeRecord(config.tokens);
   const themes = options.theme ? [options.theme] : Object.keys(tokensByTheme);
-  const output: Record<string, Record<string, unknown>> = Object.create(null);
+  const output: Record<string, Record<string, unknown>> = {};
 
   for (const theme of themes) {
     const flat = getFlattenedTokens(tokensByTheme, theme, {
       nameTransform: config.nameTransform,
       onWarn,
     });
-    output[theme] = Object.create(null);
+    output[theme] = {};
     for (const { path: p, value, type, aliases, metadata } of flat) {
       // Prevent prototype pollution from malicious keys
-      if (p === '__proto__' || p === 'constructor' || p === 'prototype') continue;
+      if (p === '__proto__' || p === 'constructor' || p === 'prototype')
+        continue;
       output[theme][p] = {
         value,
         type,

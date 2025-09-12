@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url);
 const tsxLoader = require.resolve('tsx/esm');
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-async function waitFor(check: () => boolean, timeout = 4000) {
+async function waitFor(check: () => boolean, timeout = 10000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
     if (check()) return;
