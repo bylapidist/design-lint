@@ -24,5 +24,5 @@ export * from './file-resolution.js';
 export * from './loader.js';
 export * from './normalize-tokens.js';
 export * from './schema.js';
-export * from './token-errors.js';
 export * from './token-loader.js';
+export { wrapTokenError } from '../utils/tokens/index.js';

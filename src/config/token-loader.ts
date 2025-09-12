@@ -9,14 +9,14 @@ import {
   TokenParseError,
 } from '../adapters/node/token-parser.js';
 import type { DesignTokens } from '../core/types.js';
-import { guards } from '../utils/index.js';
+import { guards, tokens } from '../utils/index.js';
 import { normalizeTokens } from './normalize-tokens.js';
-import { wrapTokenError } from './token-errors.js';
 
 const {
   data: { isRecord },
   domain: { isDesignTokens, isThemeRecord },
 } = guards;
+const { wrapTokenError } = tokens;
 
 /**
  * Load and validate design tokens defined in configuration.

@@ -11,6 +11,7 @@ void test('utils expose grouped namespaces', () => {
     'color',
     'guards',
     'rules',
+    'tokens',
   ]);
 });
 
@@ -21,4 +22,6 @@ void test('namespace members are accessible', () => {
   assert.equal(utils.color.namedColors instanceof Set, true);
   assert.equal(typeof utils.guards.ast.isJsxLike, 'function');
   assert.equal(typeof utils.rules.tokenRule, 'function');
+  assert.equal(typeof utils.tokens.wrapTokenError, 'function');
+  assert.equal(typeof utils.tokens.parseTokensForTheme, 'function');
 });

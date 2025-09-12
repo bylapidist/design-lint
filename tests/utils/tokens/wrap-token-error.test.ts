@@ -3,7 +3,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { wrapTokenError } from '../../src/config/token-errors.js';
+import { wrapTokenError } from '../../../src/utils/tokens/wrap-token-error.js';
 
 void test('formats message and preserves cause', () => {
   const cause = new Error('boom');
