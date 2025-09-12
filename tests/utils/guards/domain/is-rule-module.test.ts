@@ -1,6 +1,9 @@
+/**
+ * Unit tests for {@link isRuleModule} domain guard.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { guards } from '../../src/utils/index.js';
+import { guards } from '../../../../src/utils/index.js';
 
 const {
   domain: { isRuleModule },
@@ -24,4 +27,15 @@ void test('isRuleModule respects options', () => {
   );
   assert.equal(isRuleModule(valid, { requireMeta: true }), false);
   assert.equal(isRuleModule(withMeta, { requireMeta: true }), true);
+  assert.equal(
+    isRuleModule({ ...valid, meta: {} }, { requireMeta: true }),
+    false,
+  );
+  assert.equal(
+    isRuleModule(
+      { ...valid, meta: { description: '' } },
+      { requireMeta: true },
+    ),
+    false,
+  );
 });

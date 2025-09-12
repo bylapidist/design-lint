@@ -1,6 +1,9 @@
+/**
+ * Unit tests for {@link isDesignTokens} domain guard.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { guards } from '../../src/utils/index.js';
+import { guards } from '../../../../src/utils/index.js';
 
 const {
   domain: { isDesignTokens },

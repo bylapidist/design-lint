@@ -1,6 +1,9 @@
+/**
+ * Unit tests for {@link isThemeRecord} domain guard.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { guards } from '../../src/utils/index.js';
+import { guards } from '../../../../src/utils/index.js';
 
 const {
   domain: { isThemeRecord },
@@ -38,4 +41,13 @@ void test('isThemeRecord rejects invalid structures', () => {
     dark: { size: { $value: '1rem' } },
   };
   assert.equal(isThemeRecord(noShared), false);
+});
+
+void test('isThemeRecord rejects non-record themes', () => {
+  assert.equal(isThemeRecord({ light: 'foo' }), false);
+  const invalid = {
+    light: { color: { $value: '#fff' } },
+    dark: 'bar',
+  };
+  assert.equal(isThemeRecord(invalid), false);
 });
