@@ -46,3 +46,15 @@ void test('validateColor rejects non-6-digit hex fallback', () => {
     validateColor(value, 'test');
   });
 });
+
+void test('validateColor accepts hex string values', () => {
+  assert.doesNotThrow(() => {
+    validateColor('#000', 'test');
+  });
+});
+
+void test('validateColor rejects invalid color strings', () => {
+  assert.throws(() => {
+    validateColor('not-a-color', 'test');
+  });
+});

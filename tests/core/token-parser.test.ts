@@ -35,6 +35,15 @@ void test('parseDesignTokens flattens tokens with paths in declaration order', (
   );
 });
 
+void test('parseDesignTokens accepts hex string color tokens', () => {
+  const tokens: DesignTokens = {
+    color: { $type: 'color', black: { $value: '#000' } },
+  };
+  assert.doesNotThrow(() => {
+    parseDesignTokens(tokens);
+  });
+});
+
 void test('parseDesignTokens warns on duplicate names differing only by case', () => {
   const tokens = {
     color: {

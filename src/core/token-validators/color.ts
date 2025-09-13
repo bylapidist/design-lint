@@ -1,4 +1,5 @@
 import { isObject } from '../../utils/guards/index.js';
+import { parse } from 'culori';
 
 /** Mapping of Design Tokens color space identifiers to culori mode names and
  * their expected component keys and ranges. */
@@ -141,6 +142,13 @@ export function validateColor(
   value: unknown,
   path: string,
 ): asserts value is ColorValue {
+  if (typeof value === 'string') {
+    const parsed = parse(value);
+    if (!parsed) {
+      throw new Error(`Token ${path} has invalid color value`);
+    }
+    return;
+  }
   if (!isObject(value)) {
     throw new Error(`Token ${path} has invalid color value`);
   }
