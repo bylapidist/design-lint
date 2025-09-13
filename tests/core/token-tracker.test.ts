@@ -95,8 +95,8 @@ void test('numeric classifier matches number tokens', async () => {
 void test('string classifier matches plain string tokens', async () => {
   const tokens: DesignTokens = {
     color: {
-      used: { $value: 'red', $type: 'color' },
-      unused: { $value: 'blue', $type: 'color' },
+      used: { $value: '#ff0000', $type: 'color' },
+      unused: { $value: '#0000ff', $type: 'color' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -107,10 +107,10 @@ void test('string classifier matches plain string tokens', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: red;');
+  await tracker.trackUsage('color: #ff0000;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('blue'), true);
+  assert.equal(reports[0].messages[0].message.includes('#0000ff'), true);
 });
 
 void test('TokenTracker resolves alias tokens when tracking usage', async () => {

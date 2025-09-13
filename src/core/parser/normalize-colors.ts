@@ -51,6 +51,22 @@ export function normalizeColorValues(
   for (const token of tokens) {
     if (token.type !== 'color') continue;
     validateColor(token.value, token.path);
+    if (typeof token.value === 'string') {
+      const parsed = parse(token.value);
+      switch (space) {
+        case 'hsl':
+          token.value = formatHsl(parsed);
+          break;
+        case 'hex':
+          token.value = formatHex(parsed);
+          break;
+        case 'rgb':
+        default:
+          token.value = formatRgb(parsed);
+          break;
+      }
+      continue;
+    }
     const { colorSpace, components, alpha } = token.value;
     const parsed = parse(buildColorString(colorSpace, components, alpha));
     switch (space) {
