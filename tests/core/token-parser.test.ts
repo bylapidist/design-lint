@@ -210,6 +210,56 @@ void test('parseDesignTokens rejects legacy shorthand token values', () => {
   );
 });
 
+void test('parseDesignTokens accepts hsl color space tokens', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      hsl: {
+        $value: { colorSpace: 'hsl', components: [120, 100, 50] },
+      },
+    },
+  };
+  const result = parseDesignTokens(tokens);
+  assert.equal(result[0].path, 'color.hsl');
+});
+
+void test('parseDesignTokens accepts hwb color space tokens', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      hwb: {
+        $value: { colorSpace: 'hwb', components: [60, 0, 0] },
+      },
+    },
+  };
+  const result = parseDesignTokens(tokens);
+  assert.equal(result[0].path, 'color.hwb');
+});
+
+void test('parseDesignTokens rejects out-of-range hsl components', () => {
+  const tokens = {
+    color: {
+      $type: 'color',
+      bad: {
+        $value: { colorSpace: 'hsl', components: [360, 101, -1] },
+      },
+    },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
+});
+
+void test('parseDesignTokens rejects out-of-range hwb components', () => {
+  const tokens = {
+    color: {
+      $type: 'color',
+      bad: {
+        $value: { colorSpace: 'hwb', components: [361, -1, 101] },
+      },
+    },
+  } as unknown as DesignTokens;
+  assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
+});
+
 void test('parseDesignTokens rejects tokens with mismatched $type and value', () => {
   const tokens = {
     color: { $type: 'color', bad: { $value: 123 as unknown as string } },
@@ -902,10 +952,28 @@ void test('parseDesignTokens rejects malformed color values', () => {
 
 void test('parseDesignTokens normalizes colors to rgb when configured', () => {
   const tokens: DesignTokens = {
-    color: { $type: 'color', green: { $value: 'hsl(120, 100%, 50%)' } },
+    color: {
+      $type: 'color',
+      green: {
+        $value: { colorSpace: 'hsl', components: [120, 100, 50] },
+      },
+    },
   };
   const result = parseDesignTokens(tokens, undefined, { colorSpace: 'rgb' });
   assert.equal(result[0].value, 'rgb(0, 255, 0)');
+});
+
+void test('parseDesignTokens normalizes hwb colors to hex when configured', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      green: {
+        $value: { colorSpace: 'hwb', components: [120, 0, 0] },
+      },
+    },
+  };
+  const result = parseDesignTokens(tokens, undefined, { colorSpace: 'hex' });
+  assert.equal(result[0].value, '#00ff00');
 });
 
 void test('parseDesignTokens applies custom transforms', () => {

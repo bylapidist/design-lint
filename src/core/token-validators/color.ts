@@ -1,35 +1,138 @@
-import { parse } from 'culori';
 import { isObject } from '../../utils/guards/index.js';
 
 /** Mapping of Design Tokens color space identifiers to culori mode names and
- * their expected component keys. */
+ * their expected component keys and ranges. */
 export const COLOR_SPACE_CONFIG: Record<
   string,
-  { mode: string; components: Record<string, string> }
+  {
+    mode: string;
+    components: string[];
+    ranges?: [number, number, boolean?][];
+  }
 > = {
-  srgb: { mode: 'srgb', components: { red: 'r', green: 'g', blue: 'b' } },
+  srgb: {
+    mode: 'srgb',
+    components: ['r', 'g', 'b'],
+    ranges: [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+    ],
+  },
   'srgb-linear': {
     mode: 'srgb-linear',
-    components: { red: 'r', green: 'g', blue: 'b' },
+    components: ['r', 'g', 'b'],
+    ranges: [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+    ],
   },
-  'display-p3': { mode: 'p3', components: { red: 'r', green: 'g', blue: 'b' } },
-  'a98-rgb': { mode: 'a98', components: { red: 'r', green: 'g', blue: 'b' } },
+  'display-p3': {
+    mode: 'p3',
+    components: ['r', 'g', 'b'],
+    ranges: [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+    ],
+  },
+  'a98-rgb': {
+    mode: 'a98',
+    components: ['r', 'g', 'b'],
+    ranges: [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+    ],
+  },
   'prophoto-rgb': {
     mode: 'prophoto',
-    components: { red: 'r', green: 'g', blue: 'b' },
+    components: ['r', 'g', 'b'],
+    ranges: [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+    ],
   },
-  rec2020: { mode: 'rec2020', components: { red: 'r', green: 'g', blue: 'b' } },
-  lab: { mode: 'lab', components: { l: 'l', a: 'a', b: 'b' } },
-  lch: { mode: 'lch', components: { l: 'l', c: 'c', h: 'h' } },
-  oklab: { mode: 'oklab', components: { l: 'l', a: 'a', b: 'b' } },
-  oklch: { mode: 'oklch', components: { l: 'l', c: 'c', h: 'h' } },
-  'xyz-d50': { mode: 'xyz50', components: { x: 'x', y: 'y', z: 'z' } },
-  'xyz-d65': { mode: 'xyz65', components: { x: 'x', y: 'y', z: 'z' } },
+  rec2020: {
+    mode: 'rec2020',
+    components: ['r', 'g', 'b'],
+    ranges: [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+    ],
+  },
+  hsl: {
+    mode: 'hsl',
+    components: ['h', 's', 'l'],
+    ranges: [
+      [0, 360, true],
+      [0, 100],
+      [0, 100],
+    ],
+  },
+  hwb: {
+    mode: 'hwb',
+    components: ['h', 'w', 'b'],
+    ranges: [
+      [0, 360, true],
+      [0, 100],
+      [0, 100],
+    ],
+  },
+  lab: {
+    mode: 'lab',
+    components: ['l', 'a', 'b'],
+    ranges: [[0, 100]],
+  },
+  lch: {
+    mode: 'lch',
+    components: ['l', 'c', 'h'],
+    ranges: [
+      [0, 100],
+      [0, Infinity],
+      [0, 360, true],
+    ],
+  },
+  oklab: {
+    mode: 'oklab',
+    components: ['l', 'a', 'b'],
+    ranges: [[0, 1]],
+  },
+  oklch: {
+    mode: 'oklch',
+    components: ['l', 'c', 'h'],
+    ranges: [
+      [0, 1],
+      [0, Infinity],
+      [0, 360, true],
+    ],
+  },
+  'xyz-d50': {
+    mode: 'xyz50',
+    components: ['x', 'y', 'z'],
+    ranges: [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+    ],
+  },
+  'xyz-d65': {
+    mode: 'xyz65',
+    components: ['x', 'y', 'z'],
+    ranges: [
+      [0, 1],
+      [0, 1],
+      [0, 1],
+    ],
+  },
 };
 
 export interface ColorValue {
   colorSpace: keyof typeof COLOR_SPACE_CONFIG;
-  components: Record<string, number>;
+  components: (number | 'none')[];
   alpha?: number;
   hex?: string;
 }
@@ -37,12 +140,7 @@ export interface ColorValue {
 export function validateColor(
   value: unknown,
   path: string,
-): asserts value is ColorValue | string {
-  if (typeof value === 'string') {
-    const parsed = parse(value);
-    if (parsed && (parsed.mode === 'rgb' || parsed.mode === 'hsl')) return;
-    throw new Error(`Token ${path} has invalid color value`);
-  }
+): asserts value is ColorValue {
   if (!isObject(value)) {
     throw new Error(`Token ${path} has invalid color value`);
   }
@@ -50,25 +148,49 @@ export function validateColor(
   if (typeof colorSpace !== 'string') {
     throw new Error(`Token ${path} has invalid color value`);
   }
-  const components = value.components;
+  const comp = value.components;
   const alpha = value.alpha;
   const hex = value.hex;
-  const cfg = COLOR_SPACE_CONFIG[colorSpace];
-  if (!isObject(components)) {
+  if (!(colorSpace in COLOR_SPACE_CONFIG) || !Array.isArray(comp)) {
     throw new Error(`Token ${path} has invalid color value`);
   }
-  const specKeys = Object.keys(cfg.components);
-  const compKeys = Object.keys(components);
+  const components: unknown[] = comp;
+  const cfg = COLOR_SPACE_CONFIG[colorSpace];
   if (
-    compKeys.length !== specKeys.length ||
-    !specKeys.every((k) => typeof components[k] === 'number')
+    components.length !== cfg.components.length ||
+    !components.every(
+      (c): c is number | 'none' =>
+        (typeof c === 'number' && Number.isFinite(c)) || c === 'none',
+    )
   ) {
     throw new Error(`Token ${path} has invalid color value`);
   }
-  if (alpha !== undefined && typeof alpha !== 'number') {
+  if (cfg.ranges) {
+    cfg.ranges.forEach(([min, max, maxExclusive], i) => {
+      const c = components[i];
+      if (c === 'none') return;
+      if (
+        typeof c !== 'number' ||
+        c < min ||
+        (maxExclusive ? c >= max : c > max)
+      ) {
+        throw new Error(`Token ${path} has invalid color value`);
+      }
+    });
+  }
+  if (
+    alpha !== undefined &&
+    (typeof alpha !== 'number' ||
+      !Number.isFinite(alpha) ||
+      alpha < 0 ||
+      alpha > 1)
+  ) {
     throw new Error(`Token ${path} has invalid color value`);
   }
-  if (hex !== undefined && typeof hex !== 'string') {
+  if (
+    hex !== undefined &&
+    (typeof hex !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(hex))
+  ) {
     throw new Error(`Token ${path} has invalid color value`);
   }
 }
