@@ -1,5 +1,35 @@
 # @lapidist/design-lint
 
+## 5.5.0
+
+### Minor Changes
+
+- 56b6e65: feat: add validate command to verify config and tokens
+
+### Patch Changes
+
+- 054e4ce: add border and transition validators; the spec says, "Represents a border style. The `$type` property MUST be set to the string `border`." and "Represents a animated transition between two states. The `$type` property MUST be set to the string `transition`."
+- 054e4ce: add hsl and hwb color space validation
+- 054e4ce: allow arbitrary $extensions keys; the spec says, "The keys SHOULD be chosen such that they avoid the likelihood of a naming clash. For example, the reverse domain name notation is recommended."
+- 054e4ce: allow empty dashArray in strokeStyle tokens
+- 054e4ce: support hex string color tokens alongside object format
+- 054e4ce: clamp gradient stop positions to the [0, 1] range
+- 054e4ce: remove non-spec $metadata property; the spec says, "The properties `$description`, `$extensions`, `$deprecated`, `$type`, and `$schema` are reserved for use by this specification."
+- 054e4ce: validate color component ranges, alpha bounds, and hex format
+- 054e4ce: fail when token aliases cannot be resolved
+- 054e4ce: require `letterSpacing` in typography tokens; the spec says, "The value MUST be an object with the following properties: `fontFamily`, `fontSize`, `fontWeight`, `letterSpacing`, `lineHeight`."
+- 054e4ce: require shadow tokens to specify spread
+- 054e4ce: reject slash-separated alias paths; the spec says, "For a design token to reference another, its value MUST be a string containing the period-separated (`.`) path to the token it's referencing enclosed in curly brackets."
+- 054e4ce: fix color normalization to use proper syntax for non-srgb color spaces
+- 054e4ce: reject non-finite numbers in numeric token validators
+- 054e4ce: allow cubicBezier y-coordinates outside 0-1 range
+- 054e4ce: remove non-spec `aliasOf` property
+- 054e4ce: require gradient tokens to define at least two stops
+- 054e4ce: require $type unless value is a pure alias
+- 054e4ce: support spec-compliant color object values
+- 054e4ce: validate `$description` to ensure it is a string; the spec says, "The value of the `$description` property MUST be a plain JSON string."
+- 054e4ce: warn when token names differ only by case; the spec says, "Token names are case-sensitive. Tools MAY display a warning when token names differ only by case."
+
 ## 5.4.0
 
 ### Minor Changes
