@@ -9,6 +9,8 @@ import { validateCubicBezier } from './cubicBezier.js';
 import { validateShadow } from './shadow.js';
 import { validateStrokeStyle } from './strokeStyle.js';
 import { validateGradient } from './gradient.js';
+import { validateBorder } from './border.js';
+import { validateTransition } from './transition.js';
 import { validateTypography } from './typography.js';
 
 export type TokenValidator = (
@@ -27,7 +29,9 @@ export const validatorRegistry = new Map<string, TokenValidator>([
   ['cubicBezier', validateCubicBezier],
   ['shadow', validateShadow],
   ['strokeStyle', validateStrokeStyle],
+  ['border', validateBorder],
   ['gradient', validateGradient],
+  ['transition', validateTransition],
   ['typography', validateTypography],
 ]);
 

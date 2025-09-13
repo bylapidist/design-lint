@@ -44,14 +44,3 @@ void test('accepts theme records with tokens at the root', async () => {
   const result = await provider.load();
   assert.deepEqual(result, themes);
 });
-
-void test('accepts theme records with primitive metadata fields', async () => {
-  const themesWithMetadata = {
-    light: tokens,
-    dark: tokens,
-    $metadata: { tokenSetOrder: ['light', 'dark'], version: 1 },
-  };
-  const provider = new NodeTokenProvider(themesWithMetadata);
-  const result = await provider.load();
-  assert.deepEqual(result, themesWithMetadata);
-});

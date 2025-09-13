@@ -66,7 +66,7 @@ void test('validate command fails on invalid tokens', () => {
   assert.match(res.stderr, /unknown \$type/i);
 });
 
-void test('validate command emits warnings without failing', () => {
+void test('validate command fails on unresolved aliases', () => {
   const dir = makeTmpDir();
   const tokensPath = path.join(dir, 'tokens.tokens.json');
   fs.writeFileSync(
@@ -95,6 +95,6 @@ void test('validate command emits warnings without failing', () => {
     ],
     { cwd: dir, encoding: 'utf8' },
   );
-  assert.equal(res.status, 0);
+  assert.notEqual(res.status, 0);
   assert.match(res.stderr, /circular alias reference/i);
 });

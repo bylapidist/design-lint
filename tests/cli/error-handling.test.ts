@@ -27,7 +27,7 @@ void test('reports config errors and sets exit code', () => {
   assert.match(res.stderr, /Invalid config/);
 });
 
-void test('deduplicates token warnings', () => {
+void test('fails on unresolved aliases', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'designlint-'));
   fs.writeFileSync(
     path.join(dir, 'tokens.tokens.json'),
@@ -60,8 +60,6 @@ void test('deduplicates token warnings', () => {
     ],
     { cwd: dir, encoding: 'utf8' },
   );
-  assert.equal(res.status, 0);
-  const warnings = res.stderr.split('\n').filter(Boolean);
-  assert.ok(warnings.length > 0);
-  assert.match(warnings[0], /references unknown token/i);
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /references unknown token/i);
 });

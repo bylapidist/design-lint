@@ -5,7 +5,6 @@ import type { Environment } from './environment.js';
 export interface VariableDefinition {
   id: string;
   modes?: Record<string, string | number>;
-  aliasOf?: string;
 }
 
 /**
@@ -17,7 +16,6 @@ export interface Token {
   $description?: string;
   $extensions?: Record<string, unknown>;
   $deprecated?: boolean | string;
-  aliasOf?: string[];
 }
 
 /**

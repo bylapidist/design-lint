@@ -7,7 +7,7 @@ const {
 } = guards;
 
 export function validateGradient(value: unknown, path: string): void {
-  if (!isArray(value) || value.length === 0) {
+  if (!isArray(value) || value.length < 2) {
     throw new Error(`Token ${path} has invalid gradient value`);
   }
   for (let i = 0; i < value.length; i++) {
@@ -23,8 +23,13 @@ export function validateGradient(value: unknown, path: string): void {
     }
     validateColor(stop.color, `${path}[${String(i)}].color`);
     const pos = stop.position;
-    if (typeof pos !== 'number') {
+    if (typeof pos !== 'number' || !Number.isFinite(pos)) {
       throw new Error(`Token ${path} has invalid gradient value`);
+    }
+    if (pos < 0) {
+      stop.position = 0;
+    } else if (pos > 1) {
+      stop.position = 1;
     }
   }
 }

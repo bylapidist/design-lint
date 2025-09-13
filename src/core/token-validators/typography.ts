@@ -16,6 +16,7 @@ export function validateTypography(value: unknown, path: string): void {
     'fontFamily',
     'fontSize',
     'fontWeight',
+    'letterSpacing',
     'lineHeight',
   ]);
   for (const key of Object.keys(value)) {
@@ -23,11 +24,12 @@ export function validateTypography(value: unknown, path: string): void {
       throw new Error(`Token ${path} has invalid typography value`);
     }
   }
-  const { fontFamily, fontSize, fontWeight, lineHeight } = value;
+  const { fontFamily, fontSize, fontWeight, letterSpacing, lineHeight } = value;
   if (
     fontFamily === undefined ||
     fontSize === undefined ||
     fontWeight === undefined ||
+    letterSpacing === undefined ||
     lineHeight === undefined
   ) {
     throw new Error(`Token ${path} has invalid typography value`);
@@ -35,5 +37,6 @@ export function validateTypography(value: unknown, path: string): void {
   validateFontFamily(fontFamily, `${path}.fontFamily`);
   validateDimension(fontSize, `${path}.fontSize`);
   validateFontWeight(fontWeight, `${path}.fontWeight`);
+  validateDimension(letterSpacing, `${path}.letterSpacing`);
   validateNumber(lineHeight, `${path}.lineHeight`);
 }

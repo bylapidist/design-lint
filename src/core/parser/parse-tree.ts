@@ -25,19 +25,22 @@ const GROUP_PROPS = new Set([
   '$extensions',
   '$deprecated',
   '$schema',
-  '$metadata',
 ]);
 const INVALID_NAME_CHARS = /[{}\.]/;
 
-function validateExtensions(value: unknown, path: string): void {
+function validateExtensions(
+  value: unknown,
+  path: string,
+  onWarn?: (msg: string) => void,
+): void {
   if (value === undefined) return;
   if (!isRecord(value)) {
     throw new Error(`Token or group ${path} has invalid $extensions`);
   }
   for (const key of Object.keys(value)) {
-    if (!key.includes('.')) {
-      throw new Error(
-        `Token or group ${path} has invalid $extensions key: ${key}`,
+    if (!key.includes('.') && onWarn) {
+      onWarn(
+        `Token or group ${path} has $extensions key without a dot: ${key}`,
       );
     }
   }
@@ -50,21 +53,37 @@ function validateDeprecated(value: unknown, path: string): void {
   }
 }
 
+// The spec says, "The value of the `$description` property MUST be a plain JSON string."
+function validateDescription(value: unknown, path: string): void {
+  if (value === undefined) return;
+  if (typeof value !== 'string') {
+    throw new Error(`Token or group ${path} has invalid $description`);
+  }
+}
+
 function validateMetadata(
-  node: { $extensions?: unknown; $deprecated?: unknown },
+  node: {
+    $extensions?: unknown;
+    $deprecated?: unknown;
+    $description?: unknown;
+  },
   path: string,
+  onWarn?: (msg: string) => void,
 ): void {
-  validateExtensions(node.$extensions, path);
+  validateExtensions(node.$extensions, path, onWarn);
   validateDeprecated(node.$deprecated, path);
+  validateDescription(node.$description, path);
 }
 
 export function buildParseTree(
   tokens: DesignTokens,
   getLoc?: (path: string) => { line: number; column: number },
+  onWarn?: (msg: string) => void,
 ): FlattenedToken[] {
   tokenLocations.clear();
   const result: FlattenedToken[] = [];
-  const seenPaths = new Map<string, string>();
+  const seenExactPaths = new Set<string>();
+  const seenCaseInsensitivePaths = new Map<string, string>();
 
   function walk(
     group: TokenGroup,
@@ -73,7 +92,7 @@ export function buildParseTree(
     inheritedDeprecated?: boolean | string,
   ): void {
     const pathLabel = prefix.length ? prefix.join('.') : '(root)';
-    validateMetadata(group, pathLabel);
+    validateMetadata(group, pathLabel, onWarn);
     if (prefix.length === 0) {
       if (
         '$schema' in group &&
@@ -86,7 +105,9 @@ export function buildParseTree(
     }
     const currentType = group.$type ?? inheritedType;
     const currentDeprecated = group.$deprecated ?? inheritedDeprecated;
-    const seenNames = new Map<string, string>();
+    const seenExactNames = new Set<string>();
+    const seenCaseInsensitiveNames = new Map<string, string>();
+    // The spec states, "Token names are case-sensitive. Tools MAY display a warning when token names differ only by case."
 
     for (const name of Object.keys(group)) {
       if (GROUP_PROPS.has(name)) continue;
@@ -96,37 +117,42 @@ export function buildParseTree(
       if (INVALID_NAME_CHARS.test(name)) {
         throw new Error(`Invalid token or group name: ${name}`);
       }
+      if (seenExactNames.has(name)) {
+        throw new Error(`Duplicate token name: ${name}`);
+      }
       const lower = name.toLowerCase();
-      const existing = seenNames.get(lower);
-      if (existing) {
-        if (existing === name) {
-          throw new Error(`Duplicate token name: ${name}`);
-        }
-        throw new Error(
+      const existing = seenCaseInsensitiveNames.get(lower);
+      if (existing && existing !== name && onWarn) {
+        onWarn(
           `Duplicate token name differing only by case: ${existing} vs ${name}`,
         );
+      } else if (!existing) {
+        seenCaseInsensitiveNames.set(lower, name);
       }
-      seenNames.set(lower, name);
+      seenExactNames.add(name);
 
       const node = group[name];
       if (node === undefined) continue;
       const pathParts = [...prefix, name];
       const pathId = pathParts.join('.');
+      if (seenExactPaths.has(pathId)) {
+        throw new Error(`Duplicate token path: ${pathId}`);
+      }
       const lowerPath = pathId.toLowerCase();
-      const existingPath = seenPaths.get(lowerPath);
-      if (existingPath) {
-        if (existingPath === pathId) {
-          throw new Error(`Duplicate token path: ${pathId}`);
-        }
-        throw new Error(
+      const existingPath = seenCaseInsensitivePaths.get(lowerPath);
+      if (existingPath && existingPath !== pathId && onWarn) {
+        onWarn(
           `Duplicate token path differing only by case: ${existingPath} vs ${pathId}`,
         );
+      } else if (!existingPath) {
+        seenCaseInsensitivePaths.set(lowerPath, pathId);
       }
-      seenPaths.set(lowerPath, pathId);
+      seenExactPaths.add(pathId);
 
       if (isRecord(node)) {
         if (isToken(node)) {
           const token: Token = { ...node, $type: node.$type ?? currentType };
+          validateMetadata(token, pathId, onWarn);
           const tokenDeprecated = token.$deprecated ?? currentDeprecated;
           if (tokenDeprecated !== undefined)
             token.$deprecated = tokenDeprecated;

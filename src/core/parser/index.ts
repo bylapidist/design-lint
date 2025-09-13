@@ -37,7 +37,7 @@ export function parseDesignTokens(
   for (const transform of transforms) {
     transformed = transform(transformed);
   }
-  const tree = buildParseTree(transformed, getLoc);
+  const tree = buildParseTree(transformed, getLoc, options?.onWarn);
   normalizeTokens(tree, options?.onWarn);
   if (options?.colorSpace) {
     normalizeColorValues(tree, options.colorSpace);
