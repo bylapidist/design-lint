@@ -10,6 +10,7 @@ export function validateDuration(value: unknown, path: string): void {
   if (
     isRecord(value) &&
     typeof value.value === 'number' &&
+    Number.isFinite(value.value) &&
     typeof value.unit === 'string' &&
     DURATION_UNITS.has(value.unit)
   ) {
