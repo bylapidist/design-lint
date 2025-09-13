@@ -12,6 +12,7 @@ const tokens = {
         offsetX: { value: 0, unit: 'px' },
         offsetY: { value: 1, unit: 'px' },
         blur: { value: 2, unit: 'px' },
+        spread: { value: 0, unit: 'px' },
         color: 'rgba(0,0,0,0.1)',
       },
     },
@@ -20,6 +21,7 @@ const tokens = {
         offsetX: { value: 0, unit: 'px' },
         offsetY: { value: 2, unit: 'px' },
         blur: { value: 4, unit: 'px' },
+        spread: { value: 0, unit: 'px' },
         color: 'rgba(0,0,0,0.2)',
       },
     },
@@ -39,7 +41,7 @@ function createLinter() {
 void test('design-token/box-shadow reports disallowed value', async () => {
   const linter = createLinter();
   const res = await linter.lintText(
-    '.a{box-shadow:0px 2px 4px rgba(0,0,0,0.1);}',
+    '.a{box-shadow:0px 2px 4px 0px rgba(0,0,0,0.1);}',
     'file.css',
   );
   assert.equal(res.messages.length, 1);
@@ -48,7 +50,7 @@ void test('design-token/box-shadow reports disallowed value', async () => {
 void test('design-token/box-shadow allows configured tokens', async () => {
   const linter = createLinter();
   const res = await linter.lintText(
-    '.a{box-shadow:0px 1px 2px rgba(0,0,0,0.1), 0px 2px 4px rgba(0,0,0,0.2);}',
+    '.a{box-shadow:0px 1px 2px 0px rgba(0,0,0,0.1), 0px 2px 4px 0px rgba(0,0,0,0.2);}',
     'file.css',
   );
   assert.equal(res.messages.length, 0);

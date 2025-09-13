@@ -21,6 +21,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
           "offsetX": { "value": 0, "unit": "px" },
           "offsetY": { "value": 1, "unit": "px" },
           "blur": { "value": 2, "unit": "px" },
+          "spread": { "value": 0, "unit": "px" },
           "color": "rgba(0,0,0,0.1)"
         }
       },
@@ -43,14 +44,14 @@ This rule is not auto-fixable.
 ### Invalid
 
 ```css
-.box { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.box { box-shadow: 0 2px 4px 0 rgba(0,0,0,0.1); }
 ```
 
 ### Valid
 
 ```css
-.box { box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-.box { box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.2); }
+.box { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.1); }
+.box { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.1), 0 2px 4px 0 rgba(0,0,0,0.2); }
 ```
 
 ## When Not To Use

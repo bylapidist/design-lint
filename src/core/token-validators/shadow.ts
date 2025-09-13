@@ -32,9 +32,7 @@ export function validateShadow(value: unknown, path: string): void {
     validateDimension(item.offsetX, `${base}.offsetX`);
     validateDimension(item.offsetY, `${base}.offsetY`);
     validateDimension(item.blur, `${base}.blur`);
-    if (item.spread !== undefined) {
-      validateDimension(item.spread, `${base}.spread`);
-    }
+    validateDimension(item.spread, `${base}.spread`);
     if ('inset' in item && typeof item.inset !== 'boolean') {
       throw new Error(`Token ${path} has invalid shadow value`);
     }

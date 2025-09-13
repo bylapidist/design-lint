@@ -32,7 +32,7 @@ export function validateStrokeStyle(value: unknown, path: string): void {
         throw new Error(`Token ${path} has invalid strokeStyle value`);
       }
     }
-    if (!isArray(value.dashArray) || value.dashArray.length === 0) {
+    if (!isArray(value.dashArray)) {
       throw new Error(`Token ${path} has invalid strokeStyle value`);
     }
     for (let i = 0; i < value.dashArray.length; i++) {

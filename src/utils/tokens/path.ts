@@ -31,12 +31,16 @@ function transformSegment(seg: string, transform?: NameTransform): string {
 /**
  * Normalize a token path to dot notation with optional case transforms.
  *
- * @param path - Original token path using dot or slash separators.
+ * @param path - Original token path using dot separators.
  * @param transform - Optional casing applied to each path segment.
  * @returns Normalized dot-notation path.
+ * @throws If `path` contains `/` because the spec requires period-separated references.
  */
 export function normalizePath(path: string, transform?: NameTransform): string {
-  const parts = path.split(/[./]/).filter(Boolean);
+  if (path.includes('/')) {
+    throw new Error("Alias paths must use 'dot' notation; '/' is disallowed");
+  }
+  const parts = path.split('.').filter(Boolean);
   return parts.map((p) => transformSegment(p, transform)).join('.');
 }
 

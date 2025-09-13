@@ -5,11 +5,14 @@ import {
   toConstantName,
 } from '../../../src/utils/tokens/index.js';
 
-void test('normalizePath converts separators and applies case transforms', () => {
-  assert.equal(normalizePath('foo/bar-baz'), 'foo.bar-baz');
-  assert.equal(normalizePath('foo/barBaz', 'kebab-case'), 'foo.bar-baz');
-  assert.equal(normalizePath('foo/bar-baz', 'camelCase'), 'foo.barBaz');
-  assert.equal(normalizePath('foo/bar-baz', 'PascalCase'), 'foo.BarBaz');
+void test('normalizePath rejects slash separators', () => {
+  assert.throws(() => normalizePath('foo/bar-baz'));
+});
+
+void test('normalizePath applies case transforms', () => {
+  assert.equal(normalizePath('foo.barBaz', 'kebab-case'), 'foo.bar-baz');
+  assert.equal(normalizePath('foo.bar-baz', 'camelCase'), 'foo.barBaz');
+  assert.equal(normalizePath('foo.bar-baz', 'PascalCase'), 'foo.BarBaz');
 });
 
 void test('toConstantName transforms paths to upper snake case', () => {

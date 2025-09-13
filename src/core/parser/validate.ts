@@ -11,13 +11,6 @@ function validateExtensions(value: unknown, path: string): void {
   if (!isRecord(value)) {
     throw new Error(`Token or group ${path} has invalid $extensions`);
   }
-  for (const key of Object.keys(value)) {
-    if (!key.includes('.')) {
-      throw new Error(
-        `Token or group ${path} has invalid $extensions key: ${key}`,
-      );
-    }
-  }
 }
 
 function validateDeprecated(value: unknown, path: string): void {
@@ -27,12 +20,25 @@ function validateDeprecated(value: unknown, path: string): void {
   }
 }
 
+// The spec says, "The value of the `$description` property MUST be a plain JSON string."
+function validateDescription(value: unknown, path: string): void {
+  if (value === undefined) return;
+  if (typeof value !== 'string') {
+    throw new Error(`Token or group ${path} has invalid $description`);
+  }
+}
+
 function validateMetadata(
-  node: { $extensions?: unknown; $deprecated?: unknown },
+  node: {
+    $extensions?: unknown;
+    $deprecated?: unknown;
+    $description?: unknown;
+  },
   path: string,
 ): void {
   validateExtensions(node.$extensions, path);
   validateDeprecated(node.$deprecated, path);
+  validateDescription(node.$description, path);
 }
 
 function validateToken(
@@ -44,7 +50,8 @@ function validateToken(
   if (token.$value === undefined) {
     throw new Error(`Token ${path} is missing $value`);
   }
-  if (typeof token.$value === 'string' && /\{[^}]+\}/.test(token.$value)) {
+  // The spec says, "The $type property MAY be omitted when the token references another token that has the desired type. A token referencing another token MUST have a $value set to the period-separated (`.`) path to the token it's referencing, enclosed in curly brackets."
+  if (typeof token.$value === 'string' && /^\{[^}]+\}$/.test(token.$value)) {
     return;
   }
   if (!token.$type) {

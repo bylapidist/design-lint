@@ -132,7 +132,7 @@ void test('flattenDesignTokens resolves alias references', () => {
   ]);
 });
 
-void test('flattenDesignTokens detects circular aliases', () => {
+void test('flattenDesignTokens rejects circular aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
@@ -140,31 +140,20 @@ void test('flattenDesignTokens detects circular aliases', () => {
       b: { $value: '{color.a}' },
     },
   };
-  const result = flattenDesignTokens(tokens);
-  const a = result.find((t) => t.path === 'color.a');
-  const b = result.find((t) => t.path === 'color.b');
-  assert(a && b);
-  assert.equal(a.value, '{color.b}');
-  assert.deepEqual(a.aliases, ['color.b']);
-  assert.equal(b.value, '{color.a}');
-  assert.deepEqual(b.aliases, ['color.a']);
+  assert.throws(() => flattenDesignTokens(tokens), /circular alias reference/i);
 });
 
-void test('flattenDesignTokens errors on unknown alias', () => {
+void test('flattenDesignTokens rejects unknown aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
       a: { $value: '{color.missing}' },
     },
   };
-  const result = flattenDesignTokens(tokens);
-  const a = result.find((t) => t.path === 'color.a');
-  assert(a);
-  assert.equal(a.value, '{color.missing}');
-  assert.deepEqual(a.aliases, ['color.missing']);
+  assert.throws(() => flattenDesignTokens(tokens), /references unknown token/i);
 });
 
-void test('flattenDesignTokens normalizes slash-separated aliases', () => {
+void test('flattenDesignTokens rejects slash-separated aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
@@ -172,11 +161,7 @@ void test('flattenDesignTokens normalizes slash-separated aliases', () => {
       primary: { $value: '{color/base}' },
     },
   };
-  const flat = flattenDesignTokens(tokens);
-  const primary = flat.find((t) => t.path === 'color.primary');
-  assert(primary);
-  assert.equal(primary.value, '#fff');
-  assert.deepEqual(primary.aliases, ['color.base']);
+  assert.throws(() => flattenDesignTokens(tokens));
 });
 
 void test('flattenDesignTokens applies name transforms', () => {

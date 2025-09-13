@@ -15,7 +15,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "letterSpacings": {
-      "tight": { "$type": "dimension", "$value": { "value": -0.05, "unit": "em" } },
+      "tight": { "$type": "dimension", "$value": { "value": -0.05, "unit": "rem" } },
       "loose": { "$type": "dimension", "$value": "{letterSpacings.tight}" }
     }
   },
@@ -41,7 +41,7 @@ This rule is not auto-fixable.
 ### Valid
 
 ```css
-.text { letter-spacing: -0.05em; }
+.text { letter-spacing: -0.05rem; }
 .text { letter-spacing: 0; }
 ```
 

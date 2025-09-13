@@ -11,39 +11,34 @@ function resolveAlias(
   rawPath: string,
   tokenMap: Map<string, FlattenedToken>,
   stack: string[],
-  warnings: string[],
-): FlattenedToken | undefined {
+): FlattenedToken {
   const targetPath = normalizePath(rawPath);
   if (stack.includes(targetPath)) {
-    warnings.push(
+    throw new Error(
       `Circular alias reference: ${[...stack, targetPath].join(' -> ')}`,
     );
-    return undefined;
   }
   const target = tokenMap.get(targetPath);
   if (!target) {
     const source = stack[0];
-    warnings.push(`Token ${source} references unknown token: ${targetPath}`);
-    return undefined;
+    throw new Error(`Token ${source} references unknown token: ${targetPath}`);
   }
   const next =
     typeof target.value === 'string' ? ALIAS_EXACT.exec(target.value) : null;
   if (next) {
-    return resolveAlias(next[1], tokenMap, [...stack, targetPath], warnings);
+    return resolveAlias(next[1], tokenMap, [...stack, targetPath]);
   }
   if (!target.type) {
     const source = stack[0];
-    warnings.push(
+    throw new Error(
       `Token ${source} references token without type: ${targetPath}`,
     );
-    return undefined;
   }
   if (target.value === undefined) {
     const source = stack[0];
-    warnings.push(
+    throw new Error(
       `Token ${source} references token without value: ${targetPath}`,
     );
-    return undefined;
   }
   return target;
 }
@@ -68,34 +63,25 @@ export function resolveAliases(
       if (exact) {
         const ref = normalizePath(exact[1]);
         refs.push(ref);
-        const target = resolveAlias(ref, tokenMap, [path], warnings);
-        if (target) {
-          const aliasType = target.type;
-          if (expectedType) {
-            if (!aliasType) {
-              warnings.push(
-                `Token ${path} references token without type: ${ref}`,
-              );
-              return val;
-            }
-            if (aliasType !== expectedType) {
-              warnings.push(
-                `Token ${path} has mismatched type ${expectedType}; expected ${aliasType}`,
-              );
-              return val;
-            }
-          } else if (!token.type && aliasType) {
-            token.type = aliasType;
+        const target = resolveAlias(ref, tokenMap, [path]);
+        const aliasType = target.type;
+        if (expectedType) {
+          if (aliasType && aliasType !== expectedType) {
+            warnings.push(
+              `Token ${path} has mismatched type ${expectedType}; expected ${aliasType}`,
+            );
+            return val;
           }
-          return target.value;
+        } else if (!token.type && aliasType) {
+          token.type = aliasType;
         }
-        return val;
+        return target.value;
       }
       return val.replace(ALIAS_GLOBAL, (_, ref: string) => {
         const norm = normalizePath(ref);
         refs.push(norm);
-        const target = resolveAlias(norm, tokenMap, [path], warnings);
-        return target ? String(target.value) : `{${norm}}`;
+        const target = resolveAlias(norm, tokenMap, [path]);
+        return String(target.value);
       });
     }
     if (isArray(val)) {
