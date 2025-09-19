@@ -14,6 +14,8 @@
 
 **@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, flags unsupported components and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [W3C Design Tokens format](https://www.designtokens.org/technical-reports/), serving as a reference implementation of the specification.
 
+> This project is not ready for production use.
+
 ## Quick start
 
 **@lapidist/design-lint** requires Node.js ≥22. The commands below either run the linter once via `npx` or install it locally, initialise configuration, and lint your `src` directory. For deeper CLI details, see the [Usage guide](docs/usage.md).
