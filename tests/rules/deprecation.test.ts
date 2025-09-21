@@ -24,7 +24,7 @@ void test('design-system/deprecation flags deprecated token', async () => {
   assert.equal(res.messages.length, 1);
   assert.equal(
     res.messages[0].message,
-    'Token #/colors/old is deprecated; use {#/colors/new}',
+    'Token #/colors/old is deprecated; use #/colors/new',
   );
   assert.deepEqual(res.messages[0].fix, {
     range: [10, 24],

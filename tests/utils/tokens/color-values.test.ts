@@ -34,6 +34,28 @@ void test('collectColorTokenValues normalizes DTIF color objects', () => {
   assert(values.has('rgb(255, 0, 0)'));
 });
 
+void test('collectColorTokenValues includes fallback candidates', () => {
+  const token: FlattenedToken = {
+    path: '/theme/brand',
+    type: 'color',
+    value: { colorSpace: 'srgb', components: [1, 0, 0] },
+    candidates: [
+      {
+        ref: '/palette/base',
+        value: { colorSpace: 'srgb', components: [1, 0, 0] },
+      },
+      {
+        value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+    ],
+    metadata: baseMetadata,
+  };
+
+  const values = new Set(collectColorTokenValues(token));
+  assert(values.has('rgb(255, 0, 0)'));
+  assert(values.has('rgb(0, 0, 0)'));
+});
+
 void test('collectColorTokenValues ignores non-color tokens', () => {
   const token: FlattenedToken = {
     path: '/spacing/sm',

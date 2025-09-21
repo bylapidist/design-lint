@@ -30,6 +30,42 @@ function transformSegment(seg: string, transform?: NameTransform): string {
   }
 }
 
+function normalizePointerFragment(fragment: string): string {
+  if (fragment === '' || fragment === '/' || fragment === '#') {
+    return '';
+  }
+  return fragment.startsWith('/') ? fragment : `/${fragment}`;
+}
+
+interface PointerParts {
+  document?: string;
+  pointer: string;
+}
+
+function extractPointer(path: string): PointerParts | undefined {
+  if (path.length === 0 || path === '/' || path === '#') {
+    return { pointer: '' };
+  }
+
+  const hashIndex = path.indexOf('#');
+  if (hashIndex === 0) {
+    const fragment = normalizePointerFragment(path.slice(1));
+    return { pointer: fragment };
+  }
+
+  if (hashIndex > 0) {
+    const document = path.slice(0, hashIndex);
+    const fragment = normalizePointerFragment(path.slice(hashIndex + 1));
+    return { document, pointer: fragment };
+  }
+
+  if (path.startsWith('/')) {
+    return { pointer: path === '/' ? '' : path };
+  }
+
+  return undefined;
+}
+
 function encodePointer(segments: (string | number)[]): string {
   if (segments.length === 0) {
     return '';
@@ -44,14 +80,12 @@ function encodePointer(segments: (string | number)[]): string {
  * @returns Array of unescaped pointer segments.
  */
 export function getPathSegments(path: string): string[] {
-  if (path.length === 0 || path === '/' || path === '#') {
-    return [];
-  }
-  if (path.startsWith('/')) {
-    return JsonPointer.compile(path).segments;
-  }
-  if (path.startsWith('#')) {
-    return JsonPointer.compile(path).segments;
+  const pointer = extractPointer(path);
+  if (pointer) {
+    if (pointer.pointer === '') {
+      return [];
+    }
+    return JsonPointer.compile(pointer.pointer).segments;
   }
   return path.split('.').filter(Boolean);
 }
@@ -75,11 +109,22 @@ export function getPathRoot(path: string): string | undefined {
  * @returns Canonical JSON Pointer string representing the provided path.
  */
 export function normalizePath(path: string, transform?: NameTransform): string {
-  const segments = getPathSegments(path);
+  const pointer = extractPointer(path);
+  const segments = pointer
+    ? pointer.pointer === ''
+      ? []
+      : JsonPointer.compile(pointer.pointer).segments
+    : path.split('.').filter(Boolean);
   const transformed = segments.map((segment) =>
     transformSegment(segment, transform),
   );
-  return encodePointer(transformed);
+  const canonical = encodePointer(transformed);
+  if (pointer?.document) {
+    return canonical === ''
+      ? `${pointer.document}#`
+      : `${pointer.document}#${canonical}`;
+  }
+  return canonical;
 }
 
 function constantSegment(segment: string): string {

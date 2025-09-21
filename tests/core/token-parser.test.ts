@@ -43,6 +43,21 @@ void test('parseDesignTokens flattens tokens with JSON Pointer paths in declarat
   );
 });
 
+void test('parseDesignTokens rejects invalid DTIF when validate option is set', () => {
+  const invalid = {
+    spacing: { sm: { $type: 'dimension', $value: { value: 4, unit: 'px' } } },
+  } as unknown as DesignTokens;
+
+  assert.throws(
+    () => parseDesignTokens(invalid, undefined, { validate: true }),
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /DTIF validation failed/i);
+      return true;
+    },
+  );
+});
+
 void test('parseDesignTokens inherits nested collection types', () => {
   const tokens: DesignTokens = {
     theme: {
@@ -182,6 +197,299 @@ void test('parseDesignTokens resolves alias chains and collects unique reference
   });
   assert.equal(brand.type, 'color');
   assert.deepEqual(brand.aliases, ['/palette/accent', '/palette/base']);
+});
+
+void test('parseDesignTokens resolves aliases declared via $value objects', () => {
+  const tokens: DesignTokens = {
+    palette: {
+      $type: 'color',
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0.5, 1] },
+      },
+      alias: {
+        $type: 'color',
+        $value: { $ref: '/palette/base' },
+      },
+    },
+  };
+
+  const result = parseDesignTokens(tokens);
+  const alias = result.find((t) => t.path === '/palette/alias');
+  assert(alias);
+  assert.equal(alias.ref, '/palette/base');
+  assert.deepEqual(alias.aliases, ['/palette/base']);
+  assert.deepEqual(alias.value, {
+    colorSpace: 'srgb',
+    components: [0, 0.5, 1],
+  });
+  assert.equal(alias.candidates, undefined);
+});
+
+void test('parseDesignTokens records fallback candidates from $value arrays', () => {
+  const tokens: DesignTokens = {
+    palette: {
+      $type: 'color',
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+    },
+    theme: {
+      $type: 'color',
+      brand: {
+        $type: 'color',
+        $value: [
+          { $ref: '/palette/base' },
+          { colorSpace: 'srgb', components: [0, 0, 0] },
+        ],
+      },
+    },
+  };
+
+  const result = parseDesignTokens(tokens);
+  const brand = result.find((t) => t.path === '/theme/brand');
+  assert(brand);
+  assert.deepEqual(brand.value, {
+    colorSpace: 'srgb',
+    components: [1, 1, 1],
+  });
+  assert.equal(brand.ref, '/palette/base');
+  assert.deepEqual(brand.aliases, ['/palette/base']);
+  assert(brand.candidates);
+  const candidates = brand.candidates;
+  assert.equal(candidates.length, 2);
+  assert.deepEqual(candidates[0], {
+    ref: '/palette/base',
+    value: { colorSpace: 'srgb', components: [1, 1, 1] },
+  });
+  assert.deepEqual(candidates[1], {
+    value: { colorSpace: 'srgb', components: [0, 0, 0] },
+  });
+});
+
+void test('parseDesignTokens flattens nested fallback chains inside $value arrays', () => {
+  const tokens: DesignTokens = {
+    palette: {
+      $type: 'color',
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.9, 0.9, 0.9] },
+      },
+      inverse: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.05, 0.05, 0.05] },
+      },
+      accent: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.25, 0.4, 0.75] },
+      },
+    },
+    theme: {
+      $type: 'color',
+      brand: {
+        $type: 'color',
+        $value: [
+          {
+            $ref: '/palette/base',
+            $fallback: [
+              { $ref: '/palette/inverse' },
+              {
+                $value: {
+                  colorSpace: 'srgb',
+                  components: [0.1, 0.1, 0.1],
+                },
+                $fallback: { $ref: '/palette/accent' },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  };
+
+  const result = parseDesignTokens(tokens);
+  const brand = result.find((t) => t.path === '/theme/brand');
+  assert(brand);
+  assert(brand.candidates);
+  assert.deepEqual(brand.value, {
+    colorSpace: 'srgb',
+    components: [0.9, 0.9, 0.9],
+  });
+  assert.deepEqual(brand.ref, '/palette/base');
+  assert.deepEqual(brand.aliases, [
+    '/palette/base',
+    '/palette/inverse',
+    '/palette/accent',
+  ]);
+  assert.deepEqual(brand.candidates, [
+    {
+      ref: '/palette/base',
+      value: { colorSpace: 'srgb', components: [0.9, 0.9, 0.9] },
+    },
+    {
+      ref: '/palette/inverse',
+      value: { colorSpace: 'srgb', components: [0.05, 0.05, 0.05] },
+    },
+    { value: { colorSpace: 'srgb', components: [0.1, 0.1, 0.1] } },
+    {
+      ref: '/palette/accent',
+      value: { colorSpace: 'srgb', components: [0.25, 0.4, 0.75] },
+    },
+  ]);
+});
+
+void test('parseDesignTokens supports fallback entry objects with nested fallbacks', () => {
+  const tokens: DesignTokens = {
+    palette: {
+      $type: 'color',
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.2, 0.2, 0.2] },
+      },
+      subtle: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.4, 0.4, 0.4] },
+      },
+    },
+    component: {
+      $type: 'color',
+      overlay: {
+        $type: 'color',
+        $value: {
+          $ref: '/palette/base',
+          $fallback: {
+            $value: {
+              colorSpace: 'srgb',
+              components: [0.3, 0.3, 0.3],
+            },
+            $fallback: { $ref: '/palette/subtle' },
+          },
+        },
+      },
+    },
+  };
+
+  const result = parseDesignTokens(tokens);
+  const overlay = result.find((t) => t.path === '/component/overlay');
+  assert(overlay);
+  assert(overlay.candidates);
+  assert.deepEqual(overlay.value, {
+    colorSpace: 'srgb',
+    components: [0.2, 0.2, 0.2],
+  });
+  assert.equal(overlay.ref, '/palette/base');
+  assert.deepEqual(overlay.aliases, ['/palette/base', '/palette/subtle']);
+  assert.deepEqual(overlay.candidates, [
+    {
+      ref: '/palette/base',
+      value: { colorSpace: 'srgb', components: [0.2, 0.2, 0.2] },
+    },
+    { value: { colorSpace: 'srgb', components: [0.3, 0.3, 0.3] } },
+    {
+      ref: '/palette/subtle',
+      value: { colorSpace: 'srgb', components: [0.4, 0.4, 0.4] },
+    },
+  ]);
+});
+
+void test('parseDesignTokens attaches overrides with canonical pointers and fallbacks', () => {
+  const tokens: DesignTokens = {
+    palette: {
+      $type: 'color',
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+      inverse: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+    },
+    surface: {
+      $type: 'color',
+      button: {
+        brand: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0.25, 0.25, 0.25] },
+        },
+      },
+    },
+    spacing: {
+      $type: 'dimension',
+      base: {
+        $type: 'dimension',
+        $value: { dimensionType: 'length', value: 8, unit: 'px' },
+      },
+    },
+    $overrides: [
+      {
+        $token: '/surface/button/brand',
+        $when: { mode: 'dark' },
+        $ref: '/palette/base',
+        $fallback: [
+          {
+            $ref: '/palette/inverse',
+            $fallback: {
+              $value: { colorSpace: 'srgb', components: [0.1, 0.1, 0.1] },
+            },
+          },
+          { $value: { colorSpace: 'srgb', components: [0.2, 0.2, 0.2] } },
+        ],
+      },
+      {
+        $token: '/surface/button/brand',
+        $when: { mode: 'spacious' },
+        $ref: '/spacing/base',
+      },
+    ],
+  };
+
+  const warnings: string[] = [];
+  const result = parseDesignTokens(tokens, undefined, {
+    onWarn: (msg) => warnings.push(msg),
+  });
+
+  const brand = result.find((t) => t.path === '/surface/button/brand');
+  assert(brand);
+  assert(brand.overrides);
+  assert.equal(brand.overrides.length, 2);
+
+  const [darkOverride, spaciousOverride] = brand.overrides;
+  assert.deepEqual(darkOverride.source, '/$overrides/0');
+  assert.deepEqual(darkOverride.when, { mode: 'dark' });
+  assert.equal(darkOverride.ref, '/palette/base');
+  assert.deepEqual(darkOverride.value, {
+    colorSpace: 'srgb',
+    components: [0, 0, 0],
+  });
+  assert(darkOverride.fallback);
+  assert.deepEqual(darkOverride.fallback, [
+    {
+      ref: '/palette/inverse',
+      value: { colorSpace: 'srgb', components: [1, 1, 1] },
+    },
+    { value: { colorSpace: 'srgb', components: [0.1, 0.1, 0.1] } },
+    { value: { colorSpace: 'srgb', components: [0.2, 0.2, 0.2] } },
+  ]);
+
+  assert.deepEqual(spaciousOverride.source, '/$overrides/1');
+  assert.deepEqual(spaciousOverride.when, { mode: 'spacious' });
+  assert.equal(spaciousOverride.ref, '/spacing/base');
+  assert.deepEqual(spaciousOverride.value, {
+    dimensionType: 'length',
+    value: 8,
+    unit: 'px',
+  });
+  assert.equal(spaciousOverride.fallback, undefined);
+
+  assert.ok(
+    warnings.some((msg) =>
+      msg.includes(
+        'Override /$overrides/1 for token /surface/button/brand references /spacing/base of type dimension (expected color)',
+      ),
+    ),
+  );
 });
 
 void test('parseDesignTokens warns when alias type mismatches target', () => {

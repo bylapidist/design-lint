@@ -3,6 +3,7 @@ import { buildParseTree } from './parse-tree.js';
 import { normalizeTokens } from './normalize.js';
 import { normalizeColorValues, type ColorSpace } from './normalize-colors.js';
 import { validateTokens } from './validate.js';
+import { applyOverrides } from './overrides.js';
 
 export type TokenTransform = (tokens: DesignTokens) => DesignTokens;
 
@@ -22,6 +23,7 @@ export interface ParseDesignTokensOptions {
   colorSpace?: ColorSpace;
   transforms?: TokenTransform[];
   onWarn?: (msg: string) => void;
+  validate?: boolean;
 }
 
 export function parseDesignTokens(
@@ -37,11 +39,17 @@ export function parseDesignTokens(
   for (const transform of transforms) {
     transformed = transform(transformed);
   }
+  if (options?.validate) {
+    validateTokens(transformed);
+  }
+
   const tree = buildParseTree(transformed, getLoc, options?.onWarn);
   normalizeTokens(tree, options?.onWarn);
+  if (Array.isArray(transformed.$overrides)) {
+    applyOverrides(tree, transformed.$overrides, options?.onWarn);
+  }
   if (options?.colorSpace) {
     normalizeColorValues(tree, options.colorSpace);
   }
-  validateTokens();
   return tree;
 }

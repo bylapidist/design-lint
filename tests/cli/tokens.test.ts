@@ -10,7 +10,28 @@ const require = createRequire(import.meta.url);
 const tsxLoader = require.resolve('tsx/esm');
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-void test('tokens command exports resolved tokens with extensions', () => {
+interface ExportedToken {
+  value: unknown;
+  type?: string;
+  extensions?: unknown;
+  description?: string;
+  deprecated?: unknown;
+  loc?: unknown;
+  aliases?: string[];
+  ref?: string;
+  candidates?: { value: unknown; ref?: string }[];
+  overrides?: {
+    source: string;
+    when: Record<string, unknown>;
+    value?: unknown;
+    ref?: string;
+    fallback?: { value: unknown; ref?: string }[];
+  }[];
+}
+
+type ExportedThemes = Record<string, Record<string, ExportedToken>>;
+
+void test('tokens command exports DTIF metadata for resolved tokens', () => {
   const dir = makeTmpDir();
   const tokensPath = path.join(dir, 'base.dtif.json');
   const tokens = {
@@ -20,8 +41,29 @@ void test('tokens command exports resolved tokens with extensions', () => {
         $value: { colorSpace: 'srgb', components: [1, 0, 0] },
         $extensions: { 'vendor.ext': { foo: 'bar' } },
       },
-      blue: { $type: 'color', $ref: '#/palette/red' },
+      blue: {
+        $type: 'color',
+        $value: [
+          { $ref: '#/palette/red' },
+          { colorSpace: 'srgb', components: [0, 0, 1] },
+        ],
+      },
+      accent: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 1, 0] },
+      },
     },
+    $overrides: [
+      {
+        $token: '#/palette/accent',
+        $when: { mode: 'dark' },
+        $ref: '#/palette/red',
+        $fallback: [
+          { $value: { colorSpace: 'srgb', components: [0, 0.5, 0] } },
+          { $ref: '#/palette/blue' },
+        ],
+      },
+    ],
   };
   fs.writeFileSync(tokensPath, JSON.stringify(tokens));
   fs.writeFileSync(
@@ -43,31 +85,59 @@ void test('tokens command exports resolved tokens with extensions', () => {
     ],
     { cwd: dir, encoding: 'utf8' },
   );
-  assert.equal(res.status, 0);
+  assert.equal(res.status, 0, res.stderr);
   const out = JSON.parse(
     fs.readFileSync(path.join(dir, 'out.json'), 'utf8'),
-  ) as Record<
-    string,
-    Record<
-      string,
-      {
-        value: unknown;
-        extensions?: unknown;
-        type?: string;
-      }
-    >
-  >;
-  assert.deepEqual(out.default['/palette/red'].value, {
+  ) as ExportedThemes;
+
+  const red = out.default['/palette/red'];
+  const expectedRedValue = {
     colorSpace: 'srgb',
     components: [1, 0, 0],
-  });
-  assert.deepEqual(out.default['/palette/red'].extensions, {
-    'vendor.ext': { foo: 'bar' },
-  });
-  assert.deepEqual(out.default['/palette/blue'].value, {
+  };
+  assert.deepEqual(red.value, expectedRedValue);
+  assert.equal(red.type, 'color');
+  assert.deepEqual(red.extensions, { 'vendor.ext': { foo: 'bar' } });
+
+  const blue = out.default['/palette/blue'];
+  const expectedBlueFallback = {
     colorSpace: 'srgb',
-    components: [1, 0, 0],
-  });
+    components: [0, 0, 1],
+  };
+  assert.deepEqual(blue.value, expectedRedValue);
+  assert.equal(blue.type, 'color');
+  assert.equal(blue.ref, '/palette/red');
+  assert.deepEqual(blue.aliases, ['/palette/red']);
+  assert.ok(Array.isArray(blue.candidates));
+  assert.deepEqual(blue.candidates, [
+    { value: expectedRedValue, ref: '/palette/red' },
+    { value: expectedBlueFallback },
+  ]);
+
+  const accent = out.default['/palette/accent'];
+  const expectedAccentValue = {
+    colorSpace: 'srgb',
+    components: [0, 1, 0],
+  };
+  const expectedAccentFallback = {
+    colorSpace: 'srgb',
+    components: [0, 0.5, 0],
+  };
+  assert.deepEqual(accent.value, expectedAccentValue);
+  assert.equal(accent.type, 'color');
+  assert.ok(Array.isArray(accent.overrides));
+  assert.deepEqual(accent.overrides, [
+    {
+      source: '/$overrides/0',
+      when: { mode: 'dark' },
+      value: expectedRedValue,
+      ref: '/palette/red',
+      fallback: [
+        { value: expectedAccentFallback },
+        { value: expectedRedValue, ref: '/palette/blue' },
+      ],
+    },
+  ]);
 });
 
 void test('tokens command reads config from outside cwd', () => {

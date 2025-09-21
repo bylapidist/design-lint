@@ -38,13 +38,36 @@ export type RootTokenGroup = DesignTokenInterchangeFormat;
  */
 export type DesignTokens = DesignTokenInterchangeFormat;
 
+export interface TokenValueCandidate {
+  value: unknown;
+  /** Canonical JSON Pointer reference for alias candidates. */
+  ref?: string;
+}
+
+export interface TokenOverride {
+  /** JSON Pointer to the override declaration within the token document. */
+  source: string;
+  /** Context map describing when the override applies. */
+  when: Record<string, unknown>;
+  /** Resolved override value from an inline $value or referenced token. */
+  value?: unknown;
+  /** Canonical JSON Pointer reference when the override aliases another token. */
+  ref?: string;
+  /** Ordered fallback candidates derived from the override's $fallback chain. */
+  fallback?: TokenValueCandidate[];
+}
+
 export interface FlattenedToken {
   path: string;
   value: unknown;
   type?: string;
+  /** Ordered fallback candidates derived from the token's $value array. */
+  candidates?: TokenValueCandidate[];
   /** Canonical JSON Pointer reference when the token aliases another token. */
   ref?: string;
   aliases?: string[];
+  /** Conditional overrides applied to the token. */
+  overrides?: TokenOverride[];
   metadata: {
     description?: string;
     extensions?: Record<string, unknown>;

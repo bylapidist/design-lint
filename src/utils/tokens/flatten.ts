@@ -5,8 +5,53 @@
  */
 
 import { parseDesignTokens } from '../../core/parser/index.js';
-import type { DesignTokens, FlattenedToken } from '../../core/types.js';
+import type {
+  DesignTokens,
+  FlattenedToken,
+  TokenOverride,
+  TokenValueCandidate,
+} from '../../core/types.js';
 import { normalizePath, type NameTransform } from './path.js';
+
+function mapCandidates(
+  candidates: TokenValueCandidate[] | undefined,
+  transform?: NameTransform,
+): TokenValueCandidate[] | undefined {
+  if (!candidates) return undefined;
+  return candidates.map((candidate) => {
+    const ref = candidate.ref
+      ? transform
+        ? normalizePath(candidate.ref, transform)
+        : candidate.ref
+      : undefined;
+    return {
+      value: candidate.value,
+      ...(ref ? { ref } : {}),
+    } satisfies TokenValueCandidate;
+  });
+}
+
+function mapOverrides(
+  overrides: TokenOverride[] | undefined,
+  transform?: NameTransform,
+): TokenOverride[] | undefined {
+  if (!overrides) return undefined;
+  return overrides.map((override) => {
+    const ref = override.ref
+      ? transform
+        ? normalizePath(override.ref, transform)
+        : override.ref
+      : undefined;
+    const fallback = mapCandidates(override.fallback, transform);
+    return {
+      source: override.source,
+      when: { ...override.when },
+      ...(override.value !== undefined ? { value: override.value } : {}),
+      ...(ref ? { ref } : {}),
+      ...(fallback ? { fallback } : {}),
+    } satisfies TokenOverride;
+  });
+}
 
 export interface FlattenOptions {
   /** Optional transform applied to each path segment */
@@ -34,14 +79,18 @@ export function flattenDesignTokens(
     const { path, value, type, metadata } = token;
     const aliases = token.aliases ? [...token.aliases] : undefined;
     const ref = token.ref;
+    const baseCandidates = mapCandidates(token.candidates);
+    const baseOverrides = mapOverrides(token.overrides);
 
     if (!transform) {
       return {
         path,
         value,
         ...(type ? { type } : {}),
+        ...(baseCandidates ? { candidates: baseCandidates } : {}),
         ...(ref ? { ref } : {}),
         ...(aliases ? { aliases } : {}),
+        ...(baseOverrides ? { overrides: baseOverrides } : {}),
         metadata,
       } satisfies FlattenedToken;
     }
@@ -51,13 +100,17 @@ export function flattenDesignTokens(
       normalizePath(alias, transform),
     );
     const normalizedRef = ref ? normalizePath(ref, transform) : undefined;
+    const normalizedCandidates = mapCandidates(token.candidates, transform);
+    const normalizedOverrides = mapOverrides(token.overrides, transform);
 
     return {
       path: normalizedPath,
       value,
       ...(type ? { type } : {}),
+      ...(normalizedCandidates ? { candidates: normalizedCandidates } : {}),
       ...(normalizedRef ? { ref: normalizedRef } : {}),
       ...(normalizedAliases ? { aliases: normalizedAliases } : {}),
+      ...(normalizedOverrides ? { overrides: normalizedOverrides } : {}),
       metadata,
     } satisfies FlattenedToken;
   });
