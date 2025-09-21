@@ -1,10 +1,11 @@
 import ts from 'typescript';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
 } = guards;
+const { getPathRoot } = tokens;
 
 export const fontWeightRule = tokenRule({
   name: 'design-token/font-weight',
@@ -16,7 +17,7 @@ export const fontWeightRule = tokenRule({
     const numeric = new Set<number>();
     const values = new Set<string>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('fontWeights.')) continue;
+      if (getPathRoot(path) !== 'fontWeights') continue;
       const val = value;
       if (typeof val === 'number') {
         numeric.add(val);

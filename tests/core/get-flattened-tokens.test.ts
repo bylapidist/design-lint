@@ -8,10 +8,10 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
     light: {
       palette: {
         $type: 'color',
-        $deprecated: 'use new palette',
-        primary: { $value: '#fff' },
+        $deprecated: true,
+        primary: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
         secondary: {
-          $value: '#000',
+          $value: { colorSpace: 'srgb', components: [0, 0, 0] },
           $extensions: { 'vendor.example': { note: true } },
         },
       },
@@ -19,7 +19,9 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
     dark: {
       palette: {
         $type: 'color',
-        primary: { $value: '#111' },
+        primary: {
+          $value: { colorSpace: 'srgb', components: [0.066, 0.066, 0.066] },
+        },
       },
     },
   };
@@ -27,24 +29,24 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
   const flat = getFlattenedTokens(tokens, 'light');
   assert.deepEqual(flat, [
     {
-      path: 'palette.primary',
-      value: '#fff',
+      path: '/palette/primary',
+      value: { colorSpace: 'srgb', components: [1, 1, 1] },
       type: 'color',
       metadata: {
         description: undefined,
         extensions: undefined,
-        deprecated: 'use new palette',
+        deprecated: true,
         loc: { line: 1, column: 1 },
       },
     },
     {
-      path: 'palette.secondary',
-      value: '#000',
+      path: '/palette/secondary',
+      value: { colorSpace: 'srgb', components: [0, 0, 0] },
       type: 'color',
       metadata: {
         description: undefined,
         extensions: { 'vendor.example': { note: true } },
-        deprecated: 'use new palette',
+        deprecated: true,
         loc: { line: 1, column: 1 },
       },
     },
@@ -53,14 +55,24 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
 
 void test('getFlattenedTokens merges tokens from all themes when none is specified', () => {
   const tokens: Record<string, DesignTokens> = {
-    light: { palette: { $type: 'color', primary: { $value: '#fff' } } },
-    dark: { palette: { $type: 'color', secondary: { $value: '#000' } } },
+    light: {
+      palette: {
+        $type: 'color',
+        primary: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
+      },
+    },
+    dark: {
+      palette: {
+        $type: 'color',
+        secondary: { $value: { colorSpace: 'srgb', components: [0, 0, 0] } },
+      },
+    },
   };
   const flat = getFlattenedTokens(tokens);
   assert.deepEqual(flat, [
     {
-      path: 'palette.primary',
-      value: '#fff',
+      path: '/palette/primary',
+      value: { colorSpace: 'srgb', components: [1, 1, 1] },
       type: 'color',
       metadata: {
         description: undefined,
@@ -70,8 +82,8 @@ void test('getFlattenedTokens merges tokens from all themes when none is specifi
       },
     },
     {
-      path: 'palette.secondary',
-      value: '#000',
+      path: '/palette/secondary',
+      value: { colorSpace: 'srgb', components: [0, 0, 0] },
       type: 'color',
       metadata: {
         description: undefined,
@@ -88,16 +100,16 @@ void test('getFlattenedTokens resolves aliases', () => {
     default: {
       palette: {
         $type: 'color',
-        base: { $value: '#f00' },
-        primary: { $value: '{palette.base}' },
+        base: { $value: { colorSpace: 'srgb', components: [1, 0, 0] } },
+        primary: { $ref: '/palette/base' },
       },
     },
   };
   const flat = getFlattenedTokens(tokens, 'default');
   assert.deepEqual(flat, [
     {
-      path: 'palette.base',
-      value: '#f00',
+      path: '/palette/base',
+      value: { colorSpace: 'srgb', components: [1, 0, 0] },
       type: 'color',
       metadata: {
         description: undefined,
@@ -107,10 +119,11 @@ void test('getFlattenedTokens resolves aliases', () => {
       },
     },
     {
-      path: 'palette.primary',
-      value: '#f00',
+      path: '/palette/primary',
+      value: { colorSpace: 'srgb', components: [1, 0, 0] },
       type: 'color',
-      aliases: ['palette.base'],
+      ref: '/palette/base',
+      aliases: ['/palette/base'],
       metadata: {
         description: undefined,
         extensions: undefined,
@@ -124,10 +137,16 @@ void test('getFlattenedTokens resolves aliases', () => {
 void test('getFlattenedTokens applies name transforms', () => {
   const tokens: Record<string, DesignTokens> = {
     light: {
-      ColorGroup: { $type: 'color', primaryColor: { $value: '#fff' } },
+      ColorGroup: {
+        $type: 'color',
+        primaryColor: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
+      },
     },
     dark: {
-      ColorGroup: { $type: 'color', primaryColor: { $value: '#000' } },
+      ColorGroup: {
+        $type: 'color',
+        primaryColor: { $value: { colorSpace: 'srgb', components: [0, 0, 0] } },
+      },
     },
   };
   const flat = getFlattenedTokens(tokens, undefined, {
@@ -135,8 +154,8 @@ void test('getFlattenedTokens applies name transforms', () => {
   });
   assert.deepEqual(flat, [
     {
-      path: 'colorGroup.primaryColor',
-      value: '#fff',
+      path: '/colorGroup/primaryColor',
+      value: { colorSpace: 'srgb', components: [1, 1, 1] },
       type: 'color',
       metadata: {
         description: undefined,
@@ -148,15 +167,13 @@ void test('getFlattenedTokens applies name transforms', () => {
   ]);
 });
 
-void test('getFlattenedTokens rejects primitive token values', () => {
+void test('getFlattenedTokens returns empty array for primitive token values', () => {
   const tokens = {
     default: {
       colors: { primary: '#fff' },
       deprecations: { old: { replacement: 'new' } },
     },
   } as unknown as Record<string, DesignTokens>;
-  assert.throws(
-    () => getFlattenedTokens(tokens, 'default'),
-    /must be an object with \$value/i,
-  );
+  const result = getFlattenedTokens(tokens, 'default');
+  assert.deepEqual(result, []);
 });

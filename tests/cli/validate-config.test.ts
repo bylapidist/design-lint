@@ -12,14 +12,21 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 void test('validate command reports valid configuration', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'tokens.tokens.json');
+  const tokensPath = path.join(dir, 'tokens.dtif.json');
   fs.writeFileSync(
     tokensPath,
-    JSON.stringify({ color: { red: { $type: 'color', $value: '#ff0000' } } }),
+    JSON.stringify({
+      palette: {
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+      },
+    }),
   );
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: { default: './tokens.tokens.json' }, rules: {} }),
+    JSON.stringify({ tokens: { default: './tokens.dtif.json' }, rules: {} }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -40,47 +47,18 @@ void test('validate command reports valid configuration', () => {
 
 void test('validate command fails on invalid tokens', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'tokens.tokens.json');
-  fs.writeFileSync(
-    tokensPath,
-    JSON.stringify({ color: { bad: { $type: 'foo', $value: 'bar' } } }),
-  );
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: { default: './tokens.tokens.json' }, rules: {} }),
-  );
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'validate',
-      '--config',
-      'designlint.config.json',
-    ],
-    { cwd: dir, encoding: 'utf8' },
-  );
-  assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /unknown \$type/i);
-});
-
-void test('validate command fails on unresolved aliases', () => {
-  const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'tokens.tokens.json');
+  const tokensPath = path.join(dir, 'tokens.dtif.json');
   fs.writeFileSync(
     tokensPath,
     JSON.stringify({
-      color: {
-        red: { $type: 'color', $value: '{color.green}' },
-        green: { $type: 'color', $value: '{color.red}' },
+      palette: {
+        broken: { $type: 'color' },
       },
     }),
   );
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: { default: './tokens.tokens.json' }, rules: {} }),
+    JSON.stringify({ tokens: { default: './tokens.dtif.json' }, rules: {} }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -96,5 +74,38 @@ void test('validate command fails on unresolved aliases', () => {
     { cwd: dir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /circular alias reference/i);
+  assert.match(res.stderr, /DTIF validation failed/i);
+});
+
+void test('validate command fails on unresolved aliases', () => {
+  const dir = makeTmpDir();
+  const tokensPath = path.join(dir, 'tokens.dtif.json');
+  fs.writeFileSync(
+    tokensPath,
+    JSON.stringify({
+      palette: {
+        red: { $type: 'color', $ref: '#/palette/green' },
+        green: { $type: 'color', $ref: '#/palette/red' },
+      },
+    }),
+  );
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({ tokens: { default: './tokens.dtif.json' }, rules: {} }),
+  );
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      'validate',
+      '--config',
+      'designlint.config.json',
+    ],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /Circular \$ref chain detected/i);
 });

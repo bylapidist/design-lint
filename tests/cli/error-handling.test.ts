@@ -30,19 +30,22 @@ void test('reports config errors and sets exit code', () => {
 void test('fails on unresolved aliases', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'designlint-'));
   fs.writeFileSync(
-    path.join(dir, 'tokens.tokens.json'),
+    path.join(dir, 'tokens.dtif.json'),
     JSON.stringify({
-      color: {
-        red: { $type: 'color', $value: '#ff0000' },
-        bad1: { $type: 'color', $value: '{color.missing}' },
-        bad2: { $type: 'color', $value: '{color.missing}' },
+      palette: {
+        base: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+        bad1: { $type: 'color', $ref: '#/palette/missing' },
+        bad2: { $type: 'color', $ref: '#/palette/missing' },
       },
     }),
   );
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { default: './tokens.tokens.json' },
+      tokens: { default: './tokens.dtif.json' },
       rules: {},
       output: [],
     }),

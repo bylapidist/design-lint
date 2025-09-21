@@ -99,7 +99,7 @@ const rule: RuleModule<{ ignore?: string[] }> = {
 
 ### 3. Register token transforms
 If your plugin consumes design tokens from other tools, provide a transform to
-convert them to the W3C format. Register the transform inside `init`:
+convert them to DTIF. Register the transform inside `init`:
 
 ```ts
 import {

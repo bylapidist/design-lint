@@ -1,11 +1,12 @@
 import valueParser from 'postcss-value-parser';
-import { rules, guards, collections } from '../utils/index.js';
+import { rules, guards, collections, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   data: { isRecord },
 } = guards;
 const { toArray } = collections;
+const { getPathRoot } = tokens;
 
 const normalize = (val: string): string =>
   valueParser.stringify(valueParser(val).nodes).trim();
@@ -49,7 +50,7 @@ export const boxShadowRule = tokenRule({
       return parts.join(', ');
     };
     for (const { path, value } of tokens) {
-      if (!path.startsWith('shadows.')) continue;
+      if (getPathRoot(path) !== 'shadows') continue;
       const val = toString(value);
       if (val) allowed.add(normalize(val));
     }

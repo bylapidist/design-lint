@@ -1,11 +1,12 @@
 import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   data: { isRecord },
 } = guards;
+const { getPathRoot } = tokens;
 
 interface BlurRuleOptions {
   units?: string[];
@@ -26,7 +27,7 @@ export const blurRule = tokenRule<BlurRuleOptions>({
       isRecord(val) && typeof val.value === 'number' ? val.value : null;
     const allowed = new Set<number>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('blurs.')) continue;
+      if (getPathRoot(path) !== 'blurs') continue;
       const num = parse(value);
       if (num !== null) allowed.add(num);
     }

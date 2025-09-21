@@ -6,7 +6,13 @@
 export { wrapTokenError } from './wrap-token-error.js';
 export { parseTokensForTheme } from './parse-tokens-for-theme.js';
 export { normalizeTokens } from './normalize-tokens.js';
-export { normalizePath, toConstantName, type NameTransform } from './path.js';
+export {
+  normalizePath,
+  toConstantName,
+  getPathSegments,
+  getPathRoot,
+  type NameTransform,
+} from './path.js';
 export { matchToken, closestToken, type TokenPattern } from './pattern.js';
 export {
   flattenDesignTokens,
@@ -15,5 +21,6 @@ export {
 } from './flatten.js';
 export { toThemeRecord } from './theme.js';
 export { extractVarName } from './css.js';
+export { collectColorTokenValues } from './color-values.js';
 export { TOKEN_FILE_GLOB } from './files.js';
 export { compareTokenPath, sortTokensByPath } from './sort.js';

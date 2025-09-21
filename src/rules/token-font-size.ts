@@ -1,9 +1,10 @@
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   data: { isRecord },
 } = guards;
+const { getPathRoot } = tokens;
 
 const parseSize = (val: unknown): number | null => {
   if (
@@ -35,7 +36,7 @@ export const fontSizeRule = tokenRule({
   getAllowed(tokens) {
     const sizes = new Set<number>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('fontSizes.')) continue;
+      if (getPathRoot(path) !== 'fontSizes') continue;
       const num = parseSize(value);
       if (num !== null) sizes.add(num);
     }

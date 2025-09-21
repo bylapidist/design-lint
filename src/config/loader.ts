@@ -12,6 +12,41 @@ import { loadTokens } from './token-loader.js';
 import { guards } from '../utils/index.js';
 import { ConfigError } from '../core/errors.js';
 
+function isIssueRecord(value: unknown): value is Record<PropertyKey, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function extractCustomIssueMessage(issues: unknown[]): string | undefined {
+  const queue = [...issues];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (current === undefined || current === null) continue;
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        queue.unshift(item);
+      }
+      continue;
+    }
+    if (!isIssueRecord(current)) continue;
+    const code = current.code;
+    const message = current.message;
+    const errors = current.errors;
+    if (
+      typeof code === 'string' &&
+      code === 'custom' &&
+      typeof message === 'string'
+    ) {
+      return message;
+    }
+    if (Array.isArray(errors)) {
+      for (const item of errors) {
+        queue.unshift(item);
+      }
+    }
+  }
+  return undefined;
+}
+
 const {
   data: { isRecord },
 } = guards;
@@ -57,8 +92,10 @@ export async function loadConfig(
   const parsed = configSchema.safeParse(merged);
   if (!parsed.success) {
     const location = result?.filepath ? ` at ${result.filepath}` : '';
+    const detail = extractCustomIssueMessage(parsed.error.issues);
+    const reason = detail ?? parsed.error.message;
     throw new ConfigError({
-      message: `Invalid config${location}: ${parsed.error.message}`,
+      message: `Invalid config${location}: ${reason}`,
       context: result?.filepath ? `Config file "${result.filepath}"` : 'Config',
       remediation: 'Review and fix the configuration file.',
     });

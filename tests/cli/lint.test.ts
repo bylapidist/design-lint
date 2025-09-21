@@ -12,17 +12,22 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 void test('lint command reports token color violations', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
+  const tokensPath = path.join(dir, 'base.dtif.json');
   fs.writeFileSync(
     tokensPath,
     JSON.stringify({
-      color: { primary: { $type: 'color', $value: '#ff0000' } },
+      palette: {
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+      },
     }),
   );
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { default: './base.tokens.json' },
+      tokens: { default: './base.dtif.json' },
       rules: { 'token-colors': 'error' },
     }),
   );

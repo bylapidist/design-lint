@@ -1,6 +1,7 @@
-import { rules } from '../utils/index.js';
+import { rules, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
+const { getPathRoot } = tokens;
 
 export const fontFamilyRule = tokenRule({
   name: 'design-token/font-family',
@@ -11,7 +12,7 @@ export const fontFamilyRule = tokenRule({
   getAllowed(tokens) {
     const fonts = new Set<string>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('fonts.')) continue;
+      if (getPathRoot(path) !== 'fonts') continue;
       const val = value;
       if (typeof val === 'string') fonts.add(val);
     }

@@ -1,5 +1,7 @@
 import type { DesignTokens } from '../../../core/types.js';
 import { isRecord } from '../data/index.js';
+import { isToken } from './is-token.js';
+import { isTokenGroup } from './is-token-group.js';
 
 /**
  * Determines whether a value is a record of theme names mapping to design tokens.
@@ -31,13 +33,19 @@ export const isThemeRecord = (
     // only direct token definitions.
     const [, theme] = entries[0];
     if (!isRecord(theme)) return false;
-    const children = Object.entries(theme)
-      .filter(([k]) => !k.startsWith('$'))
-      .map(([, v]) => v);
-    const allTokens = children.every(
-      (child) => isRecord(child) && ('$value' in child || 'value' in child),
-    );
-    return !allTokens;
+    const children = Object.entries(theme).filter(([k]) => !k.startsWith('$'));
+    if (children.length === 0) return false;
+    let hasCollection = false;
+    for (const [, child] of children) {
+      if (isTokenGroup(child)) {
+        hasCollection = true;
+        continue;
+      }
+      if (isToken(child)) continue;
+      if (isRecord(child)) return false;
+      return false;
+    }
+    return hasCollection;
   }
 
   // For multiple themes, track the intersection of their token keys to ensure

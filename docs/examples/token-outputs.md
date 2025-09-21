@@ -10,10 +10,10 @@ This guide shows a minimal setup that writes CSS variables, JavaScript constants
 ## Example tokens
 
 ```jsonc
-// tokens/default.tokens.json
+// tokens/default.dtif.json
 { "color": { "primary": { "$value": "#fff" } } }
 
-// tokens/dark.tokens.json
+// tokens/dark.dtif.json
 { "color": { "primary": { "$value": "#000" } } }
 ```
 
@@ -23,8 +23,8 @@ This guide shows a minimal setup that writes CSS variables, JavaScript constants
 // designlint.config.ts
 export default {
   tokens: {
-    default: 'tokens/default.tokens.json',
-    dark: 'tokens/dark.tokens.json',
+    default: 'tokens/default.dtif.json',
+    dark: 'tokens/dark.dtif.json',
   },
   output: [
     { format: 'css', file: 'dist/tokens.css' },

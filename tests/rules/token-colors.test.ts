@@ -5,7 +5,19 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 function createLinter(rule: unknown = 'error') {
-  const tokens = { colors: { $type: 'color', primary: { $value: '#ffffff' } } };
+  const tokens = {
+    palette: {
+      $type: 'color',
+      neutral: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+      accent: {
+        $type: 'color',
+        $value: { colorSpace: 'display-p3', components: [1, 0, 0] },
+      },
+    },
+  } as const;
   return initLinter(
     { tokens, rules: { 'design-token/colors': rule } },
     {
@@ -14,6 +26,24 @@ function createLinter(rule: unknown = 'error') {
     },
   );
 }
+
+void test('design-token/colors allows declared rgb tokens', async () => {
+  const linter = createLinter();
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "rgb(255, 255, 255)" }} />;',
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 0);
+});
+
+void test('design-token/colors allows declared color() tokens', async () => {
+  const linter = createLinter();
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "color(display-p3 1 0 0)" }} />;',
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 0);
+});
 
 void test('design-token/colors reports disallowed hwb', async () => {
   const linter = createLinter();
@@ -45,7 +75,7 @@ void test('design-token/colors reports disallowed lch', async () => {
 void test('design-token/colors reports disallowed color()', async () => {
   const linter = createLinter();
   const res = await linter.lintText(
-    'const c = <div style={{ color: "color(display-p3 1 0 0)" }} />;',
+    'const c = <div style={{ color: "color(display-p3 0 1 0)" }} />;',
     'file.tsx',
   );
   assert.equal(res.messages.length, 1);

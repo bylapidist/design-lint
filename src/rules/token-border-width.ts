@@ -1,13 +1,14 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
   data: { isRecord },
 } = guards;
+const { getPathRoot } = tokens;
 
 interface BorderWidthOptions {
   units?: string[];
@@ -28,7 +29,7 @@ export const borderWidthRule = tokenRule<BorderWidthOptions>({
       isRecord(val) && typeof val.value === 'number' ? val.value : null;
     const allowed = new Set<number>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('borderWidths.')) continue;
+      if (getPathRoot(path) !== 'borderWidths') continue;
       const num = parse(value);
       if (num !== null) allowed.add(num);
     }

@@ -8,15 +8,28 @@ import path from 'node:path';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
 import { loadTokens } from '../../src/config/token-loader.js';
 
+const black = { colorSpace: 'srgb', components: [0, 0, 0] } as const;
+const nearWhite = { colorSpace: 'srgb', components: [1, 1, 1] } as const;
+const charcoal = {
+  colorSpace: 'srgb',
+  components: [0.133, 0.133, 0.133],
+} as const;
+
 void test('reads token files', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'light.tokens.json'),
-    JSON.stringify({ color: { primary: { $type: 'color', $value: '#000' } } }),
+    JSON.stringify({
+      color: {
+        primary: { $type: 'color', $value: black },
+      },
+    }),
   );
   const tokens = await loadTokens({ light: './light.tokens.json' }, tmp);
-  const light = tokens.light as { color: { primary: { $value: string } } };
-  assert.equal(light.color.primary.$value, '#000');
+  const light = tokens.light as {
+    color: { primary: { $value: typeof black } };
+  };
+  assert.deepEqual(light.color.primary.$value, black);
 });
 
 void test('propagates parsing errors', async () => {
@@ -27,7 +40,7 @@ void test('propagates parsing errors', async () => {
   );
   await assert.rejects(
     loadTokens({ light: './bad.tokens.json' }, tmp),
-    /missing \$value/i,
+    /DTIF validation failed/i,
   );
 });
 
@@ -41,37 +54,39 @@ void test('includes theme when token file missing', async () => {
 
 void test('parses inline design tokens object', async () => {
   const tokens = await loadTokens(
-    { color: { primary: { $type: 'color', $value: '#000' } } },
+    { color: { primary: { $type: 'color', $value: black } } },
     process.cwd(),
   );
-  const color = tokens.color as { primary: { $value: string } };
-  assert.equal(color.primary.$value, '#000');
+  const color = tokens.color as { primary: { $value: typeof black } };
+  assert.deepEqual(color.primary.$value, black);
 });
 
 void test('retains metadata on inline tokens', async () => {
   const tokens = await loadTokens(
     {
-      $schema: 'https://design-tokens.org',
-      color: { primary: { $type: 'color', $value: '#000' } },
+      $schema: 'https://dtif.lapidist.net/schema/core.json',
+      color: { primary: { $type: 'color', $value: black } },
     },
     process.cwd(),
   );
-  const color = tokens.color as { primary: { $value: string } };
-  assert.equal(color.primary.$value, '#000');
+  const color = tokens.color as { primary: { $value: typeof black } };
+  assert.deepEqual(color.primary.$value, black);
   const meta = tokens as { $schema: string };
-  assert.equal(meta.$schema, 'https://design-tokens.org');
+  assert.equal(meta.$schema, 'https://dtif.lapidist.net/schema/core.json');
 });
 
 void test('parses inline theme record', async () => {
   const tokens = await loadTokens(
     {
-      light: { color: { primary: { $type: 'color', $value: '#000' } } },
-      dark: { color: { primary: { $type: 'color', $value: '#111' } } },
+      light: { color: { primary: { $type: 'color', $value: black } } },
+      dark: { color: { primary: { $type: 'color', $value: charcoal } } },
     },
     process.cwd(),
   );
-  const light = tokens.light as { color: { primary: { $value: string } } };
-  assert.equal(light.color.primary.$value, '#000');
+  const light = tokens.light as {
+    color: { primary: { $value: typeof black } };
+  };
+  assert.deepEqual(light.color.primary.$value, black);
 });
 
 void test('merges variant tokens over default', async () => {
@@ -81,8 +96,8 @@ void test('merges variant tokens over default', async () => {
     JSON.stringify({
       $description: 'base',
       color: {
-        primary: { $type: 'color', $value: '#000' },
-        secondary: { $type: 'color', $value: '#222' },
+        primary: { $type: 'color', $value: black },
+        secondary: { $type: 'color', $value: charcoal },
       },
     }),
   );
@@ -90,7 +105,7 @@ void test('merges variant tokens over default', async () => {
     path.join(tmp, 'dark.tokens.json'),
     JSON.stringify({
       $description: 'dark',
-      color: { primary: { $type: 'color', $value: '#111' } },
+      color: { primary: { $type: 'color', $value: nearWhite } },
     }),
   );
   const tokens = await loadTokens(
@@ -100,18 +115,18 @@ void test('merges variant tokens over default', async () => {
   const dark = tokens.dark as {
     $description: string;
     color: {
-      primary: { $value: string };
-      secondary: { $value: string };
+      primary: { $value: typeof nearWhite };
+      secondary: { $value: typeof charcoal };
     };
   };
-  assert.equal(dark.color.primary.$value, '#111');
-  assert.equal(dark.color.secondary.$value, '#222');
+  assert.deepEqual(dark.color.primary.$value, nearWhite);
+  assert.deepEqual(dark.color.secondary.$value, charcoal);
   assert.equal(dark.$description, 'dark');
   const base = tokens.default as {
     $description: string;
-    color: { primary: { $value: string } };
+    color: { primary: { $value: typeof black } };
   };
-  assert.equal(base.color.primary.$value, '#000');
+  assert.deepEqual(base.color.primary.$value, black);
   assert.equal(base.$description, 'base');
 });
 

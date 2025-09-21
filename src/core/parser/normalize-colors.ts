@@ -4,7 +4,7 @@ import { validateColor } from '../token-validators/color.js';
 
 export type ColorSpace = 'rgb' | 'hsl' | 'hex';
 
-function buildColorString(
+export function buildColorString(
   colorSpace: string,
   components: (number | 'none')[],
   alpha?: number,

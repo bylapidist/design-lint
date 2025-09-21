@@ -30,13 +30,37 @@ export function flattenDesignTokens(
     onWarn: options?.onWarn,
   });
   const transform = options?.nameTransform;
-  return flat.map(({ path, aliases, ...rest }) => ({
-    ...rest,
-    path: normalizePath(path, transform),
-    ...(aliases
-      ? { aliases: aliases.map((a) => normalizePath(a, transform)) }
-      : {}),
-  }));
+  return flat.map((token) => {
+    const { path, value, type, metadata } = token;
+    const aliases = token.aliases ? [...token.aliases] : undefined;
+    const ref = token.ref;
+
+    if (!transform) {
+      return {
+        path,
+        value,
+        ...(type ? { type } : {}),
+        ...(ref ? { ref } : {}),
+        ...(aliases ? { aliases } : {}),
+        metadata,
+      } satisfies FlattenedToken;
+    }
+
+    const normalizedPath = normalizePath(path, transform);
+    const normalizedAliases = aliases?.map((alias) =>
+      normalizePath(alias, transform),
+    );
+    const normalizedRef = ref ? normalizePath(ref, transform) : undefined;
+
+    return {
+      path: normalizedPath,
+      value,
+      ...(type ? { type } : {}),
+      ...(normalizedRef ? { ref: normalizedRef } : {}),
+      ...(normalizedAliases ? { aliases: normalizedAliases } : {}),
+      metadata,
+    } satisfies FlattenedToken;
+  });
 }
 
 /**

@@ -1,12 +1,13 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
 } = guards;
+const { getPathRoot } = tokens;
 
 interface SpacingOptions {
   base?: number;
@@ -31,7 +32,7 @@ export const spacingRule = tokenRule<SpacingOptions>({
   getAllowed(tokens) {
     const allowed = new Set<number>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('spacing.')) continue;
+      if (getPathRoot(path) !== 'spacing') continue;
       const val = value;
       if (val && typeof val === 'object') {
         const num: unknown = Reflect.get(val, 'value');

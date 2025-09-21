@@ -62,14 +62,14 @@ Key methods:
 - `registerTokenTransform(transform)` – convert design tokens before validation;
   returns an unregister function.
 - `parseDesignTokens(tokens, getLoc?, options?)` – validate and flatten design tokens.
-- `readDesignTokensFile(path)` – load and validate a `.tokens` or `.tokens.json` file.
+- `readDesignTokensFile(path)` – load and validate a DTIF token file (e.g. `.dtif.json`, `.tokens.yaml`).
 - `parseDesignTokensFile(path)` – read and parse a design tokens file, returning flattened tokens.
 - `TokenParseError` – error type exposing file location details for token parsing failures.
 
 ### Token transforms
 Design token objects may originate from sources like Figma or Tokens Studio.
 Use `registerTokenTransform()` to supply converters that adapt these formats
-to the [W3C Design Tokens specification](./glossary.md#design-tokens).
+to the [Design Token Interchange Format](./glossary.md#design-tokens).
 Transforms run before token normalization and validation.
 `parseDesignTokens()` also accepts a `transforms` array for per-call transforms.
 

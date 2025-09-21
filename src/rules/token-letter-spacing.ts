@@ -1,11 +1,12 @@
 import ts from 'typescript';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
   data: { isRecord },
 } = guards;
+const { getPathRoot } = tokens;
 
 const parse = (val: unknown): number | null => {
   if (
@@ -43,7 +44,7 @@ export const letterSpacingRule = tokenRule({
     const numeric = new Set<number>();
     const values = new Set<string>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('letterSpacings.')) continue;
+      if (getPathRoot(path) !== 'letterSpacings') continue;
       const val = value;
       const num = parse(val);
       if (num !== null) numeric.add(num);

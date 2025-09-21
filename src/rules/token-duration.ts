@@ -1,11 +1,12 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
 } = guards;
+const { getPathRoot } = tokens;
 
 export const durationRule = tokenRule({
   name: 'design-token/duration',
@@ -26,7 +27,7 @@ export const durationRule = tokenRule({
     };
     const allowed = new Set<number>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('durations.')) continue;
+      if (getPathRoot(path) !== 'durations') continue;
       const num = parse(value);
       if (num !== null) allowed.add(num);
     }

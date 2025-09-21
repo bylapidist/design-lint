@@ -1,11 +1,12 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
 } = guards;
+const { getPathRoot } = tokens;
 
 export const opacityRule = tokenRule({
   name: 'design-token/opacity',
@@ -16,7 +17,7 @@ export const opacityRule = tokenRule({
   getAllowed(tokens) {
     const allowed = new Set<number>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('opacity.')) continue;
+      if (getPathRoot(path) !== 'opacity') continue;
       if (typeof value === 'number') {
         allowed.add(value);
       }

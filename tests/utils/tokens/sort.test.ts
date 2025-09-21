@@ -15,18 +15,18 @@ function token(path: string): FlattenedToken {
 }
 
 void test('sortTokensByPath orders tokens alphabetically by path', () => {
-  const tokens = [token('b.beta'), token('a.alpha')];
+  const tokens = [token('/b/beta'), token('/a/alpha')];
   const sorted = sortTokensByPath(tokens);
   assert.deepEqual(
     sorted.map((t) => t.path),
-    ['a.alpha', 'b.beta'],
+    ['/a/alpha', '/b/beta'],
   );
-  assert.equal(tokens[0].path, 'b.beta');
+  assert.equal(tokens[0].path, '/b/beta');
 });
 
 void test('compareTokenPath sorts by path', () => {
-  const a = token('a');
-  const b = token('b');
+  const a = token('/a');
+  const b = token('/b');
   assert.ok(compareTokenPath(a, b) < 0);
   assert.ok(compareTokenPath(b, a) > 0);
 });

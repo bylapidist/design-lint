@@ -16,19 +16,45 @@ const baseConfig = (): Config => ({
 void test('wraps single token set as default theme', () => {
   const cfg = baseConfig();
   cfg.tokens = {
-    color: { primary: { $type: 'color', $value: '#000' } },
+    color: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+    },
   } as Config['tokens'];
   const provider = new ConfigTokenProvider(cfg);
   const tokens = provider.load();
-  const light = tokens.default as { color: { primary: { $value: string } } };
-  assert.equal(light.color.primary.$value, '#000');
+  const light = tokens.default as {
+    color: {
+      primary: { $value: { colorSpace: string; components: number[] } };
+    };
+  };
+  assert.deepEqual(light.color.primary.$value, {
+    colorSpace: 'srgb',
+    components: [0, 0, 0],
+  });
 });
 
 void test('handles multiple themes', () => {
   const cfg = baseConfig();
   cfg.tokens = {
-    light: { color: { primary: { $type: 'color', $value: '#111' } } },
-    dark: { color: { primary: { $type: 'color', $value: '#222' } } },
+    light: {
+      color: {
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0.066, 0.066, 0.066] },
+        },
+      },
+    },
+    dark: {
+      color: {
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0.133, 0.133, 0.133] },
+        },
+      },
+    },
   } as Config['tokens'];
   const provider = new ConfigTokenProvider(cfg);
   const tokens = provider.load();
@@ -39,7 +65,7 @@ void test('rejects invalid token structures', () => {
   const cfg = baseConfig();
   cfg.tokens = { foo: '#000' } as unknown as Config['tokens'];
   const provider = new ConfigTokenProvider(cfg);
-  assert.throws(() => provider.load(), /must be an object with \$value/);
+  assert.throws(() => provider.load(), /DTIF validation failed/i);
 });
 
 void test('includes theme in parse errors for theme records', () => {
@@ -58,7 +84,7 @@ void test('throws on invalid design token object', () => {
   const cfg = baseConfig();
   cfg.tokens = { color: { primary: { $type: 'color' } } } as Config['tokens'];
   const provider = new ConfigTokenProvider(cfg);
-  assert.throws(() => provider.load(), /missing \$value/i);
+  assert.throws(() => provider.load(), /DTIF validation failed/i);
 });
 
 void test('returns empty object when tokens missing', () => {

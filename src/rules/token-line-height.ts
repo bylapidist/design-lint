@@ -1,10 +1,11 @@
 import ts from 'typescript';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
 } = guards;
+const { getPathRoot } = tokens;
 
 const parse = (val: string): number | null => {
   const v = val.trim();
@@ -30,7 +31,7 @@ export const lineHeightRule = tokenRule({
   getAllowed(tokens) {
     const allowed = new Set<number>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('lineHeights.')) continue;
+      if (getPathRoot(path) !== 'lineHeights') continue;
       const val = value;
       if (typeof val === 'number') allowed.add(val);
     }

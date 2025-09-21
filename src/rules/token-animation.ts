@@ -1,7 +1,8 @@
 import valueParser from 'postcss-value-parser';
-import { rules } from '../utils/index.js';
+import { rules, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
+const { getPathRoot } = tokens;
 
 const normalize = (val: string): string =>
   valueParser.stringify(valueParser(val).nodes).trim();
@@ -15,7 +16,7 @@ export const animationRule = tokenRule({
   getAllowed(tokens) {
     const allowed = new Set<string>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('animations.')) continue;
+      if (getPathRoot(path) !== 'animations') continue;
       const val = value;
       if (typeof val === 'string') {
         allowed.add(normalize(val));

@@ -4,23 +4,28 @@
  * Zod schemas describing the structure of configuration and design tokens.
  */
 import path from 'node:path';
+import {
+  createDtifValidator,
+  DTIF_VALIDATION_MESSAGE,
+  formatDtifErrors,
+} from '../utils/dtif/validator.js';
+import {
+  isSupportedTokenFilePath,
+  TOKEN_FILE_SUFFIXES,
+} from '../utils/tokens/files.js';
 import { z } from 'zod';
 import type { Config } from '../core/linter.js';
 import type { DesignTokens } from '../core/types.js';
-import { guards } from '../utils/index.js';
 
 /**
  * Validation schema for configuration files.
  *
  * Uses [Zod](https://zod.dev/) to ensure user-supplied configuration matches
- * expected shapes and that token definitions adhere to the W3C Design Tokens
- * format.
+ * expected shapes and that token definitions adhere to the Design Token
+ * Interchange Format (DTIF).
  */
 
-const {
-  domain: { isTokenGroup },
-} = guards;
-
+const dtifValidator = createDtifValidator();
 /**
  * Allowed rule severity values like `'error'` or numeric levels.
  */
@@ -42,29 +47,47 @@ const ruleSettingSchema = z.union([
 ]);
 
 /**
- * Schema ensuring a value follows the W3C Design Tokens format.
+ * Schema ensuring a value follows the DTIF format.
  */
-const designTokensSchema = z.custom<DesignTokens>(isTokenGroup, {
-  message: 'Tokens must be W3C Design Tokens objects',
-});
+function isObjectRecord(value: unknown): value is Record<PropertyKey, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+const designTokensSchema: z.ZodType<DesignTokens> = z
+  .unknown()
+  .superRefine((value, ctx) => {
+    if (!isObjectRecord(value) || Array.isArray(value)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: DTIF_VALIDATION_MESSAGE,
+      });
+      return;
+    }
+
+    if (!dtifValidator.validate(value)) {
+      const details = formatDtifErrors(dtifValidator.validate.errors);
+      const message =
+        details === DTIF_VALIDATION_MESSAGE
+          ? DTIF_VALIDATION_MESSAGE
+          : `DTIF validation failed:\n${details}`;
+      ctx.addIssue({
+        code: 'custom',
+        message,
+      });
+    }
+  })
+  .pipe(z.custom<DesignTokens>(() => true));
 
 /**
  * Schema validating token file path references.
  */
+const TOKEN_FILE_MESSAGE = `Token file paths must be relative and end with one of: ${TOKEN_FILE_SUFFIXES.join(', ')}`;
+
 const tokenFileSchema = z
   .string()
-  .refine(
-    (p) =>
-      !path.isAbsolute(p) &&
-      (p.endsWith('.tokens') ||
-        p.endsWith('.tokens.json') ||
-        p.endsWith('.tokens.yaml') ||
-        p.endsWith('.tokens.yml')),
-    {
-      message:
-        'Token file paths must be relative and end with .tokens, .tokens.json, .tokens.yaml, or .tokens.yml',
-    },
-  );
+  .refine((p) => !path.isAbsolute(p) && isSupportedTokenFilePath(p), {
+    message: TOKEN_FILE_MESSAGE,
+  });
 
 /**
  * Schema describing the `tokens` property of configuration objects.

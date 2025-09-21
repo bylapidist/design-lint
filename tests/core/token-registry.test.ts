@@ -9,7 +9,7 @@ const tokens: Record<string, DesignTokens> = {
     color: {
       $type: 'color',
       primary: { $value: '#fff' },
-      secondary: { $value: '{color.primary}' },
+      secondary: { $ref: '/color/primary' },
     },
   },
   dark: {
@@ -22,9 +22,9 @@ const tokens: Record<string, DesignTokens> = {
 
 void test('getToken retrieves tokens by theme and resolves aliases', () => {
   const registry = new TokenRegistry(tokens);
-  assert.equal(registry.getToken('color.primary')?.value, '#fff');
-  assert.equal(registry.getToken('color.secondary')?.value, '#fff');
-  assert.equal(registry.getToken('color.primary', 'dark')?.value, '#000');
+  assert.equal(registry.getToken('/color/primary')?.value, '#fff');
+  assert.equal(registry.getToken('/color/secondary')?.value, '#fff');
+  assert.equal(registry.getToken('/color/primary', 'dark')?.value, '#000');
 });
 
 void test('getToken normalizes paths and applies name transforms', () => {
@@ -34,13 +34,14 @@ void test('getToken normalizes paths and applies name transforms', () => {
         ColorGroup: {
           $type: 'color',
           primaryColor: { $value: '#111' },
+          secondaryColor: { $ref: '/ColorGroup/primaryColor' },
         },
       },
     },
     { nameTransform: 'kebab-case' },
   );
-  assert.equal(registry.getToken('ColorGroup.primaryColor')?.value, '#111');
-  assert.equal(registry.getToken('color-group.primary-color')?.value, '#111');
+  assert.equal(registry.getToken('/ColorGroup/primaryColor')?.value, '#111');
+  assert.equal(registry.getToken('/color-group/primary-color')?.value, '#111');
 });
 
 void test('getTokens returns flattened tokens and dedupes across themes', () => {
@@ -49,5 +50,5 @@ void test('getTokens returns flattened tokens and dedupes across themes', () => 
   assert.equal(all.length, 2);
   const dark = registry.getTokens('dark');
   assert.equal(dark.length, 1);
-  assert.equal(dark[0].path, 'color.primary');
+  assert.equal(dark[0].path, '/color/primary');
 });

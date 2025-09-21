@@ -1,14 +1,16 @@
+import { JsonPointer } from 'jsonpointerx';
 import type {
   DesignTokens,
+  FlattenedToken,
   Token,
   TokenGroup,
-  FlattenedToken,
 } from '../types.js';
+import type { DeprecationMetadata } from '@lapidist/dtif-schema';
 import { guards } from '../../utils/index.js';
 
 const {
   data: { isRecord },
-  domain: { isToken, isTokenGroup },
+  domain: { isToken },
 } = guards;
 
 const tokenLocations = new Map<string, { line: number; column: number }>();
@@ -19,60 +21,166 @@ export function getTokenLocation(
   return tokenLocations.get(path);
 }
 
-const GROUP_PROPS = new Set([
-  '$type',
-  '$description',
-  '$extensions',
-  '$deprecated',
-  '$schema',
-]);
-const INVALID_NAME_CHARS = /[{}\.]/;
-
-function validateExtensions(
-  value: unknown,
-  path: string,
-  onWarn?: (msg: string) => void,
-): void {
-  if (value === undefined) return;
-  if (!isRecord(value)) {
-    throw new Error(`Token or group ${path} has invalid $extensions`);
-  }
-  for (const key of Object.keys(value)) {
-    if (!key.includes('.') && onWarn) {
-      onWarn(
-        `Token or group ${path} has $extensions key without a dot: ${key}`,
-      );
+function getLocation(
+  pointer: string,
+  getLoc?: (path: string) => { line: number; column: number },
+): { line: number; column: number } {
+  if (!getLoc) return { line: 1, column: 1 };
+  try {
+    return getLoc(pointer);
+  } catch (error) {
+    if (error instanceof Error) {
+      // fall through to default when the location lookup fails
     }
   }
+  return { line: 1, column: 1 };
 }
 
-function validateDeprecated(value: unknown, path: string): void {
-  if (value === undefined) return;
-  if (typeof value !== 'boolean' && typeof value !== 'string') {
-    throw new Error(`Token or group ${path} has invalid $deprecated`);
+function toPointer(segments: string[]): string {
+  if (segments.length === 0) return '';
+  return new JsonPointer(segments).toString();
+}
+
+function getCollectionType(
+  collection: TokenGroup,
+  inheritedType?: string,
+): string | undefined {
+  if ('$type' in collection) {
+    const candidate = collection.$type;
+    if (typeof candidate === 'string') {
+      return candidate;
+    }
   }
+  return inheritedType;
 }
 
-// The spec says, "The value of the `$description` property MUST be a plain JSON string."
-function validateDescription(value: unknown, path: string): void {
-  if (value === undefined) return;
-  if (typeof value !== 'string') {
-    throw new Error(`Token or group ${path} has invalid $description`);
+function getCollectionDeprecated(
+  collection: TokenGroup,
+  inheritedDeprecated?: DeprecationMetadata,
+): DeprecationMetadata | undefined {
+  if ('$deprecated' in collection) {
+    const candidate = collection.$deprecated;
+    if (isDeprecationMetadata(candidate)) {
+      return candidate;
+    }
   }
+  return inheritedDeprecated;
 }
 
-function validateMetadata(
-  node: {
-    $extensions?: unknown;
-    $deprecated?: unknown;
-    $description?: unknown;
-  },
-  path: string,
+function warnCaseCollision(
+  seen: Map<string, string>,
+  name: string,
   onWarn?: (msg: string) => void,
+  context?: string,
 ): void {
-  validateExtensions(node.$extensions, path, onWarn);
-  validateDeprecated(node.$deprecated, path);
-  validateDescription(node.$description, path);
+  const lower = name.toLowerCase();
+  const existing = seen.get(lower);
+  if (existing && existing !== name && onWarn) {
+    const scope = context ? `${context} ` : '';
+    onWarn(
+      `${scope}contains names that differ only by case: ${existing} vs ${name}`,
+    );
+  } else if (!existing) {
+    seen.set(lower, name);
+  }
+}
+
+function isTokenCollection(value: unknown): value is TokenGroup {
+  return isRecord(value) && !isToken(value);
+}
+
+function isDeprecationMetadata(value: unknown): value is DeprecationMetadata {
+  if (typeof value === 'boolean') return true;
+  if (!isRecord(value)) return false;
+  if (!('$replacement' in value)) return false;
+  const replacement = value.$replacement;
+  return typeof replacement === 'string';
+}
+
+interface BuildTokenOptions {
+  getLoc?: (path: string) => { line: number; column: number };
+  inheritedType?: string;
+  inheritedDeprecated?: DeprecationMetadata;
+}
+
+function buildToken(
+  token: Token,
+  pointer: string,
+  options: BuildTokenOptions = {},
+): FlattenedToken {
+  const { getLoc, inheritedType, inheritedDeprecated } = options;
+  const loc = getLocation(pointer, getLoc);
+  tokenLocations.set(pointer, loc);
+  const explicitType = token.$type;
+  const type = typeof explicitType === 'string' ? explicitType : inheritedType;
+  const deprecated = token.$deprecated;
+
+  const flattened: FlattenedToken = {
+    path: pointer,
+    value: token.$value,
+    type,
+    metadata: {
+      description: token.$description,
+      extensions: token.$extensions,
+      deprecated: isDeprecationMetadata(deprecated)
+        ? deprecated
+        : inheritedDeprecated,
+      loc,
+    },
+  };
+
+  if (typeof token.$ref === 'string') {
+    flattened.ref = token.$ref;
+  }
+
+  return flattened;
+}
+
+function walkCollection(
+  collection: TokenGroup,
+  segments: string[],
+  tokens: FlattenedToken[],
+  getLoc?: (path: string) => { line: number; column: number },
+  onWarn?: (msg: string) => void,
+  inheritedDeprecated?: DeprecationMetadata,
+  inheritedType?: string,
+): void {
+  const seenNames = new Map<string, string>();
+  const context = segments.length ? toPointer(segments) : 'root collection';
+  const collectionDeprecated = getCollectionDeprecated(
+    collection,
+    inheritedDeprecated,
+  );
+  const collectionType = getCollectionType(collection, inheritedType);
+
+  for (const [rawName, node] of Object.entries(collection)) {
+    if (rawName.startsWith('$')) continue;
+    warnCaseCollision(seenNames, rawName, onWarn, context);
+    if (isToken(node)) {
+      const pointer = toPointer([...segments, rawName]);
+      const flattened = buildToken(node, pointer, {
+        getLoc,
+        inheritedDeprecated: collectionDeprecated,
+        inheritedType: collectionType,
+      });
+      tokens.push(flattened);
+      continue;
+    }
+
+    if (!isTokenCollection(node)) continue;
+
+    const nextSegments = [...segments, rawName];
+
+    walkCollection(
+      node,
+      nextSegments,
+      tokens,
+      getLoc,
+      onWarn,
+      getCollectionDeprecated(node, collectionDeprecated),
+      getCollectionType(node, collectionType),
+    );
+  }
 }
 
 export function buildParseTree(
@@ -81,111 +189,7 @@ export function buildParseTree(
   onWarn?: (msg: string) => void,
 ): FlattenedToken[] {
   tokenLocations.clear();
-  const result: FlattenedToken[] = [];
-  const seenExactPaths = new Set<string>();
-  const seenCaseInsensitivePaths = new Map<string, string>();
-
-  function walk(
-    group: TokenGroup,
-    prefix: string[],
-    inheritedType?: string,
-    inheritedDeprecated?: boolean | string,
-  ): void {
-    const pathLabel = prefix.length ? prefix.join('.') : '(root)';
-    validateMetadata(group, pathLabel, onWarn);
-    if (prefix.length === 0) {
-      if (
-        '$schema' in group &&
-        typeof Reflect.get(group, '$schema') !== 'string'
-      ) {
-        throw new Error('Root group has invalid $schema');
-      }
-    } else if ('$schema' in group) {
-      throw new Error('$schema is only allowed on the root group');
-    }
-    const currentType = group.$type ?? inheritedType;
-    const currentDeprecated = group.$deprecated ?? inheritedDeprecated;
-    const seenExactNames = new Set<string>();
-    const seenCaseInsensitiveNames = new Map<string, string>();
-    // The spec states, "Token names are case-sensitive. Tools MAY display a warning when token names differ only by case."
-
-    for (const name of Object.keys(group)) {
-      if (GROUP_PROPS.has(name)) continue;
-      if (name.startsWith('$')) {
-        throw new Error(`Invalid token or group name: ${name}`);
-      }
-      if (INVALID_NAME_CHARS.test(name)) {
-        throw new Error(`Invalid token or group name: ${name}`);
-      }
-      if (seenExactNames.has(name)) {
-        throw new Error(`Duplicate token name: ${name}`);
-      }
-      const lower = name.toLowerCase();
-      const existing = seenCaseInsensitiveNames.get(lower);
-      if (existing && existing !== name && onWarn) {
-        onWarn(
-          `Duplicate token name differing only by case: ${existing} vs ${name}`,
-        );
-      } else if (!existing) {
-        seenCaseInsensitiveNames.set(lower, name);
-      }
-      seenExactNames.add(name);
-
-      const node = group[name];
-      if (node === undefined) continue;
-      const pathParts = [...prefix, name];
-      const pathId = pathParts.join('.');
-      if (seenExactPaths.has(pathId)) {
-        throw new Error(`Duplicate token path: ${pathId}`);
-      }
-      const lowerPath = pathId.toLowerCase();
-      const existingPath = seenCaseInsensitivePaths.get(lowerPath);
-      if (existingPath && existingPath !== pathId && onWarn) {
-        onWarn(
-          `Duplicate token path differing only by case: ${existingPath} vs ${pathId}`,
-        );
-      } else if (!existingPath) {
-        seenCaseInsensitivePaths.set(lowerPath, pathId);
-      }
-      seenExactPaths.add(pathId);
-
-      if (isRecord(node)) {
-        if (isToken(node)) {
-          const token: Token = { ...node, $type: node.$type ?? currentType };
-          validateMetadata(token, pathId, onWarn);
-          const tokenDeprecated = token.$deprecated ?? currentDeprecated;
-          if (tokenDeprecated !== undefined)
-            token.$deprecated = tokenDeprecated;
-          const loc = getLoc ? getLoc(pathId) : { line: 1, column: 1 };
-          tokenLocations.set(pathId, loc);
-          result.push({
-            path: pathId,
-            value: token.$value,
-            type: token.$type,
-            metadata: {
-              description: token.$description,
-              extensions: token.$extensions,
-              deprecated: token.$deprecated,
-              loc,
-            },
-          });
-        } else if (isTokenGroup(node)) {
-          const childKeys = Object.keys(node).filter(
-            (k) => !GROUP_PROPS.has(k),
-          );
-          if ('$type' in node && childKeys.length === 0) {
-            throw new Error(`Token ${pathId} is missing $value`);
-          }
-          walk(node, pathParts, currentType, currentDeprecated);
-        } else {
-          throw new Error(`Token ${pathId} must be an object with $value`);
-        }
-      } else {
-        throw new Error(`Token ${pathId} must be an object with $value`);
-      }
-    }
-  }
-
-  walk(tokens, [], undefined, undefined);
-  return result;
+  const flattened: FlattenedToken[] = [];
+  walkCollection(tokens, [], flattened, getLoc, onWarn);
+  return flattened;
 }

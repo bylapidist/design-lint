@@ -1,9 +1,11 @@
 import type { DesignTokens } from '../core/types.js';
 import {
   getFlattenedTokens,
+  normalizePath,
   sortTokensByPath,
   type NameTransform,
 } from '../utils/tokens/index.js';
+import { JsonPointer } from 'jsonpointerx';
 
 export interface CssOutputOptions {
   /** Optional transform applied to token path segments before generating vars */
@@ -44,12 +46,35 @@ export function generateCssVariables(
     );
     const lines: string[] = [`${selector} {`];
     for (const t of flat) {
-      const varName = `--${t.path.replace(/\./g, '-')}`;
-      lines.push(`  ${varName}: ${String(t.value)};`);
+      const varName = pointerToCssVariable(t.path);
+      lines.push(`  ${varName}: ${formatCssValue(t.value)};`);
     }
     lines.push('}');
     blocks.push(lines.join('\n'));
   }
 
   return blocks.join('\n\n');
+}
+
+function formatCssValue(value: unknown): string {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return String(value);
+  }
+  if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+    return JSON.stringify(value);
+  }
+  return '';
+}
+
+function pointerToCssVariable(path: string): string {
+  const pointer = normalizePath(path);
+  if (pointer === '') {
+    return '--';
+  }
+  const segments = JsonPointer.compile(pointer).segments;
+  return `--${segments.join('-')}`;
 }

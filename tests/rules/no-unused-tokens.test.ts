@@ -38,7 +38,7 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
       unused: {
         $value: '#123456',
         $type: 'color',
-        $deprecated: 'deprecated',
+        $deprecated: true,
         $extensions: { 'vendor.foo': true },
       },
     },
@@ -61,16 +61,14 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
     .find((m) => m.ruleId === 'design-system/no-unused-tokens');
   assert(msg);
   assert(msg.metadata);
-  assert.equal(msg.metadata.path, 'color.unused');
-  assert.equal(msg.metadata.deprecated, 'deprecated');
+  assert.equal(msg.metadata.path, '/color/unused');
+  assert.equal(msg.metadata.deprecated, true);
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });
 
 void test('design-system/no-unused-tokens passes when tokens used', async () => {
   const tokens = {
-    color: {
-      primary: { $value: '#000000', $type: 'color' },
-    },
+    color: { primary: { $value: '#000000', $type: 'color' } },
   };
   const linter = initLinter(
     {
@@ -120,9 +118,7 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
 });
 
 void test('design-system/no-unused-tokens matches hex case-insensitively', async () => {
-  const tokens = {
-    color: { primary: { $value: '#abcdef', $type: 'color' } },
-  };
+  const tokens = { color: { primary: { $value: '#abcdef', $type: 'color' } } };
   const linter = initLinter(
     {
       tokens,

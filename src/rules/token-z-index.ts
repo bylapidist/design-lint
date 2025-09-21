@@ -1,10 +1,11 @@
 import ts from 'typescript';
-import { rules, guards } from '../utils/index.js';
+import { rules, guards, tokens } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
 } = guards;
+const { getPathRoot } = tokens;
 
 export const zIndexRule = tokenRule({
   name: 'design-token/z-index',
@@ -15,7 +16,7 @@ export const zIndexRule = tokenRule({
   getAllowed(tokens) {
     const allowed = new Set<number>();
     for (const { path, value } of tokens) {
-      if (!path.startsWith('zIndex.')) continue;
+      if (getPathRoot(path) !== 'zIndex') continue;
       const val = value;
       if (typeof val === 'number') allowed.add(val);
     }

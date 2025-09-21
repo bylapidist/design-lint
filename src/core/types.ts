@@ -1,3 +1,10 @@
+import type {
+  DesignToken,
+  DesignTokenInterchangeFormat,
+  TokenCollection,
+  TokenOrCollectionNode,
+  DeprecationMetadata,
+} from '@lapidist/dtif-schema';
 import type ts from 'typescript';
 import type { z } from 'zod';
 import type { Environment } from './environment.js';
@@ -8,47 +15,40 @@ export interface VariableDefinition {
 }
 
 /**
- * W3C Design Tokens Format token node.
+ * DTIF design token node.
  */
-export interface Token {
-  $value: unknown;
-  $type?: string;
-  $description?: string;
-  $extensions?: Record<string, unknown>;
-  $deprecated?: boolean | string;
-}
+export type Token = DesignToken;
 
-/**
- * W3C Design Tokens Format group node.
- */
-export type TokenGroup = {
-  $type?: string;
-  $description?: string;
-  $extensions?: Record<string, unknown>;
-  $deprecated?: boolean | string;
-} & {
-  [name: string]: TokenGroup | Token | undefined;
+type CollectionEntries = {
+  [K in string as K extends `$${string}` ? never : K]?: TokenOrCollectionNode;
 };
 
 /**
- * Root token group with optional $schema.
+ * DTIF token collection node.
  */
-export type RootTokenGroup = TokenGroup & { $schema?: string };
+export type TokenGroup = TokenCollection & CollectionEntries;
 
 /**
- * W3C Design Tokens tree.
+ * Root DTIF document.
  */
-export type DesignTokens = RootTokenGroup;
+export type RootTokenGroup = DesignTokenInterchangeFormat;
+
+/**
+ * DTIF design token tree.
+ */
+export type DesignTokens = DesignTokenInterchangeFormat;
 
 export interface FlattenedToken {
   path: string;
   value: unknown;
   type?: string;
+  /** Canonical JSON Pointer reference when the token aliases another token. */
+  ref?: string;
   aliases?: string[];
   metadata: {
     description?: string;
     extensions?: Record<string, unknown>;
-    deprecated?: boolean | string;
+    deprecated?: DeprecationMetadata;
     loc: { line: number; column: number };
   };
 }

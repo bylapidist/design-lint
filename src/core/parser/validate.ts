@@ -1,90 +1,9 @@
-import type { Token, FlattenedToken } from '../types.js';
-import { validatorRegistry } from '../token-validators/index.js';
-import { guards } from '../../utils/index.js';
-
-const {
-  data: { isRecord },
-} = guards;
-
-function validateExtensions(value: unknown, path: string): void {
-  if (value === undefined) return;
-  if (!isRecord(value)) {
-    throw new Error(`Token or group ${path} has invalid $extensions`);
-  }
-}
-
-function validateDeprecated(value: unknown, path: string): void {
-  if (value === undefined) return;
-  if (typeof value !== 'boolean' && typeof value !== 'string') {
-    throw new Error(`Token or group ${path} has invalid $deprecated`);
-  }
-}
-
-// The spec says, "The value of the `$description` property MUST be a plain JSON string."
-function validateDescription(value: unknown, path: string): void {
-  if (value === undefined) return;
-  if (typeof value !== 'string') {
-    throw new Error(`Token or group ${path} has invalid $description`);
-  }
-}
-
-function validateMetadata(
-  node: {
-    $extensions?: unknown;
-    $deprecated?: unknown;
-    $description?: unknown;
-  },
-  path: string,
-): void {
-  validateExtensions(node.$extensions, path);
-  validateDeprecated(node.$deprecated, path);
-  validateDescription(node.$description, path);
-}
-
-function validateToken(
-  path: string,
-  token: Token,
-  tokenMap: Map<string, Token>,
-): void {
-  validateMetadata(token, path);
-  if (token.$value === undefined) {
-    throw new Error(`Token ${path} is missing $value`);
-  }
-  // The spec says, "The $type property MAY be omitted when the token references another token that has the desired type. A token referencing another token MUST have a $value set to the period-separated (`.`) path to the token it's referencing, enclosed in curly brackets."
-  if (typeof token.$value === 'string' && /^\{[^}]+\}$/.test(token.$value)) {
-    return;
-  }
-  if (!token.$type) {
-    throw new Error(`Token ${path} is missing $type`);
-  }
-  const validator = validatorRegistry.get(token.$type);
-  if (!validator) {
-    throw new Error(`Token ${path} has unknown $type ${token.$type}`);
-  }
-  validator(token.$value, path, tokenMap);
-}
-
-export function validateTokens(tokens: FlattenedToken[]): void {
-  const tokenMap = new Map<string, Token>(
-    tokens.map((t) => [
-      t.path,
-      {
-        $value: t.value,
-        $type: t.type,
-        $description: t.metadata.description,
-        $extensions: t.metadata.extensions,
-        $deprecated: t.metadata.deprecated,
-      },
-    ]),
-  );
-  for (const t of tokens) {
-    const token: Token = {
-      $value: t.value,
-      $type: t.type,
-      $description: t.metadata.description,
-      $extensions: t.metadata.extensions,
-      $deprecated: t.metadata.deprecated,
-    };
-    validateToken(t.path, token, tokenMap);
-  }
+/**
+ * Placeholder for legacy token validation.
+ *
+ * DTIF schema validation occurs before this stage, so no additional
+ * structural checks are performed yet.
+ */
+export function validateTokens(): void {
+  // Intentionally left blank. Future DTIF-specific validation can be added here.
 }

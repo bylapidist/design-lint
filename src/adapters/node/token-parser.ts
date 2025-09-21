@@ -7,12 +7,24 @@ import {
   type ValueNode,
   type DocumentNode,
 } from '@humanwhocodes/momoa';
+import { JsonPointer } from 'jsonpointerx';
 import yamlToMomoa from 'yaml-to-momoa';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
+import {
+  isSupportedTokenFilePath,
+  TOKEN_FILE_SUFFIXES,
+} from '../../utils/tokens/files.js';
 import {
   parseDesignTokens,
   type ParseDesignTokensOptions,
 } from '../../core/parser/index.js';
+import {
+  createDtifValidator,
+  DTIF_VALIDATION_MESSAGE,
+  formatDtifErrors,
+} from '../../utils/dtif/validator.js';
+
+const dtifValidator = createDtifValidator();
 
 export class TokenParseError extends Error {
   filePath: string;
@@ -42,16 +54,11 @@ export class TokenParseError extends Error {
 }
 
 function assertSupportedFile(filePath: string): void {
-  if (
-    !(
-      filePath.endsWith('.tokens') ||
-      filePath.endsWith('.tokens.json') ||
-      filePath.endsWith('.tokens.yaml') ||
-      filePath.endsWith('.tokens.yml')
-    )
-  ) {
-    throw new Error(`Unsupported design tokens file: ${filePath}`);
-  }
+  if (isSupportedTokenFilePath(filePath)) return;
+  const allowed = TOKEN_FILE_SUFFIXES.join(', ');
+  throw new Error(
+    `Unsupported design tokens file: ${filePath}. Expected one of: ${allowed}`,
+  );
 }
 
 function isDesignTokens(value: unknown): value is DesignTokens {
@@ -100,21 +107,30 @@ function parseTokensContent(
       return value.type === 'Object';
     }
 
-    function walk(value: ValueNode, prefix: string[]): void {
-      if (!isObjectNode(value)) return;
-      const members = value.members;
-      const hasValue = members.some((m) => getName(m.name) === '$value');
-      if (hasValue) {
-        const pathId = prefix.join('.');
-        locations.set(pathId, {
-          line: value.loc.start.line,
-          column: value.loc.start.column,
-        });
+    function toPointer(segments: string[]): string {
+      if (segments.length === 0) {
+        return '';
       }
-      for (const m of members) {
-        const name = getName(m.name);
-        if (name.startsWith('$')) continue;
-        walk(m.value, [...prefix, name]);
+      return new JsonPointer(segments).toString();
+    }
+
+    function recordPointer(segments: string[], value: ValueNode): void {
+      const pointer = toPointer(segments);
+      const key = pointer === '' ? '/' : pointer;
+      locations.set(key, {
+        line: value.loc.start.line,
+        column: value.loc.start.column,
+      });
+    }
+
+    function walk(value: ValueNode, segments: string[]): void {
+      recordPointer(segments, value);
+      if (!isObjectNode(value)) return;
+      for (const member of value.members) {
+        const name = getName(member.name);
+        const next = [...segments, name];
+        recordPointer(next, member.value);
+        walk(member.value, next);
       }
     }
 
@@ -126,9 +142,33 @@ function parseTokensContent(
         `Error parsing ${filePath}: root value must be an object`,
       );
     }
+    if (!dtifValidator.validate(result)) {
+      const errors = dtifValidator.validate.errors;
+      const pointer =
+        errors && errors.length > 0 ? (errors[0]?.instancePath ?? '') : '';
+      const key = pointer === '' ? '/' : pointer;
+      const loc = locations.get(key) ?? { line: 1, column: 1 };
+      const detail = formatDtifErrors(errors);
+      const message =
+        detail === DTIF_VALIDATION_MESSAGE
+          ? DTIF_VALIDATION_MESSAGE
+          : `DTIF validation failed:\n${detail}`;
+      const lines = content.split(/\r?\n/);
+      const lineText = lines[loc.line - 1] ?? '';
+      throw new TokenParseError(
+        filePath,
+        loc.line,
+        loc.column,
+        message,
+        lineText,
+      );
+    }
     return {
       tokens: result,
-      getTokenLocation: (path) => locations.get(path) ?? { line: 1, column: 1 },
+      getTokenLocation: (path) => {
+        const key = path === '' ? '/' : path;
+        return locations.get(key) ?? { line: 1, column: 1 };
+      },
     };
   } catch (error: unknown) {
     let line: number | undefined;

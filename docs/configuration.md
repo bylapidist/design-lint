@@ -39,7 +39,7 @@ Each option tunes a specific aspect of design-lint. Use the table below as a qui
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `tokens` | object | `undefined` | A [W3C Design Tokens](./glossary.md#design-tokens) tree or a map of themes. Theme values may be inline token objects or paths to `.tokens` files. |
+| `tokens` | object | `undefined` | A [DTIF design token](./glossary.md#design-tokens) tree or a map of themes. Theme values may be inline token objects or paths to `.tokens` or `.dtif` files. |
 | `rules` | object | `undefined` | Enables [rules](./rules/index.md) and sets their severity. |
 | `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
 | `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
@@ -51,7 +51,7 @@ Each option tunes a specific aspect of design-lint. Use the table below as a qui
 
 
 ## Tokens
-Tokens describe the design system in a machine-readable form. Provide a W3C Design Tokens object directly or supply a map of theme names.
+Tokens describe the design system in a machine-readable form. Provide a Design Token Interchange Format (DTIF) document directly or supply a map of theme names.
 
 Inline example:
 
@@ -63,7 +63,7 @@ Inline example:
         "$type": "color",
         "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
       },
-      "secondary": { "$type": "color", "$value": "{color.primary}" }
+      "secondary": { "$ref": "/color/primary" }
     },
     "space": {
       "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
@@ -78,7 +78,7 @@ Organise tokens by category—such as `color`, `space`, or `typography`—to mir
 ```json
 {
   "tokens": {
-    "light": "./light.tokens.json",
+    "light": "./light.dtif.json",
     "dark": {
       "color": {
         "primary": {
@@ -92,16 +92,11 @@ Organise tokens by category—such as `color`, `space`, or `typography`—to mir
 }
 ```
 
-Token files should use the `.tokens` or `.tokens.json` extension and are typically served with the `application/design-tokens+json` MIME type.
+Token files should use one of the `.dtif`, `.dtif.json`, `.dtif.yaml`, `.dtif.yml`, `.tokens`, `.tokens.json`, `.tokens.yaml`, or `.tokens.yml` extensions and are typically served with the `application/design-tokens+json` MIME type.
 
-Design token files are validated strictly:
-
-- Token and group names may not include `{`, `}`, or `.` and names differing only by case are rejected.
-- `$extensions` keys must contain at least one dot to avoid collisions.
-- Alias references must resolve to tokens of the same `$type` and cyclic or unknown aliases raise errors.
-- Composite token objects such as `shadow`, `strokeStyle`, `gradient`, and `typography` may only include the fields defined by the specification.
+design-lint validates token files with the official `@lapidist/dtif-validator`, returning detailed schema errors when documents diverge from DTIF.
 ## Name transforms
-Token paths are normalized to dot notation. Set `nameTransform` to convert those paths into a preferred case during flattening and output generation.
+Token paths are normalized to JSON Pointer strings. Set `nameTransform` to convert individual pointer segments into a preferred case during flattening and output generation.
 
 ```json
 {

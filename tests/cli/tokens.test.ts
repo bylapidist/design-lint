@@ -12,24 +12,21 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 void test('tokens command exports resolved tokens with extensions', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
+  const tokensPath = path.join(dir, 'base.dtif.json');
   const tokens = {
-    color: {
+    palette: {
       red: {
         $type: 'color',
-        $value: '#ff0000',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
         $extensions: { 'vendor.ext': { foo: 'bar' } },
       },
-      blue: {
-        $type: 'color',
-        $value: '{color.red}',
-      },
+      blue: { $type: 'color', $ref: '#/palette/red' },
     },
   };
   fs.writeFileSync(tokensPath, JSON.stringify(tokens));
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: { default: './base.tokens.json' }, rules: {} }),
+    JSON.stringify({ tokens: { default: './base.dtif.json' }, rules: {} }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -49,23 +46,46 @@ void test('tokens command exports resolved tokens with extensions', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(
     fs.readFileSync(path.join(dir, 'out.json'), 'utf8'),
-  ) as Record<string, Record<string, { value: unknown; extensions?: unknown }>>;
-  assert.equal(out.default['color.red'].value, '#ff0000');
-  assert.deepEqual(out.default['color.red'].extensions, {
+  ) as Record<
+    string,
+    Record<
+      string,
+      {
+        value: unknown;
+        extensions?: unknown;
+        type?: string;
+      }
+    >
+  >;
+  assert.deepEqual(out.default['/palette/red'].value, {
+    colorSpace: 'srgb',
+    components: [1, 0, 0],
+  });
+  assert.deepEqual(out.default['/palette/red'].extensions, {
     'vendor.ext': { foo: 'bar' },
   });
-  assert.equal(out.default['color.blue'].value, '#ff0000');
+  assert.deepEqual(out.default['/palette/blue'].value, {
+    colorSpace: 'srgb',
+    components: [1, 0, 0],
+  });
 });
 
 void test('tokens command reads config from outside cwd', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
-  const tokens = { color: { red: { $type: 'color', $value: '#ff0000' } } };
+  const tokensPath = path.join(dir, 'base.dtif.json');
+  const tokens = {
+    palette: {
+      red: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+      },
+    },
+  };
   fs.writeFileSync(tokensPath, JSON.stringify(tokens));
   const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
-    JSON.stringify({ tokens: { default: './base.tokens.json' }, rules: {} }),
+    JSON.stringify({ tokens: { default: './base.dtif.json' }, rules: {} }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const outPath = path.join(dir, 'out.json');
@@ -88,15 +108,32 @@ void test('tokens command reads config from outside cwd', () => {
     string,
     Record<string, { value: unknown }>
   >;
-  assert.equal(out.default['color.red'].value, '#ff0000');
+  assert.deepEqual(out.default['/palette/red'].value, {
+    colorSpace: 'srgb',
+    components: [1, 0, 0],
+  });
 });
 
 void test('tokens command exports themes with root tokens', () => {
   const dir = makeTmpDir();
   const configPath = path.join(dir, 'designlint.config.json');
   const tokens = {
-    light: { primary: { $type: 'color', $value: '#fff' } },
-    dark: { primary: { $type: 'color', $value: '#000' } },
+    light: {
+      palette: {
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+        },
+      },
+    },
+    dark: {
+      palette: {
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+        },
+      },
+    },
   };
   fs.writeFileSync(configPath, JSON.stringify({ tokens, rules: {} }));
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
@@ -117,6 +154,12 @@ void test('tokens command exports themes with root tokens', () => {
     string,
     Record<string, { value: unknown }>
   >;
-  assert.equal(out.light.primary.value, '#fff');
-  assert.equal(out.dark.primary.value, '#000');
+  assert.deepEqual(out.light['/palette/primary'].value, {
+    colorSpace: 'srgb',
+    components: [1, 1, 1],
+  });
+  assert.deepEqual(out.dark['/palette/primary'].value, {
+    colorSpace: 'srgb',
+    components: [0, 0, 0],
+  });
 });

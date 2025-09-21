@@ -9,10 +9,13 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
   const tokens: DesignTokens = {
     colors: {
       $type: 'color',
-      red: { $value: '#ff0000' },
-      accent: { $value: '#00ff00', $type: 'special' },
+      red: { $value: { colorSpace: 'srgb', components: [1, 0, 0] } },
+      accent: {
+        $value: { colorSpace: 'srgb', components: [0, 1, 0] },
+        $type: 'special',
+      },
       nested: {
-        green: { $value: '#00ff00' },
+        green: { $value: { colorSpace: 'srgb', components: [0, 0.5, 0.2] } },
       },
     },
     size: {
@@ -25,8 +28,8 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
   const flat = flattenDesignTokens(tokens);
   assert.deepEqual(flat, [
     {
-      path: 'colors.red',
-      value: '#ff0000',
+      path: '/colors/red',
+      value: { colorSpace: 'srgb', components: [1, 0, 0] },
       type: 'color',
       metadata: {
         description: undefined,
@@ -36,8 +39,8 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
       },
     },
     {
-      path: 'colors.accent',
-      value: '#00ff00',
+      path: '/colors/accent',
+      value: { colorSpace: 'srgb', components: [0, 1, 0] },
       type: 'special',
       metadata: {
         description: undefined,
@@ -47,8 +50,8 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
       },
     },
     {
-      path: 'colors.nested.green',
-      value: '#00ff00',
+      path: '/colors/nested/green',
+      value: { colorSpace: 'srgb', components: [0, 0.5, 0.2] },
       type: 'color',
       metadata: {
         description: undefined,
@@ -58,7 +61,7 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
       },
     },
     {
-      path: 'size.spacing.small',
+      path: '/size/spacing/small',
       value: { value: 4, unit: 'px' },
       type: 'dimension',
       metadata: {
@@ -83,15 +86,15 @@ void test('flattenDesignTokens preserves $extensions and inherits $deprecated', 
   };
   const flat = flattenDesignTokens(tokens);
   assert.deepEqual(
-    flat.find((t) => t.path === 'theme.base')?.metadata.extensions,
+    flat.find((t) => t.path === '/theme/base')?.metadata.extensions,
     ext,
   );
   assert.equal(
-    flat.find((t) => t.path === 'theme.base')?.metadata.deprecated,
+    flat.find((t) => t.path === '/theme/base')?.metadata.deprecated,
     true,
   );
   assert.equal(
-    flat.find((t) => t.path === 'theme.active')?.metadata.deprecated,
+    flat.find((t) => t.path === '/theme/active')?.metadata.deprecated,
     false,
   );
 });
@@ -100,15 +103,15 @@ void test('flattenDesignTokens resolves alias references', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      base: { $value: '#fff' },
-      primary: { $value: '{color.base}' },
+      base: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
+      primary: { $ref: '/color/base' },
     },
   };
   const flat = flattenDesignTokens(tokens);
   assert.deepEqual(flat, [
     {
-      path: 'color.base',
-      value: '#fff',
+      path: '/color/base',
+      value: { colorSpace: 'srgb', components: [1, 1, 1] },
       type: 'color',
       metadata: {
         description: undefined,
@@ -118,10 +121,11 @@ void test('flattenDesignTokens resolves alias references', () => {
       },
     },
     {
-      path: 'color.primary',
-      value: '#fff',
+      path: '/color/primary',
+      value: { colorSpace: 'srgb', components: [1, 1, 1] },
       type: 'color',
-      aliases: ['color.base'],
+      ref: '/color/base',
+      aliases: ['/color/base'],
       metadata: {
         description: undefined,
         extensions: undefined,
@@ -136,47 +140,47 @@ void test('flattenDesignTokens rejects circular aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $value: '{color.b}' },
-      b: { $value: '{color.a}' },
+      a: { $ref: '/color/b' },
+      b: { $ref: '/color/a' },
     },
   };
-  assert.throws(() => flattenDesignTokens(tokens), /circular alias reference/i);
+  assert.throws(() => flattenDesignTokens(tokens), /circular \$ref chain/i);
 });
 
 void test('flattenDesignTokens rejects unknown aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $value: '{color.missing}' },
+      a: { $ref: '/color/missing' },
     },
   };
   assert.throws(() => flattenDesignTokens(tokens), /references unknown token/i);
 });
 
-void test('flattenDesignTokens rejects slash-separated aliases', () => {
+void test('flattenDesignTokens rejects invalid JSON Pointer aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
       base: { $value: '#fff' },
-      primary: { $value: '{color/base}' },
+      primary: { $ref: 'color/base' },
     },
   };
-  assert.throws(() => flattenDesignTokens(tokens));
+  assert.throws(() => flattenDesignTokens(tokens), /invalid \$ref/i);
 });
 
 void test('flattenDesignTokens applies name transforms', () => {
   const tokens: DesignTokens = {
     ColorGroup: {
       $type: 'color',
-      primaryColor: { $value: '#000' },
-      secondaryColor: { $value: '{ColorGroup.primaryColor}' },
+      primaryColor: { $value: { colorSpace: 'srgb', components: [0, 0, 0] } },
+      secondaryColor: { $ref: '/ColorGroup/primaryColor' },
     },
   };
   const flat = flattenDesignTokens(tokens, { nameTransform: 'kebab-case' });
   assert.deepEqual(flat, [
     {
-      path: 'color-group.primary-color',
-      value: '#000',
+      path: '/color-group/primary-color',
+      value: { colorSpace: 'srgb', components: [0, 0, 0] },
       type: 'color',
       metadata: {
         description: undefined,
@@ -186,10 +190,11 @@ void test('flattenDesignTokens applies name transforms', () => {
       },
     },
     {
-      path: 'color-group.secondary-color',
-      value: '#000',
+      path: '/color-group/secondary-color',
+      value: { colorSpace: 'srgb', components: [0, 0, 0] },
       type: 'color',
-      aliases: ['color-group.primary-color'],
+      ref: '/color-group/primary-color',
+      aliases: ['/color-group/primary-color'],
       metadata: {
         description: undefined,
         extensions: undefined,

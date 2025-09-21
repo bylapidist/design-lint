@@ -1,11 +1,28 @@
 import ts from 'typescript';
 import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
-import { guards } from '../utils/index.js';
+import { guards, tokens } from '../utils/index.js';
 
 const {
   ast: { isInNonStyleJsx },
 } = guards;
+const { normalizePath, getPathSegments } = tokens;
+
+interface DeprecationInfo {
+  canonical: string;
+  reason?: string;
+  replacement?: string;
+}
+
+function formatPointer(path: string): string {
+  const normalized = normalizePath(path);
+  if (!normalized) return normalized;
+  return normalized.startsWith('/') ? `#${normalized}` : normalized;
+}
+
+function hasReplacement(value: unknown): value is { $replacement?: unknown } {
+  return typeof value === 'object' && value !== null && '$replacement' in value;
+}
 
 export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',
@@ -15,18 +32,46 @@ export const deprecationRule: RuleModule = {
     schema: z.void(),
   },
   create(context) {
-    const deprecated = new Map<string, { reason?: string; suggest?: string }>();
+    const deprecated = new Map<string, DeprecationInfo>();
+    const register = (name: string, info: DeprecationInfo): void => {
+      if (!name || deprecated.has(name)) return;
+      deprecated.set(name, info);
+    };
     for (const { path, metadata } of context.getFlattenedTokens()) {
-      const dep = metadata.deprecated;
-      if (!dep) continue;
-      let reason: string | undefined;
-      let suggest: string | undefined;
+      const deprecatedMeta = metadata.deprecated;
+      if (!deprecatedMeta) continue;
+      const dep: unknown = deprecatedMeta;
+      const canonical = normalizePath(path);
+      const info: DeprecationInfo = { canonical };
       if (typeof dep === 'string') {
-        reason = dep;
-        const m = /\{([^}]+)\}/.exec(dep);
-        if (m) suggest = m[1];
+        const updated = dep.replace(/\{([^}]+)\}/g, (_, inner: string) => {
+          const formatted = formatPointer(inner);
+          info.replacement ??= normalizePath(inner);
+          return `{${formatted}}`;
+        });
+        info.reason = updated;
+        if (!info.replacement) {
+          const match = /\{([^}]+)\}/.exec(dep);
+          if (match) {
+            info.replacement = normalizePath(match[1]);
+          }
+        }
+      } else if (dep === true) {
+        // No additional metadata beyond the deprecated flag.
+      } else if (hasReplacement(dep)) {
+        const replacement = dep.$replacement;
+        if (typeof replacement === 'string') {
+          info.replacement = normalizePath(replacement);
+        }
       }
-      deprecated.set(path, { reason, suggest });
+      register(canonical, info);
+      if (canonical.startsWith('/')) {
+        register(`#${canonical}`, info);
+      }
+      const segments = getPathSegments(canonical);
+      if (segments.length) {
+        register(segments.join('.'), info);
+      }
     }
     if (deprecated.size === 0) {
       context.report({
@@ -37,47 +82,58 @@ export const deprecationRule: RuleModule = {
       });
       return {};
     }
-    const names = new Set(deprecated.keys());
     return {
       onNode(node) {
         if (ts.isStringLiteral(node)) {
           if (isInNonStyleJsx(node)) return;
-          if (names.has(node.text)) {
-            const info = deprecated.get(node.text);
-            const pos = node
-              .getSourceFile()
-              .getLineAndCharacterOfPosition(node.getStart());
-            context.report({
-              message: `Token ${node.text} is deprecated${
-                info?.reason ? `: ${info.reason}` : ''
-              }`,
-              line: pos.line + 1,
-              column: pos.character + 1,
-              ...(info?.suggest
-                ? {
-                    fix: {
-                      range: [node.getStart(), node.getEnd()],
-                      text: `'${info.suggest}'`,
-                    },
-                    suggest: info.suggest,
-                  }
-                : {}),
-            });
-          }
+          const info = deprecated.get(node.text);
+          if (!info) return;
+          const pos = node
+            .getSourceFile()
+            .getLineAndCharacterOfPosition(node.getStart());
+          const pointer = formatPointer(info.canonical);
+          const replacement = info.replacement
+            ? formatPointer(info.replacement)
+            : undefined;
+          const message =
+            info.reason ??
+            (replacement
+              ? `Token ${pointer} is deprecated; use {${replacement}}`
+              : `Token ${pointer} is deprecated`);
+          context.report({
+            message,
+            line: pos.line + 1,
+            column: pos.character + 1,
+            ...(replacement
+              ? {
+                  fix: {
+                    range: [node.getStart(), node.getEnd()],
+                    text: `'${replacement}'`,
+                  },
+                  suggest: replacement,
+                }
+              : {}),
+          });
         }
       },
       onCSSDeclaration(decl) {
-        if (names.has(decl.value)) {
-          const info = deprecated.get(decl.value);
-          context.report({
-            message: `Token ${decl.value} is deprecated${
-              info?.reason ? `: ${info.reason}` : ''
-            }`,
-            line: decl.line,
-            column: decl.column,
-            ...(info?.suggest ? { suggest: info.suggest } : {}),
-          });
-        }
+        const info = deprecated.get(decl.value);
+        if (!info) return;
+        const pointer = formatPointer(info.canonical);
+        const replacement = info.replacement
+          ? formatPointer(info.replacement)
+          : undefined;
+        const message =
+          info.reason ??
+          (replacement
+            ? `Token ${pointer} is deprecated; use {${replacement}}`
+            : `Token ${pointer} is deprecated`);
+        context.report({
+          message,
+          line: decl.line,
+          column: decl.column,
+          ...(replacement ? { suggest: replacement } : {}),
+        });
       },
     };
   },

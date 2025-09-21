@@ -11,7 +11,7 @@ void test('design-system/deprecation flags deprecated token', async () => {
           old: {
             $type: 'color',
             $value: '#000',
-            $deprecated: 'Use {colors.new}',
+            $deprecated: { $replacement: '#/colors/new' },
           },
           new: { $type: 'color', $value: '#fff' },
         },
@@ -20,12 +20,15 @@ void test('design-system/deprecation flags deprecated token', async () => {
     },
     new FileSource(),
   );
-  const res = await linter.lintText('const a = "colors.old";', 'file.ts');
+  const res = await linter.lintText('const a = "#/colors/old";', 'file.ts');
   assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].message.includes('Use {colors.new}'));
+  assert.equal(
+    res.messages[0].message,
+    'Token #/colors/old is deprecated; use {#/colors/new}',
+  );
   assert.deepEqual(res.messages[0].fix, {
-    range: [10, 22],
-    text: `'colors.new'`,
+    range: [10, 24],
+    text: `'#/colors/new'`,
   });
 });
 
@@ -37,7 +40,7 @@ void test('design-system/deprecation ignores tokens in non-style jsx attributes'
           old: {
             $type: 'color',
             $value: '#000',
-            $deprecated: 'Use {colors.new}',
+            $deprecated: { $replacement: '#/colors/new' },
           },
           new: { $type: 'color', $value: '#fff' },
         },
@@ -47,7 +50,7 @@ void test('design-system/deprecation ignores tokens in non-style jsx attributes'
     new FileSource(),
   );
   const res = await linter.lintText(
-    'const a = <div aria-label="colors.old" />;',
+    'const a = <div aria-label="#/colors/old" />;',
     'file.tsx',
   );
   assert.equal(res.messages.length, 0);

@@ -42,6 +42,6 @@ export function parseDesignTokens(
   if (options?.colorSpace) {
     normalizeColorValues(tree, options.colorSpace);
   }
-  validateTokens(tree);
+  validateTokens();
   return tree;
 }
