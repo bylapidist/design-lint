@@ -124,7 +124,7 @@ void test('parseDesignTokens resolves alias pointers with escaped segments', () 
     icons: {
       $type: 'color',
       'icon/home': { $value: '#000000' },
-      alias: { $ref: '#/icons/icon~1home' },
+      alias: { $type: 'color', $ref: '#/icons/icon~1home' },
     },
   };
 
@@ -810,24 +810,13 @@ void test('parseDesignTokens rejects unknown aliases', () => {
   const tokens = {
     color: {
       $type: 'color',
-      brand: { $ref: '#/color/missing' },
+      brand: { $type: 'color', $ref: '#/color/missing' },
     },
   } as unknown as DesignTokens;
   assert.throws(
     () => parseDesignTokens(tokens),
     /references unknown token via \$ref/i,
   );
-});
-
-void test('parseDesignTokens rejects circular aliases', () => {
-  const tokens = {
-    color: {
-      base: { $value: '#00f', $type: 'color' },
-      a: { $ref: '#/color/b' },
-      b: { $ref: '#/color/a' },
-    },
-  } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /circular \$ref reference/i);
 });
 
 void test('normalizeTokens errors when alias target lacks type', () => {
@@ -880,7 +869,7 @@ void test('parseDesignTokens rejects invalid $ref fragments', () => {
     color: {
       $type: 'color',
       base: { $value: '#fff' },
-      primary: { $ref: 'color/base' },
+      primary: { $type: 'color', $ref: 'color/base' },
     },
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(tokens), /invalid \$ref/i);
@@ -889,9 +878,10 @@ void test('parseDesignTokens rejects invalid $ref fragments', () => {
 void test('parseDesignTokens resolves alias chains', () => {
   const tokens: DesignTokens = {
     color: {
+      $type: 'color',
       base: { $value: '#00f', $type: 'color' },
-      mid: { $ref: '#/color/base' },
-      top: { $ref: '#/color/mid' },
+      mid: { $type: 'color', $ref: '#/color/base' },
+      top: { $type: 'color', $ref: '#/color/mid' },
     },
   };
   const result = parseDesignTokens(tokens);
@@ -902,8 +892,8 @@ void test('parseDesignTokens rejects circular aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $ref: '#/color/b' },
-      b: { $ref: '#/color/a' },
+      a: { $type: 'color', $ref: '#/color/b' },
+      b: { $type: 'color', $ref: '#/color/a' },
     },
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(tokens), /circular \$ref reference/i);
@@ -913,8 +903,8 @@ void test('parseDesignTokens rejects alias chains with unknown targets', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $ref: '#/color/b' },
-      b: { $ref: '#/color/missing' },
+      a: { $type: 'color', $ref: '#/color/b' },
+      b: { $type: 'color', $ref: '#/color/missing' },
     },
   } as unknown as DesignTokens;
   assert.throws(
@@ -925,7 +915,7 @@ void test('parseDesignTokens rejects alias chains with unknown targets', () => {
 
 void test('parseDesignTokens rejects alias chains when final target lacks $type', () => {
   const tokens = {
-    a: { $ref: '#/b' },
+    a: { $type: 'color', $ref: '#/b' },
     b: { $value: '#00f' },
   } as unknown as DesignTokens;
   assert.throws(
@@ -934,15 +924,38 @@ void test('parseDesignTokens rejects alias chains when final target lacks $type'
   );
 });
 
-void test('parseDesignTokens allows pure aliases to omit $type', () => {
-  const tokens = {
-    a: { $ref: '#/b' },
-    b: { $type: 'color', $value: '#00f' },
-  } as unknown as DesignTokens;
+void test('parseDesignTokens infers alias $type from referenced token', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      base: { $value: '#00f' },
+      alias: { $ref: '#/color/base' },
+    },
+  };
+
   const result = parseDesignTokens(tokens);
-  const a = result.find((t) => t.path === 'a');
-  assert.ok(a);
-  assert.equal(a.type, 'color');
+  const alias = result.find((token) => token.path === 'color.alias');
+  assert.ok(alias);
+  assert.equal(alias.type, 'color');
+  assert.equal(alias.value, '#00f');
+  assert.deepEqual(alias.aliases, ['#/color/base']);
+});
+
+void test('parseDesignTokens infers fallback $ref entry types', () => {
+  const tokens: DesignTokens = {
+    color: {
+      base: { $type: 'color', $value: '#00f' },
+      accent: { $value: [{ $ref: '#/color/base' }] },
+    },
+  };
+
+  const result = parseDesignTokens(tokens);
+  const accent = result.find((token) => token.path === 'color.accent');
+  assert.ok(accent);
+  assert.equal(accent.type, 'color');
+  assert.equal(accent.value, '#00f');
+  const aliases = accent.aliases ?? [];
+  assert.ok(aliases.includes('#/color/base'));
 });
 
 void test('parseDesignTokens requires $type when $value contains braces with other text', () => {
