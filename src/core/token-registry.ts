@@ -1,6 +1,7 @@
 import type { DesignTokens, FlattenedToken } from './types.js';
 import {
   flattenDesignTokens,
+  isPointerFragment,
   normalizePath,
   type NameTransform,
 } from '../utils/tokens/index.js';
@@ -10,13 +11,27 @@ export interface TokenRegistryOptions {
   onWarn?: (msg: string) => void;
 }
 
+interface ThemeTokenIndex {
+  byPath: Map<string, FlattenedToken>;
+  byPointer: Map<string, FlattenedToken>;
+}
+
+function extractPointerFragment(identifier: string): string | undefined {
+  const hashIndex = identifier.indexOf('#');
+  if (hashIndex === -1) {
+    return undefined;
+  }
+  const fragment = identifier.slice(hashIndex);
+  return isPointerFragment(fragment) ? fragment : undefined;
+}
+
 /**
  * Registry for flattened design tokens keyed by theme and normalized path.
  *
  * Provides lookup and aggregation utilities used by the linter and generators.
  */
 export class TokenRegistry {
-  private tokens = new Map<string, Map<string, FlattenedToken>>();
+  private tokens = new Map<string, ThemeTokenIndex>();
   private transform?: NameTransform;
 
   /**
@@ -33,15 +48,62 @@ export class TokenRegistry {
     const warn = options?.onWarn;
     for (const [theme, tokens] of Object.entries(tokensByTheme)) {
       if (theme.startsWith('$')) continue;
-      const map = new Map<string, FlattenedToken>();
+      const index: ThemeTokenIndex = {
+        byPath: new Map<string, FlattenedToken>(),
+        byPointer: new Map<string, FlattenedToken>(),
+      };
       for (const token of flattenDesignTokens(tokens, {
         nameTransform: this.transform,
         onWarn: warn,
       })) {
-        map.set(token.path, token);
+        index.byPath.set(token.path, token);
+        index.byPointer.set(token.pointer, token);
       }
-      this.tokens.set(theme, map);
+      this.tokens.set(theme, index);
     }
+  }
+
+  private getThemeOrder(theme?: string): ThemeTokenIndex[] {
+    if (theme) {
+      const index = this.tokens.get(theme);
+      return index ? [index] : [];
+    }
+    const ordered: ThemeTokenIndex[] = [];
+    const defaultIndex = this.tokens.get('default');
+    if (defaultIndex) {
+      ordered.push(defaultIndex);
+    }
+    for (const [themeName, index] of this.tokens) {
+      if (themeName === 'default') continue;
+      ordered.push(index);
+    }
+    return ordered;
+  }
+
+  private lookupByPointer(
+    pointer: string,
+    theme?: string,
+  ): FlattenedToken | undefined {
+    for (const index of this.getThemeOrder(theme)) {
+      const match = index.byPointer.get(pointer);
+      if (match) {
+        return match;
+      }
+    }
+    return undefined;
+  }
+
+  private lookupByPath(
+    path: string,
+    theme?: string,
+  ): FlattenedToken | undefined {
+    for (const index of this.getThemeOrder(theme)) {
+      const match = index.byPath.get(path);
+      if (match) {
+        return match;
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -52,17 +114,35 @@ export class TokenRegistry {
    * @returns The matching token or `undefined` if none exists.
    */
   getToken(name: string, theme?: string): FlattenedToken | undefined {
+    const pointer = extractPointerFragment(name);
+    if (pointer) {
+      const match = this.lookupByPointer(pointer, theme);
+      if (match) {
+        return match;
+      }
+    }
     const key = normalizePath(name, this.transform);
-    if (theme) return this.tokens.get(theme)?.get(key);
-    if (this.tokens.has('default')) {
-      const def = this.tokens.get('default')?.get(key);
-      if (def) return def;
+    return this.lookupByPath(key, theme);
+  }
+
+  /**
+   * Retrieve a flattened token by JSON Pointer fragment.
+   *
+   * @param pointer - Token pointer (e.g. `#/color/brand`).
+   * @param theme - Theme name to query; searches all themes when omitted.
+   * @returns The matching token or `undefined` if none exists.
+   */
+  getTokenByPointer(
+    pointer: string,
+    theme?: string,
+  ): FlattenedToken | undefined {
+    const fragment = extractPointerFragment(pointer);
+    if (!fragment) {
+      throw new Error(
+        `Token pointer must be a valid JSON Pointer fragment: ${pointer}`,
+      );
     }
-    for (const map of this.tokens.values()) {
-      const token = map.get(key);
-      if (token) return token;
-    }
-    return undefined;
+    return this.lookupByPointer(fragment, theme);
   }
 
   /**
@@ -73,11 +153,11 @@ export class TokenRegistry {
    */
   getTokens(theme?: string): FlattenedToken[] {
     if (theme) {
-      return Array.from(this.tokens.get(theme)?.values() ?? []);
+      return Array.from(this.tokens.get(theme)?.byPath.values() ?? []);
     }
     const seen = new Map<string, FlattenedToken>();
-    for (const map of this.tokens.values()) {
-      for (const [path, token] of map) {
+    for (const index of this.getThemeOrder()) {
+      for (const [path, token] of index.byPath) {
         if (!seen.has(path)) seen.set(path, token);
       }
     }

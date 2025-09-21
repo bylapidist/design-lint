@@ -4,6 +4,8 @@
  * Utilities for normalizing design token paths and applying name transforms.
  */
 
+import { isPointerFragment, pointerToPath } from './pointer.js';
+
 export type NameTransform = 'kebab-case' | 'camelCase' | 'PascalCase';
 
 /** @internal */
@@ -37,10 +39,29 @@ function transformSegment(seg: string, transform?: NameTransform): string {
  * @throws If `path` contains `/` because the spec requires period-separated references.
  */
 export function normalizePath(path: string, transform?: NameTransform): string {
-  if (path.includes('/')) {
+  let canonical = path;
+  const hashIndex = path.indexOf('#');
+  if (hashIndex !== -1) {
+    const fragment = path.slice(hashIndex);
+    if (!isPointerFragment(fragment)) {
+      throw new Error(
+        `Alias pointers must be valid JSON Pointer fragments: ${path}`,
+      );
+    }
+    const pointerPath = pointerToPath(fragment);
+    if (!pointerPath) {
+      throw new Error(
+        `Alias pointer must reference a token within the same document: ${path}`,
+      );
+    }
+    canonical = pointerPath;
+  }
+
+  if (canonical.includes('/')) {
     throw new Error("Alias paths must use 'dot' notation; '/' is disallowed");
   }
-  const parts = path.split('.').filter(Boolean);
+
+  const parts = canonical.split('.').filter(Boolean);
   return parts.map((p) => transformSegment(p, transform)).join('.');
 }
 

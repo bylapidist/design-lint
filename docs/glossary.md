@@ -18,7 +18,7 @@ Key concepts used throughout the documentation.
 - [See also](#see-also)
 
 ## Design tokens
-Named values such as colours, spacing, or typography that describe your design system. design-lint uses the [W3C Design Tokens Community Group format](https://www.designtokens.org/technical-reports/) for all token files.
+Named values such as colours, spacing, or typography that describe your design system. design-lint uses the [Design Token Interchange Format (DTIF)](https://dtif.lapidist.net/) for all token files.
 
 ## Rule
 A check that validates code against the design system. Rules may be built-in or provided by plugins.

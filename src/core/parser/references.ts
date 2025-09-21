@@ -1,9 +1,10 @@
 import type { FlattenedToken } from '../types.js';
-import { pointerToPath } from '../../utils/tokens/index.js';
+import { isPointerFragment, pointerToPath } from '../../utils/tokens/index.js';
 
 export interface ReferenceResolutionResult {
   value: unknown;
   references: string[];
+  fallbacks?: unknown[];
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -26,7 +27,14 @@ export function resolveReferences(
   }
 
   function assertPointer(pointer: string, origin: string): void {
-    if (!pointer.includes('#')) {
+    const hashIndex = pointer.indexOf('#');
+    if (hashIndex === -1) {
+      throw new Error(
+        `Token ${origin} has invalid $ref ${pointer}; expected a JSON Pointer fragment`,
+      );
+    }
+    const fragment = pointer.slice(hashIndex);
+    if (!isPointerFragment(fragment)) {
       throw new Error(
         `Token ${origin} has invalid $ref ${pointer}; expected a JSON Pointer fragment`,
       );
@@ -71,6 +79,47 @@ export function resolveReferences(
       return out;
     }
     return node;
+  }
+
+  const ARRAY_LITERAL_TYPES = new Set(['cubicBezier', 'gradient', 'shadow']);
+
+  function isFallbackEntry(value: unknown): boolean {
+    if (Array.isArray(value)) {
+      return true;
+    }
+    if (isPlainObject(value)) {
+      if ('$ref' in value || '$value' in value || 'fn' in value) {
+        return true;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function extractValue(
+    node: unknown,
+    ancestry: string[],
+    tokenType?: string,
+  ): { primary: unknown; fallbacks?: unknown[] } {
+    if (Array.isArray(node)) {
+      const treatAsFallback =
+        !tokenType || !ARRAY_LITERAL_TYPES.has(tokenType)
+          ? node.some((item) => isFallbackEntry(item))
+          : false;
+      const resolvedEntries = node.map((item) => resolveValue(item, ancestry));
+      if (resolvedEntries.length === 0) {
+        return { primary: undefined };
+      }
+      if (!treatAsFallback) {
+        return { primary: resolvedEntries };
+      }
+      const [first, ...rest] = resolvedEntries;
+      return {
+        primary: first,
+        fallbacks: rest.length > 0 ? rest : undefined,
+      };
+    }
+    return { primary: resolveValue(node, ancestry) };
   }
 
   function resolve(
@@ -138,12 +187,17 @@ export function resolveReferences(
   }
 
   resolve(token, [token.path]);
+  let primary: unknown = token.value;
+  let fallbackValues: unknown[] | undefined;
   if (token.value !== undefined) {
-    token.value = resolveValue(token.value, [token.path]);
+    const resolved = extractValue(token.value, [token.path], token.type);
+    primary = resolved.primary;
+    fallbackValues = resolved.fallbacks;
   }
 
   return {
-    value: token.value,
+    value: primary,
     references,
+    ...(fallbackValues ? { fallbacks: fallbackValues } : {}),
   };
 }

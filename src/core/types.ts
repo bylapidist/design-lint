@@ -7,6 +7,7 @@ import type {
   DeprecationMetadata,
   ExtensionsMap,
   Description,
+  OverrideConditions,
 } from '@lapidist/dtif-schema';
 import type { Environment } from './environment.js';
 
@@ -35,6 +36,23 @@ export type RootTokenGroup = DesignTokenInterchangeFormat;
  */
 export type DesignTokens = DesignTokenInterchangeFormat;
 
+export interface TokenOverrideFallback {
+  ref?: string;
+  refPath?: string;
+  value?: unknown;
+  fallback?: TokenOverrideFallback[];
+}
+
+export interface TokenOverride {
+  pointer: string;
+  path: string;
+  conditions: OverrideConditions;
+  ref?: string;
+  refPath?: string;
+  value?: unknown;
+  fallback?: TokenOverrideFallback[];
+}
+
 export interface FlattenedToken {
   /**
    * Legacy dot-delimited path used by existing rules and formatters.
@@ -45,9 +63,14 @@ export interface FlattenedToken {
    */
   pointer: string;
   value: unknown;
+  /**
+   * Ordered fallback candidates resolved after the primary value.
+   */
+  fallbacks?: unknown[];
   ref?: string;
   type?: string;
   aliases?: string[];
+  overrides?: TokenOverride[];
   metadata: {
     description?: Description;
     extensions?: ExtensionsMap;

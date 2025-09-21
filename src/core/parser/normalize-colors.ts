@@ -1,6 +1,7 @@
 import { parse, formatRgb, formatHex, formatHsl } from 'culori';
 import type { FlattenedToken } from '../types.js';
 import { validateColor } from '../token-validators/color.js';
+import { describeTokenValueLocation, mapTokenValues } from './token-values.js';
 
 export type ColorSpace = 'rgb' | 'hsl' | 'hex';
 
@@ -44,42 +45,47 @@ function buildColorString(
   }
 }
 
+function normalizeColorEntry(
+  value: unknown,
+  token: FlattenedToken,
+  index: number,
+  space: ColorSpace,
+): string | undefined {
+  const location = describeTokenValueLocation(token, index);
+  validateColor(value, location);
+  if (typeof value === 'string') {
+    const parsed = parse(value);
+    switch (space) {
+      case 'hsl':
+        return formatHsl(parsed);
+      case 'hex':
+        return formatHex(parsed);
+      case 'rgb':
+      default:
+        return formatRgb(parsed);
+    }
+  }
+  const { colorSpace, components, alpha } = value;
+  const parsed = parse(buildColorString(colorSpace, components, alpha));
+  switch (space) {
+    case 'hsl':
+      return formatHsl(parsed);
+    case 'hex':
+      return formatHex(parsed);
+    case 'rgb':
+    default:
+      return formatRgb(parsed);
+  }
+}
+
 export function normalizeColorValues(
   tokens: FlattenedToken[],
   space: ColorSpace,
 ): void {
   for (const token of tokens) {
     if (token.type !== 'color') continue;
-    validateColor(token.value, token.path);
-    if (typeof token.value === 'string') {
-      const parsed = parse(token.value);
-      switch (space) {
-        case 'hsl':
-          token.value = formatHsl(parsed);
-          break;
-        case 'hex':
-          token.value = formatHex(parsed);
-          break;
-        case 'rgb':
-        default:
-          token.value = formatRgb(parsed);
-          break;
-      }
-      continue;
-    }
-    const { colorSpace, components, alpha } = token.value;
-    const parsed = parse(buildColorString(colorSpace, components, alpha));
-    switch (space) {
-      case 'hsl':
-        token.value = formatHsl(parsed);
-        break;
-      case 'hex':
-        token.value = formatHex(parsed);
-        break;
-      case 'rgb':
-      default:
-        token.value = formatRgb(parsed);
-        break;
-    }
+    mapTokenValues(token, (value, index) =>
+      normalizeColorEntry(value, token, index, space),
+    );
   }
 }

@@ -1,3 +1,62 @@
+import { append, nil } from '@hyperjump/json-pointer';
+
+const FRAGMENT_PATTERN = /^#(?:|\/.*)$/;
+
+const INVALID_ESCAPE_SEQUENCE = /~(?![01])/;
+
+function decodeFragmentToSegments(fragment: string): string[] {
+  if (!FRAGMENT_PATTERN.test(fragment)) {
+    throw new Error(`JSON Pointer fragment is invalid: ${fragment}`);
+  }
+
+  if (fragment === '#') {
+    return [];
+  }
+
+  const pointer = fragment.slice(1);
+  if (!pointer.startsWith('/')) {
+    throw new Error(`JSON Pointer fragment is invalid: ${fragment}`);
+  }
+
+  const encodedSegments = pointer.substring(1).split('/');
+  const decodedSegments: string[] = [];
+  for (const segment of encodedSegments) {
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(segment);
+    } catch {
+      throw new Error(`JSON Pointer fragment is invalid: ${fragment}`);
+    }
+
+    if (INVALID_ESCAPE_SEQUENCE.test(decoded)) {
+      throw new Error(
+        `JSON Pointer fragment contains invalid escape sequence: ${fragment}`,
+      );
+    }
+
+    decodedSegments.push(decoded.replace(/~1/g, '/').replace(/~0/g, '~'));
+  }
+
+  return decodedSegments;
+}
+
+function encodePointerToken(segment: string): string {
+  const pointer = append(segment, nil);
+  return pointer.length <= 1 ? '' : pointer.slice(1);
+}
+
+function encodeFragmentFromSegments(segments: readonly string[]): string {
+  if (segments.length === 0) {
+    return '#';
+  }
+
+  const encodedSegments = segments.map((segment) =>
+    encodeURIComponent(encodePointerToken(segment)),
+  );
+
+  return `#/${encodedSegments.join('/')}`;
+}
+
 /**
  * Encode a token path segment for use in a JSON Pointer fragment.
  *
@@ -5,7 +64,7 @@
  * @returns Encoded pointer segment.
  */
 export function encodePointerSegment(segment: string): string {
-  return segment.replace(/~/g, '~0').replace(/\//g, '~1');
+  return encodeURIComponent(encodePointerToken(segment));
 }
 
 /**
@@ -15,7 +74,8 @@ export function encodePointerSegment(segment: string): string {
  * @returns Decoded token path segment.
  */
 export function decodePointerSegment(segment: string): string {
-  return segment.replace(/~1/g, '/').replace(/~0/g, '~');
+  const segments = decodeFragmentToSegments(`#/${segment}`);
+  return segments.length === 0 ? '' : segments[0];
 }
 
 /**
@@ -25,37 +85,44 @@ export function decodePointerSegment(segment: string): string {
  * @returns Canonical JSON Pointer string beginning with `#`.
  */
 export function pathToPointer(path: string): string {
-  const parts = path.split('.').filter(Boolean);
-  if (parts.length === 0) {
-    return '#';
-  }
-  return `#/${parts.map(encodePointerSegment).join('/')}`;
+  const parts = path.split('.').filter((part) => part.length > 0);
+  return encodeFragmentFromSegments(parts);
 }
 
 /**
- * Convert a JSON Pointer (possibly with a document prefix) into dot notation.
+ * Convert a JSON Pointer fragment into dot notation when referencing the same document.
  *
  * @param pointer - JSON Pointer string, optionally prefixed by a document URL.
- * @returns Dot-separated token path when the pointer references the same document.
+ * @returns Dot-separated token path when the pointer references the current document.
  */
 export function pointerToPath(pointer: string): string | undefined {
-  const hashIndex = pointer.indexOf('#');
-  if (hashIndex === -1) {
+  if (!FRAGMENT_PATTERN.test(pointer)) {
     return undefined;
   }
-  if (hashIndex > 0) {
+
+  try {
+    const segments = decodeFragmentToSegments(pointer);
+    return segments.join('.');
+  } catch {
     return undefined;
   }
-  const fragment = pointer.slice(hashIndex + 1);
-  if (!fragment || fragment === '') {
-    return '';
+}
+
+/**
+ * Encode pointer segments into a canonical JSON Pointer fragment.
+ */
+export function segmentsToPointer(segments: readonly string[]): string {
+  return encodeFragmentFromSegments(segments);
+}
+
+/**
+ * Determine whether the provided fragment is a valid JSON Pointer fragment.
+ */
+export function isPointerFragment(fragment: string): boolean {
+  try {
+    decodeFragmentToSegments(fragment);
+    return true;
+  } catch {
+    return false;
   }
-  if (!fragment.startsWith('/')) {
-    return undefined;
-  }
-  const segments = fragment
-    .slice(1)
-    .split('/')
-    .map((segment) => decodePointerSegment(segment));
-  return segments.join('.');
 }

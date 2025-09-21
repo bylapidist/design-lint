@@ -12,6 +12,8 @@ export {
   decodePointerSegment,
   pathToPointer,
   pointerToPath,
+  segmentsToPointer,
+  isPointerFragment,
 } from './pointer.js';
 export { matchToken, closestToken, type TokenPattern } from './pattern.js';
 export {

@@ -21,7 +21,7 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
         "$deprecated": { "$replacement": "#/color/new" }
       },
       "new": { "$type": "color", "$value": "#fff" },
-      "alias": { "$type": "color", "$value": "{color.new}" }
+      "alias": { "$type": "color", "$ref": "#/color/new" }
     }
   },
   "rules": { "design-system/deprecation": "error" }
