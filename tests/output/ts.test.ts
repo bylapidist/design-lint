@@ -7,12 +7,18 @@ void test('generateTsDeclarations emits typed object with themes', () => {
   const tokens: Record<string, DesignTokens> = {
     default: {
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#fff' },
+        PrimaryColor: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+        },
       },
     },
     dark: {
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#000' },
+        PrimaryColor: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+        },
       },
     },
   };
@@ -21,10 +27,10 @@ void test('generateTsDeclarations emits typed object with themes', () => {
   const expected = [
     'export const tokens = {',
     '  "default": {',
-    '    COLOR_PALETTE_PRIMARY_COLOR: "#fff",',
+    '    COLOR_PALETTE_PRIMARY_COLOR: {"colorSpace":"srgb","components":[1,1,1]},',
     '  },',
     '  "dark": {',
-    '    COLOR_PALETTE_PRIMARY_COLOR: "#000",',
+    '    COLOR_PALETTE_PRIMARY_COLOR: {"colorSpace":"srgb","components":[0,0,0]},',
     '  },',
     '} as const;',
     'export type Tokens = typeof tokens;',

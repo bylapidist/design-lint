@@ -3,6 +3,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { DesignTokens } from '../types.js';
+import {
+  extractPointerFragment,
+  segmentsToPointer,
+} from '../../utils/tokens/index.js';
 
 const require = createRequire(import.meta.url);
 
@@ -181,10 +185,19 @@ function cloneTokens<T>(value: T): T {
   return globalThis.structuredClone(value);
 }
 
+function hasOwn(value: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
 function canonicalizeToken(
   token: Record<string, unknown>,
   inheritedType?: string,
 ): void {
+  const hasValue = hasOwn(token, '$value');
+  const hasRef = hasOwn(token, '$ref');
+  if (!hasValue && hasRef) {
+    return;
+  }
   if (token.$type === undefined && inheritedType !== undefined) {
     token.$type = inheritedType;
   }
@@ -219,9 +232,149 @@ function canonicalizeCollection(
   }
 }
 
+function readStringProperty(
+  value: Record<string, unknown>,
+  key: string,
+): string | undefined {
+  const raw = Reflect.get(value, key);
+  return typeof raw === 'string' ? raw : undefined;
+}
+
+function collectTokenNodes(
+  node: Record<string, unknown>,
+  pointerSegments: string[],
+  index: Map<string, Record<string, unknown>>,
+): void {
+  for (const [key, value] of Object.entries(node)) {
+    if (key.startsWith('$')) {
+      continue;
+    }
+    if (!isRecord(value)) {
+      continue;
+    }
+
+    const nextSegments = [...pointerSegments, key];
+    const childKeys = Object.keys(value).filter(
+      (childKey) => !childKey.startsWith('$'),
+    );
+    const hasTokenFields = '$value' in value || '$ref' in value;
+
+    if (hasTokenFields || childKeys.length === 0) {
+      index.set(segmentsToPointer(nextSegments), value);
+      if (hasTokenFields) {
+        continue;
+      }
+    }
+
+    collectTokenNodes(value, nextSegments, index);
+  }
+}
+
+function extractReferenceFromValue(value: unknown): string | undefined {
+  if (Array.isArray(value) && value.length > 0) {
+    return extractReferenceFromValue(value[0]);
+  }
+
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const nonMetaKeys = Object.keys(value).filter((key) => !key.startsWith('$'));
+  if (nonMetaKeys.length > 0) {
+    return undefined;
+  }
+
+  const directRef = readStringProperty(value, '$ref');
+  if (directRef) {
+    const fragment = extractPointerFragment(directRef);
+    if (fragment && fragment !== '#') {
+      return fragment;
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(value, '$fallback')) {
+    return extractReferenceFromValue(Reflect.get(value, '$fallback'));
+  }
+
+  return undefined;
+}
+
+function extractPrimaryReference(
+  token: Record<string, unknown>,
+): string | undefined {
+  const directRef = readStringProperty(token, '$ref');
+  if (directRef) {
+    const fragment = extractPointerFragment(directRef);
+    if (fragment && fragment !== '#') {
+      return fragment;
+    }
+    return undefined;
+  }
+
+  if (!hasOwn(token, '$value')) {
+    return undefined;
+  }
+
+  return extractReferenceFromValue(Reflect.get(token, '$value'));
+}
+
+function propagateAliasTypes(tokens: Record<string, unknown>): void {
+  const tokenIndex = new Map<string, Record<string, unknown>>();
+  collectTokenNodes(tokens, [], tokenIndex);
+
+  const resolving = new Set<string>();
+  const cache = new Map<string, string | undefined>();
+
+  function ensureType(pointer: string): string | undefined {
+    if (cache.has(pointer)) {
+      return cache.get(pointer);
+    }
+
+    const token = tokenIndex.get(pointer);
+    if (!token) {
+      cache.set(pointer, undefined);
+      return undefined;
+    }
+
+    const declared = readStringProperty(token, '$type');
+    if (declared) {
+      cache.set(pointer, declared);
+      return declared;
+    }
+
+    const reference = extractPrimaryReference(token);
+    if (!reference || reference === pointer) {
+      cache.set(pointer, undefined);
+      return undefined;
+    }
+
+    if (resolving.has(pointer)) {
+      cache.set(pointer, undefined);
+      return undefined;
+    }
+
+    resolving.add(pointer);
+    const inferred = ensureType(reference);
+    resolving.delete(pointer);
+
+    if (inferred) {
+      Reflect.set(token, '$type', inferred);
+    }
+
+    const result = readStringProperty(token, '$type');
+    cache.set(pointer, result);
+    return result;
+  }
+
+  for (const pointer of tokenIndex.keys()) {
+    ensureType(pointer);
+  }
+}
+
 function canonicalizeTree<T extends Record<string, unknown>>(tokens: T): T {
   const clone = cloneTokens(tokens);
   canonicalizeCollection(clone);
+  propagateAliasTypes(clone);
   return clone;
 }
 

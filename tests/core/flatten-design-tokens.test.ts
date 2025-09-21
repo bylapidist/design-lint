@@ -69,7 +69,10 @@ void test('flattenDesignTokens preserves slash characters in token paths', () =>
   assert(home);
   assert.equal(home.pointer, '#/icons/icon~1home');
   const alias = flat.find((token) => token.path === 'icons.alias');
-  assert(alias);
+  if (!alias) {
+    assert.fail('Expected icons.alias token');
+  }
+  assert.equal(alias.type, 'color');
   assert.deepEqual(alias.aliases, ['#/icons/icon~1home']);
 });
 
@@ -131,8 +134,8 @@ void test('flattenDesignTokens rejects circular $ref chains', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $ref: '#/color/b' },
-      b: { $ref: '#/color/a' },
+      a: { $type: 'color', $ref: '#/color/b' },
+      b: { $type: 'color', $ref: '#/color/a' },
     },
   };
   assert.throws(() => flattenDesignTokens(tokens), /circular \$ref reference/i);
@@ -142,7 +145,7 @@ void test('flattenDesignTokens rejects unknown $ref targets', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $ref: '#/color/missing' },
+      a: { $type: 'color', $ref: '#/color/missing' },
     },
   };
   assert.throws(
@@ -156,7 +159,7 @@ void test('flattenDesignTokens rejects invalid $ref fragments', () => {
     color: {
       $type: 'color',
       base: { $value: '#fff' },
-      primary: { $ref: 'color/base' },
+      primary: { $type: 'color', $ref: 'color/base' },
     },
   };
   assert.throws(() => flattenDesignTokens(tokens), /invalid \$ref/i);

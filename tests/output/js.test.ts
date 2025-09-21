@@ -7,20 +7,26 @@ void test('generateJsConstants emits constants for each theme', () => {
   const tokens: Record<string, DesignTokens> = {
     default: {
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#fff' },
+        PrimaryColor: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+        },
       },
     },
     dark: {
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#000' },
+        PrimaryColor: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+        },
       },
     },
   };
 
   const js = generateJsConstants(tokens, { nameTransform: 'kebab-case' });
   const expected = [
-    'export const COLOR_PALETTE_PRIMARY_COLOR = "#fff";',
-    'export const COLOR_PALETTE_PRIMARY_COLOR_DARK = "#000";',
+    'export const COLOR_PALETTE_PRIMARY_COLOR = {"colorSpace":"srgb","components":[1,1,1]};',
+    'export const COLOR_PALETTE_PRIMARY_COLOR_DARK = {"colorSpace":"srgb","components":[0,0,0]};',
   ].join('\n');
   assert.equal(js, expected);
 });
