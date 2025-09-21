@@ -16,6 +16,11 @@ import ignore from 'ignore';
 const tsxLoader = require.resolve('tsx/esm');
 const WATCH_TIMEOUT = 2000;
 
+const srgb = (r: number, g: number, b: number) => ({
+  colorSpace: 'srgb',
+  components: [r, g, b],
+});
+
 void test('CLI aborts on unsupported Node versions', async () => {
   const { run } = await import('../src/cli/index.js');
   const original = process.versions.node;
@@ -258,7 +263,13 @@ void test('CLI exits 0 when warnings equal --max-warnings', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'warn' },
     }),
   );
@@ -288,7 +299,13 @@ void test('CLI exits 1 when warnings exceed --max-warnings', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'warn' },
     }),
   );
@@ -394,7 +411,17 @@ void test('CLI --fix applies fixes', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: { $replacement: '#/new' },
+        },
+        new: {
+          $type: 'color',
+          $value: srgb(1, 1, 1),
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -493,7 +520,13 @@ void test('CLI writes report to file with --output', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -620,7 +653,13 @@ void test('CLI outputs SARIF reports', () => {
     fs.writeFileSync(
       path.join(dir, 'designlint.config.json'),
       JSON.stringify({
-        tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+        tokens: {
+          old: {
+            $type: 'color',
+            $value: srgb(0, 0, 0),
+            $deprecated: true,
+          },
+        },
         rules: { 'design-system/deprecation': 'error' },
       }),
     );
@@ -718,7 +757,13 @@ void test('CLI ignores common directories by default', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -762,7 +807,13 @@ void test('.designlintignore can unignore paths via CLI', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -813,7 +864,13 @@ void test('CLI skips directories listed in .designlintignore', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -853,7 +910,13 @@ void test('CLI --ignore-path excludes files', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -974,7 +1037,13 @@ void test('CLI --report outputs JSON log', () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1013,7 +1082,13 @@ void test('CLI re-runs on file change in watch mode', async () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1330,7 +1405,13 @@ void test('CLI re-runs with updated config in watch mode', async () => {
   fs.writeFileSync(
     configPath,
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: {},
     }),
   );
@@ -1654,7 +1735,13 @@ void test('CLI reloads when nested ignore file changes in watch mode', async () 
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1709,7 +1796,13 @@ void test('CLI updates ignore list when .gitignore changes in watch mode', async
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1765,7 +1858,13 @@ void test('CLI continues watching after deleting ignore files in watch mode', as
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1826,7 +1925,13 @@ void test('CLI clears cache when a watched file is deleted', async () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
@@ -1883,7 +1988,13 @@ void test('CLI continues linting after deleting a watched file', async () => {
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { old: { $type: 'color', $value: '#000', $deprecated: true } },
+      tokens: {
+        old: {
+          $type: 'color',
+          $value: srgb(0, 0, 0),
+          $deprecated: true,
+        },
+      },
       rules: { 'design-system/deprecation': 'error' },
     }),
   );
