@@ -9,6 +9,7 @@ import type { FlattenedToken } from '../../../src/core/types.js';
 function token(path: string): FlattenedToken {
   return {
     path,
+    pointer: `#/${path.replace(/\./g, '/')}`,
     value: path,
     metadata: { loc: { line: 1, column: 1 } },
   };

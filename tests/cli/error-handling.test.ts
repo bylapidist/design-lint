@@ -34,8 +34,8 @@ void test('fails on unresolved aliases', () => {
     JSON.stringify({
       color: {
         red: { $type: 'color', $value: '#ff0000' },
-        bad1: { $type: 'color', $value: '{color.missing}' },
-        bad2: { $type: 'color', $value: '{color.missing}' },
+        bad1: { $type: 'color', $ref: '#/color/missing' },
+        bad2: { $type: 'color', $ref: '#/color/missing' },
       },
     }),
   );
@@ -61,5 +61,5 @@ void test('fails on unresolved aliases', () => {
     { cwd: dir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /references unknown token/i);
+  assert.match(res.stderr, /references unknown token via \$ref/i);
 });

@@ -53,13 +53,9 @@ void test('tokenRule passes allowed values to create', () => {
     getFlattenedTokens: () => [
       {
         path: 'a',
+        pointer: '#/a',
         value: 2,
-        metadata: {
-          description: undefined,
-          extensions: undefined,
-          deprecated: undefined,
-          loc: { line: 1, column: 1 },
-        },
+        metadata: { loc: { line: 1, column: 1 } },
       },
     ],
     sourceId: 'x',

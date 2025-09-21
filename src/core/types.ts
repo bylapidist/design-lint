@@ -1,5 +1,13 @@
 import type ts from 'typescript';
 import type { z } from 'zod';
+import type {
+  DesignTokenInterchangeFormat,
+  DesignToken,
+  TokenCollection,
+  DeprecationMetadata,
+  ExtensionsMap,
+  Description,
+} from '@lapidist/dtif-schema';
 import type { Environment } from './environment.js';
 
 export interface VariableDefinition {
@@ -8,47 +16,48 @@ export interface VariableDefinition {
 }
 
 /**
- * W3C Design Tokens Format token node.
+ * DTIF design token node.
  */
-export interface Token {
-  $value: unknown;
-  $type?: string;
-  $description?: string;
-  $extensions?: Record<string, unknown>;
-  $deprecated?: boolean | string;
-}
+export type Token = DesignToken;
 
 /**
- * W3C Design Tokens Format group node.
+ * DTIF collection node containing nested tokens or collections.
  */
-export type TokenGroup = {
-  $type?: string;
-  $description?: string;
-  $extensions?: Record<string, unknown>;
-  $deprecated?: boolean | string;
-} & {
-  [name: string]: TokenGroup | Token | undefined;
-};
+export type TokenGroup = TokenCollection;
 
 /**
- * Root token group with optional $schema.
+ * Root DTIF document.
  */
-export type RootTokenGroup = TokenGroup & { $schema?: string };
+export type RootTokenGroup = DesignTokenInterchangeFormat;
 
 /**
- * W3C Design Tokens tree.
+ * DTIF design token document.
  */
-export type DesignTokens = RootTokenGroup;
+export type DesignTokens = DesignTokenInterchangeFormat;
 
 export interface FlattenedToken {
+  /**
+   * Legacy dot-delimited path used by existing rules and formatters.
+   */
   path: string;
+  /**
+   * Canonical JSON Pointer for the token within the DTIF document.
+   */
+  pointer: string;
   value: unknown;
+  ref?: string;
   type?: string;
   aliases?: string[];
   metadata: {
-    description?: string;
-    extensions?: Record<string, unknown>;
-    deprecated?: boolean | string;
+    description?: Description;
+    extensions?: ExtensionsMap;
+    deprecated?: DeprecationMetadata;
+    lastModified?: string;
+    lastUsed?: string;
+    usageCount?: number;
+    author?: string;
+    tags?: string[];
+    hash?: string;
     loc: { line: number; column: number };
   };
 }

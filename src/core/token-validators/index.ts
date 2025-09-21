@@ -1,4 +1,3 @@
-import type { Token } from '../types.js';
 import { validateColor } from './color.js';
 import { validateDimension } from './dimension.js';
 import { validateNumber } from './number.js';
@@ -13,10 +12,15 @@ import { validateBorder } from './border.js';
 import { validateTransition } from './transition.js';
 import { validateTypography } from './typography.js';
 
+export interface ValidationTokenInfo {
+  $value: unknown;
+  $type?: string;
+}
+
 export type TokenValidator = (
   value: unknown,
   path: string,
-  tokenMap: Map<string, Token>,
+  tokenMap: Map<string, ValidationTokenInfo>,
 ) => void;
 
 export const validatorRegistry = new Map<string, TokenValidator>([

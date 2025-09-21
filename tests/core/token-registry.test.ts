@@ -9,7 +9,7 @@ const tokens: Record<string, DesignTokens> = {
     color: {
       $type: 'color',
       primary: { $value: '#fff' },
-      secondary: { $value: '{color.primary}' },
+      secondary: { $ref: '#/color/primary' },
     },
   },
   dark: {

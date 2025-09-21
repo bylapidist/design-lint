@@ -58,7 +58,10 @@ void test('throws on invalid design token object', () => {
   const cfg = baseConfig();
   cfg.tokens = { color: { primary: { $type: 'color' } } } as Config['tokens'];
   const provider = new ConfigTokenProvider(cfg);
-  assert.throws(() => provider.load(), /missing \$value/i);
+  assert.throws(
+    () => provider.load(),
+    /must be an object with \$value or \$ref/i,
+  );
 });
 
 void test('returns empty object when tokens missing', () => {

@@ -8,7 +8,7 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
     light: {
       palette: {
         $type: 'color',
-        $deprecated: 'use new palette',
+        $deprecated: true,
         primary: { $value: '#fff' },
         secondary: {
           $value: '#000',
@@ -28,23 +28,22 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
   assert.deepEqual(flat, [
     {
       path: 'palette.primary',
+      pointer: '#/palette/primary',
       value: '#fff',
       type: 'color',
       metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: 'use new palette',
+        deprecated: true,
         loc: { line: 1, column: 1 },
       },
     },
     {
       path: 'palette.secondary',
+      pointer: '#/palette/secondary',
       value: '#000',
       type: 'color',
       metadata: {
-        description: undefined,
         extensions: { 'vendor.example': { note: true } },
-        deprecated: 'use new palette',
+        deprecated: true,
         loc: { line: 1, column: 1 },
       },
     },
@@ -60,36 +59,32 @@ void test('getFlattenedTokens merges tokens from all themes when none is specifi
   assert.deepEqual(flat, [
     {
       path: 'palette.primary',
+      pointer: '#/palette/primary',
       value: '#fff',
       type: 'color',
       metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
         loc: { line: 1, column: 1 },
       },
     },
     {
       path: 'palette.secondary',
+      pointer: '#/palette/secondary',
       value: '#000',
       type: 'color',
       metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
         loc: { line: 1, column: 1 },
       },
     },
   ]);
 });
 
-void test('getFlattenedTokens resolves aliases', () => {
+void test('getFlattenedTokens resolves $ref references', () => {
   const tokens: Record<string, DesignTokens> = {
     default: {
       palette: {
         $type: 'color',
         base: { $value: '#f00' },
-        primary: { $value: '{palette.base}' },
+        primary: { $ref: '#/palette/base' },
       },
     },
   };
@@ -97,24 +92,21 @@ void test('getFlattenedTokens resolves aliases', () => {
   assert.deepEqual(flat, [
     {
       path: 'palette.base',
+      pointer: '#/palette/base',
       value: '#f00',
       type: 'color',
       metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
         loc: { line: 1, column: 1 },
       },
     },
     {
       path: 'palette.primary',
+      pointer: '#/palette/primary',
       value: '#f00',
+      ref: '#/palette/base',
       type: 'color',
       aliases: ['palette.base'],
       metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
         loc: { line: 1, column: 1 },
       },
     },
@@ -136,14 +128,10 @@ void test('getFlattenedTokens applies name transforms', () => {
   assert.deepEqual(flat, [
     {
       path: 'colorGroup.primaryColor',
+      pointer: '#/ColorGroup/primaryColor',
       value: '#fff',
       type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
   ]);
 });

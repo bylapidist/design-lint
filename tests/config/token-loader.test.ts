@@ -27,7 +27,7 @@ void test('propagates parsing errors', async () => {
   );
   await assert.rejects(
     loadTokens({ light: './bad.tokens.json' }, tmp),
-    /missing \$value/i,
+    /must be an object with \$value or \$ref/i,
   );
 });
 

@@ -1,11 +1,17 @@
 import ts from 'typescript';
 import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
-import { guards } from '../utils/index.js';
+import { guards, tokens } from '../utils/index.js';
 
 const {
   ast: { isInNonStyleJsx },
 } = guards;
+const { pointerToPath } = tokens;
+
+interface DeprecationInfo {
+  replacementPointer?: string;
+  replacementPath?: string;
+}
 
 export const deprecationRule: RuleModule = {
   name: 'design-system/deprecation',
@@ -15,18 +21,20 @@ export const deprecationRule: RuleModule = {
     schema: z.void(),
   },
   create(context) {
-    const deprecated = new Map<string, { reason?: string; suggest?: string }>();
+    const deprecated = new Map<string, DeprecationInfo>();
     for (const { path, metadata } of context.getFlattenedTokens()) {
       const dep = metadata.deprecated;
       if (!dep) continue;
-      let reason: string | undefined;
-      let suggest: string | undefined;
-      if (typeof dep === 'string') {
-        reason = dep;
-        const m = /\{([^}]+)\}/.exec(dep);
-        if (m) suggest = m[1];
+      if (dep === true) {
+        deprecated.set(path, {});
+        continue;
       }
-      deprecated.set(path, { reason, suggest });
+      const replacementPointer = dep.$replacement;
+      const replacementPath = pointerToPath(replacementPointer);
+      deprecated.set(path, {
+        replacementPointer,
+        ...(replacementPath ? { replacementPath } : {}),
+      });
     }
     if (deprecated.size === 0) {
       context.report({
@@ -47,19 +55,25 @@ export const deprecationRule: RuleModule = {
             const pos = node
               .getSourceFile()
               .getLineAndCharacterOfPosition(node.getStart());
+            const suggestion = info?.replacementPath;
+            const fallback = info?.replacementPointer;
+            let replacementSuffix = '';
+            if (suggestion) {
+              replacementSuffix = `; use ${suggestion}`;
+            } else if (fallback) {
+              replacementSuffix = `; use ${fallback}`;
+            }
             context.report({
-              message: `Token ${node.text} is deprecated${
-                info?.reason ? `: ${info.reason}` : ''
-              }`,
+              message: `Token ${node.text} is deprecated${replacementSuffix}.`,
               line: pos.line + 1,
               column: pos.character + 1,
-              ...(info?.suggest
+              ...(suggestion
                 ? {
                     fix: {
                       range: [node.getStart(), node.getEnd()],
-                      text: `'${info.suggest}'`,
+                      text: `'${suggestion}'`,
                     },
-                    suggest: info.suggest,
+                    suggest: suggestion,
                   }
                 : {}),
             });
@@ -69,13 +83,14 @@ export const deprecationRule: RuleModule = {
       onCSSDeclaration(decl) {
         if (names.has(decl.value)) {
           const info = deprecated.get(decl.value);
+          const suggestion = info?.replacementPath ?? info?.replacementPointer;
           context.report({
             message: `Token ${decl.value} is deprecated${
-              info?.reason ? `: ${info.reason}` : ''
-            }`,
+              suggestion ? `; use ${suggestion}` : ''
+            }.`,
             line: decl.line,
             column: decl.column,
-            ...(info?.suggest ? { suggest: info.suggest } : {}),
+            ...(info?.replacementPath ? { suggest: info.replacementPath } : {}),
           });
         }
       },

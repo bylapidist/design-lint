@@ -5,6 +5,7 @@ import { rules, guards } from '../utils/index.js';
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
+  data: { isRecord },
 } = guards;
 
 export const durationRule = tokenRule({
@@ -15,13 +16,20 @@ export const durationRule = tokenRule({
     'design-token/duration requires duration tokens; configure tokens with $type "duration" under a "durations" group to enable this rule.',
   getAllowed(tokens) {
     const parse = (val: unknown): number | null => {
-      if (typeof val === 'object' && val !== null) {
-        const unit: unknown = Reflect.get(val, 'unit');
-        const num: unknown = Reflect.get(val, 'value');
-        if (typeof unit === 'string' && typeof num === 'number') {
-          return unit === 's' ? num * 1000 : unit === 'ms' ? num : null;
-        }
+      if (!isRecord(val)) return null;
+      const type = Reflect.get(val, 'durationType');
+      const unit = Reflect.get(val, 'unit');
+      const num = Reflect.get(val, 'value');
+      if (
+        typeof type !== 'string' ||
+        typeof unit !== 'string' ||
+        typeof num !== 'number'
+      ) {
+        return null;
       }
+      if (!type.startsWith('css.')) return null;
+      if (unit === 's') return num * 1000;
+      if (unit === 'ms') return num;
       return null;
     };
     const allowed = new Set<number>();

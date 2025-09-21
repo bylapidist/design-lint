@@ -39,7 +39,7 @@ void test('accepts theme record with relative token file', () => {
 void test('rejects non-design token objects', () => {
   assert.throws(
     () => configSchema.parse({ tokens: { light: { color: '#fff' } } }),
-    /Tokens must be W3C Design Tokens objects/,
+    /Tokens must be DTIF design token collections/,
   );
 });
 

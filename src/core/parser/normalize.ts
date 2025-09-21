@@ -1,23 +1,23 @@
 import type { FlattenedToken } from '../types.js';
-import { resolveAliases } from './alias.js';
+import { resolveReferences } from './references.js';
 
 export function normalizeTokens(
   tokens: FlattenedToken[],
   warn: (msg: string) => void = console.warn,
 ): FlattenedToken[] {
-  const tokenMap = new Map(tokens.map((t) => [t.path, t]));
+  const tokensByPath = new Map(tokens.map((t) => [t.path, t]));
   const warnings: string[] = [];
   for (const token of tokens) {
-    const { value, refs } = resolveAliases(
-      token.value,
-      token.path,
+    const { value, references } = resolveReferences(
       token,
-      tokenMap,
+      tokensByPath,
       warnings,
     );
     token.value = value;
-    if (refs.length) {
-      token.aliases = Array.from(new Set(refs));
+    if (references.length > 0) {
+      token.aliases = Array.from(new Set(references));
+    } else if (token.aliases) {
+      delete token.aliases;
     }
   }
   for (const w of warnings) warn(w);

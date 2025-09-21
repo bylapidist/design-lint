@@ -2,7 +2,7 @@ import type { DesignTokens } from '../../../core/types.js';
 import { isRecord } from '../data/index.js';
 
 /**
- * Determines whether a value conforms to the `DesignTokens` structure.
+ * Determines whether a value conforms to the DTIF `DesignTokens` structure.
  *
  * Currently this simply checks whether the value is a record. Additional
  * validation may be layered on in the future.

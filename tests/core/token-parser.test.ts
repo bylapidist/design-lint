@@ -206,7 +206,10 @@ void test('parseDesignTokens rejects tokens missing $value', () => {
   const tokens = {
     color: { blue: { $type: 'color' } },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /missing \$value/i);
+  assert.throws(
+    () => parseDesignTokens(tokens),
+    /must be an object with \$value or \$ref/i,
+  );
 });
 
 void test('parseDesignTokens rejects legacy shorthand token values', () => {
@@ -280,13 +283,14 @@ void test('parseDesignTokens handles aliases with mismatched types', () => {
   const tokens = {
     color: { base: { $value: '#00f', $type: 'color' } },
     size: { sm: { $value: { value: 4, unit: 'px' }, $type: 'dimension' } },
-    alias: { wrong: { $type: 'color', $value: '{size.sm}' } },
+    alias: { wrong: { $type: 'color', $ref: '#/size/sm' } },
   } as unknown as DesignTokens;
 
   const result = parseDesignTokens(tokens);
   const wrong = result.find((t) => t.path === 'alias.wrong');
   assert.ok(wrong);
-  assert.equal(wrong.value, '{size.sm}');
+  assert.equal(wrong.value, undefined);
+  assert.equal(wrong.ref, '#/size/sm');
   assert.deepEqual(wrong.aliases, ['size.sm']);
 });
 
@@ -294,7 +298,7 @@ void test('parseDesignTokens resolves alias token types', () => {
   const tokens: DesignTokens = {
     color: {
       blue: { $value: '#00f', $type: 'color' },
-      brand: { $value: '{color.blue}' },
+      brand: { $ref: '#/color/blue' },
     },
   };
   const result = parseDesignTokens(tokens);
@@ -323,7 +327,13 @@ void test('parseDesignTokens validates duration tokens', () => {
   const tokens = {
     durations: {
       $type: 'duration',
-      fast: { $value: { value: 100, unit: 'ms' } },
+      fast: {
+        $value: {
+          durationType: 'css.transition-duration',
+          value: 100,
+          unit: 'ms',
+        },
+      },
     },
   } as unknown as DesignTokens;
   const result = parseDesignTokens(tokens);
@@ -332,7 +342,13 @@ void test('parseDesignTokens validates duration tokens', () => {
   const invalid = {
     durations: {
       $type: 'duration',
-      bad: { $value: { value: 1, unit: 'min' } },
+      bad: {
+        $value: {
+          durationType: 'css.transition-duration',
+          value: 1,
+          unit: 'min',
+        },
+      },
     },
   } as unknown as DesignTokens;
   assert.throws(() => parseDesignTokens(invalid), /invalid duration value/i);
@@ -380,39 +396,45 @@ void test('parseDesignTokens rejects unknown aliases', () => {
   const tokens = {
     color: {
       $type: 'color',
-      brand: { $value: '{color.missing}' },
+      brand: { $ref: '#/color/missing' },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /references unknown token/i);
+  assert.throws(
+    () => parseDesignTokens(tokens),
+    /references unknown token via \$ref/i,
+  );
 });
 
 void test('parseDesignTokens rejects circular aliases', () => {
   const tokens = {
     color: {
       base: { $value: '#00f', $type: 'color' },
-      a: { $value: '{color.b}' },
-      b: { $value: '{color.a}' },
+      a: { $ref: '#/color/b' },
+      b: { $ref: '#/color/a' },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /circular alias reference/i);
+  assert.throws(() => parseDesignTokens(tokens), /circular \$ref reference/i);
 });
 
 void test('normalizeTokens errors when alias target lacks type', () => {
   const tokens: FlattenedToken[] = [
     {
       path: 'size.base',
+      pointer: '#/size/base',
       value: { value: 4, unit: 'px' },
       metadata: { loc: { line: 1, column: 1 } },
     },
     {
       path: 'size.alias',
-      value: '{size.base}',
+      pointer: '#/size/alias',
+      value: undefined,
+      ref: '#/size/base',
       metadata: { loc: { line: 1, column: 1 } },
     },
   ];
   assert.throws(
     () => normalizeTokens(tokens),
-    /references token without type/i,
+    /references token without \$?type/i,
   );
 });
 
@@ -420,39 +442,42 @@ void test('normalizeTokens errors when alias target lacks value', () => {
   const tokens: FlattenedToken[] = [
     {
       path: 'color.base',
+      pointer: '#/color/base',
       type: 'color',
       value: undefined,
       metadata: { loc: { line: 1, column: 1 } },
     },
     {
       path: 'color.alias',
-      value: '{color.base}',
+      pointer: '#/color/alias',
+      value: undefined,
+      ref: '#/color/base',
       metadata: { loc: { line: 1, column: 1 } },
     },
   ];
   assert.throws(
     () => normalizeTokens(tokens),
-    /references token without value/i,
+    /references token without \$?value/i,
   );
 });
 
-void test('parseDesignTokens rejects slash-separated aliases', () => {
+void test('parseDesignTokens rejects invalid $ref fragments', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
       base: { $value: '#fff' },
-      primary: { $value: '{color/base}' },
+      primary: { $ref: 'color/base' },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens));
+  assert.throws(() => parseDesignTokens(tokens), /invalid \$ref/i);
 });
 
 void test('parseDesignTokens resolves alias chains', () => {
   const tokens: DesignTokens = {
     color: {
       base: { $value: '#00f', $type: 'color' },
-      mid: { $value: '{color.base}' },
-      top: { $value: '{color.mid}' },
+      mid: { $ref: '#/color/base' },
+      top: { $ref: '#/color/mid' },
     },
   };
   const result = parseDesignTokens(tokens);
@@ -463,38 +488,41 @@ void test('parseDesignTokens rejects circular aliases', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $value: '{color.b}' },
-      b: { $value: '{color.a}' },
+      a: { $ref: '#/color/b' },
+      b: { $ref: '#/color/a' },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /circular alias reference/i);
+  assert.throws(() => parseDesignTokens(tokens), /circular \$ref reference/i);
 });
 
 void test('parseDesignTokens rejects alias chains with unknown targets', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $value: '{color.b}' },
-      b: { $value: '{color.missing}' },
+      a: { $ref: '#/color/b' },
+      b: { $ref: '#/color/missing' },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /references unknown token/i);
+  assert.throws(
+    () => parseDesignTokens(tokens),
+    /references unknown token via \$ref/i,
+  );
 });
 
 void test('parseDesignTokens rejects alias chains when final target lacks $type', () => {
   const tokens = {
-    a: { $value: '{b}' },
+    a: { $ref: '#/b' },
     b: { $value: '#00f' },
   } as unknown as DesignTokens;
   assert.throws(
     () => parseDesignTokens(tokens),
-    /references token without type/i,
+    /references token without \$?type/i,
   );
 });
 
 void test('parseDesignTokens allows pure aliases to omit $type', () => {
   const tokens = {
-    a: { $value: '{b}' },
+    a: { $ref: '#/b' },
     b: { $type: 'color', $value: '#00f' },
   } as unknown as DesignTokens;
   const result = parseDesignTokens(tokens);
@@ -519,8 +547,8 @@ void test('parseDesignTokens validates shadow composite tokens', () => {
       small: {
         $value: {
           color: '#000',
-          offsetX: '{size.sm}',
-          offsetY: '{size.sm}',
+          offsetX: { $ref: '#/size/sm' },
+          offsetY: { $ref: '#/size/sm' },
           blur: { value: 2, unit: 'px' },
           spread: { value: 0, unit: 'px' },
         },
@@ -689,8 +717,8 @@ void test('parseDesignTokens resolves aliases inside gradient stops', () => {
       $type: 'gradient',
       hero: {
         $value: [
-          { color: '{color.base}', position: 0 },
-          { color: '{color.dark}', position: 1 },
+          { color: { $ref: '#/color/base' }, position: 0 },
+          { color: { $ref: '#/color/dark' }, position: 1 },
         ],
       },
     },
@@ -759,8 +787,16 @@ void test('parseDesignTokens validates transition composite tokens', () => {
       $type: 'transition',
       fade: {
         $value: {
-          duration: { value: 1, unit: 's' },
-          delay: { value: 0, unit: 's' },
+          duration: {
+            durationType: 'css.transition-duration',
+            value: 1,
+            unit: 's',
+          },
+          delay: {
+            durationType: 'css.transition-delay',
+            value: 0,
+            unit: 's',
+          },
           timingFunction: [0, 0, 1, 1],
         },
       },
@@ -777,8 +813,16 @@ void test('parseDesignTokens validates transition composite tokens', () => {
       $type: 'transition',
       bad: {
         $value: {
-          duration: { value: 1, unit: 's' },
-          delay: { value: 0, unit: 's' },
+          duration: {
+            durationType: 'css.transition-duration',
+            value: 1,
+            unit: 's',
+          },
+          delay: {
+            durationType: 'css.transition-delay',
+            value: 0,
+            unit: 's',
+          },
         },
       },
     },
@@ -794,7 +838,7 @@ void test('parseDesignTokens resolves aliases inside shadow segments', () => {
       subtle: {
         $value: [
           {
-            color: '{color.shadow}',
+            color: { $ref: '#/color/shadow' },
             offsetX: { value: 0, unit: 'px' },
             offsetY: { value: 1, unit: 'px' },
             blur: { value: 2, unit: 'px' },
@@ -891,7 +935,7 @@ void test('parseDesignTokens preserves $extensions and $deprecated metadata', ()
   const tokens: DesignTokens = {
     theme: {
       $type: 'color',
-      $deprecated: 'use new theme',
+      $deprecated: true,
       brand: { $value: '#000', $extensions: ext },
       active: { $value: '#fff', $deprecated: false },
     },
@@ -903,7 +947,7 @@ void test('parseDesignTokens preserves $extensions and $deprecated metadata', ()
   );
   assert.equal(
     result.find((t) => t.path === 'theme.brand')?.metadata.deprecated,
-    'use new theme',
+    true,
   );
   assert.equal(
     result.find((t) => t.path === 'theme.active')?.metadata.deprecated,

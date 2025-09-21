@@ -4,6 +4,7 @@ import type {
   TokenGroup,
   FlattenedToken,
 } from '../types.js';
+import type { DeprecationMetadata } from '@lapidist/dtif-schema';
 import { guards } from '../../utils/index.js';
 
 const {
@@ -14,19 +15,40 @@ const {
 const tokenLocations = new Map<string, { line: number; column: number }>();
 
 export function getTokenLocation(
-  path: string,
+  identifier: string,
 ): { line: number; column: number } | undefined {
-  return tokenLocations.get(path);
+  return tokenLocations.get(identifier);
 }
 
-const GROUP_PROPS = new Set([
+const RESERVED_COLLECTION_PROPS = new Set([
   '$type',
   '$description',
   '$extensions',
   '$deprecated',
   '$schema',
+  '$version',
+  '$overrides',
+  '$lastModified',
+  '$lastUsed',
+  '$usageCount',
+  '$author',
+  '$tags',
+  '$hash',
 ]);
+
 const INVALID_NAME_CHARS = /[{}\.]/;
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
+}
+
+function isDeprecationObject(value: unknown): value is DeprecationMetadata {
+  if (!isRecord(value)) return false;
+  const replacement = Reflect.get(value, '$replacement');
+  return replacement === undefined || typeof replacement === 'string';
+}
 
 function validateExtensions(
   value: unknown,
@@ -37,8 +59,9 @@ function validateExtensions(
   if (!isRecord(value)) {
     throw new Error(`Token or group ${path} has invalid $extensions`);
   }
+  if (!onWarn) return;
   for (const key of Object.keys(value)) {
-    if (!key.includes('.') && onWarn) {
+    if (!key.includes('.')) {
       onWarn(
         `Token or group ${path} has $extensions key without a dot: ${key}`,
       );
@@ -48,12 +71,11 @@ function validateExtensions(
 
 function validateDeprecated(value: unknown, path: string): void {
   if (value === undefined) return;
-  if (typeof value !== 'boolean' && typeof value !== 'string') {
-    throw new Error(`Token or group ${path} has invalid $deprecated`);
-  }
+  if (typeof value === 'boolean') return;
+  if (isDeprecationObject(value)) return;
+  throw new Error(`Token or group ${path} has invalid $deprecated`);
 }
 
-// The spec says, "The value of the `$description` property MUST be a plain JSON string."
 function validateDescription(value: unknown, path: string): void {
   if (value === undefined) return;
   if (typeof value !== 'string') {
@@ -61,18 +83,94 @@ function validateDescription(value: unknown, path: string): void {
   }
 }
 
-function validateMetadata(
-  node: {
-    $extensions?: unknown;
-    $deprecated?: unknown;
-    $description?: unknown;
-  },
+function validateNodeMetadata(
+  node: Token | TokenGroup | DesignTokens,
   path: string,
   onWarn?: (msg: string) => void,
 ): void {
-  validateExtensions(node.$extensions, path, onWarn);
-  validateDeprecated(node.$deprecated, path);
-  validateDescription(node.$description, path);
+  validateExtensions(Reflect.get(node, '$extensions'), path, onWarn);
+  validateDeprecated(Reflect.get(node, '$deprecated'), path);
+  validateDescription(Reflect.get(node, '$description'), path);
+}
+
+function encodePointerSegment(segment: string): string {
+  return segment.replace(/~/g, '~0').replace(/\//g, '~1');
+}
+
+function toPointer(segments: string[]): string {
+  if (segments.length === 0) return '#';
+  return `#/${segments.map(encodePointerSegment).join('/')}`;
+}
+
+function readString(
+  node: Token | TokenGroup | DesignTokens,
+  key: string,
+): string | undefined {
+  const value = Reflect.get(node, key);
+  return typeof value === 'string' ? value : undefined;
+}
+
+function readNumber(
+  node: Token | TokenGroup | DesignTokens,
+  key: string,
+): number | undefined {
+  const value = Reflect.get(node, key);
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
+}
+
+function readRecord(
+  node: Token | TokenGroup | DesignTokens,
+  key: string,
+): Record<string, unknown> | undefined {
+  const value = Reflect.get(node, key);
+  return isRecord(value) ? value : undefined;
+}
+
+function readStringArray(
+  node: Token | TokenGroup | DesignTokens,
+  key: string,
+): string[] | undefined {
+  const value = Reflect.get(node, key);
+  return isStringArray(value) ? value : undefined;
+}
+
+function readDeprecated(
+  node: Token | TokenGroup | DesignTokens,
+  fallback?: DeprecationMetadata,
+): DeprecationMetadata | undefined {
+  const value = Reflect.get(node, '$deprecated');
+  if (value === undefined) return fallback;
+  if (typeof value === 'boolean') return value;
+  if (isDeprecationObject(value)) return value;
+  return fallback;
+}
+
+function readTokenMetadata(
+  token: Token,
+  fallbackDeprecated?: DeprecationMetadata,
+): Omit<FlattenedToken['metadata'], 'loc'> {
+  const metadata: Omit<FlattenedToken['metadata'], 'loc'> = {};
+  const description = readString(token, '$description');
+  if (description !== undefined) metadata.description = description;
+  const extensions = readRecord(token, '$extensions');
+  if (extensions !== undefined) metadata.extensions = extensions;
+  const deprecated = readDeprecated(token, fallbackDeprecated);
+  if (deprecated !== undefined) metadata.deprecated = deprecated;
+  const lastModified = readString(token, '$lastModified');
+  if (lastModified !== undefined) metadata.lastModified = lastModified;
+  const lastUsed = readString(token, '$lastUsed');
+  if (lastUsed !== undefined) metadata.lastUsed = lastUsed;
+  const usageCount = readNumber(token, '$usageCount');
+  if (usageCount !== undefined) metadata.usageCount = usageCount;
+  const author = readString(token, '$author');
+  if (author !== undefined) metadata.author = author;
+  const tags = readStringArray(token, '$tags');
+  if (tags !== undefined) metadata.tags = tags;
+  const hash = readString(token, '$hash');
+  if (hash !== undefined) metadata.hash = hash;
+  return metadata;
 }
 
 export function buildParseTree(
@@ -84,33 +182,31 @@ export function buildParseTree(
   const result: FlattenedToken[] = [];
   const seenExactPaths = new Set<string>();
   const seenCaseInsensitivePaths = new Map<string, string>();
+  const seenPointers = new Set<string>();
 
   function walk(
-    group: TokenGroup,
-    prefix: string[],
-    inheritedType?: string,
-    inheritedDeprecated?: boolean | string,
+    group: TokenGroup | DesignTokens,
+    pathSegments: string[],
+    pointerSegments: string[],
+    inheritedDeprecated?: DeprecationMetadata,
   ): void {
-    const pathLabel = prefix.length ? prefix.join('.') : '(root)';
-    validateMetadata(group, pathLabel, onWarn);
-    if (prefix.length === 0) {
-      if (
-        '$schema' in group &&
-        typeof Reflect.get(group, '$schema') !== 'string'
-      ) {
-        throw new Error('Root group has invalid $schema');
+    const pathLabel = pathSegments.length ? pathSegments.join('.') : '(root)';
+    validateNodeMetadata(group, pathLabel, onWarn);
+    const rawSchema = Reflect.get(group, '$schema');
+    if (pathSegments.length === 0) {
+      if (rawSchema !== undefined && typeof rawSchema !== 'string') {
+        throw new Error('Root collection has invalid $schema');
       }
-    } else if ('$schema' in group) {
-      throw new Error('$schema is only allowed on the root group');
+    } else if (rawSchema !== undefined) {
+      throw new Error('$schema is only allowed on the root collection');
     }
-    const currentType = group.$type ?? inheritedType;
-    const currentDeprecated = group.$deprecated ?? inheritedDeprecated;
+
+    const currentDeprecated = readDeprecated(group, inheritedDeprecated);
     const seenExactNames = new Set<string>();
     const seenCaseInsensitiveNames = new Map<string, string>();
-    // The spec states, "Token names are case-sensitive. Tools MAY display a warning when token names differ only by case."
 
     for (const name of Object.keys(group)) {
-      if (GROUP_PROPS.has(name)) continue;
+      if (RESERVED_COLLECTION_PROPS.has(name)) continue;
       if (name.startsWith('$')) {
         throw new Error(`Invalid token or group name: ${name}`);
       }
@@ -133,8 +229,11 @@ export function buildParseTree(
 
       const node = group[name];
       if (node === undefined) continue;
-      const pathParts = [...prefix, name];
-      const pathId = pathParts.join('.');
+
+      const nextPathSegments = [...pathSegments, name];
+      const nextPointerSegments = [...pointerSegments, name];
+      const pathId = nextPathSegments.join('.');
+      const pointer = toPointer(nextPointerSegments);
       if (seenExactPaths.has(pathId)) {
         throw new Error(`Duplicate token path: ${pathId}`);
       }
@@ -148,44 +247,51 @@ export function buildParseTree(
         seenCaseInsensitivePaths.set(lowerPath, pathId);
       }
       seenExactPaths.add(pathId);
+      if (seenPointers.has(pointer)) {
+        throw new Error(`Duplicate token pointer: ${pointer}`);
+      }
+      seenPointers.add(pointer);
 
       if (isRecord(node)) {
         if (isToken(node)) {
-          const token: Token = { ...node, $type: node.$type ?? currentType };
-          validateMetadata(token, pathId, onWarn);
-          const tokenDeprecated = token.$deprecated ?? currentDeprecated;
-          if (tokenDeprecated !== undefined)
-            token.$deprecated = tokenDeprecated;
+          const token = node;
+          validateNodeMetadata(token, pathId, onWarn);
+          const tokenType = readString(token, '$type');
+          const metadataBase = readTokenMetadata(token, currentDeprecated);
+          const tokenValue = Reflect.get(token, '$value');
+          const tokenRef = readString(token, '$ref');
+          if (tokenValue === undefined && tokenRef === undefined) {
+            throw new Error(`Token ${pathId} is missing $value or $ref`);
+          }
           const loc = getLoc ? getLoc(pathId) : { line: 1, column: 1 };
           tokenLocations.set(pathId, loc);
+          tokenLocations.set(pointer, loc);
           result.push({
             path: pathId,
-            value: token.$value,
-            type: token.$type,
+            pointer,
+            value: tokenValue,
+            ...(tokenRef !== undefined ? { ref: tokenRef } : {}),
+            type: tokenType,
             metadata: {
-              description: token.$description,
-              extensions: token.$extensions,
-              deprecated: token.$deprecated,
+              ...metadataBase,
               loc,
             },
           });
         } else if (isTokenGroup(node)) {
-          const childKeys = Object.keys(node).filter(
-            (k) => !GROUP_PROPS.has(k),
-          );
-          if ('$type' in node && childKeys.length === 0) {
-            throw new Error(`Token ${pathId} is missing $value`);
-          }
-          walk(node, pathParts, currentType, currentDeprecated);
+          walk(node, nextPathSegments, nextPointerSegments, currentDeprecated);
         } else {
-          throw new Error(`Token ${pathId} must be an object with $value`);
+          throw new Error(
+            `Token ${pathId} must be an object with $value or $ref`,
+          );
         }
       } else {
-        throw new Error(`Token ${pathId} must be an object with $value`);
+        throw new Error(
+          `Token ${pathId} must be an object with $value or $ref`,
+        );
       }
     }
   }
 
-  walk(tokens, [], undefined, undefined);
+  walk(tokens, [], [], undefined);
   return result;
 }

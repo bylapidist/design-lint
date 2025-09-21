@@ -15,13 +15,13 @@
     "old-token": {
       "$type": "color",
       "$value": "#000000",
-      "$deprecated": "Use {new-token}"
+      "$deprecated": { "$replacement": "#/new-token" }
     },
     "new-token": { "$type": "color", "$value": "#ffffff" },
     "OldComponent": {
       "$type": "color",
       "$value": "#000000",
-      "$deprecated": "Use {NewComponent}"
+      "$deprecated": { "$replacement": "#/NewComponent" }
     },
     "NewComponent": { "$type": "color", "$value": "#ffffff" }
   },

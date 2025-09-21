@@ -26,47 +26,31 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
   assert.deepEqual(flat, [
     {
       path: 'colors.red',
+      pointer: '#/colors/red',
       value: '#ff0000',
       type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
     {
       path: 'colors.accent',
+      pointer: '#/colors/accent',
       value: '#00ff00',
       type: 'special',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
     {
       path: 'colors.nested.green',
+      pointer: '#/colors/nested/green',
       value: '#00ff00',
       type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
     {
       path: 'size.spacing.small',
+      pointer: '#/size/spacing/small',
       value: { value: 4, unit: 'px' },
       type: 'dimension',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
   ]);
 });
@@ -96,72 +80,68 @@ void test('flattenDesignTokens preserves $extensions and inherits $deprecated', 
   );
 });
 
-void test('flattenDesignTokens resolves alias references', () => {
+void test('flattenDesignTokens resolves $ref references', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
       base: { $value: '#fff' },
-      primary: { $value: '{color.base}' },
+      primary: { $ref: '#/color/base' },
     },
   };
   const flat = flattenDesignTokens(tokens);
   assert.deepEqual(flat, [
     {
       path: 'color.base',
+      pointer: '#/color/base',
       value: '#fff',
       type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
     {
       path: 'color.primary',
+      pointer: '#/color/primary',
       value: '#fff',
+      ref: '#/color/base',
       type: 'color',
       aliases: ['color.base'],
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
   ]);
 });
 
-void test('flattenDesignTokens rejects circular aliases', () => {
+void test('flattenDesignTokens rejects circular $ref chains', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $value: '{color.b}' },
-      b: { $value: '{color.a}' },
+      a: { $ref: '#/color/b' },
+      b: { $ref: '#/color/a' },
     },
   };
-  assert.throws(() => flattenDesignTokens(tokens), /circular alias reference/i);
+  assert.throws(() => flattenDesignTokens(tokens), /circular \$ref reference/i);
 });
 
-void test('flattenDesignTokens rejects unknown aliases', () => {
+void test('flattenDesignTokens rejects unknown $ref targets', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
-      a: { $value: '{color.missing}' },
+      a: { $ref: '#/color/missing' },
     },
   };
-  assert.throws(() => flattenDesignTokens(tokens), /references unknown token/i);
+  assert.throws(
+    () => flattenDesignTokens(tokens),
+    /references unknown token via \$ref/i,
+  );
 });
 
-void test('flattenDesignTokens rejects slash-separated aliases', () => {
+void test('flattenDesignTokens rejects invalid $ref fragments', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
       base: { $value: '#fff' },
-      primary: { $value: '{color/base}' },
+      primary: { $ref: 'color/base' },
     },
   };
-  assert.throws(() => flattenDesignTokens(tokens));
+  assert.throws(() => flattenDesignTokens(tokens), /invalid \$ref/i);
 });
 
 void test('flattenDesignTokens applies name transforms', () => {
@@ -169,33 +149,26 @@ void test('flattenDesignTokens applies name transforms', () => {
     ColorGroup: {
       $type: 'color',
       primaryColor: { $value: '#000' },
-      secondaryColor: { $value: '{ColorGroup.primaryColor}' },
+      secondaryColor: { $ref: '#/ColorGroup/primaryColor' },
     },
   };
   const flat = flattenDesignTokens(tokens, { nameTransform: 'kebab-case' });
   assert.deepEqual(flat, [
     {
       path: 'color-group.primary-color',
+      pointer: '#/ColorGroup/primaryColor',
       value: '#000',
       type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
     {
       path: 'color-group.secondary-color',
+      pointer: '#/ColorGroup/secondaryColor',
       value: '#000',
+      ref: '#/ColorGroup/primaryColor',
       type: 'color',
       aliases: ['color-group.primary-color'],
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
+      metadata: { loc: { line: 1, column: 1 } },
     },
   ]);
 });

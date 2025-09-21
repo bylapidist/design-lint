@@ -14,7 +14,12 @@
 - 054e4ce: allow empty dashArray in strokeStyle tokens
 - 054e4ce: support hex string color tokens alongside object format
 - 054e4ce: clamp gradient stop positions to the [0, 1] range
-- 054e4ce: remove non-spec $metadata property; the spec says, "The properties `$description`, `$extensions`, `$deprecated`, `$type`, and `$schema` are reserved for use by this specification."
+- 054e4ce: remove non-spec $metadata property; the spec reserves the following properties for the specification:
+  - `$description`
+  - `$extensions`
+  - `$deprecated`
+  - `$type`
+  - `$schema`
 - 054e4ce: validate color component ranges, alpha bounds, and hex format
 - 054e4ce: fail when token aliases cannot be resolved
 - 054e4ce: require `letterSpacing` in typography tokens; the spec says, "The value MUST be an object with the following properties: `fontFamily`, `fontSize`, `fontWeight`, `letterSpacing`, `lineHeight`."

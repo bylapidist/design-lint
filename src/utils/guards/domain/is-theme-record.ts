@@ -35,7 +35,9 @@ export const isThemeRecord = (
       .filter(([k]) => !k.startsWith('$'))
       .map(([, v]) => v);
     const allTokens = children.every(
-      (child) => isRecord(child) && ('$value' in child || 'value' in child),
+      (child) =>
+        isRecord(child) &&
+        ('$value' in child || '$ref' in child || 'value' in child),
     );
     return !allTokens;
   }

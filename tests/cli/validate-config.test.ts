@@ -73,8 +73,8 @@ void test('validate command fails on unresolved aliases', () => {
     tokensPath,
     JSON.stringify({
       color: {
-        red: { $type: 'color', $value: '{color.green}' },
-        green: { $type: 'color', $value: '{color.red}' },
+        red: { $type: 'color', $ref: '#/color/green' },
+        green: { $type: 'color', $ref: '#/color/red' },
       },
     }),
   );
@@ -96,5 +96,5 @@ void test('validate command fails on unresolved aliases', () => {
     { cwd: dir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /circular alias reference/i);
+  assert.match(res.stderr, /circular \$ref reference/i);
 });

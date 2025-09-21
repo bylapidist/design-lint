@@ -22,7 +22,7 @@ void test('tokens command exports resolved tokens with extensions', () => {
       },
       blue: {
         $type: 'color',
-        $value: '{color.red}',
+        $ref: '#/color/red',
       },
     },
   };

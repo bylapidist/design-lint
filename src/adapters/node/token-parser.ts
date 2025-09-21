@@ -13,6 +13,7 @@ import {
   parseDesignTokens,
   type ParseDesignTokensOptions,
 } from '../../core/parser/index.js';
+import { canonicalizeDesignTokens } from '../../core/parser/validate-dtif.js';
 
 export class TokenParseError extends Error {
   filePath: string;
@@ -103,8 +104,11 @@ function parseTokensContent(
     function walk(value: ValueNode, prefix: string[]): void {
       if (!isObjectNode(value)) return;
       const members = value.members;
-      const hasValue = members.some((m) => getName(m.name) === '$value');
-      if (hasValue) {
+      const hasTokenCore = members.some((m) => {
+        const key = getName(m.name);
+        return key === '$value' || key === '$ref';
+      });
+      if (hasTokenCore) {
         const pathId = prefix.join('.');
         locations.set(pathId, {
           line: value.loc.start.line,
@@ -184,5 +188,5 @@ export async function readDesignTokensFile(
   const { tokens, getTokenLocation } = parseTokensContent(filePath, content);
   // Validate the structure but discard the result.
   parseDesignTokens(tokens, getTokenLocation, options);
-  return tokens;
+  return canonicalizeDesignTokens(tokens);
 }

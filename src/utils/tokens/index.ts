@@ -7,6 +7,12 @@ export { wrapTokenError } from './wrap-token-error.js';
 export { parseTokensForTheme } from './parse-tokens-for-theme.js';
 export { normalizeTokens } from './normalize-tokens.js';
 export { normalizePath, toConstantName, type NameTransform } from './path.js';
+export {
+  encodePointerSegment,
+  decodePointerSegment,
+  pathToPointer,
+  pointerToPath,
+} from './pointer.js';
 export { matchToken, closestToken, type TokenPattern } from './pattern.js';
 export {
   flattenDesignTokens,

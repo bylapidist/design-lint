@@ -38,7 +38,7 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
       unused: {
         $value: '#123456',
         $type: 'color',
-        $deprecated: 'deprecated',
+        $deprecated: true,
         $extensions: { 'vendor.foo': true },
       },
     },
@@ -62,7 +62,7 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   assert(msg);
   assert(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
-  assert.equal(msg.metadata.deprecated, 'deprecated');
+  assert.equal(msg.metadata.deprecated, true);
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });
 

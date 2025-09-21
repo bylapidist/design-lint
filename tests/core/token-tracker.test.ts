@@ -117,7 +117,7 @@ void test('TokenTracker resolves alias tokens when tracking usage', async () => 
   const tokens: DesignTokens = {
     color: {
       red: { $value: '#ff0000', $type: 'color' },
-      primary: { $value: '{color.red}', $type: 'color' },
+      primary: { $ref: '#/color/red', $type: 'color' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -139,7 +139,7 @@ void test('TokenTracker includes token metadata in reports', async () => {
       unused: {
         $value: '#123456',
         $type: 'color',
-        $deprecated: 'deprecated',
+        $deprecated: true,
         $extensions: { 'vendor.foo': true },
       },
     },
@@ -157,6 +157,6 @@ void test('TokenTracker includes token metadata in reports', async () => {
   const msg = reports[0].messages[0];
   assert(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
-  assert.equal(msg.metadata.deprecated, 'deprecated');
+  assert.equal(msg.metadata.deprecated, true);
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });

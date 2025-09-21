@@ -18,8 +18,22 @@ import { guards } from '../utils/index.js';
  */
 
 const {
-  domain: { isTokenGroup },
+  data: { isRecord },
 } = guards;
+
+function isDesignTokenTree(value: unknown): value is Record<string, unknown> {
+  if (!isRecord(value)) {
+    return false;
+  }
+  if ('$value' in value || '$ref' in value) {
+    return true;
+  }
+  for (const [key, child] of Object.entries(value)) {
+    if (key.startsWith('$')) continue;
+    if (!isDesignTokenTree(child)) return false;
+  }
+  return true;
+}
 
 /**
  * Allowed rule severity values like `'error'` or numeric levels.
@@ -44,8 +58,8 @@ const ruleSettingSchema = z.union([
 /**
  * Schema ensuring a value follows the W3C Design Tokens format.
  */
-const designTokensSchema = z.custom<DesignTokens>(isTokenGroup, {
-  message: 'Tokens must be W3C Design Tokens objects',
+const designTokensSchema = z.custom<DesignTokens>(isDesignTokenTree, {
+  message: 'Tokens must be DTIF design token collections',
 });
 
 /**

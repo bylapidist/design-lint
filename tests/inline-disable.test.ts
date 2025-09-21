@@ -7,7 +7,11 @@ import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 
 const tokens = {
-  old: { $type: 'color', $value: '#000', $deprecated: 'Use {new}' },
+  old: {
+    $type: 'color',
+    $value: '#000',
+    $deprecated: { $replacement: '#/new' },
+  },
   new: { $type: 'color', $value: '#fff' },
 };
 

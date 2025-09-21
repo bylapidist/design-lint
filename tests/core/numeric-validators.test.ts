@@ -24,9 +24,15 @@ void test('validateDimension rejects non-finite numbers', () => {
 
 void test('validateDuration rejects non-finite numbers', () => {
   assert.throws(() => {
-    validateDuration({ value: NaN, unit: 's' }, 'dur');
+    validateDuration(
+      { durationType: 'css.transition-duration', value: NaN, unit: 's' },
+      'dur',
+    );
   });
   assert.throws(() => {
-    validateDuration({ value: Infinity, unit: 's' }, 'dur');
+    validateDuration(
+      { durationType: 'css.transition-duration', value: Infinity, unit: 's' },
+      'dur',
+    );
   });
 });

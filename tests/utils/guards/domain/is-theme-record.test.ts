@@ -33,6 +33,13 @@ void test('isThemeRecord rejects invalid structures', () => {
     },
   };
   assert.equal(isThemeRecord(single), false);
+  const aliasesOnly = {
+    color: {
+      a: { $type: 'color', $ref: '#/color/b' },
+      b: { $type: 'color', $ref: '#/color/a' },
+    },
+  };
+  assert.equal(isThemeRecord(aliasesOnly), false);
   const noShared = {
     light: { color: { $value: '#fff' } },
     dark: { size: { $value: '1rem' } },

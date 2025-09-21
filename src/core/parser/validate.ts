@@ -1,4 +1,5 @@
-import type { Token, FlattenedToken } from '../types.js';
+import type { FlattenedToken } from '../types.js';
+import type { ValidationTokenInfo } from '../token-validators/index.js';
 import { validatorRegistry } from '../token-validators/index.js';
 import { guards } from '../../utils/index.js';
 
@@ -15,9 +16,12 @@ function validateExtensions(value: unknown, path: string): void {
 
 function validateDeprecated(value: unknown, path: string): void {
   if (value === undefined) return;
-  if (typeof value !== 'boolean' && typeof value !== 'string') {
-    throw new Error(`Token or group ${path} has invalid $deprecated`);
+  if (typeof value === 'boolean') return;
+  if (isRecord(value)) {
+    const replacement = Reflect.get(value, '$replacement');
+    if (replacement === undefined || typeof replacement === 'string') return;
   }
+  throw new Error(`Token or group ${path} has invalid $deprecated`);
 }
 
 // The spec says, "The value of the `$description` property MUST be a plain JSON string."
@@ -29,62 +33,48 @@ function validateDescription(value: unknown, path: string): void {
 }
 
 function validateMetadata(
-  node: {
-    $extensions?: unknown;
-    $deprecated?: unknown;
-    $description?: unknown;
-  },
+  metadata: FlattenedToken['metadata'],
   path: string,
 ): void {
-  validateExtensions(node.$extensions, path);
-  validateDeprecated(node.$deprecated, path);
-  validateDescription(node.$description, path);
+  validateExtensions(metadata.extensions, path);
+  validateDeprecated(metadata.deprecated, path);
+  validateDescription(metadata.description, path);
 }
 
 function validateToken(
-  path: string,
-  token: Token,
-  tokenMap: Map<string, Token>,
+  token: FlattenedToken,
+  tokenMap: Map<string, ValidationTokenInfo>,
 ): void {
-  validateMetadata(token, path);
-  if (token.$value === undefined) {
-    throw new Error(`Token ${path} is missing $value`);
+  validateMetadata(token.metadata, token.path);
+  const hasValue = token.value !== undefined;
+  const hasRef = token.ref !== undefined;
+  if (!hasValue && !hasRef) {
+    throw new Error(`Token ${token.path} must provide $value or $ref`);
   }
-  // The spec says, "The $type property MAY be omitted when the token references another token that has the desired type. A token referencing another token MUST have a $value set to the period-separated (`.`) path to the token it's referencing, enclosed in curly brackets."
-  if (typeof token.$value === 'string' && /^\{[^}]+\}$/.test(token.$value)) {
+  if (!hasValue) {
     return;
   }
-  if (!token.$type) {
-    throw new Error(`Token ${path} is missing $type`);
+  if (!token.type) {
+    throw new Error(`Token ${token.path} is missing $type`);
   }
-  const validator = validatorRegistry.get(token.$type);
+  const validator = validatorRegistry.get(token.type);
   if (!validator) {
-    throw new Error(`Token ${path} has unknown $type ${token.$type}`);
+    throw new Error(`Token ${token.path} has unknown $type ${token.type}`);
   }
-  validator(token.$value, path, tokenMap);
+  validator(token.value, token.path, tokenMap);
 }
 
 export function validateTokens(tokens: FlattenedToken[]): void {
-  const tokenMap = new Map<string, Token>(
+  const tokenMap = new Map<string, ValidationTokenInfo>(
     tokens.map((t) => [
       t.path,
       {
         $value: t.value,
-        $type: t.type,
-        $description: t.metadata.description,
-        $extensions: t.metadata.extensions,
-        $deprecated: t.metadata.deprecated,
+        ...(t.type ? { $type: t.type } : {}),
       },
     ]),
   );
   for (const t of tokens) {
-    const token: Token = {
-      $value: t.value,
-      $type: t.type,
-      $description: t.metadata.description,
-      $extensions: t.metadata.extensions,
-      $deprecated: t.metadata.deprecated,
-    };
-    validateToken(t.path, token, tokenMap);
+    validateToken(t, tokenMap);
   }
 }

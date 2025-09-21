@@ -93,7 +93,10 @@ void test('propagates token parsing errors', async () => {
     configPath,
     JSON.stringify({ tokens: { color: { primary: { $type: 'color' } } } }),
   );
-  await assert.rejects(loadConfig(tmp), /missing \$value/i);
+  await assert.rejects(
+    loadConfig(tmp),
+    /must be an object with \$value or \$ref/i,
+  );
 });
 
 void test('throws when specified config file is missing', async () => {
@@ -133,7 +136,13 @@ void test('validates additional token groups', async () => {
         },
         durations: {
           $type: 'duration',
-          fast: { $value: { value: 200, unit: 'ms' } },
+          fast: {
+            $value: {
+              durationType: 'css.transition-duration',
+              value: 200,
+              unit: 'ms',
+            },
+          },
         },
       },
     }),
@@ -144,7 +153,11 @@ void test('validates additional token groups', async () => {
     borderRadius: { sm: { $value: { value: number } } };
     borderWidths: { sm: { $value: { value: number } } };
     shadows: { sm: { $value: { color: string } } };
-    durations: { fast: { $value: { unit: string } } };
+    durations: {
+      fast: {
+        $value: { durationType: string; unit: string };
+      };
+    };
   };
   assert.equal(tokens.borderRadius.sm.$value.value, 2);
   assert.equal(tokens.borderWidths.sm.$value.value, 1);
@@ -399,12 +412,12 @@ void test('rejects unresolved token aliases', async () => {
     JSON.stringify({
       color: {
         brand: {
-          primary: { $type: 'color', $value: '{color.missing}' },
+          primary: { $type: 'color', $ref: '#/color/missing' },
         },
       },
     }),
   );
-  await assert.rejects(loadConfig(tmp), /references unknown token/i);
+  await assert.rejects(loadConfig(tmp), /references unknown token via \$ref/i);
 });
 
 void test('rejects inline tokens using legacy shorthand', async () => {
@@ -462,13 +475,13 @@ void test('rejects circular token aliases', async () => {
     JSON.stringify({
       tokens: {
         color: {
-          a: { $type: 'color', $value: '{color.b}' },
-          b: { $type: 'color', $value: '{color.a}' },
+          a: { $type: 'color', $ref: '#/color/b' },
+          b: { $type: 'color', $ref: '#/color/a' },
         },
       },
     }),
   );
-  await assert.rejects(loadConfig(tmp), /circular alias reference/i);
+  await assert.rejects(loadConfig(tmp), /circular \$ref reference/i);
 });
 
 void test('rejects invalid typography tokens', async () => {

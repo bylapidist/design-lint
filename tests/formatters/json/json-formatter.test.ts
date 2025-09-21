@@ -56,7 +56,7 @@ void test('json formatter serializes token metadata', async () => {
       unused: {
         $value: '#123456',
         $type: 'color',
-        $deprecated: 'deprecated',
+        $deprecated: true,
         $extensions: { 'vendor.foo': true },
       },
     },
@@ -77,6 +77,6 @@ void test('json formatter serializes token metadata', async () => {
   const meta = parsed[0].messages[0].metadata;
   assert(meta);
   assert.equal(meta.path, 'color.unused');
-  assert.equal(meta.deprecated, 'deprecated');
+  assert.equal(meta.deprecated, true);
   assert.deepEqual(meta.extensions, { 'vendor.foo': true });
 });

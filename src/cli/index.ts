@@ -210,6 +210,7 @@ export async function run(argv = process.argv.slice(2)): Promise<void> {
       if (options.watch) await watchMode(patterns, options, services);
     } catch (err) {
       logger.error(err instanceof TokenParseError ? err.format() : err);
+      process.exitCode = 1;
     }
   });
 

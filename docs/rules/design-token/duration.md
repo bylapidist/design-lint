@@ -15,15 +15,24 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "durations": {
-      "short": { "$type": "duration", "$value": { "value": 100, "unit": "ms" } },
-      "long": { "$type": "duration", "$value": "{durations.short}" }
+      "short": {
+        "$type": "duration",
+        "$value": {
+          "durationType": "css.transition-duration",
+          "value": 100,
+          "unit": "ms"
+        }
+      },
+      "long": { "$type": "duration", "$ref": "#/durations/short" }
     }
   },
   "rules": { "design-token/duration": "error" }
 }
 ```
 
-Duration tokens use objects with a numeric `value` and a `unit` of `ms` or `s`.
+Duration tokens use DTIF measurement objects that include a `durationType`
+identifier along with the numeric `value` and time `unit` (typically `ms` or
+`s`). Use `$ref` pointers to alias existing tokens.
 
 ## Options
 No additional options.
