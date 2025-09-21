@@ -16,7 +16,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
   "tokens": {
     "color": {
       "primary": { "$type": "color", "$value": "#ff0000" },
-      "secondary": { "$type": "color", "$value": "{color.primary}" }
+      "secondary": { "$type": "color", "$ref": "#/color/primary" }
     }
   },
   "rules": {

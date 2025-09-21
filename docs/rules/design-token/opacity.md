@@ -16,7 +16,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
   "tokens": {
     "opacity": {
       "low": { "$type": "number", "$value": 0.2 },
-      "high": { "$type": "number", "$value": "{opacity.low}" }
+      "high": { "$type": "number", "$ref": "#/opacity/low" }
     }
   },
   "rules": { "design-token/opacity": "error" }

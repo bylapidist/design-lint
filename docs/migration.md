@@ -6,7 +6,7 @@ sidebar_position: 12
 
 # Migration from Style Dictionary
 
-Design systems often start with [Style Dictionary](https://amzn.github.io/style-dictionary/#/). The `generate` command in design-lint provides a similar token build pipeline while adhering strictly to the W3C Design Tokens format.
+Design systems often start with [Style Dictionary](https://amzn.github.io/style-dictionary/#/). The `generate` command in design-lint provides a similar token build pipeline while adhering strictly to the Design Token Interchange Format (DTIF).
 
 ## Before
 A typical Style Dictionary setup transforms tokens into multiple outputs:

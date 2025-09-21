@@ -2,6 +2,10 @@ import type { FlattenedToken } from '../types.js';
 import type { ValidationTokenInfo } from '../token-validators/index.js';
 import { validatorRegistry } from '../token-validators/index.js';
 import { guards } from '../../utils/index.js';
+import {
+  describeTokenValueLocation,
+  forEachTokenValue,
+} from './token-values.js';
 
 const {
   data: { isRecord },
@@ -61,7 +65,10 @@ function validateToken(
   if (!validator) {
     throw new Error(`Token ${token.path} has unknown $type ${token.type}`);
   }
-  validator(token.value, token.path, tokenMap);
+  forEachTokenValue(token, (candidate, index) => {
+    const location = describeTokenValueLocation(token, index);
+    validator(candidate, location, tokenMap);
+  });
 }
 
 export function validateTokens(tokens: FlattenedToken[]): void {

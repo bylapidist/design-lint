@@ -3,7 +3,11 @@ import { buildParseTree } from './parse-tree.js';
 import { normalizeTokens } from './normalize.js';
 import { normalizeColorValues, type ColorSpace } from './normalize-colors.js';
 import { validateTokens } from './validate.js';
-import { canonicalizeDesignTokens } from './validate-dtif.js';
+import {
+  canonicalizeDesignTokens,
+  validateDesignTokensDocument,
+} from './validate-dtif.js';
+import { applyOverrides } from './overrides.js';
 
 export type TokenTransform = (tokens: DesignTokens) => DesignTokens;
 
@@ -39,11 +43,13 @@ export function parseDesignTokens(
     transformed = transform(transformed);
   }
   const canonical = canonicalizeDesignTokens(transformed);
+  validateDesignTokensDocument(canonical);
   const tree = buildParseTree(canonical, getLoc, options?.onWarn);
   normalizeTokens(tree, options?.onWarn);
   if (options?.colorSpace) {
     normalizeColorValues(tree, options.colorSpace);
   }
+  applyOverrides(canonical, tree, options?.onWarn);
   validateTokens(tree);
   return tree;
 }

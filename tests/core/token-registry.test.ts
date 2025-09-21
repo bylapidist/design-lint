@@ -24,6 +24,8 @@ void test('getToken retrieves tokens by theme and resolves aliases', () => {
   const registry = new TokenRegistry(tokens);
   assert.equal(registry.getToken('color.primary')?.value, '#fff');
   assert.equal(registry.getToken('color.secondary')?.value, '#fff');
+  assert.equal(registry.getToken('#/color/primary')?.value, '#fff');
+  assert.equal(registry.getToken('#/color/secondary')?.value, '#fff');
   assert.equal(registry.getToken('color.primary', 'dark')?.value, '#000');
 });
 
@@ -50,4 +52,21 @@ void test('getTokens returns flattened tokens and dedupes across themes', () => 
   const dark = registry.getTokens('dark');
   assert.equal(dark.length, 1);
   assert.equal(dark[0].path, 'color.primary');
+});
+
+void test('getTokenByPointer retrieves tokens across themes', () => {
+  const registry = new TokenRegistry(tokens);
+  assert.equal(registry.getTokenByPointer('#/color/primary')?.value, '#fff');
+  assert.equal(
+    registry.getTokenByPointer('#/color/primary', 'dark')?.value,
+    '#000',
+  );
+  assert.equal(
+    registry.getTokenByPointer('design.tokens.json#/color/primary')?.value,
+    '#fff',
+  );
+  assert.throws(
+    () => registry.getTokenByPointer('color.primary'),
+    /valid JSON Pointer fragment/,
+  );
 });

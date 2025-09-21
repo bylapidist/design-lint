@@ -39,7 +39,7 @@ Each option tunes a specific aspect of design-lint. Use the table below as a qui
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `tokens` | object | `undefined` | A [W3C Design Tokens](./glossary.md#design-tokens) tree or a map of themes. Theme values may be inline token objects or paths to `.tokens` files. |
+| `tokens` | object | `undefined` | A [DTIF](./glossary.md#design-tokens) document or a map of themes. Theme values may be inline token objects or paths to `.tokens` files. |
 | `rules` | object | `undefined` | Enables [rules](./rules/index.md) and sets their severity. |
 | `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
 | `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
@@ -51,7 +51,7 @@ Each option tunes a specific aspect of design-lint. Use the table below as a qui
 
 
 ## Tokens
-Tokens describe the design system in a machine-readable form. Provide a W3C Design Tokens object directly or supply a map of theme names.
+Tokens describe the design system in a machine-readable form. Provide a DTIF document directly or supply a map of theme names.
 
 Inline example:
 
@@ -63,11 +63,23 @@ Inline example:
         "$type": "color",
         "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
       },
-      "secondary": { "$type": "color", "$value": "{color.primary}" }
+      "secondary": {
+        "$type": "color",
+        "$ref": "#/color/primary"
+      }
     },
     "space": {
-      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
-      "md": { "$type": "dimension", "$value": { "value": 8, "unit": "px" } }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "value": 4, "unit": "px" }
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": [
+          { "$ref": "#/space/sm" },
+          { "$value": { "value": 8, "unit": "px" } }
+        ]
+      }
     }
   }
 }
@@ -85,21 +97,25 @@ Organise tokens by category—such as `color`, `space`, or `typography`—to mir
           "$type": "color",
           "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
         },
-        "secondary": { "$type": "color", "$value": "{color.primary}" }
+        "secondary": {
+          "$type": "color",
+          "$ref": "#/color/primary"
+        }
       }
     }
   }
 }
 ```
 
-Token files should use the `.tokens` or `.tokens.json` extension and are typically served with the `application/design-tokens+json` MIME type.
+Token files should use the `.tokens`, `.tokens.json`, `.tokens.yaml`, or `.tokens.yml` extension and declare DTIF payloads.
 
 Design token files are validated strictly:
 
 - Token and group names may not include `{`, `}`, or `.` and names differing only by case are rejected.
+- `$ref` pointers must resolve to tokens of the same `$type`; cyclic or unknown pointers raise errors.
+- `$value` fallback arrays are evaluated in order and each entry must represent a valid token payload.
 - `$extensions` keys must contain at least one dot to avoid collisions.
-- Alias references must resolve to tokens of the same `$type` and cyclic or unknown aliases raise errors.
-- Composite token objects such as `shadow`, `strokeStyle`, `gradient`, and `typography` may only include the fields defined by the specification.
+
 ## Name transforms
 Token paths are normalized to dot notation. Set `nameTransform` to convert those paths into a preferred case during flattening and output generation.
 
@@ -174,7 +190,7 @@ export default defineConfig({
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [1, 0, 0] },
       },
-      secondary: { $type: 'color', $value: '{color.primary}' },
+      secondary: { $type: 'color', $ref: '#/color/primary' },
     },
   },
   rules: { 'design-token/colors': 'error' },

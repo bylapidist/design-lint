@@ -8,12 +8,17 @@ export function normalizeTokens(
   const tokensByPath = new Map(tokens.map((t) => [t.path, t]));
   const warnings: string[] = [];
   for (const token of tokens) {
-    const { value, references } = resolveReferences(
+    const { value, references, fallbacks } = resolveReferences(
       token,
       tokensByPath,
       warnings,
     );
     token.value = value;
+    if (fallbacks && fallbacks.length > 0) {
+      token.fallbacks = fallbacks;
+    } else {
+      delete token.fallbacks;
+    }
     if (references.length > 0) {
       token.aliases = Array.from(new Set(references));
     } else if (token.aliases) {

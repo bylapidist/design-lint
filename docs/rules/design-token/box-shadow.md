@@ -25,7 +25,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
           "color": "rgba(0,0,0,0.1)"
         }
       },
-      "md": { "$type": "shadow", "$value": "{shadows.sm}" }
+      "md": { "$type": "shadow", "$ref": "#/shadows/sm" }
     }
   },
   "rules": { "design-token/box-shadow": "error" }

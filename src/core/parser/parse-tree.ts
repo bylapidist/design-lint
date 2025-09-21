@@ -6,6 +6,7 @@ import type {
 } from '../types.js';
 import type { DeprecationMetadata } from '@lapidist/dtif-schema';
 import { guards } from '../../utils/index.js';
+import { segmentsToPointer } from '../../utils/tokens/index.js';
 
 const {
   data: { isRecord },
@@ -93,13 +94,8 @@ function validateNodeMetadata(
   validateDescription(Reflect.get(node, '$description'), path);
 }
 
-function encodePointerSegment(segment: string): string {
-  return segment.replace(/~/g, '~0').replace(/\//g, '~1');
-}
-
 function toPointer(segments: string[]): string {
-  if (segments.length === 0) return '#';
-  return `#/${segments.map(encodePointerSegment).join('/')}`;
+  return segmentsToPointer(segments);
 }
 
 function readString(
