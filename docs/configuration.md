@@ -63,15 +63,23 @@ Inline example:
         "$type": "color",
         "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
       },
-      "secondary": { "$ref": "/color/primary" }
+      "secondary": { "$ref": "#/color/primary" }
     },
     "space": {
-      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
-      "md": { "$type": "dimension", "$value": { "value": 8, "unit": "px" } }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 8, "unit": "px" }
+      }
     }
   }
 }
 ```
+
+Use canonical JSON Pointers (beginning with `/`) for `$ref`, `$replacement`, and other references so tokens resolve consistently across documents.
 
 Organise tokens by category—such as `color`, `space`, or `typography`—to mirror your design language. To support light and dark themes, supply an object keyed by theme name. Each theme may contain an inline token tree or a path to an external token file. Paths resolve relative to the configuration file:
 
@@ -85,7 +93,7 @@ Organise tokens by category—such as `color`, `space`, or `typography`—to mir
           "$type": "color",
           "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
         },
-        "secondary": { "$type": "color", "$value": "{color.primary}" }
+        "secondary": { "$ref": "#/color/primary" }
       }
     }
   }
@@ -169,7 +177,7 @@ export default defineConfig({
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [1, 0, 0] },
       },
-      secondary: { $type: 'color', $value: '{color.primary}' },
+      secondary: { $ref: '#/color/primary' },
     },
   },
   rules: { 'design-token/colors': 'error' },

@@ -8,20 +8,27 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
   registerTokenValidator('special', () => undefined);
   const tokens: DesignTokens = {
     colors: {
-      $type: 'color',
-      red: { $value: { colorSpace: 'srgb', components: [1, 0, 0] } },
+      red: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+      },
       accent: {
-        $value: { colorSpace: 'srgb', components: [0, 1, 0] },
         $type: 'special',
+        $value: { colorSpace: 'srgb', components: [0, 1, 0] },
       },
       nested: {
-        green: { $value: { colorSpace: 'srgb', components: [0, 0.5, 0.2] } },
+        green: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0, 0.5, 0.2] },
+        },
       },
     },
     size: {
       spacing: {
-        $type: 'dimension',
-        small: { $value: { value: 4, unit: 'px' } },
+        small: {
+          $type: 'dimension',
+          $value: { dimensionType: 'length', value: 4, unit: 'px' },
+        },
       },
     },
   };
@@ -62,7 +69,7 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
     },
     {
       path: '/size/spacing/small',
-      value: { value: 4, unit: 'px' },
+      value: { dimensionType: 'length', value: 4, unit: 'px' },
       type: 'dimension',
       metadata: {
         description: undefined,
@@ -74,14 +81,31 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
   ]);
 });
 
+void test('flattenDesignTokens rejects invalid DTIF documents by default', () => {
+  const invalid = {
+    spacing: {
+      sm: { $type: 'dimension', $value: { value: 4, unit: 'px' } },
+    },
+  } as unknown as DesignTokens;
+
+  assert.throws(() => flattenDesignTokens(invalid));
+});
+
 void test('flattenDesignTokens preserves $extensions and inherits $deprecated', () => {
   const ext = { 'org.example.tool': { foo: 1 } };
   const tokens: DesignTokens = {
     theme: {
-      $type: 'color',
       $deprecated: true,
-      base: { $value: '#000', $extensions: ext },
-      active: { $value: '#fff', $deprecated: false },
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+        $extensions: ext,
+      },
+      active: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+        $deprecated: false,
+      },
     },
   };
   const flat = flattenDesignTokens(tokens);
@@ -102,9 +126,11 @@ void test('flattenDesignTokens preserves $extensions and inherits $deprecated', 
 void test('flattenDesignTokens resolves alias references', () => {
   const tokens: DesignTokens = {
     color: {
-      $type: 'color',
-      base: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
-      primary: { $ref: '/color/base' },
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+      primary: { $type: 'color', $ref: '#/color/base' },
     },
   };
   const flat = flattenDesignTokens(tokens);
@@ -139,12 +165,14 @@ void test('flattenDesignTokens resolves alias references', () => {
 void test('flattenDesignTokens preserves fallback candidates', () => {
   const tokens: DesignTokens = {
     color: {
-      $type: 'color',
-      base: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
       brand: {
         $type: 'color',
         $value: [
-          { $ref: '/color/base' },
+          { $ref: '#/color/base' },
           { colorSpace: 'srgb', components: [0, 0, 0] },
         ],
       },
@@ -167,7 +195,6 @@ void test('flattenDesignTokens preserves fallback candidates', () => {
 void test('flattenDesignTokens includes overrides and normalizes override pointers', () => {
   const tokens: DesignTokens = {
     Theme: {
-      $type: 'color',
       BaseSwatch: {
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [0, 0, 0] },
@@ -178,7 +205,6 @@ void test('flattenDesignTokens includes overrides and normalizes override pointe
       },
     },
     Component: {
-      $type: 'color',
       ButtonStyles: {
         PrimaryTone: {
           $type: 'color',
@@ -188,11 +214,11 @@ void test('flattenDesignTokens includes overrides and normalizes override pointe
     },
     $overrides: [
       {
-        $token: '/Component/ButtonStyles/PrimaryTone',
+        $token: '#/Component/ButtonStyles/PrimaryTone',
         $when: { mode: 'dark' },
-        $ref: '/Theme/BaseSwatch',
+        $ref: '#/Theme/BaseSwatch',
         $fallback: [
-          { $ref: '/Theme/Accent' },
+          { $ref: '#/Theme/Accent' },
           { $value: { colorSpace: 'srgb', components: [0.4, 0.4, 0.4] } },
         ],
       },
@@ -226,9 +252,8 @@ void test('flattenDesignTokens includes overrides and normalizes override pointe
 void test('flattenDesignTokens rejects circular aliases', () => {
   const tokens: DesignTokens = {
     color: {
-      $type: 'color',
-      a: { $ref: '/color/b' },
-      b: { $ref: '/color/a' },
+      a: { $type: 'color', $ref: '#/color/b' },
+      b: { $type: 'color', $ref: '#/color/a' },
     },
   };
   assert.throws(() => flattenDesignTokens(tokens), /circular \$ref chain/i);
@@ -237,8 +262,11 @@ void test('flattenDesignTokens rejects circular aliases', () => {
 void test('flattenDesignTokens rejects unknown aliases', () => {
   const tokens: DesignTokens = {
     color: {
-      $type: 'color',
-      a: { $ref: '/color/missing' },
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.5, 0.5, 0.5] },
+      },
+      a: { $type: 'color', $ref: '#/color/missing' },
     },
   };
   assert.throws(() => flattenDesignTokens(tokens), /references unknown token/i);
@@ -247,20 +275,24 @@ void test('flattenDesignTokens rejects unknown aliases', () => {
 void test('flattenDesignTokens rejects invalid JSON Pointer aliases', () => {
   const tokens: DesignTokens = {
     color: {
-      $type: 'color',
-      base: { $value: '#fff' },
-      primary: { $ref: 'color/base' },
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+      primary: { $type: 'color', $ref: 'color/base' },
     },
   };
-  assert.throws(() => flattenDesignTokens(tokens), /invalid \$ref/i);
+  assert.throws(() => flattenDesignTokens(tokens), /\$ref must match pattern/);
 });
 
 void test('flattenDesignTokens applies name transforms', () => {
   const tokens: DesignTokens = {
     ColorGroup: {
-      $type: 'color',
-      primaryColor: { $value: { colorSpace: 'srgb', components: [0, 0, 0] } },
-      secondaryColor: { $ref: '/ColorGroup/primaryColor' },
+      primaryColor: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+      secondaryColor: { $type: 'color', $ref: '#/ColorGroup/primaryColor' },
     },
   };
   const flat = flattenDesignTokens(tokens, { nameTransform: 'kebab-case' });

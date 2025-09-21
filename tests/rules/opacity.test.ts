@@ -5,7 +5,7 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 function createLinter(rule: unknown = 'error') {
-  const tokens = { opacity: { $type: 'number', low: { $value: 0.2 } } };
+  const tokens = { opacity: { low: { $type: 'number', $value: 0.2 } } };
   return initLinter(
     { tokens, rules: { 'design-token/opacity': rule } },
     {

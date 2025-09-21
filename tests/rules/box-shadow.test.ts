@@ -6,24 +6,41 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
   shadows: {
-    $type: 'shadow',
     sm: {
-      $value: {
-        offsetX: { value: 0, unit: 'px' },
-        offsetY: { value: 1, unit: 'px' },
-        blur: { value: 2, unit: 'px' },
-        spread: { value: 0, unit: 'px' },
-        color: 'rgba(0,0,0,0.1)',
-      },
+      $type: 'shadow',
+      $value: [
+        {
+          shadowType: 'css.box-shadow',
+          offsetX: { dimensionType: 'length', value: 0, unit: 'px' },
+          offsetY: { dimensionType: 'length', value: 1, unit: 'px' },
+          blur: { dimensionType: 'length', value: 2, unit: 'px' },
+          spread: { dimensionType: 'length', value: 0, unit: 'px' },
+          color: {
+            colorSpace: 'srgb',
+            components: [0, 0, 0],
+            hex: '#000000',
+            alpha: 0.1,
+          },
+        },
+      ],
     },
     lg: {
-      $value: {
-        offsetX: { value: 0, unit: 'px' },
-        offsetY: { value: 2, unit: 'px' },
-        blur: { value: 4, unit: 'px' },
-        spread: { value: 0, unit: 'px' },
-        color: 'rgba(0,0,0,0.2)',
-      },
+      $type: 'shadow',
+      $value: [
+        {
+          shadowType: 'css.box-shadow',
+          offsetX: { dimensionType: 'length', value: 0, unit: 'px' },
+          offsetY: { dimensionType: 'length', value: 2, unit: 'px' },
+          blur: { dimensionType: 'length', value: 4, unit: 'px' },
+          spread: { dimensionType: 'length', value: 0, unit: 'px' },
+          color: {
+            colorSpace: 'srgb',
+            components: [0, 0, 0],
+            hex: '#000000',
+            alpha: 0.2,
+          },
+        },
+      ],
     },
   },
 };

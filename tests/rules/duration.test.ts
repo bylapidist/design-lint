@@ -6,9 +6,22 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
   durations: {
-    $type: 'duration',
-    fast: { $value: { value: 200, unit: 'ms' } },
-    slow: { $value: { value: 400, unit: 'ms' } },
+    fast: {
+      $type: 'duration',
+      $value: {
+        durationType: 'css.transition-duration',
+        value: 200,
+        unit: 'ms',
+      },
+    },
+    slow: {
+      $type: 'duration',
+      $value: {
+        durationType: 'css.transition-duration',
+        value: 400,
+        unit: 'ms',
+      },
+    },
   },
 };
 

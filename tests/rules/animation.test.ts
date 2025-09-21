@@ -9,8 +9,7 @@ registerTokenValidator('string', () => undefined);
 
 const tokens = {
   animations: {
-    $type: 'string',
-    spin: { $value: 'spin 1s linear infinite' },
+    spin: { $type: 'string', $value: 'spin 1s linear infinite' },
   },
 };
 

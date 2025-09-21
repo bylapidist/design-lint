@@ -8,7 +8,7 @@ import { registerTokenValidator } from '../../src/core/token-validators/index.js
 registerTokenValidator('string', () => undefined);
 
 const tokens = {
-  outlines: { $type: 'string', focus: { $value: '2px solid #000' } },
+  outlines: { focus: { $type: 'string', $value: '2px solid #000' } },
 };
 
 function createLinter() {

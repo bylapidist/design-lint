@@ -10,10 +10,13 @@ void test('design-system/deprecation flags deprecated token', async () => {
         colors: {
           old: {
             $type: 'color',
-            $value: '#000',
+            $value: { colorSpace: 'srgb', components: [0, 0, 0] },
             $deprecated: { $replacement: '#/colors/new' },
           },
-          new: { $type: 'color', $value: '#fff' },
+          new: {
+            $type: 'color',
+            $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+          },
         },
       },
       rules: { 'design-system/deprecation': 'error' },
@@ -39,10 +42,13 @@ void test('design-system/deprecation ignores tokens in non-style jsx attributes'
         colors: {
           old: {
             $type: 'color',
-            $value: '#000',
+            $value: { colorSpace: 'srgb', components: [0, 0, 0] },
             $deprecated: { $replacement: '#/colors/new' },
           },
-          new: { $type: 'color', $value: '#fff' },
+          new: {
+            $type: 'color',
+            $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+          },
         },
       },
       rules: { 'design-system/deprecation': 'error' },

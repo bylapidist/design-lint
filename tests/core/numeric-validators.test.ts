@@ -33,13 +33,13 @@ void test('validateDimension accepts references and fallbacks', () => {
     validateDimension({ dimensionType: 'length', value: 4, unit: 'px' }, 'dim');
   });
   assert.doesNotThrow(() => {
-    validateDimension({ $ref: '/spacing/sm' }, 'dim');
+    validateDimension({ $ref: '#/spacing/sm' }, 'dim');
   });
   assert.doesNotThrow(() => {
     validateDimension(
       [
-        { $ref: '/spacing/base' },
-        { fn: 'calc', parameters: [2, { $ref: '/spacing/base' }] },
+        { $ref: '#/spacing/base' },
+        { fn: 'calc', parameters: [2, { $ref: '#/spacing/base' }] },
       ],
       'dim',
     );
@@ -81,13 +81,13 @@ void test('validateDuration accepts references and fallbacks', () => {
     );
   });
   assert.doesNotThrow(() => {
-    validateDuration({ $ref: '/duration/short' }, 'dur');
+    validateDuration({ $ref: '#/duration/short' }, 'dur');
   });
   assert.doesNotThrow(() => {
     validateDuration(
       [
         { durationType: 'css.timeline.progress', value: 50, unit: '%' },
-        { $ref: '/duration/short' },
+        { $ref: '#/duration/short' },
       ],
       'dur',
     );

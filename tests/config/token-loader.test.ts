@@ -64,15 +64,15 @@ void test('parses inline design tokens object', async () => {
 void test('retains metadata on inline tokens', async () => {
   const tokens = await loadTokens(
     {
-      $schema: 'https://dtif.lapidist.net/schema/core.json',
+      $version: '1.2.3',
       color: { primary: { $type: 'color', $value: black } },
     },
     process.cwd(),
   );
   const color = tokens.color as { primary: { $value: typeof black } };
   assert.deepEqual(color.primary.$value, black);
-  const meta = tokens as { $schema: string };
-  assert.equal(meta.$schema, 'https://dtif.lapidist.net/schema/core.json');
+  const meta = tokens as { $version: string };
+  assert.equal(meta.$version, '1.2.3');
 });
 
 void test('parses inline theme record', async () => {

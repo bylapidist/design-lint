@@ -1,7 +1,11 @@
 import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
 import { guards, collections } from '../utils/index.js';
-import { getFlattenedTokens, extractVarName } from '../utils/tokens/index.js';
+import {
+  getFlattenedTokens,
+  extractVarName,
+  collectColorTokenValues,
+} from '../utils/tokens/index.js';
 
 const {
   data: { isRecord },
@@ -81,7 +85,25 @@ export class TokenTracker {
       if (this.usedTokenValues.has(token)) continue;
       const tokenType = getTokenType(token);
       if (classifiers[tokenType](token, text)) {
-        this.usedTokenValues.add(token);
+        this.markAsUsed(token);
+      }
+    }
+  }
+
+  private markAsUsed(value: string): void {
+    if (this.usedTokenValues.has(value)) {
+      return;
+    }
+
+    this.usedTokenValues.add(value);
+    const token = this.allTokenValues.get(value);
+    if (!token) {
+      return;
+    }
+
+    for (const [candidate, info] of this.allTokenValues.entries()) {
+      if (info === token || info.path === token.path) {
+        this.usedTokenValues.add(candidate);
       }
     }
   }
@@ -123,6 +145,12 @@ function collectTokenValues(
     if (theme.startsWith('$')) continue;
     for (const flat of getFlattenedTokens(tokensByTheme, theme)) {
       const val = flat.value;
+      if (flat.type === 'color') {
+        for (const css of collectColorTokenValues(flat)) {
+          if (!values.has(css)) values.set(css, flat);
+        }
+        continue;
+      }
       if (typeof val === 'string') {
         if (val.includes('*')) continue;
         const name = extractVarName(val);

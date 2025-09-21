@@ -15,8 +15,11 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "borderColors": {
-      "primary": { "$type": "color", "$value": "#ffffff" },
-      "secondary": { "$type": "color", "$value": "{borderColors.primary}" }
+      "primary": {
+        "$type": "color",
+        "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+      },
+      "secondary": { "$type": "color", "$ref": "#/borderColors/primary" }
     }
   },
   "rules": { "design-token/border-color": "error" }

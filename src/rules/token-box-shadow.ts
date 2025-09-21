@@ -1,5 +1,7 @@
 import valueParser from 'postcss-value-parser';
+import { formatRgb, parse } from 'culori';
 import { rules, guards, collections, tokens } from '../utils/index.js';
+import { buildColorString } from '../core/parser/normalize-colors.js';
 
 const { tokenRule } = rules;
 const {
@@ -36,13 +38,53 @@ export const boxShadowRule = tokenRule({
       for (const item of items) {
         if (!isRecord(item)) return null;
         const { offsetX, offsetY, blur, spread, color, inset } = item;
-        if (typeof color !== 'string') return null;
+        const colorString = (() => {
+          if (typeof color === 'string') return color;
+          if (isRecord(color) && typeof color.colorSpace === 'string') {
+            const components =
+              Array.isArray(color.components) &&
+              color.components.every(
+                (component): component is number | 'none' =>
+                  typeof component === 'number' || component === 'none',
+              )
+                ? color.components
+                : null;
+            if (!components) {
+              return null;
+            }
+            const css = buildColorString(
+              color.colorSpace,
+              components,
+              typeof color.alpha === 'number' ? color.alpha : undefined,
+            );
+            const parsed = parse(css);
+            if (parsed) {
+              const normalized = formatRgb(parsed);
+              if (normalized) {
+                return normalized
+                  .replace(/\(\s+/g, '(')
+                  .replace(/,\s+/g, ',')
+                  .replace(/\s+\)/g, ')');
+              }
+            }
+            return css;
+          }
+          return null;
+        })();
+        if (!colorString) return null;
         const ox = parseDim(offsetX);
         const oy = parseDim(offsetY);
         const bl = parseDim(blur);
         const sp = spread === undefined ? null : parseDim(spread);
         if (!ox || !oy || !bl) return null;
-        const seg = [inset === true ? 'inset' : null, ox, oy, bl, sp, color]
+        const seg = [
+          inset === true ? 'inset' : null,
+          ox,
+          oy,
+          bl,
+          sp,
+          colorString,
+        ]
           .filter((p): p is string => !!p)
           .join(' ');
         parts.push(seg);

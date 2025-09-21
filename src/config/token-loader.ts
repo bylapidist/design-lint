@@ -75,7 +75,7 @@ export async function loadTokens(
   // If a design token object is provided directly (i.e. all entries are objects
   // and none are file path strings aside from metadata keys), normalize it and
   // return the single theme result. This preserves any root-level metadata such
-  // as `$schema` declarations.
+  // as `$version` declarations.
   if (
     isDesignTokens(tokens) &&
     !isThemeRecord(tokens) &&

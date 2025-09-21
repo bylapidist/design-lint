@@ -7,10 +7,13 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
   const tokens: Record<string, DesignTokens> = {
     light: {
       palette: {
-        $type: 'color',
         $deprecated: true,
-        primary: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+        },
         secondary: {
+          $type: 'color',
           $value: { colorSpace: 'srgb', components: [0, 0, 0] },
           $extensions: { 'vendor.example': { note: true } },
         },
@@ -18,8 +21,8 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
     },
     dark: {
       palette: {
-        $type: 'color',
         primary: {
+          $type: 'color',
           $value: { colorSpace: 'srgb', components: [0.066, 0.066, 0.066] },
         },
       },
@@ -57,14 +60,18 @@ void test('getFlattenedTokens merges tokens from all themes when none is specifi
   const tokens: Record<string, DesignTokens> = {
     light: {
       palette: {
-        $type: 'color',
-        primary: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+        },
       },
     },
     dark: {
       palette: {
-        $type: 'color',
-        secondary: { $value: { colorSpace: 'srgb', components: [0, 0, 0] } },
+        secondary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+        },
       },
     },
   };
@@ -99,9 +106,11 @@ void test('getFlattenedTokens resolves aliases', () => {
   const tokens: Record<string, DesignTokens> = {
     default: {
       palette: {
-        $type: 'color',
-        base: { $value: { colorSpace: 'srgb', components: [1, 0, 0] } },
-        primary: { $ref: '/palette/base' },
+        base: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+        primary: { $type: 'color', $ref: '#/palette/base' },
       },
     },
   };
@@ -138,14 +147,18 @@ void test('getFlattenedTokens applies name transforms', () => {
   const tokens: Record<string, DesignTokens> = {
     light: {
       ColorGroup: {
-        $type: 'color',
-        primaryColor: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
+        primaryColor: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+        },
       },
     },
     dark: {
       ColorGroup: {
-        $type: 'color',
-        primaryColor: { $value: { colorSpace: 'srgb', components: [0, 0, 0] } },
+        primaryColor: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+        },
       },
     },
   };
@@ -174,6 +187,8 @@ void test('getFlattenedTokens returns empty array for primitive token values', (
       deprecations: { old: { replacement: 'new' } },
     },
   } as unknown as Record<string, DesignTokens>;
-  const result = getFlattenedTokens(tokens, 'default');
-  assert.deepEqual(result, []);
+  assert.throws(
+    () => getFlattenedTokens(tokens, 'default'),
+    /DTIF validation failed/i,
+  );
 });

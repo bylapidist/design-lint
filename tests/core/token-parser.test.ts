@@ -28,7 +28,10 @@ void test('parseDesignTokens flattens tokens with JSON Pointer paths in declarat
       },
     },
     spacing: {
-      sm: { $type: 'dimension', $value: { value: 4, unit: 'px' } },
+      sm: {
+        $type: 'dimension',
+        $value: { dimensionType: 'length', value: 4, unit: 'px' },
+      },
     },
   };
 
@@ -73,7 +76,10 @@ void test('parseDesignTokens inherits nested collection types', () => {
           },
         },
         spacing: {
-          tight: { $type: 'dimension', $value: { value: 2, unit: 'px' } },
+          tight: {
+            $type: 'dimension',
+            $value: { dimensionType: 'length', value: 2, unit: 'px' },
+          },
         },
       },
     },
@@ -94,7 +100,7 @@ void test('parseDesignTokens records metadata, deprecated inheritance, and locat
   const tokens: DesignTokens = {
     palette: {
       $type: 'color',
-      $deprecated: { $replacement: '/palette/brand' },
+      $deprecated: { $replacement: '#/palette/brand' },
       base: {
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [0, 0, 0] },
@@ -126,7 +132,7 @@ void test('parseDesignTokens records metadata, deprecated inheritance, and locat
     'example.tool': { token: true },
   });
   assert.deepEqual(base.metadata.deprecated, {
-    $replacement: '/palette/brand',
+    $replacement: '#/palette/brand',
   });
   assert.deepEqual(base.metadata.loc, { line: 4, column: 7 });
 
@@ -146,7 +152,7 @@ void test('parseDesignTokens resolves $ref aliases and collects canonical pointe
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [1, 1, 1] },
       },
-      brand: { $ref: '/palette/base' },
+      brand: { $ref: '#/palette/base' },
     },
   };
 
@@ -178,8 +184,8 @@ void test('parseDesignTokens resolves alias chains and collects unique reference
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [0.066, 0.066, 0.066] },
       },
-      accent: { $ref: '/palette/base' },
-      brand: { $ref: '/palette/accent' },
+      accent: { $ref: '#/palette/base' },
+      brand: { $ref: '#/palette/accent' },
     },
   };
 
@@ -209,7 +215,7 @@ void test('parseDesignTokens resolves aliases declared via $value objects', () =
       },
       alias: {
         $type: 'color',
-        $value: { $ref: '/palette/base' },
+        $value: { $ref: '#/palette/base' },
       },
     },
   };
@@ -240,7 +246,7 @@ void test('parseDesignTokens records fallback candidates from $value arrays', ()
       brand: {
         $type: 'color',
         $value: [
-          { $ref: '/palette/base' },
+          { $ref: '#/palette/base' },
           { colorSpace: 'srgb', components: [0, 0, 0] },
         ],
       },
@@ -291,15 +297,15 @@ void test('parseDesignTokens flattens nested fallback chains inside $value array
         $type: 'color',
         $value: [
           {
-            $ref: '/palette/base',
+            $ref: '#/palette/base',
             $fallback: [
-              { $ref: '/palette/inverse' },
+              { $ref: '#/palette/inverse' },
               {
                 $value: {
                   colorSpace: 'srgb',
                   components: [0.1, 0.1, 0.1],
                 },
-                $fallback: { $ref: '/palette/accent' },
+                $fallback: { $ref: '#/palette/accent' },
               },
             ],
           },
@@ -357,13 +363,13 @@ void test('parseDesignTokens supports fallback entry objects with nested fallbac
       overlay: {
         $type: 'color',
         $value: {
-          $ref: '/palette/base',
+          $ref: '#/palette/base',
           $fallback: {
             $value: {
               colorSpace: 'srgb',
               components: [0.3, 0.3, 0.3],
             },
-            $fallback: { $ref: '/palette/subtle' },
+            $fallback: { $ref: '#/palette/subtle' },
           },
         },
       },
@@ -424,12 +430,12 @@ void test('parseDesignTokens attaches overrides with canonical pointers and fall
     },
     $overrides: [
       {
-        $token: '/surface/button/brand',
+        $token: '#/surface/button/brand',
         $when: { mode: 'dark' },
-        $ref: '/palette/base',
+        $ref: '#/palette/base',
         $fallback: [
           {
-            $ref: '/palette/inverse',
+            $ref: '#/palette/inverse',
             $fallback: {
               $value: { colorSpace: 'srgb', components: [0.1, 0.1, 0.1] },
             },
@@ -438,9 +444,9 @@ void test('parseDesignTokens attaches overrides with canonical pointers and fall
         ],
       },
       {
-        $token: '/surface/button/brand',
+        $token: '#/surface/button/brand',
         $when: { mode: 'spacious' },
-        $ref: '/spacing/base',
+        $ref: '#/spacing/base',
       },
     ],
   };
@@ -492,6 +498,26 @@ void test('parseDesignTokens attaches overrides with canonical pointers and fall
   );
 });
 
+void test('parseDesignTokens rejects overrides with parent directory traversal', () => {
+  const tokens: DesignTokens = {
+    color: {
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+    },
+    $overrides: [
+      {
+        $token: '../tokens/base.dtif.json#/color/base',
+        $when: { mode: 'dark' },
+        $ref: '#/color/base',
+      },
+    ],
+  } as unknown as DesignTokens;
+
+  assert.throws(() => parseDesignTokens(tokens));
+});
+
 void test('parseDesignTokens warns when alias type mismatches target', () => {
   const tokens: DesignTokens = {
     color: {
@@ -502,7 +528,7 @@ void test('parseDesignTokens warns when alias type mismatches target', () => {
       },
     },
     alias: {
-      wrong: { $type: 'dimension', $ref: '/color/base' },
+      wrong: { $type: 'dimension', $ref: '#/color/base' },
     },
   };
 
@@ -562,10 +588,34 @@ void test('parseDesignTokens throws on invalid JSON Pointer aliases', () => {
   assert.throws(() => parseDesignTokens(tokens), /invalid \$ref/i);
 });
 
+void test('parseDesignTokens rejects fallback entries with invalid $ref pointers', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.1, 0.2, 0.3] },
+      },
+    },
+    component: {
+      $type: 'color',
+      brand: {
+        $type: 'color',
+        $value: [
+          { $ref: 'color/base' },
+          { colorSpace: 'srgb', components: [0, 0, 0] },
+        ],
+      },
+    },
+  } as unknown as DesignTokens;
+
+  assert.throws(() => parseDesignTokens(tokens), /invalid \$ref/i);
+});
+
 void test('parseDesignTokens throws on unknown alias targets', () => {
   const tokens: DesignTokens = {
     color: {
-      base: { $ref: '/color/missing' },
+      base: { $ref: '#/color/missing' },
     },
   };
 
@@ -575,12 +625,31 @@ void test('parseDesignTokens throws on unknown alias targets', () => {
 void test('parseDesignTokens throws on circular alias chains', () => {
   const tokens: DesignTokens = {
     color: {
-      a: { $ref: '/color/b' },
-      b: { $ref: '/color/a' },
+      a: { $ref: '#/color/b' },
+      b: { $ref: '#/color/a' },
     },
   };
 
   assert.throws(() => parseDesignTokens(tokens), /circular \$ref chain/i);
+});
+
+void test('parseDesignTokens rejects override fallbacks with invalid $ref pointers', () => {
+  const tokens: DesignTokens = {
+    color: {
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.2, 0.3, 0.4] },
+      },
+    },
+    $overrides: [
+      {
+        $token: '#/color/base',
+        $fallback: [{ $ref: 'color/base' }],
+      },
+    ],
+  } as unknown as DesignTokens;
+
+  assert.throws(() => parseDesignTokens(tokens), /invalid \$ref/i);
 });
 
 void test('parseDesignTokensFile reads a .dtif.json token file', async () => {
