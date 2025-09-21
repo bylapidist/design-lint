@@ -136,6 +136,93 @@ void test('flattenDesignTokens resolves alias references', () => {
   ]);
 });
 
+void test('flattenDesignTokens preserves fallback candidates', () => {
+  const tokens: DesignTokens = {
+    color: {
+      $type: 'color',
+      base: { $value: { colorSpace: 'srgb', components: [1, 1, 1] } },
+      brand: {
+        $type: 'color',
+        $value: [
+          { $ref: '/color/base' },
+          { colorSpace: 'srgb', components: [0, 0, 0] },
+        ],
+      },
+    },
+  };
+  const flat = flattenDesignTokens(tokens);
+  const brand = flat.find((t) => t.path === '/color/brand');
+  assert(brand);
+  assert.deepEqual(brand.candidates, [
+    {
+      ref: '/color/base',
+      value: { colorSpace: 'srgb', components: [1, 1, 1] },
+    },
+    {
+      value: { colorSpace: 'srgb', components: [0, 0, 0] },
+    },
+  ]);
+});
+
+void test('flattenDesignTokens includes overrides and normalizes override pointers', () => {
+  const tokens: DesignTokens = {
+    Theme: {
+      $type: 'color',
+      BaseSwatch: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+      Accent: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0.6, 0.2, 0.2] },
+      },
+    },
+    Component: {
+      $type: 'color',
+      ButtonStyles: {
+        PrimaryTone: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0.8, 0.8, 0.8] },
+        },
+      },
+    },
+    $overrides: [
+      {
+        $token: '/Component/ButtonStyles/PrimaryTone',
+        $when: { mode: 'dark' },
+        $ref: '/Theme/BaseSwatch',
+        $fallback: [
+          { $ref: '/Theme/Accent' },
+          { $value: { colorSpace: 'srgb', components: [0.4, 0.4, 0.4] } },
+        ],
+      },
+    ],
+  };
+
+  const flat = flattenDesignTokens(tokens, { nameTransform: 'kebab-case' });
+  const primary = flat.find(
+    (t) => t.path === '/component/button-styles/primary-tone',
+  );
+  assert(primary);
+  assert(primary.overrides);
+  assert.equal(primary.overrides.length, 1);
+  const [override] = primary.overrides;
+  assert.deepEqual(override.source, '/$overrides/0');
+  assert.deepEqual(override.when, { mode: 'dark' });
+  assert.equal(override.ref, '/theme/base-swatch');
+  assert.deepEqual(override.value, {
+    colorSpace: 'srgb',
+    components: [0, 0, 0],
+  });
+  assert.deepEqual(override.fallback, [
+    {
+      ref: '/theme/accent',
+      value: { colorSpace: 'srgb', components: [0.6, 0.2, 0.2] },
+    },
+    { value: { colorSpace: 'srgb', components: [0.4, 0.4, 0.4] } },
+  ]);
+});
+
 void test('flattenDesignTokens rejects circular aliases', () => {
   const tokens: DesignTokens = {
     color: {

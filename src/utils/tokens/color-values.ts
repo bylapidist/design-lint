@@ -34,26 +34,33 @@ export function collectColorTokenValues(token: FlattenedToken): string[] {
   }
 
   const values = new Set<string>();
-  const raw = token.value;
+  const rawValues =
+    token.candidates && token.candidates.length > 0
+      ? token.candidates.map((candidate) => candidate.value)
+      : [token.value];
 
-  if (typeof raw === 'string') {
-    addNormalizedValue(values, raw);
-    const parsed = parse(raw);
-    if (parsed) {
-      addNormalizedValue(values, formatRgb(parsed));
-      addNormalizedValue(values, formatHex(parsed));
-      addNormalizedValue(values, formatHsl(parsed));
+  for (const raw of rawValues) {
+    if (typeof raw === 'string') {
+      addNormalizedValue(values, raw);
+      const parsed = parse(raw);
+      if (parsed) {
+        addNormalizedValue(values, formatRgb(parsed));
+        addNormalizedValue(values, formatHex(parsed));
+        addNormalizedValue(values, formatHsl(parsed));
+      }
+      continue;
     }
-    return [...values];
-  }
 
-  if (raw && typeof raw === 'object') {
+    if (!raw || typeof raw !== 'object') {
+      continue;
+    }
+
     let value: ColorValue;
     try {
       validateColor(raw, token.path);
       value = raw;
     } catch {
-      return [...values];
+      continue;
     }
 
     addNormalizedValue(values, value.hex);

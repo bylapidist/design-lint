@@ -44,18 +44,7 @@ export const deprecationRule: RuleModule = {
       const canonical = normalizePath(path);
       const info: DeprecationInfo = { canonical };
       if (typeof dep === 'string') {
-        const updated = dep.replace(/\{([^}]+)\}/g, (_, inner: string) => {
-          const formatted = formatPointer(inner);
-          info.replacement ??= normalizePath(inner);
-          return `{${formatted}}`;
-        });
-        info.reason = updated;
-        if (!info.replacement) {
-          const match = /\{([^}]+)\}/.exec(dep);
-          if (match) {
-            info.replacement = normalizePath(match[1]);
-          }
-        }
+        info.reason = dep;
       } else if (dep === true) {
         // No additional metadata beyond the deprecated flag.
       } else if (hasReplacement(dep)) {
@@ -98,7 +87,7 @@ export const deprecationRule: RuleModule = {
           const message =
             info.reason ??
             (replacement
-              ? `Token ${pointer} is deprecated; use {${replacement}}`
+              ? `Token ${pointer} is deprecated; use ${replacement}`
               : `Token ${pointer} is deprecated`);
           context.report({
             message,
@@ -126,7 +115,7 @@ export const deprecationRule: RuleModule = {
         const message =
           info.reason ??
           (replacement
-            ? `Token ${pointer} is deprecated; use {${replacement}}`
+            ? `Token ${pointer} is deprecated; use ${replacement}`
             : `Token ${pointer} is deprecated`);
         context.report({
           message,

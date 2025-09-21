@@ -8,12 +8,27 @@ export function normalizeTokens(
   const tokenMap = new Map(tokens.map((t) => [t.path, t]));
   const warnings: string[] = [];
   for (const token of tokens) {
-    const { value, refs, type } = resolveAliases(token, tokenMap, warnings);
+    const rawValue = token.value;
+    const hadArrayValue = Array.isArray(rawValue);
+    const { value, refs, type, candidates } = resolveAliases(
+      token,
+      tokenMap,
+      warnings,
+    );
     token.value = value;
+    if (hadArrayValue || candidates.length > 1) {
+      token.candidates = candidates;
+    } else {
+      delete token.candidates;
+    }
     if (!token.type && type) {
       token.type = type;
     }
-    if (token.ref && refs.length > 0) {
+    if (candidates.length > 0 && candidates[0].ref) {
+      token.ref = candidates[0].ref;
+    } else if (hadArrayValue) {
+      delete token.ref;
+    } else if (token.ref && refs.length > 0) {
       token.ref = refs[0];
     }
     if (refs.length) {

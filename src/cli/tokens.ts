@@ -43,14 +43,27 @@ export async function exportTokens(
       onWarn,
     });
     output[theme] = {};
-    for (const { path: p, value, type, aliases, metadata } of flat) {
+    for (const token of flat) {
+      const {
+        path: p,
+        value,
+        type,
+        aliases,
+        metadata,
+        ref,
+        candidates,
+        overrides,
+      } = token;
       // Prevent prototype pollution from malicious keys
       if (p === '__proto__' || p === 'constructor' || p === 'prototype')
         continue;
       output[theme][p] = {
         value,
-        type,
-        ...(aliases ? { aliases } : {}),
+        ...(type ? { type } : {}),
+        ...(ref !== undefined ? { ref } : {}),
+        ...(aliases && aliases.length > 0 ? { aliases } : {}),
+        ...(candidates && candidates.length > 0 ? { candidates } : {}),
+        ...(overrides && overrides.length > 0 ? { overrides } : {}),
         ...metadata,
       };
     }
