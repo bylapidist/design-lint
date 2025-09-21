@@ -5,8 +5,9 @@ import {
   toConstantName,
 } from '../../../src/utils/tokens/index.js';
 
-void test('normalizePath rejects slash separators', () => {
-  assert.throws(() => normalizePath('foo/bar-baz'));
+void test('normalizePath preserves slash characters inside segments', () => {
+  assert.equal(normalizePath('icons.icon/home'), 'icons.icon/home');
+  assert.equal(normalizePath('#/icons/icon~1home'), 'icons.icon/home');
 });
 
 void test('normalizePath converts JSON Pointer fragments to dot notation', () => {
@@ -30,4 +31,5 @@ void test('normalizePath rejects invalid pointer fragments', () => {
 void test('toConstantName transforms paths to upper snake case', () => {
   assert.equal(toConstantName('color.primary'), 'COLOR_PRIMARY');
   assert.equal(toConstantName('color.primary-dark'), 'COLOR_PRIMARY_DARK');
+  assert.equal(toConstantName('icons.icon/home'), 'ICONS_ICON_HOME');
 });

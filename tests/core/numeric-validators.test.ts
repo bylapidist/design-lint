@@ -15,10 +15,58 @@ void test('validateNumber rejects non-finite numbers', () => {
 
 void test('validateDimension rejects non-finite numbers', () => {
   assert.throws(() => {
-    validateDimension({ value: NaN, unit: 'px' }, 'dim');
+    validateDimension(
+      { dimensionType: 'length', value: NaN, unit: 'px' },
+      'dim',
+    );
   });
   assert.throws(() => {
-    validateDimension({ value: Infinity, unit: 'px' }, 'dim');
+    validateDimension(
+      { dimensionType: 'length', value: Infinity, unit: 'px' },
+      'dim',
+    );
+  });
+});
+
+void test('validateDimension accepts DTIF dimension units', () => {
+  assert.doesNotThrow(() => {
+    validateDimension({ dimensionType: 'length', value: 1, unit: 'em' }, 'dim');
+  });
+  assert.doesNotThrow(() => {
+    validateDimension({ dimensionType: 'length', value: 1, unit: '%' }, 'dim');
+  });
+  assert.doesNotThrow(() => {
+    validateDimension(
+      { dimensionType: 'angle', value: 45, unit: 'deg' },
+      'dim',
+    );
+  });
+  assert.doesNotThrow(() => {
+    validateDimension(
+      { dimensionType: 'resolution', value: 2, unit: 'dppx' },
+      'dim',
+    );
+  });
+  assert.doesNotThrow(() => {
+    validateDimension(
+      { dimensionType: 'custom', value: 1, unit: 'acme.spacing.sm' },
+      'dim',
+    );
+  });
+});
+
+void test('validateDimension enforces fontScale constraints', () => {
+  assert.throws(() => {
+    validateDimension(
+      { dimensionType: 'angle', value: 1, unit: 'deg', fontScale: true },
+      'dim',
+    );
+  });
+  assert.throws(() => {
+    validateDimension(
+      { dimensionType: 'length', value: 1, unit: 'px', fontScale: 1 as never },
+      'dim',
+    );
   });
 });
 

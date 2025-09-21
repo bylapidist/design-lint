@@ -70,3 +70,17 @@ void test('getTokenByPointer retrieves tokens across themes', () => {
     /valid JSON Pointer fragment/,
   );
 });
+
+void test('TokenRegistry resolves tokens whose names contain slash characters', () => {
+  const registry = new TokenRegistry({
+    default: {
+      icons: {
+        $type: 'color',
+        'icon/home': { $value: '#000000' },
+      },
+    },
+  });
+
+  assert.equal(registry.getToken('icons.icon/home')?.value, '#000000');
+  assert.equal(registry.getToken('#/icons/icon~1home')?.value, '#000000');
+});

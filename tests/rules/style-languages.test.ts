@@ -8,7 +8,7 @@ const config = {
     color: { $type: 'color', primary: { $value: '#000000' } },
     spacing: {
       $type: 'dimension',
-      sm: { $value: { value: 4, unit: 'px' } },
+      sm: { $value: { dimensionType: 'length', value: 4, unit: 'px' } },
     },
     opacity: { $type: 'number', full: { $value: 1 } },
   },

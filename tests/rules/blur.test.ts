@@ -5,7 +5,10 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
-  blurs: { $type: 'dimension', sm: { $value: { value: 4, unit: 'px' } } },
+  blurs: {
+    $type: 'dimension',
+    sm: { $value: { dimensionType: 'length', value: 4, unit: 'px' } },
+  },
 };
 
 function createLinter() {

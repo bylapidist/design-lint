@@ -1,5 +1,5 @@
 import type { FlattenedToken } from '../types.js';
-import { isPointerFragment, pointerToPath } from '../../utils/tokens/index.js';
+import { extractPointerFragment } from '../../utils/tokens/index.js';
 
 export interface ReferenceResolutionResult {
   value: unknown;
@@ -19,31 +19,90 @@ export function resolveReferences(
   const references: string[] = [];
   const referenceSet = new Set<string>();
 
-  function trackReference(identifier: string): void {
-    if (!referenceSet.has(identifier)) {
-      referenceSet.add(identifier);
-      references.push(identifier);
+  function trackReference(fragment: string): void {
+    if (!referenceSet.has(fragment)) {
+      referenceSet.add(fragment);
+      references.push(fragment);
     }
   }
 
-  function assertPointer(pointer: string, origin: string): void {
-    const hashIndex = pointer.indexOf('#');
-    if (hashIndex === -1) {
+  function requirePointerFragment(pointer: string, origin: string): string {
+    const fragment = extractPointerFragment(pointer);
+    if (!fragment) {
       throw new Error(
         `Token ${origin} has invalid $ref ${pointer}; expected a JSON Pointer fragment`,
       );
     }
-    const fragment = pointer.slice(hashIndex);
-    if (!isPointerFragment(fragment)) {
-      throw new Error(
-        `Token ${origin} has invalid $ref ${pointer}; expected a JSON Pointer fragment`,
-      );
-    }
+    return fragment;
   }
 
-  function resolveValue(node: unknown, ancestry: string[]): unknown {
+  function describeAncestry(chain: string[]): string {
+    return chain
+      .map((fragment) => tokenMap.get(fragment)?.path ?? fragment)
+      .join(' -> ');
+  }
+
+  function resolvePointerValue(
+    pointer: string,
+    origin: string,
+    ancestry: string[],
+    expectedType?: string,
+  ): unknown {
+    const fragment = requirePointerFragment(pointer, origin);
+
+    if (fragment === '#') {
+      warnings.push(
+        `Token ${origin} references unsupported fallback $ref ${pointer}`,
+      );
+      trackReference(fragment);
+      return { $ref: pointer };
+    }
+
+    if (ancestry.includes(fragment)) {
+      throw new Error(
+        `Circular $ref reference: ${describeAncestry([...ancestry, fragment])}`,
+      );
+    }
+
+    trackReference(fragment);
+
+    const target = tokenMap.get(fragment);
+    if (!target) {
+      throw new Error(
+        `Token ${origin} references unknown token via $ref ${pointer}`,
+      );
+    }
+
+    const resolved = resolve(target, [...ancestry, fragment], origin);
+
+    if (!resolved.type) {
+      throw new Error(
+        `Token ${origin} references token without $type via $ref ${pointer}`,
+      );
+    }
+
+    if (expectedType && resolved.type !== expectedType) {
+      warnings.push(
+        `Token ${origin} has fallback $ref ${pointer} with mismatched $type ${resolved.type}; expected ${expectedType}`,
+      );
+    }
+
+    if (resolved.value === undefined) {
+      throw new Error(
+        `Token ${origin} references token without $value via $ref ${pointer}`,
+      );
+    }
+
+    return resolved.value;
+  }
+
+  function resolveValue(
+    node: unknown,
+    ancestry: string[],
+    origin: string,
+  ): unknown {
     if (Array.isArray(node)) {
-      return node.map((item) => resolveValue(item, ancestry));
+      return node.map((item) => resolveValue(item, ancestry, origin));
     }
     if (isPlainObject(node)) {
       const pointer = node.$ref;
@@ -52,29 +111,36 @@ export function resolveReferences(
         if (!keys.every((key) => key === '$ref')) {
           const out: Record<string, unknown> = {};
           for (const [key, value] of Object.entries(node)) {
-            out[key] = resolveValue(value, ancestry);
+            out[key] = resolveValue(value, ancestry, origin);
           }
           return out;
         }
-        assertPointer(pointer, ancestry[0]);
-        const asPath = pointerToPath(pointer);
-        const identifier = asPath ?? pointer;
-        trackReference(identifier);
-        if (!asPath) {
+
+        const fragment = requirePointerFragment(pointer, origin);
+        trackReference(fragment);
+
+        if (fragment === '#') {
           return node;
         }
-        const target = tokenMap.get(asPath);
-        if (!target) {
+
+        if (ancestry.includes(fragment)) {
           throw new Error(
-            `Token ${ancestry[0]} references unknown token via $ref ${pointer}`,
+            `Circular $ref reference: ${describeAncestry([...ancestry, fragment])}`,
           );
         }
-        const resolved = resolve(target, [...ancestry, asPath]);
+
+        const target = tokenMap.get(fragment);
+        if (!target) {
+          throw new Error(
+            `Token ${origin} references unknown token via $ref ${pointer}`,
+          );
+        }
+        const resolved = resolve(target, [...ancestry, fragment], origin);
         return resolved.value;
       }
       const out: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(node)) {
-        out[key] = resolveValue(value, ancestry);
+        out[key] = resolveValue(value, ancestry, origin);
       }
       return out;
     }
@@ -96,9 +162,69 @@ export function resolveReferences(
     return true;
   }
 
+  function resolveFallbackChain(
+    chain: unknown,
+    origin: string,
+    ancestry: string[],
+    tokenType?: string,
+  ): unknown[] {
+    if (chain === undefined) {
+      return [];
+    }
+
+    const entries = Array.isArray(chain) ? chain : [chain];
+    const resolved: unknown[] = [];
+
+    for (const entry of entries) {
+      if (Array.isArray(entry)) {
+        resolved.push(
+          ...resolveFallbackChain(entry, origin, ancestry, tokenType),
+        );
+        continue;
+      }
+
+      if (isPlainObject(entry)) {
+        const ref: unknown = Reflect.get(entry, '$ref');
+        const hasValue = Object.prototype.hasOwnProperty.call(entry, '$value');
+        const hasFallback = Object.prototype.hasOwnProperty.call(
+          entry,
+          '$fallback',
+        );
+
+        if (typeof ref === 'string') {
+          resolved.push(resolvePointerValue(ref, origin, ancestry, tokenType));
+        } else if (hasValue) {
+          resolved.push(
+            resolveValue(Reflect.get(entry, '$value'), ancestry, origin),
+          );
+        } else {
+          resolved.push(resolveValue(entry, ancestry, origin));
+        }
+
+        if (hasFallback) {
+          resolved.push(
+            ...resolveFallbackChain(
+              Reflect.get(entry, '$fallback'),
+              origin,
+              ancestry,
+              tokenType,
+            ),
+          );
+        }
+
+        continue;
+      }
+
+      resolved.push(resolveValue(entry, ancestry, origin));
+    }
+
+    return resolved;
+  }
+
   function extractValue(
     node: unknown,
     ancestry: string[],
+    origin: string,
     tokenType?: string,
   ): { primary: unknown; fallbacks?: unknown[] } {
     if (Array.isArray(node)) {
@@ -106,66 +232,77 @@ export function resolveReferences(
         !tokenType || !ARRAY_LITERAL_TYPES.has(tokenType)
           ? node.some((item) => isFallbackEntry(item))
           : false;
-      const resolvedEntries = node.map((item) => resolveValue(item, ancestry));
-      if (resolvedEntries.length === 0) {
+      if (!treatAsFallback) {
+        const resolvedEntries = node.map((item) =>
+          resolveValue(item, ancestry, origin),
+        );
+        return {
+          primary: resolvedEntries,
+        };
+      }
+
+      const resolvedFallbacks = resolveFallbackChain(
+        node,
+        origin,
+        ancestry,
+        tokenType,
+      );
+
+      if (resolvedFallbacks.length === 0) {
         return { primary: undefined };
       }
-      if (!treatAsFallback) {
-        return { primary: resolvedEntries };
-      }
-      const [first, ...rest] = resolvedEntries;
+
+      const [first, ...rest] = resolvedFallbacks;
       return {
         primary: first,
         fallbacks: rest.length > 0 ? rest : undefined,
       };
     }
-    return { primary: resolveValue(node, ancestry) };
+
+    return { primary: resolveValue(node, ancestry, origin) };
   }
 
   function resolve(
     current: FlattenedToken,
     ancestry: string[],
+    origin: string,
   ): FlattenedToken {
     const pointer = current.ref;
     if (!pointer) {
       return current;
     }
 
-    assertPointer(pointer, ancestry[0]);
+    const fragment = requirePointerFragment(pointer, origin);
+    trackReference(fragment);
 
-    const asPath = pointerToPath(pointer);
-    const identifier = asPath ?? pointer;
-
-    if (ancestry.includes(identifier)) {
-      throw new Error(
-        `Circular $ref reference: ${[...ancestry, identifier].join(' -> ')}`,
-      );
-    }
-
-    trackReference(identifier);
-
-    if (!asPath) {
+    if (fragment === '#') {
       return current;
     }
 
-    const target = tokenMap.get(asPath);
-    if (!target) {
+    if (ancestry.includes(fragment)) {
       throw new Error(
-        `Token ${ancestry[0]} references unknown token via $ref ${pointer}`,
+        `Circular $ref reference: ${describeAncestry([...ancestry, fragment])}`,
       );
     }
 
-    const resolved = resolve(target, [...ancestry, asPath]);
+    const target = tokenMap.get(fragment);
+    if (!target) {
+      throw new Error(
+        `Token ${origin} references unknown token via $ref ${pointer}`,
+      );
+    }
+
+    const resolved = resolve(target, [...ancestry, fragment], origin);
 
     if (!resolved.type) {
       throw new Error(
-        `Token ${ancestry[0]} references token without $type via $ref ${pointer}`,
+        `Token ${origin} references token without $type via $ref ${pointer}`,
       );
     }
 
     if (resolved.value === undefined) {
       throw new Error(
-        `Token ${ancestry[0]} references token without $value via $ref ${pointer}`,
+        `Token ${origin} references token without $value via $ref ${pointer}`,
       );
     }
 
@@ -175,7 +312,7 @@ export function resolveReferences(
     } else if (resolved.type && current.type !== resolved.type) {
       typesMatch = false;
       warnings.push(
-        `Token ${ancestry[0]} has mismatched $type ${current.type}; expected ${resolved.type}`,
+        `Token ${origin} has mismatched $type ${current.type}; expected ${resolved.type}`,
       );
     }
 
@@ -186,11 +323,16 @@ export function resolveReferences(
     return resolved;
   }
 
-  resolve(token, [token.path]);
+  resolve(token, [token.pointer], token.path);
   let primary: unknown = token.value;
   let fallbackValues: unknown[] | undefined;
   if (token.value !== undefined) {
-    const resolved = extractValue(token.value, [token.path], token.type);
+    const resolved = extractValue(
+      token.value,
+      [token.pointer],
+      token.path,
+      token.type,
+    );
     primary = resolved.primary;
     fallbackValues = resolved.fallbacks;
   }

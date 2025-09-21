@@ -95,14 +95,18 @@ export class TokenTracker {
       if (unused.length) {
         results.push({
           sourceId: configPath,
-          messages: unused.map(([value, info]) => ({
+          messages: unused.map(([matchValue, info]) => ({
             ruleId,
-            message: `Token ${value} is defined but never used`,
+            message: `Token ${info.pointer} is defined but never used`,
             severity,
             line: 1,
             column: 1,
             metadata: {
               path: info.path,
+              pointer: info.pointer,
+              value: info.value,
+              type: info.type,
+              matchValue,
               deprecated: info.metadata.deprecated,
               extensions: info.metadata.extensions,
             },

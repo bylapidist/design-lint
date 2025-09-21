@@ -9,19 +9,19 @@ const tokens = {
     $type: 'shadow',
     sm: {
       $value: {
-        offsetX: { value: 0, unit: 'px' },
-        offsetY: { value: 1, unit: 'px' },
-        blur: { value: 2, unit: 'px' },
-        spread: { value: 0, unit: 'px' },
+        offsetX: { dimensionType: 'length', value: 0, unit: 'px' },
+        offsetY: { dimensionType: 'length', value: 1, unit: 'px' },
+        blur: { dimensionType: 'length', value: 2, unit: 'px' },
+        spread: { dimensionType: 'length', value: 0, unit: 'px' },
         color: 'rgba(0,0,0,0.1)',
       },
     },
     lg: {
       $value: {
-        offsetX: { value: 0, unit: 'px' },
-        offsetY: { value: 2, unit: 'px' },
-        blur: { value: 4, unit: 'px' },
-        spread: { value: 0, unit: 'px' },
+        offsetX: { dimensionType: 'length', value: 0, unit: 'px' },
+        offsetY: { dimensionType: 'length', value: 2, unit: 'px' },
+        blur: { dimensionType: 'length', value: 4, unit: 'px' },
+        spread: { dimensionType: 'length', value: 0, unit: 'px' },
         color: 'rgba(0,0,0,0.2)',
       },
     },

@@ -5,12 +5,12 @@ export function normalizeTokens(
   tokens: FlattenedToken[],
   warn: (msg: string) => void = console.warn,
 ): FlattenedToken[] {
-  const tokensByPath = new Map(tokens.map((t) => [t.path, t]));
+  const tokensByPointer = new Map(tokens.map((t) => [t.pointer, t]));
   const warnings: string[] = [];
   for (const token of tokens) {
     const { value, references, fallbacks } = resolveReferences(
       token,
-      tokensByPath,
+      tokensByPointer,
       warnings,
     );
     token.value = value;
