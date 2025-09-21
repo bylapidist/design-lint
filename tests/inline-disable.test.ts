@@ -10,7 +10,10 @@ const tokens = {
   old: {
     $type: 'color',
     $value: { colorSpace: 'srgb', components: [0, 0, 0] },
-    $deprecated: 'Use #/new',
+    $deprecated: {
+      $message: 'Use #/new',
+      $replacement: '#/new',
+    },
   },
   new: {
     $type: 'color',
