@@ -6,7 +6,7 @@ description: "Warn when using deprecated design system parts."
 # design-system/deprecation
 
 ## Summary
-Flags tokens marked with `$deprecated`. If a deprecation message references another token using alias syntax, running the linter with `--fix` will substitute the suggested token.
+Flags tokens marked with `$deprecated`. If a deprecation message references another token using a JSON Pointer, running the linter with `--fix` will substitute the suggested token.
 
 ## Configuration
 Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
@@ -17,16 +17,24 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
     "color": {
       "old": {
         "$type": "color",
-        "$value": "#000",
-        "$deprecated": "Use {color.new}"
+        "$value": { "colorSpace": "srgb", "components": [0, 0, 0] },
+        "$deprecated": {
+          "$message": "Use the new brand color",
+          "$replacement": "#/color/new"
+        }
       },
-      "new": { "$type": "color", "$value": "#fff" },
-      "alias": { "$type": "color", "$value": "{color.new}" }
+      "new": {
+        "$type": "color",
+        "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+      },
+      "alias": { "$ref": "#/color/new" }
     }
   },
   "rules": { "design-system/deprecation": "error" }
 }
 ```
+
+Use canonical JSON Pointers (e.g. `#/color/new`) in `$deprecated.$replacement` so that auto-fixes resolve the correct token.
 
 ## Options
 No additional options.

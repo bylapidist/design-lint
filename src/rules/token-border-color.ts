@@ -1,9 +1,10 @@
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
-import { rules, color } from '../utils/index.js';
+import { rules, color, tokens as tokenUtils } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const { detectColorFormat } = color;
+const { collectColorTokenValues } = tokenUtils;
 
 export const borderColorRule = tokenRule({
   name: 'design-token/border-color',
@@ -15,15 +16,13 @@ export const borderColorRule = tokenRule({
   message:
     'design-token/border-color requires color tokens; configure tokens with $type "color" to enable this rule.',
   getAllowed(tokens) {
-    return new Set(
-      tokens
-        .map(({ value }) => {
-          return typeof value === 'string' && !value.startsWith('{')
-            ? value.toLowerCase()
-            : null;
-        })
-        .filter((v): v is string => v !== null),
-    );
+    const values = new Set<string>();
+    for (const token of tokens) {
+      for (const candidate of collectColorTokenValues(token)) {
+        values.add(candidate);
+      }
+    }
+    return values;
   },
   create(context, allowed) {
     return {

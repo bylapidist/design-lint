@@ -1,8 +1,20 @@
 {
   "tokens": {
     "color": {
-      "base": { "$type": "color", "$value": "#000000" }
+      "base": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
     }
   },
-  "rules": { "design-token/colors": "error" }
+  "rules": {
+    "design-token/colors": "error"
+  }
 }

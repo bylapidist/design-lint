@@ -5,7 +5,7 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
-  fonts: { $type: 'fontFamily', sans: { $value: 'Inter' } },
+  fonts: { sans: { $type: 'fontFamily', $value: 'Inter' } },
 };
 
 function createLinter() {

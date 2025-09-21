@@ -6,7 +6,12 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 void test('design-token/border-color reports invalid value', async () => {
   const tokens = {
-    borderColors: { $type: 'color', primary: { $value: '#ffffff' } },
+    borderColors: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+    },
   };
   const linter = initLinter(
     { tokens, rules: { 'design-token/border-color': 'error' } },
@@ -21,7 +26,12 @@ void test('design-token/border-color reports invalid value', async () => {
 
 void test('design-token/border-color accepts valid values', async () => {
   const tokens = {
-    borderColors: { $type: 'color', primary: { $value: '#ffffff' } },
+    borderColors: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+    },
   };
   const linter = initLinter(
     { tokens, rules: { 'design-token/border-color': 'error' } },

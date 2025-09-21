@@ -5,7 +5,10 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
-  lineHeights: { $type: 'number', base: { $value: 1.5 }, tight: { $value: 2 } },
+  lineHeights: {
+    base: { $type: 'number', $value: 1.5 },
+    tight: { $type: 'number', $value: 2 },
+  },
 };
 
 function createLinter() {

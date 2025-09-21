@@ -7,12 +7,12 @@ void test('generateJsConstants emits constants for each theme', () => {
   const tokens: Record<string, DesignTokens> = {
     default: {
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#fff' },
+        PrimaryColor: { $type: 'string', $value: '#fff' },
       },
     },
     dark: {
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#000' },
+        PrimaryColor: { $type: 'string', $value: '#000' },
       },
     },
   };

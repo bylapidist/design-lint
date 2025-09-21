@@ -15,8 +15,15 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "durations": {
-      "short": { "$type": "duration", "$value": { "value": 100, "unit": "ms" } },
-      "long": { "$type": "duration", "$value": "{durations.short}" }
+      "short": {
+        "$type": "duration",
+        "$value": {
+          "durationType": "css.transition-duration",
+          "value": 100,
+          "unit": "ms"
+        }
+      },
+      "long": { "$type": "duration", "$ref": "#/durations/short" }
     }
   },
   "rules": { "design-token/duration": "error" }

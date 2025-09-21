@@ -13,13 +13,6 @@ void test('canonicalizePointer normalizes same-document fragments', () => {
 void test('canonicalizePointer preserves document URIs while normalizing fragments', () => {
   assert.equal(
     canonicalizePointer(
-      '../tokens/base.dtif.json#palette.primary',
-      'Token ../tokens/base.dtif.json#palette.primary',
-    ),
-    '../tokens/base.dtif.json#/palette.primary',
-  );
-  assert.equal(
-    canonicalizePointer(
       'https://cdn.example.com/tokens.dtif.json#/colors/brand',
       'Token https://cdn.example.com/tokens.dtif.json#/colors/brand',
     ),
@@ -27,16 +20,24 @@ void test('canonicalizePointer preserves document URIs while normalizing fragmen
   );
   assert.equal(
     canonicalizePointer(
-      '../tokens/base.dtif.json#/foo~0bar',
-      'Token ../tokens/base.dtif.json#/foo~0bar',
+      'tokens/base.dtif.json#/foo~0bar',
+      'Token tokens/base.dtif.json#/foo~0bar',
     ),
-    '../tokens/base.dtif.json#/foo~0bar',
+    'tokens/base.dtif.json#/foo~0bar',
   );
-  assert.equal(
+});
+
+void test('canonicalizePointer rejects document traversal and invalid escapes', () => {
+  assert.throws(() =>
     canonicalizePointer(
-      '../tokens/base.dtif.json#',
-      'Token ../tokens/base.dtif.json#',
+      '../tokens/base.dtif.json#/palette/primary',
+      'Token ../tokens/base.dtif.json#/palette/primary',
     ),
-    '../tokens/base.dtif.json#',
+  );
+  assert.throws(() =>
+    canonicalizePointer('#/palette/../primary', 'Token #/palette/../primary'),
+  );
+  assert.throws(() =>
+    canonicalizePointer('#/palette/~2primary', 'Token #/palette/~2primary'),
   );
 });

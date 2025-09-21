@@ -5,7 +5,9 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
-  zIndex: { $type: 'number', modal: { $value: 100 } },
+  zIndex: {
+    modal: { $type: 'number', $value: 100 },
+  },
 };
 
 function createLinter() {

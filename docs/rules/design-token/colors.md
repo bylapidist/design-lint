@@ -15,8 +15,11 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "color": {
-      "primary": { "$type": "color", "$value": "#ff0000" },
-      "secondary": { "$type": "color", "$value": "{color.primary}" }
+      "primary": {
+        "$type": "color",
+        "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
+      },
+      "secondary": { "$type": "color", "$ref": "#/color/primary" }
     }
   },
   "rules": {

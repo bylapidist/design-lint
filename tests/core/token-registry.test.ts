@@ -7,24 +7,37 @@ import { TokenRegistry } from '../../src/core/token-registry.js';
 const tokens: Record<string, DesignTokens> = {
   default: {
     color: {
-      $type: 'color',
-      primary: { $value: '#fff' },
-      secondary: { $ref: '/color/primary' },
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+      secondary: { $type: 'color', $ref: '#/color/primary' },
     },
   },
   dark: {
     color: {
-      $type: 'color',
-      primary: { $value: '#000' },
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
     },
   },
 };
 
 void test('getToken retrieves tokens by theme and resolves aliases', () => {
   const registry = new TokenRegistry(tokens);
-  assert.equal(registry.getToken('/color/primary')?.value, '#fff');
-  assert.equal(registry.getToken('/color/secondary')?.value, '#fff');
-  assert.equal(registry.getToken('/color/primary', 'dark')?.value, '#000');
+  assert.deepEqual(registry.getToken('/color/primary')?.value, {
+    colorSpace: 'srgb',
+    components: [1, 1, 1],
+  });
+  assert.deepEqual(registry.getToken('/color/secondary')?.value, {
+    colorSpace: 'srgb',
+    components: [1, 1, 1],
+  });
+  assert.deepEqual(registry.getToken('/color/primary', 'dark')?.value, {
+    colorSpace: 'srgb',
+    components: [0, 0, 0],
+  });
 });
 
 void test('getToken normalizes paths and applies name transforms', () => {
@@ -32,16 +45,27 @@ void test('getToken normalizes paths and applies name transforms', () => {
     {
       default: {
         ColorGroup: {
-          $type: 'color',
-          primaryColor: { $value: '#111' },
-          secondaryColor: { $ref: '/ColorGroup/primaryColor' },
+          primaryColor: {
+            $type: 'color',
+            $value: { colorSpace: 'srgb', components: [0.066, 0.066, 0.066] },
+          },
+          secondaryColor: {
+            $type: 'color',
+            $ref: '#/ColorGroup/primaryColor',
+          },
         },
       },
     },
     { nameTransform: 'kebab-case' },
   );
-  assert.equal(registry.getToken('/ColorGroup/primaryColor')?.value, '#111');
-  assert.equal(registry.getToken('/color-group/primary-color')?.value, '#111');
+  assert.deepEqual(registry.getToken('/ColorGroup/primaryColor')?.value, {
+    colorSpace: 'srgb',
+    components: [0.066, 0.066, 0.066],
+  });
+  assert.deepEqual(registry.getToken('/color-group/primary-color')?.value, {
+    colorSpace: 'srgb',
+    components: [0.066, 0.066, 0.066],
+  });
 });
 
 void test('getTokens returns flattened tokens and dedupes across themes', () => {

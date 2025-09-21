@@ -15,8 +15,11 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "borderWidths": {
-      "sm": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
-      "lg": { "$type": "dimension", "$value": "{borderWidths.sm}" }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 1, "unit": "px" }
+      },
+      "lg": { "$type": "dimension", "$ref": "#/borderWidths/sm" }
     }
   },
   "rules": { "design-token/border-width": "error" }

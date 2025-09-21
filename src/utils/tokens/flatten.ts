@@ -58,6 +58,8 @@ export interface FlattenOptions {
   nameTransform?: NameTransform;
   /** Warning callback for parse or alias issues */
   onWarn?: (msg: string) => void;
+  /** Whether to validate tokens against the DTIF schema (defaults to true). */
+  validate?: boolean;
 }
 
 /**
@@ -73,6 +75,7 @@ export function flattenDesignTokens(
 ): FlattenedToken[] {
   const flat = parseDesignTokens(tokens, undefined, {
     onWarn: options?.onWarn,
+    validate: options?.validate ?? true,
   });
   const transform = options?.nameTransform;
   return flat.map((token) => {
@@ -136,6 +139,7 @@ export function getFlattenedTokens(
       return flattenDesignTokens(tokensByTheme[theme], {
         nameTransform: transform,
         onWarn: warn,
+        validate: options?.validate,
       });
     }
     return [];
@@ -145,6 +149,7 @@ export function getFlattenedTokens(
     for (const flat of flattenDesignTokens(tokens, {
       nameTransform: transform,
       onWarn: warn,
+      validate: options?.validate,
     })) {
       if (!seen.has(flat.path)) {
         seen.set(flat.path, flat);

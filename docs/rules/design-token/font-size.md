@@ -15,8 +15,11 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "fontSizes": {
-      "base": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } },
-      "lg": { "$type": "dimension", "$value": "{fontSizes.base}" }
+      "base": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 1, "unit": "rem" }
+      },
+      "lg": { "$type": "dimension", "$ref": "#/fontSizes/base" }
     }
   },
   "rules": { "design-token/font-size": "error" }

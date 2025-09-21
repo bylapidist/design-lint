@@ -25,14 +25,14 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
           "color": "rgba(0,0,0,0.1)"
         }
       },
-      "md": { "$type": "shadow", "$value": "{shadows.sm}" }
+      "md": { "$type": "shadow", "$ref": "#/shadows/sm" }
     }
   },
   "rules": { "design-token/box-shadow": "error" }
 }
 ```
 
-Shadow tokens use the `shadow` type with sub-values for offsets, blur, spread, and color.
+Shadow tokens use the `shadow` type with sub-values for offsets, blur, spread, and color. Reference existing shadows with JSON Pointers such as `"$ref": "#/shadows/sm"`.
 
 ## Options
 No additional options.

@@ -7,7 +7,6 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 function createLinter(rule: unknown = 'error') {
   const tokens = {
     palette: {
-      $type: 'color',
       neutral: {
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [1, 1, 1] },

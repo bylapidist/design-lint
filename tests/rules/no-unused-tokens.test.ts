@@ -7,8 +7,17 @@ import type { LintDocument } from '../../src/core/environment.js';
 void test('design-system/no-unused-tokens reports unused tokens', async () => {
   const tokens = {
     color: {
-      primary: { $value: '#000000', $type: 'color' },
-      unused: { $value: '#123456', $type: 'color' },
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+      unused: {
+        $type: 'color',
+        $value: {
+          colorSpace: 'srgb',
+          components: [18 / 255, 52 / 255, 86 / 255],
+        },
+      },
     },
   };
   const linter = initLinter(
@@ -24,20 +33,23 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
     getText: () => Promise.resolve('const color = "#000000";'),
   };
   const { results } = await linter.lintDocuments([doc]);
-  const msg = results
+  const messages = results
     .flatMap((r) => r.messages)
-    .find((m) => m.ruleId === 'design-system/no-unused-tokens');
-  assert(msg);
-  assert.equal(msg.severity, 'warn');
-  assert.ok(msg.message.includes('#123456'));
+    .filter((m) => m.ruleId === 'design-system/no-unused-tokens');
+  const message = messages.find((m) => m.message.includes('#123456'));
+  assert(message);
+  assert.equal(message.severity, 'warn');
 });
 
 void test('design-system/no-unused-tokens includes token metadata', async () => {
   const tokens = {
     color: {
       unused: {
-        $value: '#123456',
         $type: 'color',
+        $value: {
+          colorSpace: 'srgb',
+          components: [18 / 255, 52 / 255, 86 / 255],
+        },
         $deprecated: true,
         $extensions: { 'vendor.foo': true },
       },
@@ -68,7 +80,12 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
 
 void test('design-system/no-unused-tokens passes when tokens used', async () => {
   const tokens = {
-    color: { primary: { $value: '#000000', $type: 'color' } },
+    color: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+    },
   };
   const linter = initLinter(
     {
@@ -92,8 +109,17 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
 void test('design-system/no-unused-tokens can ignore tokens', async () => {
   const tokens = {
     color: {
-      primary: { $value: '#000000', $type: 'color' },
-      unused: { $value: '#123456', $type: 'color' },
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+      unused: {
+        $type: 'color',
+        $value: {
+          colorSpace: 'srgb',
+          components: [18 / 255, 52 / 255, 86 / 255],
+        },
+      },
     },
   };
   const linter = initLinter(
@@ -118,7 +144,17 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
 });
 
 void test('design-system/no-unused-tokens matches hex case-insensitively', async () => {
-  const tokens = { color: { primary: { $value: '#abcdef', $type: 'color' } } };
+  const tokens = {
+    color: {
+      primary: {
+        $type: 'color',
+        $value: {
+          colorSpace: 'srgb',
+          components: [0xab / 255, 0xcd / 255, 0xef / 255],
+        },
+      },
+    },
+  };
   const linter = initLinter(
     {
       tokens,

@@ -7,12 +7,12 @@ void test('generateCssVariables emits blocks for each theme with transformed nam
   const tokens: Record<string, DesignTokens> = {
     default: {
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#fff' },
+        PrimaryColor: { $type: 'string', $value: '#fff' },
       },
     },
     dark: {
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#000' },
+        PrimaryColor: { $type: 'string', $value: '#000' },
       },
     },
   };
@@ -34,17 +34,17 @@ void test('generateCssVariables sorts themes with default first', () => {
   const tokens: Record<string, DesignTokens> = {
     dark: {
       color: {
-        primary: { $type: 'color', $value: '#000' },
+        primary: { $type: 'string', $value: '#000' },
       },
     },
     default: {
       color: {
-        primary: { $type: 'color', $value: '#fff' },
+        primary: { $type: 'string', $value: '#fff' },
       },
     },
     light: {
       color: {
-        primary: { $type: 'color', $value: '#eee' },
+        primary: { $type: 'string', $value: '#eee' },
       },
     },
   };

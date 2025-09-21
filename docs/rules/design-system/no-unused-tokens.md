@@ -22,8 +22,11 @@ Given this configuration:
 {
   "tokens": {
     "color": {
-      "primary": { "$type": "color", "$value": "#000000" },
-      "unused": { "$type": "color", "$value": "{color.primary}" }
+      "primary": {
+        "$type": "color",
+        "$value": { "colorSpace": "srgb", "components": [0, 0, 0] }
+      },
+      "unused": { "$ref": "#/color/primary" }
     }
   },
   "rules": { "design-system/no-unused-tokens": "warn" }
@@ -36,7 +39,7 @@ and the source:
 const color = '#000000';
 ```
 
-`#ff0000` is reported as unused.
+`#/color/unused` is reported as unused because it never appears in source files.
 
 A CSS variable can also be ignored:
 

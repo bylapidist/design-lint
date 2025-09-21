@@ -32,6 +32,26 @@ npx design-lint src
 
 See the [Usage guide](docs/usage.md) for the full command reference.
 
+## Validate DTIF documents
+
+Validate tokens in scripts or CI with the standalone DTIF validator:
+
+```ts
+import { validate } from '@lapidist/dtif-validator';
+
+const result = validate(tokens);
+
+if (!result.valid) {
+  for (const issue of result.errors ?? []) {
+    const path = issue.instancePath && issue.instancePath !== '' ? issue.instancePath : '/';
+    console.error(`${path}: ${issue.message}`);
+  }
+  process.exit(1);
+}
+```
+
+Use canonical JSON Pointers (for example `#/color/primary`) in `$ref`, `$replacement`, and `$token` fields so diagnostics line up between the validator and design-lint.
+
 ## Why design-lint?
 
 General purpose linters understand code style, not design systems. `@lapidist/design-lint` bridges that gap by enforcing token usage and component conventions across your codebase.
@@ -70,6 +90,10 @@ The complete documentation is available under the [`docs/`](docs) directory and 
 | [API](docs/api.md) | Shows programmatic usage with TypeScript types. |
 | [Migration](docs/migration.md) | Move from Style Dictionary to design-lint's token pipeline. |
 | [Architecture](docs/architecture.md) | Explains how the linter works internally. |
+
+## Migrating from DTCG
+
+Moving from the Design Tokens Community Group (DTCG) schema? Follow the [Migrating from DTCG guide](https://dtif.lapidist.net/guides/migrating-from-dtcg) to translate curly-brace aliases, `$value` shapes, and schema references into DTIF-compliant JSON Pointers.
 
 ## Contributing
 

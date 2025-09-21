@@ -6,9 +6,14 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
   fontSizes: {
-    $type: 'dimension',
-    sm: { $value: { value: 16, unit: 'px' } },
-    md: { $value: { value: 32, unit: 'px' } },
+    sm: {
+      $type: 'dimension',
+      $value: { dimensionType: 'length', value: 16, unit: 'px' },
+    },
+    md: {
+      $type: 'dimension',
+      $value: { dimensionType: 'length', value: 32, unit: 'px' },
+    },
   },
 };
 
