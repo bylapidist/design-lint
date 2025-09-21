@@ -105,7 +105,7 @@ void test('getFlattenedTokens resolves $ref references', () => {
       value: '#f00',
       ref: '#/palette/base',
       type: 'color',
-      aliases: ['palette.base'],
+      aliases: ['#/palette/base'],
       metadata: {
         loc: { line: 1, column: 1 },
       },

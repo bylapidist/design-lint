@@ -49,12 +49,26 @@ void test('tokens command exports resolved tokens with extensions', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(
     fs.readFileSync(path.join(dir, 'out.json'), 'utf8'),
-  ) as Record<string, Record<string, { value: unknown; extensions?: unknown }>>;
-  assert.equal(out.default['color.red'].value, '#ff0000');
-  assert.deepEqual(out.default['color.red'].extensions, {
+  ) as Record<
+    string,
+    Record<
+      string,
+      { path: string; pointer: string; value: unknown; extensions?: unknown }
+    >
+  >;
+  const red = out.default['#/color/red'];
+  assert(red);
+  assert.equal(red.value, '#ff0000');
+  assert.equal(red.path, 'color.red');
+  assert.equal(red.pointer, '#/color/red');
+  assert.deepEqual(red.extensions, {
     'vendor.ext': { foo: 'bar' },
   });
-  assert.equal(out.default['color.blue'].value, '#ff0000');
+  const blue = out.default['#/color/blue'];
+  assert(blue);
+  assert.equal(blue.value, '#ff0000');
+  assert.equal(blue.path, 'color.blue');
+  assert.equal(blue.pointer, '#/color/blue');
 });
 
 void test('tokens command reads config from outside cwd', () => {
@@ -86,9 +100,13 @@ void test('tokens command reads config from outside cwd', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(fs.readFileSync(outPath, 'utf8')) as Record<
     string,
-    Record<string, { value: unknown }>
+    Record<string, { value: unknown; path: string; pointer: string }>
   >;
-  assert.equal(out.default['color.red'].value, '#ff0000');
+  const red = out.default['#/color/red'];
+  assert(red);
+  assert.equal(red.value, '#ff0000');
+  assert.equal(red.path, 'color.red');
+  assert.equal(red.pointer, '#/color/red');
 });
 
 void test('tokens command exports themes with root tokens', () => {
@@ -115,8 +133,12 @@ void test('tokens command exports themes with root tokens', () => {
   assert.equal(res.status, 0);
   const out = JSON.parse(res.stdout) as Record<
     string,
-    Record<string, { value: unknown }>
+    Record<string, { value: unknown; path: string; pointer: string }>
   >;
-  assert.equal(out.light.primary.value, '#fff');
-  assert.equal(out.dark.primary.value, '#000');
+  assert.equal(out.light['#/primary'].value, '#fff');
+  assert.equal(out.light['#/primary'].path, 'primary');
+  assert.equal(out.light['#/primary'].pointer, '#/primary');
+  assert.equal(out.dark['#/primary'].value, '#000');
+  assert.equal(out.dark['#/primary'].path, 'primary');
+  assert.equal(out.dark['#/primary'].pointer, '#/primary');
 });

@@ -43,11 +43,20 @@ export async function exportTokens(
       onWarn,
     });
     output[theme] = {};
-    for (const { path: p, value, type, aliases, metadata } of flat) {
+    for (const { path: p, pointer, value, type, aliases, metadata } of flat) {
       // Prevent prototype pollution from malicious keys
-      if (p === '__proto__' || p === 'constructor' || p === 'prototype')
+      if (
+        p === '__proto__' ||
+        p === 'constructor' ||
+        p === 'prototype' ||
+        pointer === '__proto__' ||
+        pointer === 'constructor' ||
+        pointer === 'prototype'
+      )
         continue;
-      output[theme][p] = {
+      output[theme][pointer] = {
+        path: p,
+        pointer,
         value,
         type,
         ...(aliases ? { aliases } : {}),

@@ -116,6 +116,23 @@ export function segmentsToPointer(segments: readonly string[]): string {
 }
 
 /**
+ * Extract the JSON Pointer fragment portion from a pointer reference.
+ */
+export function extractPointerFragment(pointer: string): string | undefined {
+  const hashIndex = pointer.indexOf('#');
+  if (hashIndex === -1) {
+    return undefined;
+  }
+
+  const fragment = pointer.slice(hashIndex);
+  if (!isPointerFragment(fragment)) {
+    return undefined;
+  }
+
+  return fragment;
+}
+
+/**
  * Determine whether the provided fragment is a valid JSON Pointer fragment.
  */
 export function isPointerFragment(fragment: string): boolean {

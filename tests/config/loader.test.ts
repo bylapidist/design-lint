@@ -116,21 +116,21 @@ void test('validates additional token groups', async () => {
       tokens: {
         borderRadius: {
           $type: 'dimension',
-          sm: { $value: { value: 2, unit: 'px' } },
+          sm: { $value: { dimensionType: 'length', value: 2, unit: 'px' } },
         },
         borderWidths: {
           $type: 'dimension',
-          sm: { $value: { value: 1, unit: 'px' } },
+          sm: { $value: { dimensionType: 'length', value: 1, unit: 'px' } },
         },
         shadows: {
           $type: 'shadow',
           sm: {
             $value: {
               color: '#000',
-              offsetX: { value: 0, unit: 'px' },
-              offsetY: { value: 1, unit: 'px' },
-              blur: { value: 2, unit: 'px' },
-              spread: { value: 0, unit: 'px' },
+              offsetX: { dimensionType: 'length', value: 0, unit: 'px' },
+              offsetY: { dimensionType: 'length', value: 1, unit: 'px' },
+              blur: { dimensionType: 'length', value: 2, unit: 'px' },
+              spread: { dimensionType: 'length', value: 0, unit: 'px' },
             },
           },
         },

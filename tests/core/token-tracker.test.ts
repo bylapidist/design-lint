@@ -13,7 +13,12 @@ function makeProvider(tokens: DesignTokens): TokenProvider {
 void test('TokenTracker reports unused tokens', async () => {
   const tokens: DesignTokens = {
     color: { red: { $value: '#ff0000', $type: 'color' } },
-    spacing: { four: { $value: { value: 4, unit: 'px' }, $type: 'dimension' } },
+    spacing: {
+      four: {
+        $value: { dimensionType: 'length', value: 4, unit: 'px' },
+        $type: 'dimension',
+      },
+    },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
   await tracker.configure([
@@ -26,7 +31,7 @@ void test('TokenTracker reports unused tokens', async () => {
   await tracker.trackUsage('const c = "#ff0000";');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('4px'), true);
+  assert.equal(reports[0].messages[0].message.includes('#/spacing/four'), true);
 });
 
 void test('hexColor classifier tracks custom property usage', async () => {
@@ -47,7 +52,7 @@ void test('hexColor classifier tracks custom property usage', async () => {
   await tracker.trackUsage('color: #111111;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('#222222'), true);
+  assert.equal(reports[0].messages[0].message.includes('#/color/unused'), true);
 });
 
 void test('hexColor classifier is case-insensitive', async () => {
@@ -68,14 +73,20 @@ void test('hexColor classifier is case-insensitive', async () => {
   await tracker.trackUsage('color: #abcdef;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('#123456'), true);
+  assert.equal(reports[0].messages[0].message.includes('#/color/other'), true);
 });
 
 void test('numeric classifier matches number tokens', async () => {
   const tokens: DesignTokens = {
     spacing: {
-      four: { $value: { value: 4, unit: 'px' }, $type: 'dimension' },
-      eight: { $value: { value: 8, unit: 'px' }, $type: 'dimension' },
+      four: {
+        $value: { dimensionType: 'length', value: 4, unit: 'px' },
+        $type: 'dimension',
+      },
+      eight: {
+        $value: { dimensionType: 'length', value: 8, unit: 'px' },
+        $type: 'dimension',
+      },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -89,7 +100,10 @@ void test('numeric classifier matches number tokens', async () => {
   await tracker.trackUsage('margin: 4px');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('8px'), true);
+  assert.equal(
+    reports[0].messages[0].message.includes('#/spacing/eight'),
+    true,
+  );
 });
 
 void test('string classifier matches plain string tokens', async () => {
@@ -110,7 +124,7 @@ void test('string classifier matches plain string tokens', async () => {
   await tracker.trackUsage('color: #ff0000;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('#0000ff'), true);
+  assert.equal(reports[0].messages[0].message.includes('#/color/unused'), true);
 });
 
 void test('TokenTracker resolves alias tokens when tracking usage', async () => {
@@ -157,6 +171,9 @@ void test('TokenTracker includes token metadata in reports', async () => {
   const msg = reports[0].messages[0];
   assert(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
+  assert.equal(msg.metadata.pointer, '#/color/unused');
+  assert.deepEqual(msg.metadata.value, '#123456');
+  assert.equal(msg.metadata.type, 'color');
   assert.equal(msg.metadata.deprecated, true);
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });

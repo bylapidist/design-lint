@@ -4,7 +4,7 @@ import type {
   OverrideRule,
   Overrides,
 } from '@lapidist/dtif-schema';
-import { pointerToPath } from '../../utils/tokens/index.js';
+import { extractPointerFragment } from '../../utils/tokens/index.js';
 import type {
   DesignTokens,
   FlattenedToken,
@@ -63,7 +63,7 @@ interface OverrideProcessingContext {
   overrideIndex: number;
   validator: TokenValidator;
   validationMap: Map<string, ValidationTokenInfo>;
-  tokensByPath: Map<string, FlattenedToken>;
+  tokensByPointer: Map<string, FlattenedToken>;
   warnings: string[];
   references: Set<string>;
 }
@@ -78,7 +78,7 @@ function normalizeFallbackEntry(
     overrideIndex,
     validator,
     validationMap,
-    tokensByPath,
+    tokensByPointer,
     warnings,
     references,
   } = context;
@@ -86,20 +86,20 @@ function normalizeFallbackEntry(
 
   if (typeof entry.$ref === 'string') {
     normalized.ref = entry.$ref;
-    const refPath = pointerToPath(entry.$ref);
-    if (!refPath) {
+    const fragment = extractPointerFragment(entry.$ref);
+    if (!fragment || fragment === '#') {
       warnings.push(
         `Override for token ${token.path} references unsupported fallback $ref ${entry.$ref}`,
       );
     } else {
-      normalized.refPath = refPath;
-      references.add(refPath);
-      const referenced = tokensByPath.get(refPath);
+      references.add(fragment);
+      const referenced = tokensByPointer.get(fragment);
       if (!referenced) {
         throw new Error(
           `Override for token ${token.path} references unknown fallback $ref ${entry.$ref}`,
         );
       }
+      normalized.refPath = referenced.path;
       if (token.type && referenced.type && token.type !== referenced.type) {
         warnings.push(
           `Override for token ${token.path} references fallback $ref ${entry.$ref} with mismatched $type ${referenced.type}; expected ${token.type}`,
@@ -145,7 +145,7 @@ function createValidationMap(
 ): Map<string, ValidationTokenInfo> {
   return new Map(
     tokens.map((token) => [
-      token.path,
+      token.pointer,
       {
         $value: token.value,
         ...(token.type ? { $type: token.type } : {}),
@@ -153,11 +153,10 @@ function createValidationMap(
     ]),
   );
 }
-
 function normalizeOverride(
   rule: OverrideRule,
   index: number,
-  tokensByPath: Map<string, FlattenedToken>,
+  tokensByPointer: Map<string, FlattenedToken>,
   validationMap: Map<string, ValidationTokenInfo>,
   warnings: string[],
 ): { override: TokenOverride; references: Set<string> } {
@@ -167,14 +166,14 @@ function normalizeOverride(
     );
   }
 
-  const targetPath = pointerToPath(rule.$token);
-  if (!targetPath) {
+  const targetFragment = extractPointerFragment(rule.$token);
+  if (!targetFragment || targetFragment === '#') {
     throw new Error(
       `Override for $token ${rule.$token} must reference a token in the same document`,
     );
   }
 
-  const target = tokensByPath.get(targetPath);
+  const target = tokensByPointer.get(targetFragment);
   if (!target) {
     throw new Error(
       `Override for $token ${rule.$token} references unknown token`,
@@ -203,20 +202,20 @@ function normalizeOverride(
 
   if (hasOwn(rule, '$ref') && typeof rule.$ref === 'string') {
     override.ref = rule.$ref;
-    const refPath = pointerToPath(rule.$ref);
-    if (!refPath) {
+    const refFragment = extractPointerFragment(rule.$ref);
+    if (!refFragment || refFragment === '#') {
       warnings.push(
         `Override for token ${target.path} references unsupported $ref ${rule.$ref}`,
       );
     } else {
-      override.refPath = refPath;
-      references.add(refPath);
-      const referenced = tokensByPath.get(refPath);
+      references.add(refFragment);
+      const referenced = tokensByPointer.get(refFragment);
       if (!referenced) {
         throw new Error(
           `Override for token ${target.path} references unknown $ref ${rule.$ref}`,
         );
       }
+      override.refPath = referenced.path;
       if (referenced.type && referenced.type !== target.type) {
         warnings.push(
           `Override for token ${target.path} references $ref ${rule.$ref} with mismatched $type ${referenced.type}; expected ${target.type}`,
@@ -237,7 +236,7 @@ function normalizeOverride(
       overrideIndex: index,
       validator,
       validationMap,
-      tokensByPath,
+      tokensByPointer,
       warnings,
       references,
     });
@@ -266,6 +265,9 @@ export function applyOverrides(
     return;
   }
 
+  const tokensByPointer = new Map(
+    tokens.map((token) => [token.pointer, token]),
+  );
   const tokensByPath = new Map(tokens.map((token) => [token.path, token]));
   const validationMap = createValidationMap(tokens);
   const warnings: string[] = [];
@@ -274,7 +276,7 @@ export function applyOverrides(
     const { override, references } = normalizeOverride(
       rule,
       index,
-      tokensByPath,
+      tokensByPointer,
       validationMap,
       warnings,
     );

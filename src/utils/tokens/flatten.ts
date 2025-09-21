@@ -7,6 +7,7 @@
 import { parseDesignTokens } from '../../core/parser/index.js';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
 import { normalizePath, type NameTransform } from './path.js';
+import { isPointerFragment } from './pointer.js';
 
 export interface FlattenOptions {
   /** Optional transform applied to each path segment */
@@ -34,7 +35,11 @@ export function flattenDesignTokens(
     ...rest,
     path: normalizePath(path, transform),
     ...(aliases
-      ? { aliases: aliases.map((a) => normalizePath(a, transform)) }
+      ? {
+          aliases: aliases.map((alias) =>
+            isPointerFragment(alias) ? alias : normalizePath(alias, transform),
+          ),
+        }
       : {}),
   }));
 }

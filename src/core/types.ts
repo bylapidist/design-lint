@@ -69,6 +69,9 @@ export interface FlattenedToken {
   fallbacks?: unknown[];
   ref?: string;
   type?: string;
+  /**
+   * Canonical JSON Pointer fragments referencing tokens this token depends on.
+   */
   aliases?: string[];
   overrides?: TokenOverride[];
   metadata: {

@@ -74,7 +74,7 @@ function validateToken(
 export function validateTokens(tokens: FlattenedToken[]): void {
   const tokenMap = new Map<string, ValidationTokenInfo>(
     tokens.map((t) => [
-      t.path,
+      t.pointer,
       {
         $value: t.value,
         ...(t.type ? { $type: t.type } : {}),

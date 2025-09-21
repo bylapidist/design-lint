@@ -6,7 +6,10 @@ import type {
 } from '../types.js';
 import type { DeprecationMetadata } from '@lapidist/dtif-schema';
 import { guards } from '../../utils/index.js';
-import { segmentsToPointer } from '../../utils/tokens/index.js';
+import {
+  extractPointerFragment,
+  segmentsToPointer,
+} from '../../utils/tokens/index.js';
 
 const {
   data: { isRecord },
@@ -48,7 +51,14 @@ function isStringArray(value: unknown): value is string[] {
 function isDeprecationObject(value: unknown): value is DeprecationMetadata {
   if (!isRecord(value)) return false;
   const replacement = Reflect.get(value, '$replacement');
-  return replacement === undefined || typeof replacement === 'string';
+  if (replacement === undefined) {
+    return true;
+  }
+  if (typeof replacement !== 'string') {
+    return false;
+  }
+  const fragment = extractPointerFragment(replacement);
+  return fragment !== undefined && fragment !== '#';
 }
 
 function validateExtensions(
@@ -73,7 +83,21 @@ function validateExtensions(
 function validateDeprecated(value: unknown, path: string): void {
   if (value === undefined) return;
   if (typeof value === 'boolean') return;
-  if (isDeprecationObject(value)) return;
+  if (isRecord(value)) {
+    const replacement = Reflect.get(value, '$replacement');
+    if (replacement === undefined) {
+      return;
+    }
+    if (typeof replacement === 'string') {
+      const fragment = extractPointerFragment(replacement);
+      if (fragment && fragment !== '#') {
+        return;
+      }
+      throw new Error(
+        `Token or group ${path} has invalid $deprecated $replacement pointer ${replacement}`,
+      );
+    }
+  }
   throw new Error(`Token or group ${path} has invalid $deprecated`);
 }
 

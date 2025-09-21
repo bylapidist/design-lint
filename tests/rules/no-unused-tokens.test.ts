@@ -29,7 +29,9 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
     .find((m) => m.ruleId === 'design-system/no-unused-tokens');
   assert(msg);
   assert.equal(msg.severity, 'warn');
-  assert.ok(msg.message.includes('#123456'));
+  assert.ok(msg.message.includes('#/color/unused'));
+  assert(msg.metadata);
+  assert.equal(msg.metadata.pointer, '#/color/unused');
 });
 
 void test('design-system/no-unused-tokens includes token metadata', async () => {
@@ -62,6 +64,9 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   assert(msg);
   assert(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
+  assert.equal(msg.metadata.pointer, '#/color/unused');
+  assert.deepEqual(msg.metadata.value, '#123456');
+  assert.equal(msg.metadata.type, 'color');
   assert.equal(msg.metadata.deprecated, true);
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });

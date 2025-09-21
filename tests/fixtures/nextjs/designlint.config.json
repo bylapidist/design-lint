@@ -4,10 +4,10 @@
       "primary": { "$type": "color", "$value": "#000000" }
     },
     "spacing": {
-      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } }
+      "sm": { "$type": "dimension", "$value": { "dimensionType": "length", "value": 4, "unit": "px" } }
     },
     "fontSizes": {
-      "sm": { "$type": "dimension", "$value": { "value": 12, "unit": "px" } }
+      "sm": { "$type": "dimension", "$value": { "dimensionType": "length", "value": 12, "unit": "px" } }
     },
     "fonts": {
       "sans": { "$type": "fontFamily", "$value": "Arial" }

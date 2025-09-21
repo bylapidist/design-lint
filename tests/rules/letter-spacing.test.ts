@@ -7,8 +7,8 @@ import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 const tokens = {
   letterSpacings: {
     $type: 'dimension',
-    tight: { $value: { value: -0.05, unit: 'rem' } },
-    none: { $value: { value: 0, unit: 'rem' } },
+    tight: { $value: { dimensionType: 'length', value: -0.05, unit: 'rem' } },
+    none: { $value: { dimensionType: 'length', value: 0, unit: 'rem' } },
   },
 };
 

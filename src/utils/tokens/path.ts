@@ -33,10 +33,9 @@ function transformSegment(seg: string, transform?: NameTransform): string {
 /**
  * Normalize a token path to dot notation with optional case transforms.
  *
- * @param path - Original token path using dot separators.
+ * @param path - Original token path using dot separators or JSON Pointer fragments.
  * @param transform - Optional casing applied to each path segment.
  * @returns Normalized dot-notation path.
- * @throws If `path` contains `/` because the spec requires period-separated references.
  */
 export function normalizePath(path: string, transform?: NameTransform): string {
   let canonical = path;
@@ -57,10 +56,6 @@ export function normalizePath(path: string, transform?: NameTransform): string {
     canonical = pointerPath;
   }
 
-  if (canonical.includes('/')) {
-    throw new Error("Alias paths must use 'dot' notation; '/' is disallowed");
-  }
-
   const parts = canonical.split('.').filter(Boolean);
   return parts.map((p) => transformSegment(p, transform)).join('.');
 }
@@ -73,5 +68,5 @@ export function normalizePath(path: string, transform?: NameTransform): string {
  * @returns Upper snake-case representation of the provided path.
  */
 export function toConstantName(path: string): string {
-  return path.replace(/\./g, '_').replace(/-/g, '_').toUpperCase();
+  return path.replace(/[./]/g, '_').replace(/-/g, '_').toUpperCase();
 }

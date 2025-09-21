@@ -13,6 +13,7 @@ export {
   pathToPointer,
   pointerToPath,
   segmentsToPointer,
+  extractPointerFragment,
   isPointerFragment,
 } from './pointer.js';
 export { matchToken, closestToken, type TokenPattern } from './pattern.js';

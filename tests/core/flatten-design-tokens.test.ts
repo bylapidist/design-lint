@@ -18,7 +18,7 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
     size: {
       spacing: {
         $type: 'dimension',
-        small: { $value: { value: 4, unit: 'px' } },
+        small: { $value: { dimensionType: 'length', value: 4, unit: 'px' } },
       },
     },
   };
@@ -48,11 +48,29 @@ void test('flattenDesignTokens collects token paths and inherits types', () => {
     {
       path: 'size.spacing.small',
       pointer: '#/size/spacing/small',
-      value: { value: 4, unit: 'px' },
+      value: { dimensionType: 'length', value: 4, unit: 'px' },
       type: 'dimension',
       metadata: { loc: { line: 1, column: 1 } },
     },
   ]);
+});
+
+void test('flattenDesignTokens preserves slash characters in token paths', () => {
+  const tokens: DesignTokens = {
+    icons: {
+      $type: 'color',
+      'icon/home': { $value: '#000000' },
+      alias: { $ref: '#/icons/icon~1home' },
+    },
+  };
+
+  const flat = flattenDesignTokens(tokens);
+  const home = flat.find((token) => token.path === 'icons.icon/home');
+  assert(home);
+  assert.equal(home.pointer, '#/icons/icon~1home');
+  const alias = flat.find((token) => token.path === 'icons.alias');
+  assert(alias);
+  assert.deepEqual(alias.aliases, ['#/icons/icon~1home']);
 });
 
 void test('flattenDesignTokens preserves $extensions and inherits $deprecated', () => {
@@ -103,7 +121,7 @@ void test('flattenDesignTokens resolves $ref references', () => {
       value: '#fff',
       ref: '#/color/base',
       type: 'color',
-      aliases: ['color.base'],
+      aliases: ['#/color/base'],
       metadata: { loc: { line: 1, column: 1 } },
     },
   ]);
@@ -167,7 +185,7 @@ void test('flattenDesignTokens applies name transforms', () => {
       value: '#000',
       ref: '#/ColorGroup/primaryColor',
       type: 'color',
-      aliases: ['color-group.primary-color'],
+      aliases: ['#/ColorGroup/primaryColor'],
       metadata: { loc: { line: 1, column: 1 } },
     },
   ]);

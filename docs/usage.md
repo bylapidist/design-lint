@@ -97,7 +97,7 @@ npx design-lint validate --config designlint.config.json
 ```
 
 ## Export resolved tokens
-Use the `tokens` subcommand to write flattened tokens to a file or stdout. Alias references are resolved and metadata like `$extensions` is preserved:
+Use the `tokens` subcommand to write flattened tokens to a file or stdout. Alias references are resolved, metadata like `$extensions` is preserved, and each entry is keyed by the token's canonical JSON Pointer fragment:
 
 ```bash
 npx design-lint tokens --out tokens.json
