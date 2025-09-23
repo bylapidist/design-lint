@@ -34,7 +34,7 @@ void test('TokenTracker reports unused tokens', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('const c = "rgb(255, 0, 0)";');
+  await tracker.trackUsage('const c = "#ff0000";');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   assert.equal(reports[0].messages[0].message.includes('4px'), true);
@@ -56,13 +56,10 @@ void test('hexColor classifier tracks custom property usage', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: rgb(17, 17, 17);');
+  await tracker.trackUsage('color: #111111;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(
-    reports[0].messages[0].message.includes('rgb(34, 34, 34)'),
-    true,
-  );
+  assert.equal(reports[0].messages[0].message.includes('#222222'), true);
 });
 
 void test('hexColor classifier is case-insensitive', async () => {
@@ -87,13 +84,10 @@ void test('hexColor classifier is case-insensitive', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: rgb(171, 205, 239);');
+  await tracker.trackUsage('color: #ABCDEF;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
-  assert.equal(
-    reports[0].messages[0].message.includes('rgb(18, 52, 86)'),
-    true,
-  );
+  assert.equal(reports[0].messages[0].message.includes('#123456'), true);
 });
 
 void test('numeric classifier matches number tokens', async () => {
@@ -162,7 +156,7 @@ void test('TokenTracker resolves alias tokens when tracking usage', async () => 
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: rgb(255, 0, 0);');
+  await tracker.trackUsage('color: #ff0000;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 0);
 });

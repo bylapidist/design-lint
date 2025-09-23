@@ -4,25 +4,41 @@ import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
+const length = (value: number) => ({
+  dimensionType: 'length' as const,
+  value,
+  unit: 'px',
+});
+
+const srgb = (alpha: number) => ({
+  colorSpace: 'srgb' as const,
+  components: [0, 0, 0],
+  ...(alpha < 1 ? { alpha } : {}),
+  hex: '#000000',
+});
+
 const tokens = {
   shadows: {
-    $type: 'shadow',
     sm: {
+      $type: 'shadow',
       $value: {
-        offsetX: { value: 0, unit: 'px' },
-        offsetY: { value: 1, unit: 'px' },
-        blur: { value: 2, unit: 'px' },
-        spread: { value: 0, unit: 'px' },
-        color: 'rgba(0,0,0,0.1)',
+        shadowType: 'css.box-shadow',
+        offsetX: length(0),
+        offsetY: length(1),
+        blur: length(2),
+        spread: length(0),
+        color: srgb(0.1),
       },
     },
     lg: {
+      $type: 'shadow',
       $value: {
-        offsetX: { value: 0, unit: 'px' },
-        offsetY: { value: 2, unit: 'px' },
-        blur: { value: 4, unit: 'px' },
-        spread: { value: 0, unit: 'px' },
-        color: 'rgba(0,0,0,0.2)',
+        shadowType: 'css.box-shadow',
+        offsetX: length(0),
+        offsetY: length(2),
+        blur: length(4),
+        spread: length(0),
+        color: srgb(0.2),
       },
     },
   },

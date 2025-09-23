@@ -3,11 +3,7 @@ import type { Environment, TokenProvider } from './environment.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
 import { LintService } from './lint-service.js';
-import {
-  flattenDesignTokens,
-  flattenDtifDesignTokens,
-} from '../utils/tokens/flatten.js';
-import { isLikelyDtifDesignTokens } from './dtif/detect.js';
+import { flattenDtifDesignTokens } from '../utils/tokens/flatten.js';
 import type { DesignTokens } from './types.js';
 
 function isDesignTokens(val: unknown): val is DesignTokens {
@@ -24,13 +20,10 @@ export function setupLinter(
     async load() {
       const result: Record<string, DesignTokens> = {};
       if (inlineTokens && isDesignTokens(inlineTokens)) {
-        if (isLikelyDtifDesignTokens(inlineTokens)) {
-          await flattenDtifDesignTokens(inlineTokens, {
-            uri: 'memory://design-lint/config.tokens.json',
-          });
-        } else {
-          flattenDesignTokens(inlineTokens);
-        }
+        await flattenDtifDesignTokens(inlineTokens, {
+          uri: 'memory://design-lint/config.tokens.json',
+          onWarn,
+        });
         result.default = inlineTokens;
       }
       return result;

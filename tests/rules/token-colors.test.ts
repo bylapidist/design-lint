@@ -5,7 +5,14 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 function createLinter(rule: unknown = 'error') {
-  const tokens = { colors: { $type: 'color', primary: { $value: '#ffffff' } } };
+  const tokens = {
+    colors: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+    },
+  };
   return initLinter(
     { tokens, rules: { 'design-token/colors': rule } },
     {

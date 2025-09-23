@@ -10,12 +10,7 @@ import type {
   DtifParseSession,
   DtifSessionOptions,
 } from '../dtif/session.js';
-import { isLikelyDtifDesignTokens } from '../dtif/detect.js';
-import { DTIF_MIGRATION_MESSAGE } from '../dtif/messages.js';
-import { buildParseTree } from './parse-tree.js';
-import { normalizeTokens } from './normalize.js';
 import { normalizeColorValues, type ColorSpace } from './normalize-colors.js';
-import { validateTokens } from './validate.js';
 
 export type TokenTransform = (
   tokens: Record<string, unknown>,
@@ -51,31 +46,34 @@ export function registerTokenTransform(transform: TokenTransform): () => void {
   };
 }
 
-export { getTokenLocation } from './parse-tree.js';
-export { getFlattenedTokenLocation as getDtifTokenLocation } from '../dtif/flatten-tokens.js';
+export {
+  getFlattenedTokenLocation as getTokenLocation,
+  getFlattenedTokenLocation as getDtifTokenLocation,
+} from '../dtif/flatten-tokens.js';
 
 export interface ParseDesignTokensOptions {
-  colorSpace?: ColorSpace;
-  transforms?: TokenTransform[];
-  onWarn?: (msg: string) => void;
+  readonly colorSpace?: ColorSpace;
+  readonly transforms?: readonly TokenTransform[];
+  readonly onWarn?: (msg: string) => void;
+  readonly uri?: string | URL;
+  readonly session?: DtifParseSession;
+  readonly sessionOptions?: DtifSessionOptions;
 }
 
-export function parseDesignTokens(
+export async function parseDesignTokens(
   tokens: DesignTokens,
-  getLoc?: (path: string) => { line: number; column: number },
-  options?: ParseDesignTokensOptions,
-): FlattenedToken[] {
-  const transformed = applyTokenTransforms(tokens, options?.transforms);
-  if (isLikelyDtifDesignTokens(transformed)) {
-    throw new Error(DTIF_MIGRATION_MESSAGE);
-  }
-  const tree = buildParseTree(transformed, getLoc, options?.onWarn);
-  normalizeTokens(tree, options?.onWarn);
-  if (options?.colorSpace) {
-    normalizeColorValues(tree, options.colorSpace);
-  }
-  validateTokens(tree);
-  return tree;
+  _getLoc?: (path: string) => { line: number; column: number },
+  options: ParseDesignTokensOptions = {},
+): Promise<FlattenedToken[]> {
+  const transformed = applyTokenTransforms(tokens, options.transforms);
+  const { colorSpace, onWarn, session, sessionOptions, uri } = options;
+  return parseDtifDesignTokensObject(transformed, {
+    colorSpace,
+    onWarn,
+    session,
+    sessionOptions,
+    uri,
+  });
 }
 
 export interface ParseDtifDesignTokensOptions {

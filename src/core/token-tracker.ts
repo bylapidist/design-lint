@@ -1,11 +1,7 @@
 import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
 import { guards, collections } from '../utils/index.js';
-import {
-  flattenDesignTokens,
-  flattenDtifDesignTokens,
-} from '../utils/tokens/flatten.js';
-import { isLikelyDtifDesignTokens } from '../core/dtif/detect.js';
+import { flattenDtifDesignTokens } from '../utils/tokens/flatten.js';
 import { extractVarName } from '../utils/tokens/index.js';
 import { formatTokenValue } from '../utils/tokens/format-token-value.js';
 
@@ -127,13 +123,11 @@ async function collectTokenValues(
   if (!tokensByTheme) return values;
   for (const [theme, tokens] of Object.entries(tokensByTheme)) {
     if (theme.startsWith('$')) continue;
-    const flattened = isLikelyDtifDesignTokens(tokens)
-      ? await flattenDtifDesignTokens(tokens, {
-          uri: `memory://design-lint/${encodeURIComponent(theme || 'default')}.tokens.json`,
-        })
-      : flattenDesignTokens(tokens);
+    const flattened = await flattenDtifDesignTokens(tokens, {
+      uri: `memory://design-lint/${encodeURIComponent(theme || 'default')}.tokens.json`,
+    });
     for (const flat of flattened) {
-      const formatted = formatTokenValue(flat, { colorSpace: 'rgb' });
+      const formatted = formatTokenValue(flat, { colorSpace: 'hex' });
       if (formatted.includes('*')) continue;
       const name = extractVarName(formatted);
       const key = name ?? formatted;

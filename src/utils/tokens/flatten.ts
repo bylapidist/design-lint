@@ -9,7 +9,6 @@ import {
   parseDtifDesignTokensObject,
   type TokenTransform,
 } from '../../core/parser/index.js';
-import { isLikelyDtifDesignTokens } from '../../core/dtif/detect.js';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
 import type {
   DtifParseSession,
@@ -23,9 +22,6 @@ export interface FlattenOptions {
   nameTransform?: NameTransform;
   /** Warning callback for parse or alias issues */
   onWarn?: (msg: string) => void;
-}
-
-export interface FlattenDtifOptions extends FlattenOptions {
   /** Desired output color space */
   colorSpace?: ColorSpace;
   /** Optional DTIF session override */
@@ -37,6 +33,8 @@ export interface FlattenDtifOptions extends FlattenOptions {
   /** Optional transforms applied before parsing */
   transforms?: readonly TokenTransform[];
 }
+
+export type FlattenDtifOptions = FlattenOptions;
 
 function applyNameTransform(
   tokens: readonly FlattenedToken[],
@@ -61,23 +59,23 @@ function applyNameTransform(
  * @param options - Optional normalization settings.
  * @returns Array of flattened tokens including metadata and resolved aliases.
  */
-export function flattenDesignTokens(
+export async function flattenDesignTokens(
   tokens: DesignTokens,
-  options?: FlattenOptions,
-): FlattenedToken[] {
-  if (isLikelyDtifDesignTokens(tokens)) {
-    throw new Error(
-      'flattenDesignTokens does not support DTIF documents. Use flattenDtifDesignTokens instead.',
-    );
-  }
-  const flat = parseDesignTokens(tokens, undefined, {
-    onWarn: options?.onWarn,
+  options: FlattenOptions = {},
+): Promise<FlattenedToken[]> {
+  const flat = await parseDesignTokens(tokens, undefined, {
+    colorSpace: options.colorSpace,
+    onWarn: options.onWarn,
+    session: options.session,
+    sessionOptions: options.sessionOptions,
+    transforms: options.transforms,
+    uri: options.uri,
   });
-  return applyNameTransform(flat, options?.nameTransform);
+  return applyNameTransform(flat, options.nameTransform);
 }
 
 export async function flattenDtifDesignTokens(
-  tokens: Record<string, unknown>,
+  tokens: DesignTokens,
   options: FlattenDtifOptions = {},
 ): Promise<FlattenedToken[]> {
   const flat = await parseDtifDesignTokensObject(tokens, {
@@ -99,32 +97,35 @@ export async function flattenDtifDesignTokens(
  * @param options - Optional normalization settings.
  * @returns Array of flattened tokens.
  */
-export function getFlattenedTokens(
+export async function getFlattenedTokens(
   tokensByTheme: Record<string, DesignTokens>,
   theme?: string,
-  options?: FlattenOptions,
-): FlattenedToken[] {
-  const transform = options?.nameTransform;
-  const warn = options?.onWarn;
+  options: FlattenOptions = {},
+): Promise<FlattenedToken[]> {
+  const transform = options.nameTransform;
+  const warn = options.onWarn;
   if (theme) {
     if (Object.prototype.hasOwnProperty.call(tokensByTheme, theme)) {
       return flattenDesignTokens(tokensByTheme[theme], {
+        ...options,
         nameTransform: transform,
         onWarn: warn,
       });
     }
-    return [];
+    return Promise.resolve([]);
   }
   const seen = new Map<string, FlattenedToken>();
   for (const tokens of Object.values(tokensByTheme)) {
-    for (const flat of flattenDesignTokens(tokens, {
+    const flattened = await flattenDesignTokens(tokens, {
+      ...options,
       nameTransform: transform,
       onWarn: warn,
-    })) {
+    });
+    for (const flat of flattened) {
       if (!seen.has(flat.path)) {
         seen.set(flat.path, flat);
       }
     }
   }
-  return [...seen.values()];
+  return Array.from(seen.values());
 }
