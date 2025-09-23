@@ -29,7 +29,7 @@ void test('flattenDtifDesignTokens flattens DTIF tokens with metadata', async ()
         $description: 'Alias to primary background',
       },
     },
-  } satisfies Record<string, unknown>;
+  } satisfies DesignTokens;
 
   const tokens = await flattenDtifDesignTokens(document);
   const byPath = new Map(tokens.map((token) => [token.path, token]));
@@ -71,7 +71,7 @@ void test('flattenDtifDesignTokens applies name transforms', async () => {
         $ref: '#/ButtonGroup/BaseColor',
       },
     },
-  } satisfies Record<string, unknown>;
+  } satisfies DesignTokens;
 
   const tokens = await flattenDtifDesignTokens(document, {
     nameTransform: 'kebab-case',
@@ -109,7 +109,7 @@ void test('flattenDtifDesignTokens forwards warning diagnostics', async () => {
 
   const warnings: string[] = [];
   const tokens = await flattenDtifDesignTokens(
-    { $version: '1.0.0' },
+    { $version: '1.0.0' } satisfies DesignTokens,
     {
       session,
       onWarn: (message) => warnings.push(message),
@@ -135,7 +135,7 @@ void test('flattenDtifDesignTokens applies inline transforms', async () => {
         },
       },
     },
-  } satisfies Record<string, unknown>;
+  } satisfies DesignTokens;
 
   const tokens = await flattenDtifDesignTokens(document, {
     transforms: [
@@ -193,7 +193,7 @@ void test('flattenDtifDesignTokens applies registered transforms', async () => {
           },
         },
       },
-    } satisfies Record<string, unknown>;
+    } satisfies DesignTokens;
 
     const tokens = await flattenDtifDesignTokens(document);
     const extra = tokens.find((token) => token.path === 'color.extra');

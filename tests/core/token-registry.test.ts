@@ -9,21 +9,21 @@ const srgb = (components: [number, number, number]) => ({
   components,
 });
 
-const tokens: Record<string, DesignTokens> = {
+const tokens = {
   default: {
     $version: '1.0.0',
     color: {
       primary: { $type: 'color', $value: srgb([1, 1, 1]) },
       secondary: { $type: 'color', $ref: '#/color/primary' },
     },
-  } as unknown as DesignTokens,
+  },
   dark: {
     $version: '1.0.0',
     color: {
       primary: { $type: 'color', $value: srgb([0, 0, 0]) },
     },
-  } as unknown as DesignTokens,
-};
+  },
+} satisfies Record<string, DesignTokens>;
 
 void test('getToken retrieves tokens by theme and resolves aliases', async () => {
   const registry = await TokenRegistry.create(tokens);
@@ -49,8 +49,8 @@ void test('getToken normalizes paths and applies name transforms', async () => {
             $value: srgb([0.0666666667, 0.0666666667, 0.0666666667]),
           },
         },
-      } as unknown as DesignTokens,
-    },
+      },
+    } satisfies Record<string, DesignTokens>,
     { nameTransform: 'kebab-case' },
   );
   const expected = srgb([0.0666666667, 0.0666666667, 0.0666666667]);
@@ -91,7 +91,7 @@ void test('TokenRegistry.create flattens DTIF documents', async () => {
         },
       },
     },
-  } satisfies Record<string, Record<string, unknown>>;
+  } satisfies Record<string, DesignTokens>;
 
   const registry = await TokenRegistry.create(dtifTokens);
   const base = registry.getToken('color.base');

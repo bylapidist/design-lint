@@ -1,5 +1,6 @@
 import valueParser from 'postcss-value-parser';
 import { rules, guards, collections } from '../utils/index.js';
+import { formatTokenValue } from '../utils/tokens/format-token-value.js';
 
 const { tokenRule } = rules;
 const {
@@ -29,19 +30,46 @@ export const boxShadowRule = tokenRule({
       }
       return null;
     };
-    const toString = (val: unknown): string | null => {
+    const toColorString = (value: unknown, path: string): string | null => {
+      if (typeof value === 'string') return value;
+      if (!isRecord(value)) return null;
+      try {
+        const formatted = formatTokenValue(
+          {
+            path: `${path}.color`,
+            value,
+            type: 'color',
+            metadata: { loc: { line: 1, column: 1 } },
+          },
+          { colorSpace: 'rgb' },
+        );
+        return formatted.replace(/\s*,\s*/g, ',');
+      } catch {
+        return null;
+      }
+    };
+
+    const toString = (val: unknown, path: string): string | null => {
       const items = toArray(val);
       const parts: string[] = [];
       for (const item of items) {
         if (!isRecord(item)) return null;
         const { offsetX, offsetY, blur, spread, color, inset } = item;
-        if (typeof color !== 'string') return null;
+        const colorValue = toColorString(color, path);
+        if (!colorValue) return null;
         const ox = parseDim(offsetX);
         const oy = parseDim(offsetY);
         const bl = parseDim(blur);
         const sp = spread === undefined ? null : parseDim(spread);
         if (!ox || !oy || !bl) return null;
-        const seg = [inset === true ? 'inset' : null, ox, oy, bl, sp, color]
+        const seg = [
+          inset === true ? 'inset' : null,
+          ox,
+          oy,
+          bl,
+          sp,
+          colorValue,
+        ]
           .filter((p): p is string => !!p)
           .join(' ');
         parts.push(seg);
@@ -50,7 +78,7 @@ export const boxShadowRule = tokenRule({
     };
     for (const { path, value } of tokens) {
       if (!path.startsWith('shadows.')) continue;
-      const val = toString(value);
+      const val = toString(value, path);
       if (val) allowed.add(normalize(val));
     }
     return allowed;

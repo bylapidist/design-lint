@@ -5,12 +5,19 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 
 const config = {
   tokens: {
-    color: { $type: 'color', primary: { $value: '#000000' } },
-    spacing: {
-      $type: 'dimension',
-      sm: { $value: { value: 4, unit: 'px' } },
+    color: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
     },
-    opacity: { $type: 'number', full: { $value: 1 } },
+    spacing: {
+      sm: {
+        $type: 'dimension',
+        $value: { dimensionType: 'length', value: 4, unit: 'px' },
+      },
+    },
+    opacity: { full: { $type: 'number', $value: 1 } },
   },
   rules: {
     'design-token/colors': 'error',
@@ -70,7 +77,14 @@ void test('reports raw tokens in string style attributes', async () => {
 void test('reports raw tokens once for single style property', async () => {
   const linter = initLinter(
     {
-      tokens: { color: { $type: 'color', primary: { $value: '#000000' } } },
+      tokens: {
+        color: {
+          primary: {
+            $type: 'color',
+            $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+          },
+        },
+      },
       rules: { 'design-token/colors': 'error' },
     },
     new FileSource(),
