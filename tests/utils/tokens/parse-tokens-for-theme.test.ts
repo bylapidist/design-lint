@@ -4,28 +4,55 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { DesignTokens } from '../../../src/core/types.js';
-import { TokenParseError } from '../../../src/adapters/node/token-parser.js';
+import { DtifTokenParseError } from '../../../src/adapters/node/token-parser.js';
 import { parseTokensForTheme } from '../../../src/utils/tokens/parse-tokens-for-theme.js';
 
-void test('parses valid tokens', () => {
+const srgb = (
+  components: readonly [number, number, number],
+): Record<string, unknown> => ({
+  $type: 'color',
+  $value: {
+    colorSpace: 'srgb',
+    components: [...components],
+  },
+});
+
+void test('parses valid DTIF tokens', async () => {
   const tokens: DesignTokens = {
-    color: { $type: 'color', primary: { $value: '#000' } },
+    $version: '1.0.0',
+    color: {
+      primary: srgb([0, 0, 0]),
+    },
   };
-  assert.doesNotThrow(() => {
-    parseTokensForTheme('light', tokens);
-  });
+  const result = await parseTokensForTheme('light', tokens);
+  assert.ok(result.flattened);
+  const [token] = result.flattened;
+  assert(token);
+  assert.equal(token.pointer, '#/color/primary');
 });
 
-void test('rethrows TokenParseError', () => {
+void test('rethrows DtifTokenParseError', async () => {
   const tokens = {
-    color: { primary: { $value: '#000' } },
+    $version: '1.0.0',
+    color: { primary: { $type: 'color' } },
   } as unknown as DesignTokens;
-  assert.throws(() => {
-    parseTokensForTheme('light', tokens);
-  }, TokenParseError);
+  await assert.rejects(
+    parseTokensForTheme('light', tokens),
+    DtifTokenParseError,
+  );
 });
 
-void test('wraps unexpected errors', () => {
+void test('rejects legacy tokens', async () => {
+  const tokens = {
+    color: { primary: { $type: 'color', $value: '#000000' } },
+  } as unknown as DesignTokens;
+  await assert.rejects(
+    parseTokensForTheme('light', tokens),
+    DtifTokenParseError,
+  );
+});
+
+void test('wraps unexpected errors', async () => {
   const tokens = new Proxy(
     {},
     {
@@ -40,7 +67,8 @@ void test('wraps unexpected errors', () => {
       },
     },
   ) as unknown as DesignTokens;
-  assert.throws(() => {
-    parseTokensForTheme('light', tokens);
-  }, /Failed to parse tokens for theme "light": bad/);
+  await assert.rejects(
+    parseTokensForTheme('light', tokens),
+    /Failed to parse tokens for theme "light": bad/,
+  );
 });

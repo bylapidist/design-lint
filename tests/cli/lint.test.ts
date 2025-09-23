@@ -16,7 +16,13 @@ void test('lint command reports token color violations', () => {
   fs.writeFileSync(
     tokensPath,
     JSON.stringify({
-      color: { primary: { $type: 'color', $value: '#ff0000' } },
+      $version: '1.0.0',
+      color: {
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+      },
     }),
   );
   fs.writeFileSync(

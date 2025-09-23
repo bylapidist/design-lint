@@ -6,5 +6,7 @@ export { createNodeEnvironment } from './environment.js';
 export {
   parseDesignTokensFile,
   readDesignTokensFile,
-  TokenParseError,
+  parseDtifTokensFile,
+  readDtifTokensFile,
+  DtifTokenParseError,
 } from './token-parser.js';

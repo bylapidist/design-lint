@@ -13,7 +13,15 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 void test('generate command writes configured outputs', () => {
   const dir = makeTmpDir();
   const tokensPath = path.join(dir, 'base.tokens.json');
-  const tokens = { color: { red: { $type: 'color', $value: '#ff0000' } } };
+  const tokens = {
+    $version: '1.0.0',
+    color: {
+      red: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+      },
+    },
+  };
   fs.writeFileSync(tokensPath, JSON.stringify(tokens));
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),

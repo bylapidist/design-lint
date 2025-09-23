@@ -13,12 +13,12 @@ import { guards } from '../utils/index.js';
  * Validation schema for configuration files.
  *
  * Uses [Zod](https://zod.dev/) to ensure user-supplied configuration matches
- * expected shapes and that token definitions adhere to the W3C Design Tokens
- * format.
+ * expected shapes and that token definitions adhere to the DTIF token
+ * document structure.
  */
 
 const {
-  domain: { isTokenGroup },
+  domain: { isDesignTokens },
 } = guards;
 
 /**
@@ -42,10 +42,10 @@ const ruleSettingSchema = z.union([
 ]);
 
 /**
- * Schema ensuring a value follows the W3C Design Tokens format.
+ * Schema ensuring a value follows the DTIF token document structure.
  */
-const designTokensSchema = z.custom<DesignTokens>(isTokenGroup, {
-  message: 'Tokens must be W3C Design Tokens objects',
+const designTokensSchema = z.custom<DesignTokens>(isDesignTokens, {
+  message: 'Tokens must be DTIF token documents',
 });
 
 /**

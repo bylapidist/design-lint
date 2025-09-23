@@ -1,138 +1,167 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+
+import type { DesignTokens, DtifFlattenedToken } from '../../src/core/types.js';
 import { getFlattenedTokens } from '../../src/utils/tokens/index.js';
-import type { DesignTokens } from '../../src/core/types.js';
+import { attachDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js';
+
+const paletteUri = new URL('memory://get-flattened-tokens.test.json');
+
+const lightPrimary: DtifFlattenedToken = {
+  pointer: '#/palette/primary',
+  segments: ['palette', 'primary'],
+  name: 'primary',
+  type: 'color',
+  value: '#ffffff',
+  metadata: {
+    deprecated: { $replacement: '#/palette/secondary' },
+  },
+  location: {
+    pointer: '#/palette/primary',
+    span: {
+      uri: paletteUri,
+      start: { line: 4, column: 5, offset: 32 },
+      end: { line: 4, column: 20, offset: 47 },
+    },
+  },
+};
+
+const lightSecondary: DtifFlattenedToken = {
+  pointer: '#/palette/secondary',
+  segments: ['palette', 'secondary'],
+  name: 'secondary',
+  type: 'color',
+  value: '#000000',
+  metadata: {
+    extensions: { 'vendor.example': { note: true } },
+  },
+};
+
+const aliasToken: DtifFlattenedToken = {
+  pointer: '#/palette/primaryAlias',
+  segments: ['palette', 'primaryAlias'],
+  name: 'primaryAlias',
+  type: 'color',
+  value: '#ffffff',
+  metadata: {},
+  resolution: {
+    pointer: '#/palette/primaryAlias',
+    trace: [
+      { kind: 'token', pointer: '#/palette/primary' },
+      { kind: 'token', pointer: '#/palette/primaryAlias' },
+    ],
+  },
+};
+
+const darkSecondary: DtifFlattenedToken = {
+  pointer: '#/palette/secondary',
+  segments: ['palette', 'secondary'],
+  name: 'secondary',
+  type: 'color',
+  value: '#111111',
+  metadata: {},
+};
 
 void test('getFlattenedTokens flattens tokens for specified theme and preserves metadata', () => {
-  const tokens: Record<string, DesignTokens> = {
-    light: {
-      palette: {
-        $type: 'color',
-        $deprecated: 'use new palette',
-        primary: { $value: '#fff' },
-        secondary: {
-          $value: '#000',
-          $extensions: { 'vendor.example': { note: true } },
-        },
-      },
-    },
-    dark: {
-      palette: {
-        $type: 'color',
-        primary: { $value: '#111' },
-      },
-    },
-  };
+  const light = { $version: '1.0.0' } as unknown as DesignTokens;
+  attachDtifFlattenedTokens(light, [lightPrimary, lightSecondary]);
 
-  const flat = getFlattenedTokens(tokens, 'light');
-  assert.deepEqual(flat, [
-    {
-      path: 'palette.primary',
-      value: '#fff',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: 'use new palette',
-        loc: { line: 1, column: 1 },
-      },
-    },
-    {
-      path: 'palette.secondary',
-      value: '#000',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: { 'vendor.example': { note: true } },
-        deprecated: 'use new palette',
-        loc: { line: 1, column: 1 },
-      },
-    },
-  ]);
+  const flat = getFlattenedTokens({ light }, 'light');
+  assert.deepEqual(
+    flat.map((token) => token.path),
+    ['palette.primary', 'palette.secondary'],
+  );
+
+  const primary = flat.find((token) => token.path === 'palette.primary');
+  assert(primary);
+  assert.equal(primary.metadata.deprecated, '#/palette/secondary');
+  assert.deepEqual(primary.metadata.loc, { line: 4, column: 5 });
+
+  const secondary = flat.find((token) => token.path === 'palette.secondary');
+  assert(secondary);
+  assert.deepEqual(secondary.metadata.extensions, {
+    'vendor.example': { note: true },
+  });
 });
 
 void test('getFlattenedTokens merges tokens from all themes when none is specified', () => {
-  const tokens: Record<string, DesignTokens> = {
-    light: { palette: { $type: 'color', primary: { $value: '#fff' } } },
-    dark: { palette: { $type: 'color', secondary: { $value: '#000' } } },
-  };
-  const flat = getFlattenedTokens(tokens);
-  assert.deepEqual(flat, [
-    {
-      path: 'palette.primary',
-      value: '#fff',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-    {
-      path: 'palette.secondary',
-      value: '#000',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
+  const light = { $version: '1.0.0' } as unknown as DesignTokens;
+  attachDtifFlattenedTokens(light, [lightPrimary]);
+  const dark = { $version: '1.0.0' } as unknown as DesignTokens;
+  attachDtifFlattenedTokens(dark, [darkSecondary]);
+
+  const flat = getFlattenedTokens({ light, dark });
+  assert.deepEqual(flat.map((token) => token.path).sort(), [
+    'palette.primary',
+    'palette.secondary',
   ]);
 });
 
 void test('getFlattenedTokens resolves aliases', () => {
-  const tokens: Record<string, DesignTokens> = {
-    default: {
-      palette: {
-        $type: 'color',
-        base: { $value: '#f00' },
-        primary: { $value: '{palette.base}' },
-      },
-    },
-  };
-  const flat = getFlattenedTokens(tokens, 'default');
-  assert.deepEqual(flat, [
-    {
-      path: 'palette.base',
-      value: '#f00',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-    {
-      path: 'palette.primary',
-      value: '#f00',
-      type: 'color',
-      aliases: ['palette.base'],
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-  ]);
+  const theme = { $version: '1.0.0' } as unknown as DesignTokens;
+  attachDtifFlattenedTokens(theme, [lightPrimary, aliasToken]);
+
+  const flat = getFlattenedTokens({ default: theme }, 'default');
+  const alias = flat.find((token) => token.path === 'palette.primaryAlias');
+  assert(alias);
+  assert.deepEqual(alias.aliases, ['palette.primary']);
 });
 
 void test('getFlattenedTokens applies name transforms', () => {
-  const tokens: Record<string, DesignTokens> = {
-    light: {
-      ColorGroup: { $type: 'color', primaryColor: { $value: '#fff' } },
+  const theme = { $version: '1.0.0' } as unknown as DesignTokens;
+  const tokens: DtifFlattenedToken[] = [
+    {
+      pointer: '#/ColorGroup/PrimaryColor',
+      segments: ['ColorGroup', 'PrimaryColor'],
+      name: 'PrimaryColor',
+      type: 'color',
+      value: '#fff',
+      metadata: {},
     },
-    dark: {
-      ColorGroup: { $type: 'color', primaryColor: { $value: '#000' } },
-    },
-  };
-  const flat = getFlattenedTokens(tokens, undefined, {
+  ];
+  attachDtifFlattenedTokens(theme, tokens);
+
+  const flat = getFlattenedTokens({ theme }, undefined, {
     nameTransform: 'camelCase',
   });
+  assert.deepEqual(
+    flat.map((token) => token.path),
+    ['colorGroup.primaryColor'],
+  );
+});
+
+void test('getFlattenedTokens rejects primitive token values', () => {
+  const tokens = {
+    default: {
+      colors: { primary: '#fff' },
+      deprecations: { old: { replacement: 'new' } },
+    },
+  } as unknown as Record<string, DesignTokens>;
+
+  assert.throws(
+    () => getFlattenedTokens(tokens, 'default'),
+    /Expected DTIF token documents or pre-flattened DTIF tokens/i,
+  );
+});
+
+void test('getFlattenedTokens accepts flattened DTIF tokens', () => {
+  const tokens: Record<string, readonly DtifFlattenedToken[]> = {
+    default: [
+      {
+        pointer: '#/ColorGroup/PrimaryColor',
+        segments: ['ColorGroup', 'PrimaryColor'],
+        name: 'PrimaryColor',
+        type: 'color',
+        value: '#fff',
+        metadata: {},
+      },
+    ],
+  };
+
+  const flat = getFlattenedTokens(tokens, 'default', {
+    nameTransform: 'camelCase',
+  });
+
   assert.deepEqual(flat, [
     {
       path: 'colorGroup.primaryColor',
@@ -146,17 +175,4 @@ void test('getFlattenedTokens applies name transforms', () => {
       },
     },
   ]);
-});
-
-void test('getFlattenedTokens rejects primitive token values', () => {
-  const tokens = {
-    default: {
-      colors: { primary: '#fff' },
-      deprecations: { old: { replacement: 'new' } },
-    },
-  } as unknown as Record<string, DesignTokens>;
-  assert.throws(
-    () => getFlattenedTokens(tokens, 'default'),
-    /must be an object with \$value/i,
-  );
 });

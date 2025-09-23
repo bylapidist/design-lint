@@ -1,4 +1,4 @@
-import type { DesignTokens } from '../core/types.js';
+import type { DesignTokens, DtifFlattenedToken } from '../core/types.js';
 import {
   getFlattenedTokens,
   sortTokensByPath,
@@ -15,9 +15,12 @@ export interface TsOutputOptions {
 
 /**
  * Generate a TypeScript module exporting a typed token object for each theme.
+ *
+ * Accepts DTIF token documents or arrays of pre-flattened DTIF tokens gathered
+ * from the canonical parser.
  */
 export function generateTsDeclarations(
-  tokensByTheme: Record<string, DesignTokens>,
+  tokensByTheme: Record<string, DesignTokens | readonly DtifFlattenedToken[]>,
   options: TsOutputOptions = {},
 ): string {
   const { nameTransform } = options;

@@ -1,4 +1,4 @@
-import type { DesignTokens } from '../core/types.js';
+import type { DesignTokens, DtifFlattenedToken } from '../core/types.js';
 import {
   getFlattenedTokens,
   sortTokensByPath,
@@ -16,11 +16,12 @@ export interface JsOutputOptions {
 /**
  * Generate JavaScript constant declarations for the provided tokens.
  *
- * Each token becomes an exported constant. For non-default themes, the theme
- * name is appended to the constant identifier.
+ * Accepts DTIF token documents or pre-flattened DTIF token arrays. Each token
+ * becomes an exported constant. For non-default themes, the theme name is
+ * appended to the constant identifier.
  */
 export function generateJsConstants(
-  tokensByTheme: Record<string, DesignTokens>,
+  tokensByTheme: Record<string, DesignTokens | readonly DtifFlattenedToken[]>,
   options: JsOutputOptions = {},
 ): string {
   const { nameTransform } = options;

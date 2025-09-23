@@ -61,5 +61,5 @@ void test('fails on unresolved aliases', () => {
     { cwd: dir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /references unknown token/i);
+  assert.match(res.stderr, /Failed to parse DTIF document/i);
 });

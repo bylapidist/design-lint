@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
+import { pointerToLegacyPath } from '../core/dtif/legacy-adapter.js';
 import { guards } from '../utils/index.js';
 
 const {
@@ -17,16 +18,9 @@ export const deprecationRule: RuleModule = {
   create(context) {
     const deprecated = new Map<string, { reason?: string; suggest?: string }>();
     for (const { path, metadata } of context.getFlattenedTokens()) {
-      const dep = metadata.deprecated;
-      if (!dep) continue;
-      let reason: string | undefined;
-      let suggest: string | undefined;
-      if (typeof dep === 'string') {
-        reason = dep;
-        const m = /\{([^}]+)\}/.exec(dep);
-        if (m) suggest = m[1];
-      }
-      deprecated.set(path, { reason, suggest });
+      const info = parseDeprecatedMetadata(metadata.deprecated);
+      if (!info) continue;
+      deprecated.set(path, info);
     }
     if (deprecated.size === 0) {
       context.report({
@@ -82,3 +76,30 @@ export const deprecationRule: RuleModule = {
     };
   },
 };
+
+function parseDeprecatedMetadata(
+  value: boolean | string | undefined,
+): { reason?: string; suggest?: string } | undefined {
+  if (!value) return undefined;
+
+  if (value === true) {
+    return {};
+  }
+
+  if (typeof value === 'string') {
+    const suggestion = pointerToReplacementName(value);
+    if (suggestion) {
+      return { reason: `Use ${suggestion}`, suggest: suggestion };
+    }
+    return { reason: value };
+  }
+
+  return undefined;
+}
+
+function pointerToReplacementName(pointer: string): string | undefined {
+  if (!pointer) return undefined;
+  if (!pointer.startsWith('#')) return undefined;
+  const name = pointerToLegacyPath(pointer);
+  return name ?? undefined;
+}

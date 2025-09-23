@@ -1,5 +1,5 @@
 import type {
-  DesignTokens,
+  LegacyDesignTokens,
   Token,
   TokenGroup,
   FlattenedToken,
@@ -76,7 +76,7 @@ function validateMetadata(
 }
 
 export function buildParseTree(
-  tokens: DesignTokens,
+  tokens: LegacyDesignTokens,
   getLoc?: (path: string) => { line: number; column: number },
   onWarn?: (msg: string) => void,
 ): FlattenedToken[] {

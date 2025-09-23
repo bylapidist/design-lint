@@ -6,10 +6,30 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
+import { DtifTokenParseError } from '../../src/adapters/node/token-parser.js';
 import { loadConfig } from '../../src/config/loader.js';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { ConfigError } from '../../src/core/errors.js';
+
+const srgb = (
+  components: readonly [number, number, number],
+): Record<string, unknown> => ({
+  $type: 'color',
+  $value: {
+    colorSpace: 'srgb',
+    components: [...components],
+  },
+});
+
+const lengthPx = (value: number): Record<string, unknown> => ({
+  $type: 'dimension',
+  $value: {
+    dimensionType: 'length',
+    value,
+    unit: 'px',
+  },
+});
 
 void test('returns default config when none found', async () => {
   const tmp = makeTmpDir();
@@ -30,14 +50,22 @@ void test('finds config in parent directories', async () => {
   fs.writeFileSync(
     configPath,
     JSON.stringify({
-      tokens: { color: { $type: 'color', primary: { $value: '#000' } } },
+      tokens: {
+        $version: '1.0.0',
+        color: { primary: srgb([0, 0, 0]) },
+      },
     }),
   );
   const nested = path.join(tmp, 'a', 'b');
   fs.mkdirSync(nested, { recursive: true });
   const loaded = await loadConfig(nested);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
+  const tokens = loaded.tokens as {
+    color: {
+      primary: { $value: { components: number[]; colorSpace: string } };
+    };
+  };
+  assert.deepEqual(tokens.color.primary.$value.components, [0, 0, 0]);
+  assert.equal(tokens.color.primary.$value.colorSpace, 'srgb');
 });
 
 void test('throws on malformed JSON config', async () => {
@@ -91,9 +119,14 @@ void test('propagates token parsing errors', async () => {
   const configPath = path.join(tmp, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
-    JSON.stringify({ tokens: { color: { primary: { $type: 'color' } } } }),
+    JSON.stringify({
+      tokens: {
+        $version: '1.0.0',
+        color: { primary: { $type: 'color' } },
+      },
+    }),
   );
-  await assert.rejects(loadConfig(tmp), /missing \$value/i);
+  await assert.rejects(loadConfig(tmp), DtifTokenParseError);
 });
 
 void test('throws when specified config file is missing', async () => {
@@ -111,29 +144,19 @@ void test('validates additional token groups', async () => {
     configPath,
     JSON.stringify({
       tokens: {
-        borderRadius: {
-          $type: 'dimension',
-          sm: { $value: { value: 2, unit: 'px' } },
+        $version: '1.0.0',
+        spacing: {
+          sm: lengthPx(2),
+          lg: lengthPx(8),
         },
-        borderWidths: {
-          $type: 'dimension',
-          sm: { $value: { value: 1, unit: 'px' } },
+        radii: {
+          sm: lengthPx(4),
         },
-        shadows: {
-          $type: 'shadow',
-          sm: {
-            $value: {
-              color: '#000',
-              offsetX: { value: 0, unit: 'px' },
-              offsetY: { value: 1, unit: 'px' },
-              blur: { value: 2, unit: 'px' },
-              spread: { value: 0, unit: 'px' },
-            },
-          },
+        borders: {
+          thin: lengthPx(1),
         },
-        durations: {
-          $type: 'duration',
-          fast: { $value: { value: 200, unit: 'ms' } },
+        color: {
+          primary: srgb([0.25, 0.25, 0.25]),
         },
       },
     }),
@@ -141,15 +164,22 @@ void test('validates additional token groups', async () => {
   const loaded = await loadConfig(tmp);
   assert.ok(loaded.tokens);
   const tokens = loaded.tokens as {
-    borderRadius: { sm: { $value: { value: number } } };
-    borderWidths: { sm: { $value: { value: number } } };
-    shadows: { sm: { $value: { color: string } } };
-    durations: { fast: { $value: { unit: string } } };
+    spacing: {
+      sm: { $value: { value: number; unit: string } };
+      lg: { $value: { value: number } };
+    };
+    radii: { sm: { $value: { value: number; unit: string } } };
+    borders: { thin: { $value: { value: number; unit: string } } };
+    color: { primary: { $value: { components: number[] } } };
   };
-  assert.equal(tokens.borderRadius.sm.$value.value, 2);
-  assert.equal(tokens.borderWidths.sm.$value.value, 1);
-  assert.equal(tokens.shadows.sm.$value.color, '#000');
-  assert.equal(tokens.durations.fast.$value.unit, 'ms');
+  assert.equal(tokens.spacing.sm.$value.value, 2);
+  assert.equal(tokens.spacing.sm.$value.unit, 'px');
+  assert.equal(tokens.spacing.lg.$value.value, 8);
+  assert.equal(tokens.radii.sm.$value.value, 4);
+  assert.equal(tokens.radii.sm.$value.unit, 'px');
+  assert.equal(tokens.borders.thin.$value.value, 1);
+  assert.equal(tokens.borders.thin.$value.unit, 'px');
+  assert.deepEqual(tokens.color.primary.$value.components, [0.25, 0.25, 0.25]);
 });
 
 void test('throws on invalid rule setting', async () => {
@@ -175,11 +205,16 @@ void test('loads config from .js using defineConfig', async () => {
     .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
-    `const { defineConfig } = require('${rel}');\nmodule.exports = defineConfig({ tokens: { color: { $type: 'color', primary: { $value: '#000' } } } });`,
+    `const { defineConfig } = require('${rel}');\nmodule.exports = defineConfig({ tokens: { $version: '1.0.0', color: { primary: { $type: 'color', $value: { colorSpace: 'srgb', components: [0, 0, 0] } } } } });`,
   );
   const loaded = await loadConfig(tmp);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
+  const tokens = loaded.tokens as {
+    color: {
+      primary: { $value: { components: number[]; colorSpace: string } };
+    };
+  };
+  assert.deepEqual(tokens.color.primary.$value.components, [0, 0, 0]);
+  assert.equal(tokens.color.primary.$value.colorSpace, 'srgb');
 });
 
 void test('loads config from .ts with type annotations', async () => {
@@ -190,11 +225,16 @@ void test('loads config from .ts with type annotations', async () => {
     .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
-    `import { defineConfig } from '${rel}';\nconst colours: string[] = [];\nexport default defineConfig({ tokens: { color: { $type: 'color', primary: { $value: '#000' } } } });`,
+    `import { defineConfig } from '${rel}';\nconst colours: string[] = [];\nexport default defineConfig({ tokens: { $version: '1.0.0', color: { primary: { $type: 'color', $value: { colorSpace: 'srgb', components: [0, 0, 0] } } } } });`,
   );
   const loaded = await loadConfig(tmp);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
+  const tokens = loaded.tokens as {
+    color: {
+      primary: { $value: { components: number[]; colorSpace: string } };
+    };
+  };
+  assert.deepEqual(tokens.color.primary.$value.components, [0, 0, 0]);
+  assert.equal(tokens.color.primary.$value.colorSpace, 'srgb');
 });
 
 void test('loads .ts config with commonjs module output', async () => {
@@ -209,11 +249,16 @@ void test('loads .ts config with commonjs module output', async () => {
     .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
-    `import { defineConfig } from '${rel}';\nexport default defineConfig({ tokens: { color: { $type: 'color', primary: { $value: '#000' } } } });`,
+    `import { defineConfig } from '${rel}';\nexport default defineConfig({ tokens: { $version: '1.0.0', color: { primary: { $type: 'color', $value: { colorSpace: 'srgb', components: [0, 0, 0] } } } } });`,
   );
   const loaded = await loadConfig(tmp);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
+  const tokens = loaded.tokens as {
+    color: {
+      primary: { $value: { components: number[]; colorSpace: string } };
+    };
+  };
+  assert.deepEqual(tokens.color.primary.$value.components, [0, 0, 0]);
+  assert.equal(tokens.color.primary.$value.colorSpace, 'srgb');
 });
 
 void test('loads config when package.json type module', async () => {
@@ -225,11 +270,16 @@ void test('loads config when package.json type module', async () => {
   const configPath = path.join(tmp, 'designlint.config.js');
   fs.writeFileSync(
     configPath,
-    "export default { tokens: { color: { $type: 'color', primary: { $value: '#000' } } } };",
+    "export default { tokens: { $version: '1.0.0', color: { primary: { $type: 'color', $value: { colorSpace: 'srgb', components: [0, 0, 0] } } } } };",
   );
   const loaded = await loadConfig(tmp);
-  const tokens = loaded.tokens as { color: { primary: { $value: string } } };
-  assert.equal(tokens.color.primary.$value, '#000');
+  const tokens = loaded.tokens as {
+    color: {
+      primary: { $value: { components: number[]; colorSpace: string } };
+    };
+  };
+  assert.deepEqual(tokens.color.primary.$value.components, [0, 0, 0]);
+  assert.equal(tokens.color.primary.$value.colorSpace, 'srgb');
 });
 
 void test("rule configured as 'off' is ignored", async () => {
@@ -238,7 +288,10 @@ void test("rule configured as 'off' is ignored", async () => {
   fs.writeFileSync(
     configPath,
     JSON.stringify({
-      tokens: { color: { $type: 'color', primary: { $value: '#000' } } },
+      tokens: {
+        $version: '1.0.0',
+        color: { primary: srgb([0, 0, 0]) },
+      },
       rules: { 'design-token/colors': 'off' },
     }),
   );
@@ -275,17 +328,18 @@ void test('loads config with multi-theme tokens', async () => {
     configPath,
     JSON.stringify({
       tokens: {
-        light: { color: { $type: 'color', primary: { $value: '#fff' } } },
-        dark: { color: { $type: 'color', primary: { $value: '#000' } } },
+        light: { $version: '1.0.0', color: { primary: srgb([1, 1, 1]) } },
+        dark: { $version: '1.0.0', color: { primary: srgb([0, 0, 0]) } },
       },
     }),
   );
   const loaded = await loadConfig(tmp);
   const tokens = loaded.tokens as {
-    light: { color: { primary: { $value: string } } };
-    dark: { color: { primary: { $value: string } } };
+    light: { color: { primary: { $value: { components: number[] } } } };
+    dark: { color: { primary: { $value: { components: number[] } } } };
   };
-  assert.equal(tokens.light.color.primary.$value, '#fff');
+  assert.deepEqual(tokens.light.color.primary.$value.components, [1, 1, 1]);
+  assert.deepEqual(tokens.dark.color.primary.$value.components, [0, 0, 0]);
 });
 
 void test('loads config with spec token tree', async () => {
@@ -294,15 +348,16 @@ void test('loads config with spec token tree', async () => {
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({
       tokens: {
-        color: { brand: { primary: { $type: 'color', $value: '#000' } } },
+        $version: '1.0.0',
+        color: { brand: { primary: srgb([0, 0, 0]) } },
       },
     }),
   );
   const loaded = await loadConfig(tmp);
   const tokens = loaded.tokens as {
-    color: { brand: { primary: { $value: string } } };
+    color: { brand: { primary: { $value: { components: number[] } } } };
   };
-  assert.equal(tokens.color.brand.primary.$value, '#000');
+  assert.deepEqual(tokens.color.brand.primary.$value.components, [0, 0, 0]);
 });
 
 void test('loads tokens from theme file paths', async () => {
@@ -314,15 +369,16 @@ void test('loads tokens from theme file paths', async () => {
   fs.writeFileSync(
     path.join(tmp, 'light.tokens.json'),
     JSON.stringify({
-      color: { brand: { primary: { $type: 'color', $value: '#000' } } },
+      $version: '1.0.0',
+      color: { brand: { primary: srgb([0, 0, 0]) } },
     }),
   );
   const loaded = await loadConfig(tmp);
   const tokens = loaded.tokens as Record<string, unknown>;
   const light = tokens.light as {
-    color: { brand: { primary: { $value: string } } };
+    color: { brand: { primary: { $value: { components: number[] } } } };
   };
-  assert.equal(light.color.brand.primary.$value, '#000');
+  assert.deepEqual(light.color.brand.primary.$value.components, [0, 0, 0]);
 });
 
 void test('loads tokens from YAML theme file paths', async () => {
@@ -333,14 +389,14 @@ void test('loads tokens from YAML theme file paths', async () => {
   );
   fs.writeFileSync(
     path.join(tmp, 'light.tokens.yaml'),
-    "color:\n  $type: color\n  brand:\n    primary:\n      $type: color\n      $value: '#000'\n",
+    "$version: '1.0.0'\ncolor:\n  brand:\n    primary:\n      $type: color\n      $value:\n        colorSpace: srgb\n        components:\n          - 0\n          - 0\n          - 0\n",
   );
   const loaded = await loadConfig(tmp);
   const tokens = loaded.tokens as Record<string, unknown>;
   const light = tokens.light as {
-    color: { brand: { primary: { $value: string } } };
+    color: { brand: { primary: { $value: { components: number[] } } } };
   };
-  assert.equal(light.color.brand.primary.$value, '#000');
+  assert.deepEqual(light.color.brand.primary.$value.components, [0, 0, 0]);
 });
 
 void test('resolves token file paths relative to config', async () => {
@@ -354,7 +410,10 @@ void test('resolves token file paths relative to config', async () => {
   fs.writeFileSync(
     path.join(cfgDir, 'tokens.tokens.json'),
     JSON.stringify({
-      color: { brand: { primary: { $type: 'color', $value: '#111' } } },
+      $version: '1.0.0',
+      color: {
+        brand: { primary: srgb([0.0666666667, 0.0666666667, 0.0666666667]) },
+      },
     }),
   );
   const loaded = await loadConfig(
@@ -363,9 +422,12 @@ void test('resolves token file paths relative to config', async () => {
   );
   const tokens = loaded.tokens as Record<string, unknown>;
   const light = tokens.light as {
-    color: { brand: { primary: { $value: string } } };
+    color: { brand: { primary: { $value: { components: number[] } } } };
   };
-  assert.equal(light.color.brand.primary.$value, '#111');
+  assert.deepEqual(
+    light.color.brand.primary.$value.components,
+    [0.0666666667, 0.0666666667, 0.0666666667],
+  );
 });
 
 void test('surfaces errors thrown by ts config', async () => {
@@ -383,9 +445,16 @@ void test('rejects invalid token file content', async () => {
   );
   fs.writeFileSync(
     path.join(tmp, 'light.tokens.json'),
-    JSON.stringify({ color: { brand: { primary: { $value: '#000' } } } }),
+    JSON.stringify({
+      $version: '1.0.0',
+      color: {
+        brand: {
+          primary: { $type: 'color' },
+        },
+      },
+    }),
   );
-  await assert.rejects(loadConfig(tmp), /missing \$type/);
+  await assert.rejects(loadConfig(tmp), DtifTokenParseError);
 });
 
 void test('rejects unresolved token aliases', async () => {
@@ -404,7 +473,7 @@ void test('rejects unresolved token aliases', async () => {
       },
     }),
   );
-  await assert.rejects(loadConfig(tmp), /references unknown token/i);
+  await assert.rejects(loadConfig(tmp), DtifTokenParseError);
 });
 
 void test('rejects inline tokens using legacy shorthand', async () => {
@@ -413,7 +482,10 @@ void test('rejects inline tokens using legacy shorthand', async () => {
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({ tokens: { color: { $type: 'color', blue: '#00f' } } }),
   );
-  await assert.rejects(loadConfig(tmp));
+  await assert.rejects(loadConfig(tmp), (err) => {
+    assert.ok(err instanceof ConfigError);
+    return err.message.includes('Tokens must be DTIF token documents');
+  });
 });
 
 void test('rejects non-token file paths in config', async () => {
@@ -431,10 +503,10 @@ void test('allows token names differing only by case', async () => {
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({
       tokens: {
+        $version: '1.0.0',
         color: {
-          $type: 'color',
-          Blue: { $value: '#00f' },
-          blue: { $value: '#00f' },
+          Blue: srgb([0, 0, 1]),
+          blue: srgb([0, 0, 0.8]),
         },
       },
     }),
@@ -442,17 +514,18 @@ void test('allows token names differing only by case', async () => {
   await assert.doesNotReject(loadConfig(tmp));
 });
 
-void test('rejects token names with invalid characters', async () => {
+void test('allows token names with punctuation', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({
       tokens: {
-        'bad.name': { $type: 'color', $value: '#000' },
+        $version: '1.0.0',
+        'bad.name': srgb([0, 0, 0]),
       },
     }),
   );
-  await assert.rejects(loadConfig(tmp), /invalid token or group name/i);
+  await assert.doesNotReject(loadConfig(tmp));
 });
 
 void test('rejects circular token aliases', async () => {
@@ -461,14 +534,15 @@ void test('rejects circular token aliases', async () => {
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({
       tokens: {
+        $version: '1.0.0',
         color: {
-          a: { $type: 'color', $value: '{color.b}' },
-          b: { $type: 'color', $value: '{color.a}' },
+          a: { $type: 'color', $ref: '#/color/b' },
+          b: { $type: 'color', $ref: '#/color/a' },
         },
       },
     }),
   );
-  await assert.rejects(loadConfig(tmp), /circular alias reference/i);
+  await assert.rejects(loadConfig(tmp), DtifTokenParseError);
 });
 
 void test('rejects invalid typography tokens', async () => {
@@ -477,12 +551,12 @@ void test('rejects invalid typography tokens', async () => {
     path.join(tmp, 'designlint.config.json'),
     JSON.stringify({
       tokens: {
+        $version: '1.0.0',
         typography: {
-          $type: 'typography',
-          bad: { $value: { fontFamily: 'Arial' } },
+          bad: { $type: 'typography', $value: { fontFamily: 'Arial' } },
         },
       },
     }),
   );
-  await assert.rejects(loadConfig(tmp), /invalid typography value/i);
+  await assert.rejects(loadConfig(tmp), DtifTokenParseError);
 });

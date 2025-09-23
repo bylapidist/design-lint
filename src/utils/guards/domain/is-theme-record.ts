@@ -1,5 +1,6 @@
 import type { DesignTokens } from '../../../core/types.js';
 import { isRecord } from '../data/index.js';
+import { getDtifFlattenedTokens } from '../../tokens/dtif-cache.js';
 
 /**
  * Determines whether a value is a record of theme names mapping to design tokens.
@@ -21,6 +22,16 @@ export const isThemeRecord = (
 ): val is Record<string, DesignTokens> => {
   // Input must be a plain object mapping theme names to token sets.
   if (!isRecord(val)) return false;
+
+  // DTIF token documents expose metadata like $version, which distinguishes
+  // them from theme records that group multiple documents.
+  if (Object.prototype.hasOwnProperty.call(val, '$version')) {
+    return false;
+  }
+
+  // DTIF token documents receive cached flattened tokens. Those objects are
+  // single-theme documents and should not be mistaken for theme records.
+  if (getDtifFlattenedTokens(val)) return false;
 
   // Ignore metadata keys (those starting with `$`).
   const entries = Object.entries(val).filter(([k]) => !k.startsWith('$'));

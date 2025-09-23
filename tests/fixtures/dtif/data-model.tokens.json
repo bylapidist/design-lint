@@ -1,0 +1,66 @@
+{
+  "$version": "1.0.0",
+  "$description": "Primary marketing tokens expressed in DTIF",
+  "color": {
+    "button": {
+      "$description": "Primary button colors",
+      "background": {
+        "$type": "color",
+        "$description": "Solid brand fill",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0, 0.435, 1]
+        },
+        "$extensions": {
+          "org.example.export": {
+            "legacyHex": "#006FFF"
+          }
+        },
+        "$lastModified": "2024-01-01T12:00:00Z",
+        "$author": "Design Systems Team",
+        "$tags": ["marketing", "button"]
+      },
+      "text": {
+        "$type": "color",
+        "$description": "Alias to the background color",
+        "$ref": "#/color/button/background",
+        "$deprecated": {
+          "$replacement": "#/typography/button/text"
+        }
+      }
+    }
+  },
+  "typography": {
+    "button": {
+      "font-size": {
+        "$type": "dimension",
+        "$value": {
+          "dimensionType": "length",
+          "value": 16,
+          "unit": "px",
+          "fontScale": true
+        }
+      },
+      "line-height": {
+        "$type": "line-height",
+        "$value": 1.4
+      },
+      "text": {
+        "$type": "typography",
+        "$value": {
+          "fontFamily": "Inter",
+          "fontSize": {
+            "$ref": "#/typography/button/font-size"
+          },
+          "lineHeight": {
+            "$ref": "#/typography/button/line-height"
+          },
+          "fontWeight": 600,
+          "color": {
+            "$ref": "#/color/button/text"
+          }
+        }
+      }
+    }
+  }
+}

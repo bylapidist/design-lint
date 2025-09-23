@@ -1,4 +1,4 @@
-import type { DesignTokens } from '../core/types.js';
+import type { DesignTokens, DtifFlattenedToken } from '../core/types.js';
 import {
   getFlattenedTokens,
   sortTokensByPath,
@@ -17,11 +17,12 @@ export interface CssOutputOptions {
 /**
  * Generate CSS custom property declarations for the provided tokens.
  *
- * Each theme becomes a selector block. The default theme uses `:root` and
- * variants default to `[data-theme='name']` unless overridden via `selectors`.
+ * Accepts either DTIF token documents or pre-flattened DTIF token arrays for
+ * each theme. The default theme uses `:root` and variants default to
+ * `[data-theme='name']` unless overridden via `selectors`.
  */
 export function generateCssVariables(
-  tokensByTheme: Record<string, DesignTokens>,
+  tokensByTheme: Record<string, DesignTokens | readonly DtifFlattenedToken[]>,
   options: CssOutputOptions = {},
 ): string {
   const { nameTransform, selectors } = options;

@@ -7,27 +7,49 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
 import { loadTokens } from '../../src/config/token-loader.js';
+import { DtifTokenParseError } from '../../src/adapters/node/token-parser.js';
+
+const srgb = (
+  components: readonly [number, number, number],
+): Record<string, unknown> => ({
+  $type: 'color',
+  $value: {
+    colorSpace: 'srgb',
+    components: [...components],
+  },
+});
 
 void test('reads token files', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'light.tokens.json'),
-    JSON.stringify({ color: { primary: { $type: 'color', $value: '#000' } } }),
+    JSON.stringify({
+      $version: '1.0.0',
+      color: { primary: srgb([0, 0, 0]) },
+    }),
   );
   const tokens = await loadTokens({ light: './light.tokens.json' }, tmp);
-  const light = tokens.light as { color: { primary: { $value: string } } };
-  assert.equal(light.color.primary.$value, '#000');
+  const light = tokens.light as {
+    color: {
+      primary: { $value: { components: number[]; colorSpace: string } };
+    };
+  };
+  assert.deepEqual(light.color.primary.$value.components, [0, 0, 0]);
+  assert.equal(light.color.primary.$value.colorSpace, 'srgb');
 });
 
 void test('propagates parsing errors', async () => {
   const tmp = makeTmpDir();
   fs.writeFileSync(
     path.join(tmp, 'bad.tokens.json'),
-    JSON.stringify({ color: { primary: { $type: 'color' } } }),
+    JSON.stringify({
+      $version: '1.0.0',
+      color: { primary: { $type: 'color' } },
+    }),
   );
   await assert.rejects(
     loadTokens({ light: './bad.tokens.json' }, tmp),
-    /missing \$value/i,
+    DtifTokenParseError,
   );
 });
 
@@ -35,43 +57,61 @@ void test('includes theme when token file missing', async () => {
   const tmp = makeTmpDir();
   await assert.rejects(
     loadTokens({ light: './missing.tokens.json' }, tmp),
-    /Failed to read tokens for theme "light"/,
+    DtifTokenParseError,
   );
 });
 
 void test('parses inline design tokens object', async () => {
   const tokens = await loadTokens(
-    { color: { primary: { $type: 'color', $value: '#000' } } },
+    { $version: '1.0.0', color: { primary: srgb([0, 0, 0]) } },
     process.cwd(),
   );
-  const color = tokens.color as { primary: { $value: string } };
-  assert.equal(color.primary.$value, '#000');
+  const color = tokens.color as {
+    primary: { $value: { components: number[]; colorSpace: string } };
+  };
+  assert.deepEqual(color.primary.$value.components, [0, 0, 0]);
+  assert.equal(color.primary.$value.colorSpace, 'srgb');
 });
 
 void test('retains metadata on inline tokens', async () => {
   const tokens = await loadTokens(
     {
-      $schema: 'https://design-tokens.org',
-      color: { primary: { $type: 'color', $value: '#000' } },
+      $version: '1.0.0',
+      $description: 'inline metadata',
+      color: { primary: srgb([0, 0, 0]) },
     },
     process.cwd(),
   );
-  const color = tokens.color as { primary: { $value: string } };
-  assert.equal(color.primary.$value, '#000');
-  const meta = tokens as { $schema: string };
-  assert.equal(meta.$schema, 'https://design-tokens.org');
+  const color = tokens.color as {
+    primary: { $value: { components: number[] } };
+  };
+  assert.deepEqual(color.primary.$value.components, [0, 0, 0]);
+  const meta = tokens as { $description: string };
+  assert.equal(meta.$description, 'inline metadata');
 });
 
 void test('parses inline theme record', async () => {
   const tokens = await loadTokens(
     {
-      light: { color: { primary: { $type: 'color', $value: '#000' } } },
-      dark: { color: { primary: { $type: 'color', $value: '#111' } } },
+      light: { $version: '1.0.0', color: { primary: srgb([0, 0, 0]) } },
+      dark: {
+        $version: '1.0.0',
+        color: { primary: srgb([0.0666666667, 0.0666666667, 0.0666666667]) },
+      },
     },
     process.cwd(),
   );
-  const light = tokens.light as { color: { primary: { $value: string } } };
-  assert.equal(light.color.primary.$value, '#000');
+  const light = tokens.light as {
+    color: { primary: { $value: { components: number[] } } };
+  };
+  assert.deepEqual(light.color.primary.$value.components, [0, 0, 0]);
+  const dark = tokens.dark as {
+    color: { primary: { $value: { components: number[] } } };
+  };
+  assert.deepEqual(
+    dark.color.primary.$value.components,
+    [0.0666666667, 0.0666666667, 0.0666666667],
+  );
 });
 
 void test('merges variant tokens over default', async () => {
@@ -79,18 +119,20 @@ void test('merges variant tokens over default', async () => {
   fs.writeFileSync(
     path.join(tmp, 'base.tokens.json'),
     JSON.stringify({
+      $version: '1.0.0',
       $description: 'base',
       color: {
-        primary: { $type: 'color', $value: '#000' },
-        secondary: { $type: 'color', $value: '#222' },
+        primary: srgb([0, 0, 0]),
+        secondary: srgb([0.1333333333, 0.1333333333, 0.1333333333]),
       },
     }),
   );
   fs.writeFileSync(
     path.join(tmp, 'dark.tokens.json'),
     JSON.stringify({
+      $version: '1.0.0',
       $description: 'dark',
-      color: { primary: { $type: 'color', $value: '#111' } },
+      color: { primary: srgb([0.0666666667, 0.0666666667, 0.0666666667]) },
     }),
   );
   const tokens = await loadTokens(
@@ -100,18 +142,24 @@ void test('merges variant tokens over default', async () => {
   const dark = tokens.dark as {
     $description: string;
     color: {
-      primary: { $value: string };
-      secondary: { $value: string };
+      primary: { $value: { components: number[] } };
+      secondary: { $value: { components: number[] } };
     };
   };
-  assert.equal(dark.color.primary.$value, '#111');
-  assert.equal(dark.color.secondary.$value, '#222');
+  assert.deepEqual(
+    dark.color.primary.$value.components,
+    [0.0666666667, 0.0666666667, 0.0666666667],
+  );
+  assert.deepEqual(
+    dark.color.secondary.$value.components,
+    [0.1333333333, 0.1333333333, 0.1333333333],
+  );
   assert.equal(dark.$description, 'dark');
   const base = tokens.default as {
     $description: string;
-    color: { primary: { $value: string } };
+    color: { primary: { $value: { components: number[] } } };
   };
-  assert.equal(base.color.primary.$value, '#000');
+  assert.deepEqual(base.color.primary.$value.components, [0, 0, 0]);
   assert.equal(base.$description, 'base');
 });
 

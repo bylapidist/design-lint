@@ -21,6 +21,7 @@ import type { CacheProvider } from './cache-provider.js';
 import { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
 import { FILE_TYPE_MAP } from './file-types.js';
+import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
 
 export interface OutputTarget {
   format: 'css' | 'js' | 'ts';
@@ -91,12 +92,13 @@ export class Linter {
       env = depsOrEnv;
       const inlineTokens = config.tokens;
       const provider: TokenProvider = env.tokenProvider ?? {
-        load: () => {
+        async load() {
           if (inlineTokens && isDesignTokens(inlineTokens)) {
-            new TokenRegistry({ default: inlineTokens });
-            return Promise.resolve({ default: inlineTokens });
+            await ensureDtifFlattenedTokens(inlineTokens);
+            return { default: inlineTokens };
           }
-          return Promise.resolve({});
+          const empty: Record<string, DesignTokens> = {};
+          return empty;
         },
       };
       resolvedConfig = {

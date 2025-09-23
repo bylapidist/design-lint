@@ -6,6 +6,16 @@ import assert from 'node:assert/strict';
 import { configSchema } from '../../src/config/schema.js';
 import type { Config } from '../../src/core/linter.js';
 
+const srgb = (
+  components: readonly [number, number, number],
+): Record<string, unknown> => ({
+  $type: 'color',
+  $value: {
+    colorSpace: 'srgb',
+    components: [...components],
+  },
+});
+
 void test('accepts valid configuration', () => {
   const parsed = configSchema.parse({ tokens: {}, rules: {} });
   assert.deepEqual(parsed, { tokens: {}, rules: {} });
@@ -39,21 +49,25 @@ void test('accepts theme record with relative token file', () => {
 void test('rejects non-design token objects', () => {
   assert.throws(
     () => configSchema.parse({ tokens: { light: { color: '#fff' } } }),
-    /Tokens must be W3C Design Tokens objects/,
+    /Tokens must be DTIF token documents/,
   );
 });
 
 void test('accepts design token object with metadata', () => {
   const parsed = configSchema.parse({
     tokens: {
-      $schema: 'https://design-tokens.org',
-      color: { primary: { $type: 'color', $value: '#000' } },
+      $version: '1.0.0',
+      $description: 'metadata example',
+      color: { primary: srgb([0, 0, 0]) },
     },
   });
   const tokens = parsed.tokens as {
-    $schema: string;
-    color: { primary: { $value: string } };
+    $description: string;
+    color: {
+      primary: { $value: { components: number[]; colorSpace: string } };
+    };
   };
-  assert.equal(tokens.$schema, 'https://design-tokens.org');
-  assert.equal(tokens.color.primary.$value, '#000');
+  assert.equal(tokens.$description, 'metadata example');
+  assert.deepEqual(tokens.color.primary.$value.components, [0, 0, 0]);
+  assert.equal(tokens.color.primary.$value.colorSpace, 'srgb');
 });

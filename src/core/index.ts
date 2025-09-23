@@ -27,6 +27,11 @@ export type {
   CSSDeclaration,
   Fix,
   FlattenedToken,
+  DtifFlattenedToken,
+  TokenDiagnostic,
+  TokenResolution,
+  TokenMetadata,
+  TokenLocation,
   ColorFormat,
 } from './types.js';
 export {
@@ -40,10 +45,29 @@ export {
   type NameTransform,
   type FlattenOptions,
 } from '../utils/tokens/index.js';
+export { parseDesignTokens, getTokenLocation } from './parser/index.js';
 export {
-  parseDesignTokens,
-  getTokenLocation,
-  registerTokenTransform,
-  type TokenTransform,
-} from './parser/index.js';
+  parseDtifTokens,
+  parseDtifTokensFromFile,
+  parseInlineDtifTokens,
+  parseDtifTokenObject,
+} from './dtif/parse.js';
+export type {
+  ParseDtifTokensOptions,
+  ParseInlineDtifTokensOptions,
+  DtifParseResult,
+} from './dtif/parse.js';
+export {
+  toLegacyFlattenedTokens,
+  toLegacyFlattenedToken,
+} from './dtif/legacy-adapter.js';
+export {
+  indexDtifTokens,
+  createDtifNameIndex,
+  pointerSegmentsToName,
+} from './dtif/token-index.js';
+export {
+  DtifTokenRegistry,
+  type DtifTokenRegistryOptions,
+} from './dtif/token-registry.js';
 export { TokenRegistry, type TokenRegistryOptions } from './token-registry.js';

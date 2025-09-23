@@ -2,7 +2,7 @@ import type { Token } from '../../../core/types.js';
 import { isRecord } from '../data/index.js';
 
 /**
- * Determines whether a value represents a single design token.
+ * Determines whether a value represents a single DTIF design token.
  *
  * A token is any object that exposes a `$value` property.
  *
@@ -10,7 +10,9 @@ import { isRecord } from '../data/index.js';
  * @returns `true` if the value is a token object.
  *
  * @example
- * isToken({ $value: '#f00' }); // => true
+ * isToken({
+ *   $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+ * }); // => true
  */
 export const isToken = (value: unknown): value is Token =>
   isRecord(value) && '$value' in value;

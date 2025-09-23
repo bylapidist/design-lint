@@ -1,3 +1,17 @@
+import type {
+  Diagnostic,
+  DiagnosticCode,
+  JsonPointer as DtifJsonPointer,
+  ResolvedToken,
+  SourceSpan,
+} from '@lapidist/dtif-parser';
+import type {
+  DeprecationMetadata,
+  DesignToken as DtifToken,
+  DesignTokenInterchangeFormat,
+  ExtensionsMap,
+  TokenCollection as DtifCollection,
+} from '@lapidist/dtif-schema';
 import type ts from 'typescript';
 import type { z } from 'zod';
 import type { Environment } from './environment.js';
@@ -7,8 +21,72 @@ export interface VariableDefinition {
   modes?: Record<string, string | number>;
 }
 
+export type JsonPointer = DtifJsonPointer;
+
+export type TokenDocument = DesignTokenInterchangeFormat;
+export type TokenNode = DtifToken;
+export type TokenCollectionNode = DtifCollection;
+export type TokenExtensions = ExtensionsMap;
+export type TokenDeprecation = DeprecationMetadata;
+
+export interface TokenLocation {
+  uri?: URL;
+  pointer?: JsonPointer;
+  span?: SourceSpan;
+}
+
+export interface TokenMetadata {
+  description?: string;
+  extensions?: TokenExtensions;
+  deprecated?: TokenDeprecation;
+  lastModified?: string;
+  lastUsed?: string;
+  usageCount?: number;
+  author?: string;
+  tags?: string[];
+  hash?: string;
+}
+
+export type TokenResolution = Pick<
+  ResolvedToken,
+  | 'pointer'
+  | 'uri'
+  | 'type'
+  | 'value'
+  | 'source'
+  | 'overridesApplied'
+  | 'warnings'
+  | 'trace'
+>;
+
+export interface DtifFlattenedToken {
+  pointer: JsonPointer;
+  segments: readonly string[];
+  name: string;
+  type?: string;
+  value?: unknown;
+  metadata: TokenMetadata;
+  resolution?: TokenResolution;
+  location?: TokenLocation;
+}
+
+export interface TokenDiagnosticRelated {
+  message: string;
+  pointer?: JsonPointer;
+  location?: TokenLocation;
+}
+
+export interface TokenDiagnostic {
+  code: DiagnosticCode;
+  message: string;
+  severity: Diagnostic['severity'];
+  pointer?: JsonPointer;
+  location?: TokenLocation;
+  related?: readonly TokenDiagnosticRelated[];
+}
+
 /**
- * W3C Design Tokens Format token node.
+ * Legacy token node produced by the pre-DTIF parser.
  */
 export interface Token {
   $value: unknown;
@@ -19,7 +97,7 @@ export interface Token {
 }
 
 /**
- * W3C Design Tokens Format group node.
+ * Legacy token group produced by the pre-DTIF parser.
  */
 export type TokenGroup = {
   $type?: string;
@@ -31,14 +109,23 @@ export type TokenGroup = {
 };
 
 /**
- * Root token group with optional $schema.
+ * Legacy token root with optional schema reference.
  */
 export type RootTokenGroup = TokenGroup & { $schema?: string };
 
 /**
- * W3C Design Tokens tree.
+ * Canonical DTIF token document.
  */
-export type DesignTokens = RootTokenGroup;
+export type DesignTokens = TokenDocument;
+
+/**
+ * Legacy design tokens tree maintained until the DTIF migration completes.
+ *
+ * The type remains available for internal compatibility during the DTIF
+ * migration but will be removed alongside the legacy parser in a future major
+ * release.
+ */
+export type LegacyDesignTokens = RootTokenGroup;
 
 export interface FlattenedToken {
   path: string;

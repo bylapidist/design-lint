@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { NodeTokenProvider } from '../src/adapters/node/token-provider.js';
+import { getDtifFlattenedTokens } from '../src/utils/tokens/dtif-cache.js';
+import type { DesignTokens } from '../src/core/types.js';
 
 const tokens = {
   color: {
@@ -15,6 +17,34 @@ const primitiveTokens = {
     small: '4px',
   },
 };
+
+void test('attaches flattened DTIF tokens when loading inline documents', async () => {
+  const dtifTokens: DesignTokens = {
+    $version: '1.0.0',
+    color: {
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+      },
+    },
+  };
+
+  const provider = new NodeTokenProvider(dtifTokens);
+  const result = await provider.load();
+  const cached = getDtifFlattenedTokens(result.default);
+  assert(cached);
+  assert(cached.length > 0);
+  assert.equal(cached[0]?.pointer, '#/color/base');
+});
+
+void test('stores empty DTIF caches for documents without tokens', async () => {
+  const emptyDocument: DesignTokens = { $version: '1.0.0' };
+  const provider = new NodeTokenProvider(emptyDocument);
+  const result = await provider.load();
+  const cached = getDtifFlattenedTokens(result.default);
+  assert(cached);
+  assert.equal(cached.length, 0);
+});
 
 void test('wraps tokens in default theme when no theme map is provided', async () => {
   const provider = new NodeTokenProvider(tokens);

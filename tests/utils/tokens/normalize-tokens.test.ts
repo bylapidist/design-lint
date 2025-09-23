@@ -3,41 +3,89 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { DtifTokenParseError } from '../../../src/adapters/node/token-parser.js';
 import { normalizeTokens } from '../../../src/utils/tokens/normalize-tokens.js';
+import { getDtifFlattenedTokens } from '../../../src/utils/tokens/dtif-cache.js';
 
-void test('normalizes design tokens to default theme', () => {
-  const tokens = { color: { primary: { $type: 'color', $value: '#000' } } };
-  const result = normalizeTokens(tokens);
-  const color = result.default as { color: { primary: { $value: string } } };
-  assert.equal(color.color.primary.$value, '#000');
+const srgb = (
+  components: readonly [number, number, number],
+): Record<string, unknown> => ({
+  $type: 'color',
+  $value: {
+    colorSpace: 'srgb',
+    components: [...components],
+  },
 });
 
-void test('validates theme records', () => {
-  const tokens = normalizeTokens({
-    light: { color: { primary: { $type: 'color', $value: '#000' } } },
+void test('normalizes DTIF tokens to default theme', async () => {
+  const tokens = {
+    $version: '1.0.0',
+    color: { primary: srgb([0, 0, 0]) },
+  };
+  const result = await normalizeTokens(tokens);
+  const color = result.default as {
+    $version: string;
+    color: { primary: { $value: { components: number[] } } };
+  };
+  assert.equal(color.$version, '1.0.0');
+  assert.deepEqual(color.color.primary.$value.components, [0, 0, 0]);
+  const flattened = getDtifFlattenedTokens(result.default);
+  assert(flattened);
+  const [token] = flattened;
+  assert(token);
+  assert.equal(token.pointer, '#/color/primary');
+});
+
+void test('validates DTIF theme records', async () => {
+  const tokens = await normalizeTokens({
+    light: {
+      $version: '1.0.0',
+      color: { primary: srgb([0, 0, 0]) },
+    },
   });
-  const light = tokens.light as { color: { primary: { $value: string } } };
-  assert.equal(light.color.primary.$value, '#000');
+  const light = tokens.light as {
+    $version: string;
+    color: { primary: { $value: { components: number[] } } };
+  };
+  assert.equal(light.$version, '1.0.0');
+  assert.deepEqual(light.color.primary.$value.components, [0, 0, 0]);
+  const flattened = getDtifFlattenedTokens(tokens.light);
+  assert(flattened);
+  const [token] = flattened;
+  assert(token);
+  assert.equal(token.pointer, '#/color/primary');
 });
 
-void test('throws on invalid tokens', () => {
-  assert.throws(
-    () =>
-      normalizeTokens({
-        light: { color: { primary: { $type: 'color' } } },
-      }),
-    /Failed to parse tokens for theme "light"/i,
+void test('throws on invalid tokens', async () => {
+  await assert.rejects(
+    normalizeTokens({
+      light: {
+        $version: '1.0.0',
+        color: { primary: { $type: 'color' } },
+      },
+    }),
+    DtifTokenParseError,
   );
 });
 
-void test('throws on invalid design token object', () => {
-  assert.throws(
-    () => normalizeTokens({ color: { primary: { $type: 'color' } } }),
-    /missing \$value/i,
+void test('throws on invalid design token object', async () => {
+  await assert.rejects(
+    normalizeTokens({
+      $version: '1.0.0',
+      color: { primary: { $type: 'color' } },
+    }),
+    DtifTokenParseError,
   );
 });
 
-void test('returns empty object for non-object input', () => {
-  const tokens = normalizeTokens(null);
+void test('returns empty object for non-object input', async () => {
+  const tokens = await normalizeTokens(null);
   assert.deepEqual(tokens, {});
+});
+
+void test('caches empty flattened tokens for metadata-only documents', async () => {
+  const tokens = await normalizeTokens({ $version: '1.0.0' });
+  const flattened = getDtifFlattenedTokens(tokens.default);
+  assert(flattened);
+  assert.equal(flattened.length, 0);
 });

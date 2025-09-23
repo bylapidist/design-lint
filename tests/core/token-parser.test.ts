@@ -3,17 +3,16 @@ import assert from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import {
-  parseDesignTokens,
-  registerTokenTransform,
-  type TokenTransform,
-} from '../../src/core/parser/index.js';
+import { fileURLToPath } from 'node:url';
+import { parseDesignTokens } from '../../src/core/parser/index.js';
 import { normalizeTokens } from '../../src/core/parser/normalize.js';
 import {
+  DtifTokenParseError,
   parseDesignTokensFile,
-  TokenParseError,
+  readDesignTokensFile,
 } from '../../src/adapters/node/token-parser.js';
 import type { DesignTokens, FlattenedToken } from '../../src/core/types.js';
+import { getDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js';
 
 void test('parseDesignTokens flattens tokens with paths in declaration order', () => {
   const tokens: DesignTokens = {
@@ -152,14 +151,23 @@ void test('parseDesignTokens rejects names starting with $', () => {
 void test('parseDesignTokensFile reads a .tokens.json file', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
   const file = path.join(dir, 'theme.tokens.json');
-  const tokens: DesignTokens = {
-    color: { $type: 'color', blue: { $value: '#00f' } },
+  const document = {
+    $version: '1.0.0',
+    color: {
+      blue: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 1] },
+      },
+    },
   };
-  await writeFile(file, JSON.stringify(tokens), 'utf8');
+  await writeFile(file, JSON.stringify(document), 'utf8');
 
   const result = await parseDesignTokensFile(file);
   assert.equal(result[0].path, 'color.blue');
-  assert.equal(result[0].value, '#00f');
+  assert.deepEqual(result[0].value, {
+    colorSpace: 'srgb',
+    components: [0, 0, 1],
+  });
   assert.equal(result[0].type, 'color');
   assert.equal(typeof result[0].metadata.loc.line, 'number');
   assert.equal(typeof result[0].metadata.loc.column, 'number');
@@ -168,12 +176,26 @@ void test('parseDesignTokensFile reads a .tokens.json file', async () => {
 void test('parseDesignTokensFile reads a .tokens.yaml file', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
   const file = path.join(dir, 'theme.tokens.yaml');
-  const yaml = "color:\n  $type: color\n  blue:\n    $value: '#00f'\n";
+  const yaml = [
+    '$version: "1.0.0"',
+    'color:',
+    '  blue:',
+    '    $type: color',
+    '    $value:',
+    '      colorSpace: srgb',
+    '      components:',
+    '        - 0',
+    '        - 0',
+    '        - 1',
+  ].join('\n');
   await writeFile(file, yaml, 'utf8');
 
   const result = await parseDesignTokensFile(file);
   assert.equal(result[0].path, 'color.blue');
-  assert.equal(result[0].value, '#00f');
+  assert.deepEqual(result[0].value, {
+    colorSpace: 'srgb',
+    components: [0, 0, 1],
+  });
   assert.equal(result[0].type, 'color');
   assert.equal(typeof result[0].metadata.loc.line, 'number');
   assert.equal(typeof result[0].metadata.loc.column, 'number');
@@ -182,18 +204,70 @@ void test('parseDesignTokensFile reads a .tokens.yaml file', async () => {
 void test('parseDesignTokensFile reports location on parse error', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
   const file = path.join(dir, 'bad.tokens.json');
-  await writeFile(file, '{ "color": { $type: "color", }', 'utf8');
+  const invalid = 'this is not valid JSON';
+  await writeFile(file, invalid, 'utf8');
 
   await assert.rejects(
     () => parseDesignTokensFile(file),
     (err: unknown) => {
-      assert.ok(err instanceof TokenParseError);
-      assert.equal(err.filePath, file);
-      assert.ok(err.line >= 1);
-      assert.ok(err.column >= 1);
-      assert.ok(err.format().includes('^'));
+      assert.ok(err instanceof DtifTokenParseError);
+      assert.equal(err.source, file);
+      assert.ok(err.format().includes('Failed to parse DTIF document'));
       return true;
     },
+  );
+});
+
+void test('readDesignTokensFile rejects legacy DTCG tokens', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
+  const file = path.join(dir, 'legacy.tokens.json');
+  const document = {
+    color: {
+      brand: { $type: 'color', $value: '#fff' },
+      link: { $value: '{color.brand}' },
+    },
+  } as unknown as DesignTokens;
+
+  await writeFile(file, JSON.stringify(document), 'utf8');
+
+  await assert.rejects(() => readDesignTokensFile(file), DtifTokenParseError);
+});
+
+void test('readDesignTokensFile surfaces DTIF diagnostics for invalid documents', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
+  const file = path.join(dir, 'invalid.tokens.json');
+  const document = {
+    $version: '1.0.0',
+    color: {
+      bad: {
+        $type: 'color',
+        $ref: '#/color/missing',
+      },
+    },
+  } as unknown as DesignTokens;
+
+  await writeFile(file, JSON.stringify(document), 'utf8');
+
+  await assert.rejects(
+    () => readDesignTokensFile(file),
+    (err: unknown) => {
+      assert.ok(err instanceof DtifTokenParseError);
+      assert.equal(err.source, file);
+      assert.ok(err.format().includes('#/color/missing'));
+      return true;
+    },
+  );
+});
+
+void test('readDesignTokensFile attaches flattened DTIF tokens', async () => {
+  const file = fileURLToPath(
+    new URL('../fixtures/dtif/data-model.tokens.json', import.meta.url),
+  );
+  const document = await readDesignTokensFile(file);
+  const flattened = getDtifFlattenedTokens(document);
+  assert(flattened);
+  assert.ok(
+    flattened.some((token) => token.pointer === '#/color/button/background'),
   );
 });
 
@@ -983,54 +1057,4 @@ void test('parseDesignTokens normalizes hwb colors to hex when configured', () =
   };
   const result = parseDesignTokens(tokens, undefined, { colorSpace: 'hex' });
   assert.equal(result[0].value, '#00ff00');
-});
-
-void test('parseDesignTokens applies custom transforms', () => {
-  const legacy = {
-    color: { blue: { value: '#00f', type: 'color' } },
-  } as unknown as DesignTokens;
-
-  const transform: TokenTransform = (tokens) => {
-    function walk(node: unknown): unknown {
-      if (typeof node !== 'object' || node === null) return node;
-      const result: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(node)) {
-        const newKey =
-          key === 'value' ? '$value' : key === 'type' ? '$type' : key;
-        result[newKey] = walk(value);
-      }
-      return result;
-    }
-    return walk(tokens) as DesignTokens;
-  };
-
-  assert.throws(() => parseDesignTokens(legacy));
-  const parsed = parseDesignTokens(legacy, undefined, {
-    transforms: [transform],
-  });
-  assert.equal(parsed[0].path, 'color.blue');
-});
-
-void test('registerTokenTransform applies transforms globally', () => {
-  const legacy = {
-    color: { red: { value: '#f00', type: 'color' } },
-  } as unknown as DesignTokens;
-
-  const unregister = registerTokenTransform((tokens) => {
-    function walk(node: unknown): unknown {
-      if (typeof node !== 'object' || node === null) return node;
-      const result: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(node)) {
-        const newKey =
-          key === 'value' ? '$value' : key === 'type' ? '$type' : key;
-        result[newKey] = walk(value);
-      }
-      return result;
-    }
-    return walk(tokens) as DesignTokens;
-  });
-
-  const parsed = parseDesignTokens(legacy);
-  unregister();
-  assert.equal(parsed[0].path, 'color.red');
 });

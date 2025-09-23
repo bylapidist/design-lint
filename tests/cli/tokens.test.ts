@@ -14,15 +14,16 @@ void test('tokens command exports resolved tokens with extensions', () => {
   const dir = makeTmpDir();
   const tokensPath = path.join(dir, 'base.tokens.json');
   const tokens = {
+    $version: '1.0.0',
     color: {
       red: {
         $type: 'color',
-        $value: '#ff0000',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
         $extensions: { 'vendor.ext': { foo: 'bar' } },
       },
       blue: {
         $type: 'color',
-        $value: '{color.red}',
+        $ref: '#/color/red',
       },
     },
   };
@@ -50,17 +51,35 @@ void test('tokens command exports resolved tokens with extensions', () => {
   const out = JSON.parse(
     fs.readFileSync(path.join(dir, 'out.json'), 'utf8'),
   ) as Record<string, Record<string, { value: unknown; extensions?: unknown }>>;
-  assert.equal(out.default['color.red'].value, '#ff0000');
+  const red = out.default['color.red'].value as {
+    colorSpace: string;
+    components: number[];
+  };
+  assert.equal(red.colorSpace, 'srgb');
+  assert.deepEqual(red.components, [1, 0, 0]);
   assert.deepEqual(out.default['color.red'].extensions, {
     'vendor.ext': { foo: 'bar' },
   });
-  assert.equal(out.default['color.blue'].value, '#ff0000');
+  const blue = out.default['color.blue'].value as {
+    colorSpace: string;
+    components: number[];
+  };
+  assert.equal(blue.colorSpace, 'srgb');
+  assert.deepEqual(blue.components, [1, 0, 0]);
 });
 
 void test('tokens command reads config from outside cwd', () => {
   const dir = makeTmpDir();
   const tokensPath = path.join(dir, 'base.tokens.json');
-  const tokens = { color: { red: { $type: 'color', $value: '#ff0000' } } };
+  const tokens = {
+    $version: '1.0.0',
+    color: {
+      red: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+      },
+    },
+  };
   fs.writeFileSync(tokensPath, JSON.stringify(tokens));
   const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
@@ -88,15 +107,32 @@ void test('tokens command reads config from outside cwd', () => {
     string,
     Record<string, { value: unknown }>
   >;
-  assert.equal(out.default['color.red'].value, '#ff0000');
+  const red = out.default['color.red'].value as {
+    colorSpace: string;
+    components: number[];
+  };
+  assert.equal(red.colorSpace, 'srgb');
+  assert.deepEqual(red.components, [1, 0, 0]);
 });
 
 void test('tokens command exports themes with root tokens', () => {
   const dir = makeTmpDir();
   const configPath = path.join(dir, 'designlint.config.json');
   const tokens = {
-    light: { primary: { $type: 'color', $value: '#fff' } },
-    dark: { primary: { $type: 'color', $value: '#000' } },
+    light: {
+      $version: '1.0.0',
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
+    },
+    dark: {
+      $version: '1.0.0',
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+    },
   };
   fs.writeFileSync(configPath, JSON.stringify({ tokens, rules: {} }));
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
@@ -117,6 +153,16 @@ void test('tokens command exports themes with root tokens', () => {
     string,
     Record<string, { value: unknown }>
   >;
-  assert.equal(out.light.primary.value, '#fff');
-  assert.equal(out.dark.primary.value, '#000');
+  const light = out.light.primary.value as {
+    colorSpace: string;
+    components: number[];
+  };
+  assert.equal(light.colorSpace, 'srgb');
+  assert.deepEqual(light.components, [1, 1, 1]);
+  const dark = out.dark.primary.value as {
+    colorSpace: string;
+    components: number[];
+  };
+  assert.equal(dark.colorSpace, 'srgb');
+  assert.deepEqual(dark.components, [0, 0, 0]);
 });

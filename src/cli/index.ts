@@ -8,7 +8,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import { supportsColor } from 'chalk';
-import { TokenParseError } from '../adapters/node/token-parser.js';
+import { DtifTokenParseError } from '../adapters/node/token-parser.js';
 import { guards } from '../utils/index.js';
 
 const {
@@ -209,7 +209,7 @@ export async function run(argv = process.argv.slice(2)): Promise<void> {
       process.exitCode = exitCode;
       if (options.watch) await watchMode(patterns, options, services);
     } catch (err) {
-      logger.error(err instanceof TokenParseError ? err.format() : err);
+      logger.error(err instanceof DtifTokenParseError ? err.format() : err);
     }
   });
 
