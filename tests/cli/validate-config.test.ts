@@ -12,14 +12,22 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 void test('validate command reports valid configuration', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'tokens.tokens.json');
-  fs.writeFileSync(
-    tokensPath,
-    JSON.stringify({ color: { red: { $type: 'color', $value: '#ff0000' } } }),
-  );
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: { default: './tokens.tokens.json' }, rules: {} }),
+    JSON.stringify({
+      tokens: {
+        default: {
+          $version: '1.0.0',
+          color: {
+            red: {
+              $type: 'color',
+              $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+            },
+          },
+        },
+      },
+      rules: {},
+    }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -40,14 +48,22 @@ void test('validate command reports valid configuration', () => {
 
 void test('validate command fails on invalid tokens', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'tokens.tokens.json');
-  fs.writeFileSync(
-    tokensPath,
-    JSON.stringify({ color: { bad: { $type: 'foo', $value: 'bar' } } }),
-  );
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: { default: './tokens.tokens.json' }, rules: {} }),
+    JSON.stringify({
+      tokens: {
+        default: {
+          $version: '1.0.0',
+          color: {
+            bad: {
+              $type: 'color',
+              $value: { colorSpace: 'srgb' },
+            },
+          },
+        },
+      },
+      rules: {},
+    }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -63,24 +79,25 @@ void test('validate command fails on invalid tokens', () => {
     { cwd: dir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /unknown \$type/i);
+  assert.match(res.stderr, /DTIF/i);
 });
 
 void test('validate command fails on unresolved aliases', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'tokens.tokens.json');
-  fs.writeFileSync(
-    tokensPath,
-    JSON.stringify({
-      color: {
-        red: { $type: 'color', $value: '{color.green}' },
-        green: { $type: 'color', $value: '{color.red}' },
-      },
-    }),
-  );
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: { default: './tokens.tokens.json' }, rules: {} }),
+    JSON.stringify({
+      tokens: {
+        default: {
+          $version: '1.0.0',
+          color: {
+            red: { $type: 'color', $ref: '#/color/green' },
+            green: { $type: 'color', $ref: '#/color/red' },
+          },
+        },
+      },
+      rules: {},
+    }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -96,5 +113,5 @@ void test('validate command fails on unresolved aliases', () => {
     { cwd: dir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /circular alias reference/i);
+  assert.match(res.stderr, /DTIF/i);
 });

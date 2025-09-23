@@ -5,10 +5,10 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
+  $version: '1.0.0',
   fontWeights: {
-    $type: 'fontWeight',
-    regular: { $value: 400 },
-    bold: { $value: 700 },
+    regular: { $type: 'fontWeight', $value: 400 },
+    bold: { $type: 'fontWeight', $value: 700 },
   },
 };
 

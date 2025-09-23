@@ -55,8 +55,9 @@
   "homepage": "https://design-lint.lapidist.net",
   "license": "MIT",
   "dependencies": {
-    "@humanwhocodes/momoa": "3.3.9",
+    "@lapidist/dtif-parser": "^0.2.1",
     "@vue/compiler-sfc": "3.5.21",
+    "ajv": "^8.17.1",
     "chalk": "5.6.2",
     "chokidar": "4.0.3",
     "color-name": "2.0.2",
@@ -79,7 +80,6 @@
     "tempy": "3.1.0",
     "typescript": "5.9.2",
     "write-file-atomic": "6.0.0",
-    "yaml-to-momoa": "0.0.6",
     "zod": "4.1.11"
   },
   "devDependencies": {

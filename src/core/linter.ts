@@ -91,12 +91,16 @@ export class Linter {
       env = depsOrEnv;
       const inlineTokens = config.tokens;
       const provider: TokenProvider = env.tokenProvider ?? {
-        load: () => {
+        async load() {
           if (inlineTokens && isDesignTokens(inlineTokens)) {
-            new TokenRegistry({ default: inlineTokens });
-            return Promise.resolve({ default: inlineTokens });
+            const themes: Record<string, DesignTokens> = {
+              default: inlineTokens,
+            };
+            await TokenRegistry.create(themes);
+            return themes;
           }
-          return Promise.resolve({});
+          const empty: Record<string, DesignTokens> = {};
+          return empty;
         },
       };
       resolvedConfig = {
@@ -117,9 +121,9 @@ export class Linter {
     this.config = resolvedConfig;
     this.ruleRegistry = deps.ruleRegistry;
     this.tokenTracker = deps.tokenTracker;
-    this.tokensReady = deps.tokensReady.then((t) => {
+    this.tokensReady = deps.tokensReady.then(async (t) => {
       this.tokensByTheme = t;
-      this.tokenRegistry = new TokenRegistry(t, {
+      this.tokenRegistry = await TokenRegistry.create(t, {
         nameTransform: this.config.nameTransform,
         onWarn,
       });

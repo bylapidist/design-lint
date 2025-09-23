@@ -4,8 +4,18 @@
  * Helpers for flattening design token objects and aggregating them across themes.
  */
 
-import { parseDesignTokens } from '../../core/parser/index.js';
+import {
+  parseDesignTokens,
+  parseDtifDesignTokensObject,
+  type TokenTransform,
+} from '../../core/parser/index.js';
+import { isLikelyDtifDesignTokens } from '../../core/dtif/detect.js';
 import type { DesignTokens, FlattenedToken } from '../../core/types.js';
+import type {
+  DtifParseSession,
+  DtifSessionOptions,
+} from '../../core/dtif/session.js';
+import type { ColorSpace } from '../../core/parser/normalize-colors.js';
 import { normalizePath, type NameTransform } from './path.js';
 
 export interface FlattenOptions {
@@ -13,6 +23,35 @@ export interface FlattenOptions {
   nameTransform?: NameTransform;
   /** Warning callback for parse or alias issues */
   onWarn?: (msg: string) => void;
+}
+
+export interface FlattenDtifOptions extends FlattenOptions {
+  /** Desired output color space */
+  colorSpace?: ColorSpace;
+  /** Optional DTIF session override */
+  session?: DtifParseSession;
+  /** Optional DTIF session configuration */
+  sessionOptions?: DtifSessionOptions;
+  /** URI associated with the inline DTIF document */
+  uri?: string | URL;
+  /** Optional transforms applied before parsing */
+  transforms?: readonly TokenTransform[];
+}
+
+function applyNameTransform(
+  tokens: readonly FlattenedToken[],
+  transform?: NameTransform,
+): FlattenedToken[] {
+  if (!transform) {
+    return tokens.slice();
+  }
+  return tokens.map(({ path, aliases, ...rest }) => ({
+    ...rest,
+    path: normalizePath(path, transform),
+    ...(aliases
+      ? { aliases: aliases.map((alias) => normalizePath(alias, transform)) }
+      : {}),
+  }));
 }
 
 /**
@@ -26,17 +65,30 @@ export function flattenDesignTokens(
   tokens: DesignTokens,
   options?: FlattenOptions,
 ): FlattenedToken[] {
+  if (isLikelyDtifDesignTokens(tokens)) {
+    throw new Error(
+      'flattenDesignTokens does not support DTIF documents. Use flattenDtifDesignTokens instead.',
+    );
+  }
   const flat = parseDesignTokens(tokens, undefined, {
     onWarn: options?.onWarn,
   });
-  const transform = options?.nameTransform;
-  return flat.map(({ path, aliases, ...rest }) => ({
-    ...rest,
-    path: normalizePath(path, transform),
-    ...(aliases
-      ? { aliases: aliases.map((a) => normalizePath(a, transform)) }
-      : {}),
-  }));
+  return applyNameTransform(flat, options?.nameTransform);
+}
+
+export async function flattenDtifDesignTokens(
+  tokens: Record<string, unknown>,
+  options: FlattenDtifOptions = {},
+): Promise<FlattenedToken[]> {
+  const flat = await parseDtifDesignTokensObject(tokens, {
+    colorSpace: options.colorSpace,
+    onWarn: options.onWarn,
+    session: options.session,
+    sessionOptions: options.sessionOptions,
+    uri: options.uri,
+    transforms: options.transforms,
+  });
+  return applyNameTransform(flat, options.nameTransform);
 }
 
 /**

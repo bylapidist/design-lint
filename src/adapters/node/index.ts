@@ -5,6 +5,7 @@ export { NodeCacheProvider } from './node-cache-provider.js';
 export { createNodeEnvironment } from './environment.js';
 export {
   parseDesignTokensFile,
+  parseDtifDesignTokensFile,
   readDesignTokensFile,
   TokenParseError,
 } from './token-parser.js';

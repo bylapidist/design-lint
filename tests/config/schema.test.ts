@@ -39,21 +39,34 @@ void test('accepts theme record with relative token file', () => {
 void test('rejects non-design token objects', () => {
   assert.throws(
     () => configSchema.parse({ tokens: { light: { color: '#fff' } } }),
-    /Tokens must be W3C Design Tokens objects/,
+    /Tokens must be DTIF design token objects/,
   );
 });
 
 void test('accepts design token object with metadata', () => {
   const parsed = configSchema.parse({
     tokens: {
-      $schema: 'https://design-tokens.org',
-      color: { primary: { $type: 'color', $value: '#000' } },
+      $version: '1.0.0',
+      color: {
+        primary: {
+          $type: 'color',
+          $description: 'Primary brand color',
+          $value: {
+            colorSpace: 'srgb',
+            components: [0, 0.1, 0.9],
+          },
+        },
+      },
     },
   });
   const tokens = parsed.tokens as {
-    $schema: string;
-    color: { primary: { $value: string } };
+    $version: string;
+    color: {
+      primary: {
+        $value: { colorSpace: string; components: number[] };
+      };
+    };
   };
-  assert.equal(tokens.$schema, 'https://design-tokens.org');
-  assert.equal(tokens.color.primary.$value, '#000');
+  assert.equal(tokens.$version, '1.0.0');
+  assert.deepEqual(tokens.color.primary.$value.components, [0, 0.1, 0.9]);
 });

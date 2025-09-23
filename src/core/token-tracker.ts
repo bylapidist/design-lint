@@ -1,7 +1,13 @@
 import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
 import { guards, collections } from '../utils/index.js';
-import { getFlattenedTokens, extractVarName } from '../utils/tokens/index.js';
+import {
+  flattenDesignTokens,
+  flattenDtifDesignTokens,
+} from '../utils/tokens/flatten.js';
+import { isLikelyDtifDesignTokens } from '../core/dtif/detect.js';
+import { extractVarName } from '../utils/tokens/index.js';
+import { formatTokenValue } from '../utils/tokens/format-token-value.js';
 
 const {
   data: { isRecord },
@@ -51,7 +57,7 @@ export class TokenTracker {
   private async loadTokens(): Promise<void> {
     if (this.loaded) return;
     const tokens = await this.provider?.load();
-    this.allTokenValues = collectTokenValues(tokens);
+    this.allTokenValues = await collectTokenValues(tokens);
     this.loaded = true;
   }
 
@@ -114,32 +120,24 @@ export class TokenTracker {
   }
 }
 
-function collectTokenValues(
+async function collectTokenValues(
   tokensByTheme?: Record<string, DesignTokens>,
-): Map<string, FlattenedToken> {
+): Promise<Map<string, FlattenedToken>> {
   const values = new Map<string, FlattenedToken>();
   if (!tokensByTheme) return values;
-  for (const theme of Object.keys(tokensByTheme)) {
+  for (const [theme, tokens] of Object.entries(tokensByTheme)) {
     if (theme.startsWith('$')) continue;
-    for (const flat of getFlattenedTokens(tokensByTheme, theme)) {
-      const val = flat.value;
-      if (typeof val === 'string') {
-        if (val.includes('*')) continue;
-        const name = extractVarName(val);
-        const key = name ?? val;
-        if (!values.has(key)) values.set(key, flat);
-        continue;
-      }
-      if (typeof val === 'number') {
-        const key = String(val);
-        if (!values.has(key)) values.set(key, flat);
-        continue;
-      }
-      if (isValueWithUnit(val)) {
-        const key = `${String(val.value)}${val.unit}`;
-        if (!values.has(key)) values.set(key, flat);
-        continue;
-      }
+    const flattened = isLikelyDtifDesignTokens(tokens)
+      ? await flattenDtifDesignTokens(tokens, {
+          uri: `memory://design-lint/${encodeURIComponent(theme || 'default')}.tokens.json`,
+        })
+      : flattenDesignTokens(tokens);
+    for (const flat of flattened) {
+      const formatted = formatTokenValue(flat, { colorSpace: 'rgb' });
+      if (formatted.includes('*')) continue;
+      const name = extractVarName(formatted);
+      const key = name ?? formatted;
+      if (!values.has(key)) values.set(key, flat);
     }
   }
   return values;
@@ -160,15 +158,5 @@ function isUnusedTokenRule(e: {
     e.options.ignore === undefined ||
     (isArray(e.options.ignore) &&
       e.options.ignore.every((t): t is string => typeof t === 'string'))
-  );
-}
-
-function isValueWithUnit(
-  value: unknown,
-): value is { value: number; unit: string } {
-  return (
-    isRecord(value) &&
-    typeof Reflect.get(value, 'value') === 'number' &&
-    typeof Reflect.get(value, 'unit') === 'string'
   );
 }

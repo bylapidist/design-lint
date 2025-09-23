@@ -31,11 +31,16 @@ export const isThemeRecord = (
     // only direct token definitions.
     const [, theme] = entries[0];
     if (!isRecord(theme)) return false;
+    if ('$version' in theme || '$overrides' in theme || '$themes' in theme) {
+      return true;
+    }
     const children = Object.entries(theme)
       .filter(([k]) => !k.startsWith('$'))
       .map(([, v]) => v);
     const allTokens = children.every(
-      (child) => isRecord(child) && ('$value' in child || 'value' in child),
+      (child) =>
+        isRecord(child) &&
+        ('$value' in child || 'value' in child || '$ref' in child),
     );
     return !allTokens;
   }

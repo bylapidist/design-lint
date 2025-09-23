@@ -27,15 +27,13 @@ void test('reports config errors and sets exit code', () => {
   assert.match(res.stderr, /Invalid config/);
 });
 
-void test('fails on unresolved aliases', () => {
+void test('rejects non-DTIF token files', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'designlint-'));
   fs.writeFileSync(
     path.join(dir, 'tokens.tokens.json'),
     JSON.stringify({
       color: {
         red: { $type: 'color', $value: '#ff0000' },
-        bad1: { $type: 'color', $value: '{color.missing}' },
-        bad2: { $type: 'color', $value: '{color.missing}' },
       },
     }),
   );
@@ -61,5 +59,6 @@ void test('fails on unresolved aliases', () => {
     { cwd: dir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /references unknown token/i);
+  assert.match(res.stderr, /DTIF format/i);
+  assert.match(res.stderr, /DTIF migration guide/i);
 });

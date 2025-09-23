@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { loadConfig } from '../config/loader.js';
-import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
+import { toThemeRecord } from '../utils/tokens/index.js';
+import { TokenRegistry } from '../core/token-registry.js';
 
 /**
  * Options for the `tokens` CLI command.
@@ -34,14 +35,15 @@ export async function exportTokens(
 ): Promise<void> {
   const config = await loadConfig(process.cwd(), options.config);
   const tokensByTheme = toThemeRecord(config.tokens);
+  const registry = await TokenRegistry.create(tokensByTheme, {
+    nameTransform: config.nameTransform,
+    onWarn,
+  });
   const themes = options.theme ? [options.theme] : Object.keys(tokensByTheme);
   const output: Record<string, Record<string, unknown>> = {};
 
   for (const theme of themes) {
-    const flat = getFlattenedTokens(tokensByTheme, theme, {
-      nameTransform: config.nameTransform,
-      onWarn,
-    });
+    const flat = registry.getTokens(theme);
     output[theme] = {};
     for (const { path: p, value, type, aliases, metadata } of flat) {
       // Prevent prototype pollution from malicious keys

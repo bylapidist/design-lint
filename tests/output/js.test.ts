@@ -3,24 +3,31 @@ import assert from 'node:assert/strict';
 import { generateJsConstants } from '../../src/output/js.js';
 import type { DesignTokens } from '../../src/core/types.js';
 
-void test('generateJsConstants emits constants for each theme', () => {
+const srgb = (components: [number, number, number]) => ({
+  colorSpace: 'srgb',
+  components,
+});
+
+void test('generateJsConstants emits constants for each theme', async () => {
   const tokens: Record<string, DesignTokens> = {
     default: {
+      $version: '1.0.0',
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#fff' },
+        PrimaryColor: { $type: 'color', $value: srgb([1, 1, 1]) },
       },
     },
     dark: {
+      $version: '1.0.0',
       ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#000' },
+        PrimaryColor: { $type: 'color', $value: srgb([0, 0, 0]) },
       },
     },
   };
 
-  const js = generateJsConstants(tokens, { nameTransform: 'kebab-case' });
+  const js = await generateJsConstants(tokens, { nameTransform: 'kebab-case' });
   const expected = [
-    'export const COLOR_PALETTE_PRIMARY_COLOR = "#fff";',
-    'export const COLOR_PALETTE_PRIMARY_COLOR_DARK = "#000";',
+    'export const COLOR_PALETTE_PRIMARY_COLOR = "rgb(255, 255, 255)";',
+    'export const COLOR_PALETTE_PRIMARY_COLOR_DARK = "rgb(0, 0, 0)";',
   ].join('\n');
   assert.equal(js, expected);
 });

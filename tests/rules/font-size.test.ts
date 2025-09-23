@@ -5,10 +5,16 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 
 const tokens = {
+  $version: '1.0.0',
   fontSizes: {
-    $type: 'dimension',
-    base: { $value: { value: 16, unit: 'px' } },
-    lg: { $value: { value: 32, unit: 'px' } },
+    base: {
+      $type: 'dimension',
+      $value: { dimensionType: 'length', value: 16, unit: 'px' },
+    },
+    lg: {
+      $type: 'dimension',
+      $value: { dimensionType: 'length', value: 32, unit: 'px' },
+    },
   },
 };
 

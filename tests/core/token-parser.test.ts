@@ -3,17 +3,22 @@ import assert from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   parseDesignTokens,
   registerTokenTransform,
   type TokenTransform,
 } from '../../src/core/parser/index.js';
+import { DTIF_MIGRATION_MESSAGE } from '../../src/core/dtif/messages.js';
 import { normalizeTokens } from '../../src/core/parser/normalize.js';
 import {
   parseDesignTokensFile,
+  parseDtifDesignTokensFile,
+  readDesignTokensFile,
   TokenParseError,
 } from '../../src/adapters/node/token-parser.js';
 import type { DesignTokens, FlattenedToken } from '../../src/core/types.js';
+import type { DtifDiagnosticMessage } from '../../src/core/dtif/session.js';
 
 void test('parseDesignTokens flattens tokens with paths in declaration order', () => {
   const tokens: DesignTokens = {
@@ -33,6 +38,25 @@ void test('parseDesignTokens flattens tokens with paths in declaration order', (
     result.map((t) => t.path),
     ['color.blue', 'color.red', 'spacing.sm'],
   );
+});
+
+void test('parseDesignTokens rejects DTIF documents', () => {
+  const tokens = {
+    $version: '1.0.0',
+    color: {
+      swatch: {
+        $type: 'color',
+        $value: {
+          colorSpace: 'srgb',
+          components: [0.1, 0.2, 0.3],
+        },
+      },
+    },
+  };
+
+  assert.throws(() => parseDesignTokens(tokens as unknown as DesignTokens), {
+    message: DTIF_MIGRATION_MESSAGE,
+  });
 });
 
 void test('parseDesignTokens accepts hex string color tokens', () => {
@@ -152,31 +176,59 @@ void test('parseDesignTokens rejects names starting with $', () => {
 void test('parseDesignTokensFile reads a .tokens.json file', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
   const file = path.join(dir, 'theme.tokens.json');
-  const tokens: DesignTokens = {
-    color: { $type: 'color', blue: { $value: '#00f' } },
-  };
-  await writeFile(file, JSON.stringify(tokens), 'utf8');
+  const document = {
+    $version: '1.0.0',
+    button: {
+      background: {
+        $type: 'color',
+        $value: {
+          colorSpace: 'srgb',
+          components: [0, 0.35, 0.8],
+        },
+      },
+    },
+  } as const;
+  await writeFile(file, JSON.stringify(document, null, 2), 'utf8');
 
   const result = await parseDesignTokensFile(file);
-  assert.equal(result[0].path, 'color.blue');
-  assert.equal(result[0].value, '#00f');
-  assert.equal(result[0].type, 'color');
-  assert.equal(typeof result[0].metadata.loc.line, 'number');
-  assert.equal(typeof result[0].metadata.loc.column, 'number');
+  const background = result.find((token) => token.path === 'button.background');
+  assert.ok(background, 'expected background token');
+  assert.equal(background.type, 'color');
+  assert.deepEqual(background.value, {
+    colorSpace: 'srgb',
+    components: [0, 0.35, 0.8],
+  });
+  assert.equal(typeof background.metadata.loc.line, 'number');
+  assert.equal(typeof background.metadata.loc.column, 'number');
 });
 
 void test('parseDesignTokensFile reads a .tokens.yaml file', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
   const file = path.join(dir, 'theme.tokens.yaml');
-  const yaml = "color:\n  $type: color\n  blue:\n    $value: '#00f'\n";
+  const yaml = [
+    '$version: 1.0.0',
+    'button:',
+    '  background:',
+    '    $type: color',
+    '    $value:',
+    '      colorSpace: srgb',
+    '      components:',
+    '        - 0',
+    '        - 0.35',
+    '        - 0.8',
+  ].join('\n');
   await writeFile(file, yaml, 'utf8');
 
   const result = await parseDesignTokensFile(file);
-  assert.equal(result[0].path, 'color.blue');
-  assert.equal(result[0].value, '#00f');
-  assert.equal(result[0].type, 'color');
-  assert.equal(typeof result[0].metadata.loc.line, 'number');
-  assert.equal(typeof result[0].metadata.loc.column, 'number');
+  const background = result.find((token) => token.path === 'button.background');
+  assert.ok(background, 'expected background token');
+  assert.equal(background.type, 'color');
+  assert.deepEqual(background.value, {
+    colorSpace: 'srgb',
+    components: [0, 0.35, 0.8],
+  });
+  assert.equal(typeof background.metadata.loc.line, 'number');
+  assert.equal(typeof background.metadata.loc.column, 'number');
 });
 
 void test('parseDesignTokensFile reports location on parse error', async () => {
@@ -195,6 +247,148 @@ void test('parseDesignTokensFile reports location on parse error', async () => {
       return true;
     },
   );
+});
+
+void test('parseDtifDesignTokensFile reads a DTIF .tokens.json file', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'dtif-'));
+  const file = path.join(dir, 'theme.tokens.json');
+  const document = {
+    $version: '1.0.0',
+    button: {
+      background: {
+        $type: 'color',
+        $value: {
+          colorSpace: 'srgb',
+          components: [0, 0.2, 0.6],
+        },
+      },
+      label: {
+        $type: 'color',
+        $ref: '#/button/background',
+      },
+    },
+  } as const;
+
+  await writeFile(file, JSON.stringify(document, null, 2), 'utf8');
+
+  const tokens = await parseDtifDesignTokensFile(file);
+  const byPath = new Map(tokens.map((token) => [token.path, token]));
+
+  const background = byPath.get('button.background');
+  assert.ok(background, 'expected background token');
+  assert.equal(background.type, 'color');
+  assert.deepEqual(background.value, {
+    colorSpace: 'srgb',
+    components: [0, 0.2, 0.6],
+  });
+
+  const label = byPath.get('button.label');
+  assert.ok(label, 'expected alias token');
+  assert.equal(label.type, 'color');
+  assert.deepEqual(label.aliases, ['button.background']);
+  assert.deepEqual(label.value, {
+    colorSpace: 'srgb',
+    components: [0, 0.2, 0.6],
+  });
+});
+
+void test('parseDtifDesignTokensFile throws TokenParseError for DTIF diagnostics', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'dtif-error-'));
+  const file = path.join(dir, 'invalid.tokens.json');
+  const document = {
+    $version: '1.0.0',
+    alias: {
+      $type: 'color',
+      $ref: '#/missing',
+    },
+  } as const;
+
+  const source = JSON.stringify(document, null, 2);
+  await writeFile(file, source, 'utf8');
+
+  await assert.rejects(
+    () => parseDtifDesignTokensFile(file),
+    (error: unknown) => {
+      assert.ok(error instanceof TokenParseError);
+      assert.equal(error.filePath, file);
+      assert.equal(error.line, 5);
+      assert.equal(error.column, 13);
+      assert.ok(error.message.includes('DTIF6012'));
+      assert.ok(error.format().includes('^'));
+      return true;
+    },
+  );
+});
+
+void test('readDesignTokensFile returns DTIF document object', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'dtif-read-'));
+  const file = path.join(dir, 'theme.tokens.json');
+  const document = {
+    $version: '1.0.0',
+    button: {
+      background: {
+        $type: 'color',
+        $value: {
+          colorSpace: 'srgb',
+          components: [0, 0.4, 0.9],
+        },
+      },
+    },
+  } as const;
+
+  await writeFile(file, JSON.stringify(document, null, 2), 'utf8');
+
+  const tokens = await readDesignTokensFile(file);
+  assert.deepEqual(tokens, document);
+});
+
+void test('readDesignTokensFile rejects non-DTIF documents', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'legacy-read-'));
+  const file = path.join(dir, 'legacy.tokens.json');
+  const legacy = {
+    color: {
+      blue: { $type: 'color', $value: '#00f' },
+    },
+  } satisfies Record<string, unknown>;
+
+  await writeFile(file, JSON.stringify(legacy, null, 2), 'utf8');
+
+  await assert.rejects(
+    () => readDesignTokensFile(file),
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /DTIF format/i);
+      assert.match(error.message, /DTIF migration guide/i);
+      return true;
+    },
+  );
+});
+
+void test('readDesignTokensFile throws TokenParseError for invalid DTIF', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'dtif-read-error-'));
+  const file = path.join(dir, 'invalid.tokens.json');
+  const document = {
+    $version: '1.0.0',
+    color: {
+      background: {
+        $type: 'color',
+      },
+    },
+  } as const;
+
+  await writeFile(file, JSON.stringify(document, null, 2), 'utf8');
+
+  let caught: unknown;
+  try {
+    await readDesignTokensFile(file);
+    assert.fail('Expected readDesignTokensFile to reject');
+  } catch (error) {
+    caught = error;
+  }
+  assert.ok(caught && typeof caught === 'object');
+  const err = caught as TokenParseError;
+  assert.equal(err.filePath, file);
+  assert.ok(err.message.includes('DTIF'));
 });
 
 void test('parseDesignTokens rejects tokens missing explicit type', () => {
@@ -219,7 +413,7 @@ void test('parseDesignTokens rejects legacy shorthand token values', () => {
   );
 });
 
-void test('parseDesignTokens accepts hsl color space tokens', () => {
+void test('parseDesignTokens rejects DTIF color objects', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
@@ -228,24 +422,13 @@ void test('parseDesignTokens accepts hsl color space tokens', () => {
       },
     },
   };
-  const result = parseDesignTokens(tokens);
-  assert.equal(result[0].path, 'color.hsl');
+  assert.throws(
+    () => parseDesignTokens(tokens),
+    /Design tokens must use the DTIF format/i,
+  );
 });
 
-void test('parseDesignTokens accepts hwb color space tokens', () => {
-  const tokens: DesignTokens = {
-    color: {
-      $type: 'color',
-      hwb: {
-        $value: { colorSpace: 'hwb', components: [60, 0, 0] },
-      },
-    },
-  };
-  const result = parseDesignTokens(tokens);
-  assert.equal(result[0].path, 'color.hwb');
-});
-
-void test('parseDesignTokens rejects out-of-range hsl components', () => {
+void test('parseDesignTokens rejects DTIF color objects with invalid components', () => {
   const tokens = {
     color: {
       $type: 'color',
@@ -254,19 +437,10 @@ void test('parseDesignTokens rejects out-of-range hsl components', () => {
       },
     },
   } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
-});
-
-void test('parseDesignTokens rejects out-of-range hwb components', () => {
-  const tokens = {
-    color: {
-      $type: 'color',
-      bad: {
-        $value: { colorSpace: 'hwb', components: [361, -1, 101] },
-      },
-    },
-  } as unknown as DesignTokens;
-  assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
+  assert.throws(
+    () => parseDesignTokens(tokens),
+    /Design tokens must use the DTIF format/i,
+  );
 });
 
 void test('parseDesignTokens rejects tokens with mismatched $type and value', () => {
@@ -959,7 +1133,7 @@ void test('parseDesignTokens rejects malformed color values', () => {
   assert.throws(() => parseDesignTokens(tokens), /invalid color value/i);
 });
 
-void test('parseDesignTokens normalizes colors to rgb when configured', () => {
+void test('parseDesignTokens rejects DTIF color normalization requests', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
@@ -968,11 +1142,13 @@ void test('parseDesignTokens normalizes colors to rgb when configured', () => {
       },
     },
   };
-  const result = parseDesignTokens(tokens, undefined, { colorSpace: 'rgb' });
-  assert.equal(result[0].value, 'rgb(0, 255, 0)');
+  assert.throws(
+    () => parseDesignTokens(tokens, undefined, { colorSpace: 'rgb' }),
+    /Design tokens must use the DTIF format/i,
+  );
 });
 
-void test('parseDesignTokens normalizes hwb colors to hex when configured', () => {
+void test('parseDesignTokens rejects DTIF color normalization to hex', () => {
   const tokens: DesignTokens = {
     color: {
       $type: 'color',
@@ -981,8 +1157,10 @@ void test('parseDesignTokens normalizes hwb colors to hex when configured', () =
       },
     },
   };
-  const result = parseDesignTokens(tokens, undefined, { colorSpace: 'hex' });
-  assert.equal(result[0].value, '#00ff00');
+  assert.throws(
+    () => parseDesignTokens(tokens, undefined, { colorSpace: 'hex' }),
+    /Design tokens must use the DTIF format/i,
+  );
 });
 
 void test('parseDesignTokens applies custom transforms', () => {
@@ -1033,4 +1211,67 @@ void test('registerTokenTransform applies transforms globally', () => {
   const parsed = parseDesignTokens(legacy);
   unregister();
   assert.equal(parsed[0].path, 'color.red');
+});
+
+void test('TokenParseError.fromDtifDiagnostic formats DTIF diagnostics', () => {
+  const diagnostic: DtifDiagnosticMessage = {
+    code: 'DTIF1999',
+    message: 'Example failure',
+    severity: 'error',
+    pointer: '#/button/background',
+    location: {
+      uri: 'file:///tmp/theme.tokens.json',
+      start: { line: 3, column: 7 },
+      end: { line: 3, column: 15 },
+    },
+    related: [
+      {
+        message: 'Referenced alias target',
+        pointer: '#/button/background/$value',
+      },
+      {
+        message: 'Additional context',
+        location: {
+          uri: 'file:///tmp/theme.tokens.json',
+          start: { line: 2, column: 3 },
+          end: { line: 2, column: 15 },
+        },
+      },
+    ],
+  } satisfies DtifDiagnosticMessage;
+
+  const source = ['{', '  "button": {', '    "background": {}}'].join('\n');
+  const error = TokenParseError.fromDtifDiagnostic(diagnostic, { source });
+
+  const expectedPath = fileURLToPath('file:///tmp/theme.tokens.json');
+  assert.equal(error.filePath, expectedPath);
+  assert.equal(error.line, 3);
+  assert.equal(error.column, 7);
+  assert.equal(
+    error.message,
+    'pointer button.background: Example failure [related: pointer button.background.$value: Referenced alias target; file:///tmp/theme.tokens.json:2:3: Additional context] (DTIF1999)',
+  );
+  const formatted = error.format();
+  assert.ok(formatted.includes('"background"'));
+  assert.ok(formatted.includes('^'));
+});
+
+void test('TokenParseError.fromDtifDiagnostic handles diagnostics without location', () => {
+  const diagnostic: DtifDiagnosticMessage = {
+    code: 'DTIF2000',
+    message: 'Another failure',
+    severity: 'error',
+    pointer: '#/alias',
+  } satisfies DtifDiagnosticMessage;
+
+  const filePath = '/virtual/theme.tokens.json';
+  const error = TokenParseError.fromDtifDiagnostic(diagnostic, {
+    filePath,
+  });
+
+  assert.equal(error.filePath, filePath);
+  assert.equal(error.line, 1);
+  assert.equal(error.column, 1);
+  assert.equal(error.lineText, 'pointer alias');
+  assert.equal(error.message, 'pointer alias: Another failure (DTIF2000)');
 });

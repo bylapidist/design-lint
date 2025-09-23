@@ -1,6 +1,9 @@
 import type { DesignTokens, FlattenedToken } from './types.js';
+import { isLikelyDtifDesignTokens } from './dtif/detect.js';
+import { guards } from '../utils/index.js';
 import {
   flattenDesignTokens,
+  flattenDtifDesignTokens,
   normalizePath,
   type NameTransform,
 } from '../utils/tokens/index.js';
@@ -9,6 +12,10 @@ export interface TokenRegistryOptions {
   nameTransform?: NameTransform;
   onWarn?: (msg: string) => void;
 }
+
+const {
+  domain: { isDesignTokens },
+} = guards;
 
 /**
  * Registry for flattened design tokens keyed by theme and normalized path.
@@ -28,20 +35,76 @@ export class TokenRegistry {
   constructor(
     tokensByTheme: Record<string, DesignTokens>,
     options?: TokenRegistryOptions,
+    skipInitialization = false,
   ) {
     this.transform = options?.nameTransform;
-    const warn = options?.onWarn;
+    if (!skipInitialization) {
+      this.initializeSync(tokensByTheme, options?.onWarn);
+    }
+  }
+
+  static async create(
+    tokensByTheme: Record<string, Record<string, unknown>>,
+    options?: TokenRegistryOptions,
+  ): Promise<TokenRegistry> {
+    const registry = new TokenRegistry({}, options, true);
+    await registry.initializeAsync(tokensByTheme, options?.onWarn);
+    return registry;
+  }
+
+  private initializeSync(
+    tokensByTheme: Record<string, DesignTokens>,
+    onWarn?: (msg: string) => void,
+  ): void {
+    this.tokens.clear();
     for (const [theme, tokens] of Object.entries(tokensByTheme)) {
       if (theme.startsWith('$')) continue;
       const map = new Map<string, FlattenedToken>();
       for (const token of flattenDesignTokens(tokens, {
         nameTransform: this.transform,
-        onWarn: warn,
+        onWarn,
       })) {
         map.set(token.path, token);
       }
       this.tokens.set(theme, map);
     }
+  }
+
+  private async initializeAsync(
+    tokensByTheme: Record<string, Record<string, unknown>>,
+    onWarn?: (msg: string) => void,
+  ): Promise<void> {
+    this.tokens.clear();
+    for (const [theme, tokens] of Object.entries(tokensByTheme)) {
+      if (theme.startsWith('$')) continue;
+      const map = new Map<string, FlattenedToken>();
+      const flattened = await this.flattenTokens(tokens, onWarn);
+      for (const token of flattened) {
+        map.set(token.path, token);
+      }
+      this.tokens.set(theme, map);
+    }
+  }
+
+  private async flattenTokens(
+    tokens: Record<string, unknown>,
+    onWarn?: (msg: string) => void,
+  ): Promise<FlattenedToken[]> {
+    if (isLikelyDtifDesignTokens(tokens)) {
+      return flattenDtifDesignTokens(tokens, {
+        nameTransform: this.transform,
+        onWarn,
+      });
+    }
+    if (!isDesignTokens(tokens)) {
+      return [];
+    }
+    return Promise.resolve(
+      flattenDesignTokens(tokens, {
+        nameTransform: this.transform,
+        onWarn,
+      }),
+    );
   }
 
   /**

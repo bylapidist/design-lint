@@ -9,27 +9,35 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const tsxLoader = require.resolve('tsx/esm');
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const srgb = (components: [number, number, number]) => ({
+  colorSpace: 'srgb',
+  components,
+});
 
 void test('tokens command exports resolved tokens with extensions', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
-  const tokens = {
-    color: {
-      red: {
-        $type: 'color',
-        $value: '#ff0000',
-        $extensions: { 'vendor.ext': { foo: 'bar' } },
-      },
-      blue: {
-        $type: 'color',
-        $value: '{color.red}',
+  const config = {
+    tokens: {
+      default: {
+        $version: '1.0.0',
+        color: {
+          red: {
+            $type: 'color',
+            $value: srgb([1, 0, 0]),
+            $extensions: { 'vendor.ext': { foo: 'bar' } },
+          },
+          blue: {
+            $type: 'color',
+            $ref: '#/color/red',
+          },
+        },
       },
     },
-  };
-  fs.writeFileSync(tokensPath, JSON.stringify(tokens));
+    rules: {},
+  } as const;
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: { default: './base.tokens.json' }, rules: {} }),
+    JSON.stringify(config),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -50,23 +58,26 @@ void test('tokens command exports resolved tokens with extensions', () => {
   const out = JSON.parse(
     fs.readFileSync(path.join(dir, 'out.json'), 'utf8'),
   ) as Record<string, Record<string, { value: unknown; extensions?: unknown }>>;
-  assert.equal(out.default['color.red'].value, '#ff0000');
+  assert.deepEqual(out.default['color.red'].value, srgb([1, 0, 0]));
   assert.deepEqual(out.default['color.red'].extensions, {
     'vendor.ext': { foo: 'bar' },
   });
-  assert.equal(out.default['color.blue'].value, '#ff0000');
+  assert.deepEqual(out.default['color.blue'].value, srgb([1, 0, 0]));
 });
 
 void test('tokens command reads config from outside cwd', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
-  const tokens = { color: { red: { $type: 'color', $value: '#ff0000' } } };
-  fs.writeFileSync(tokensPath, JSON.stringify(tokens));
   const configPath = path.join(dir, 'designlint.config.json');
-  fs.writeFileSync(
-    configPath,
-    JSON.stringify({ tokens: { default: './base.tokens.json' }, rules: {} }),
-  );
+  const config = {
+    tokens: {
+      default: {
+        $version: '1.0.0',
+        color: { red: { $type: 'color', $value: srgb([1, 0, 0]) } },
+      },
+    },
+    rules: {},
+  } as const;
+  fs.writeFileSync(configPath, JSON.stringify(config));
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const outPath = path.join(dir, 'out.json');
   const res = spawnSync(
@@ -88,16 +99,22 @@ void test('tokens command reads config from outside cwd', () => {
     string,
     Record<string, { value: unknown }>
   >;
-  assert.equal(out.default['color.red'].value, '#ff0000');
+  assert.deepEqual(out.default['color.red'].value, srgb([1, 0, 0]));
 });
 
 void test('tokens command exports themes with root tokens', () => {
   const dir = makeTmpDir();
   const configPath = path.join(dir, 'designlint.config.json');
   const tokens = {
-    light: { primary: { $type: 'color', $value: '#fff' } },
-    dark: { primary: { $type: 'color', $value: '#000' } },
-  };
+    light: {
+      $version: '1.0.0',
+      primary: { $type: 'color', $value: srgb([1, 1, 1]) },
+    },
+    dark: {
+      $version: '1.0.0',
+      primary: { $type: 'color', $value: srgb([0, 0, 0]) },
+    },
+  } as const;
   fs.writeFileSync(configPath, JSON.stringify({ tokens, rules: {} }));
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -117,6 +134,6 @@ void test('tokens command exports themes with root tokens', () => {
     string,
     Record<string, { value: unknown }>
   >;
-  assert.equal(out.light.primary.value, '#fff');
-  assert.equal(out.dark.primary.value, '#000');
+  assert.deepEqual(out.light.primary.value, srgb([1, 1, 1]));
+  assert.deepEqual(out.dark.primary.value, srgb([0, 0, 0]));
 });

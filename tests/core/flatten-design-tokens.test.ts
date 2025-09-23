@@ -199,3 +199,20 @@ void test('flattenDesignTokens applies name transforms', () => {
     },
   ]);
 });
+
+void test('flattenDesignTokens rejects DTIF documents', () => {
+  const dtifTokens = {
+    $version: '1.0.0',
+    color: {
+      base: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+      },
+    },
+  } as unknown as DesignTokens;
+
+  assert.throws(
+    () => flattenDesignTokens(dtifTokens),
+    /flattenDesignTokens does not support DTIF/,
+  );
+});

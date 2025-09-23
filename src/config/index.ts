@@ -10,7 +10,8 @@
  * - `resolveConfigFile` – searches for configuration files on disk.
  * - `loadConfig` – high-level loader that resolves, validates and normalizes
  *   configuration.
- * - `normalizeTokens` – ensures design token inputs conform to a theme record.
+ * - `normalizeTokens` – asynchronously ensures design token inputs conform to a
+ *   theme record.
  * - `configSchema` – [Zod](https://zod.dev/) schema describing valid
  *   configuration.
  * - `wrapTokenError` – attaches theme context to low-level token errors.

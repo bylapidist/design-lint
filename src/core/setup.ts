@@ -3,7 +3,11 @@ import type { Environment, TokenProvider } from './environment.js';
 import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
 import { LintService } from './lint-service.js';
-import { getFlattenedTokens as flattenTokens } from '../utils/tokens/index.js';
+import {
+  flattenDesignTokens,
+  flattenDtifDesignTokens,
+} from '../utils/tokens/flatten.js';
+import { isLikelyDtifDesignTokens } from './dtif/detect.js';
 import type { DesignTokens } from './types.js';
 
 function isDesignTokens(val: unknown): val is DesignTokens {
@@ -17,12 +21,19 @@ export function setupLinter(
 ): { linter: Linter; service: LintService } {
   const inlineTokens = config.tokens;
   const provider: TokenProvider = env.tokenProvider ?? {
-    load: () => {
+    async load() {
+      const result: Record<string, DesignTokens> = {};
       if (inlineTokens && isDesignTokens(inlineTokens)) {
-        flattenTokens({ default: inlineTokens });
-        return Promise.resolve({ default: inlineTokens });
+        if (isLikelyDtifDesignTokens(inlineTokens)) {
+          await flattenDtifDesignTokens(inlineTokens, {
+            uri: 'memory://design-lint/config.tokens.json',
+          });
+        } else {
+          flattenDesignTokens(inlineTokens);
+        }
+        result.default = inlineTokens;
       }
-      return Promise.resolve({});
+      return result;
     },
   };
   const resolvedConfig: Config = {

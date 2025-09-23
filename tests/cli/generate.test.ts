@@ -12,13 +12,20 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 void test('generate command writes configured outputs', () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
-  const tokens = { color: { red: { $type: 'color', $value: '#ff0000' } } };
-  fs.writeFileSync(tokensPath, JSON.stringify(tokens));
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
-      tokens: { default: './base.tokens.json' },
+      tokens: {
+        default: {
+          $version: '1.0.0',
+          color: {
+            red: {
+              $type: 'color',
+              $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+            },
+          },
+        },
+      },
       rules: {},
       output: [
         { format: 'css', file: 'tokens.css', nameTransform: 'kebab-case' },
@@ -43,8 +50,11 @@ void test('generate command writes configured outputs', () => {
   assert.equal(res.status, 0);
   const css = fs.readFileSync(path.join(dir, 'tokens.css'), 'utf8');
   assert.match(css, /--color-red/);
+  assert.match(css, /rgb\(255, 0, 0\)/);
   const js = fs.readFileSync(path.join(dir, 'tokens.js'), 'utf8');
   assert.match(js, /export const COLOR_RED/);
+  assert.match(js, /"rgb\(255, 0, 0\)"/);
   const ts = fs.readFileSync(path.join(dir, 'tokens.d.ts'), 'utf8');
   assert.match(ts, /COLOR_RED/);
+  assert.match(ts, /"rgb\(255, 0, 0\)"/);
 });

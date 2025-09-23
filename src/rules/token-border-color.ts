@@ -1,6 +1,7 @@
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import { rules, color } from '../utils/index.js';
+import { formatTokenValue } from '../utils/tokens/format-token-value.js';
 
 const { tokenRule } = rules;
 const { detectColorFormat } = color;
@@ -17,10 +18,20 @@ export const borderColorRule = tokenRule({
   getAllowed(tokens) {
     return new Set(
       tokens
-        .map(({ value }) => {
-          return typeof value === 'string' && !value.startsWith('{')
-            ? value.toLowerCase()
-            : null;
+        .map((token) => {
+          const formatted = formatTokenValue(token, { colorSpace: 'hex' });
+          const normalized = formatted.trim();
+          if (!normalized || normalized.startsWith('{')) {
+            return null;
+          }
+          const detected = detectColorFormat(normalized);
+          if (!detected) {
+            return null;
+          }
+          if (detected !== 'named' && !colorString.get(normalized)) {
+            return null;
+          }
+          return normalized.toLowerCase();
         })
         .filter((v): v is string => v !== null),
     );

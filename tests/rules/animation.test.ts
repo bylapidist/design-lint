@@ -8,9 +8,9 @@ import { registerTokenValidator } from '../../src/core/token-validators/index.js
 registerTokenValidator('string', () => undefined);
 
 const tokens = {
+  $version: '1.0.0',
   animations: {
-    $type: 'string',
-    spin: { $value: 'spin 1s linear infinite' },
+    spin: { $type: 'string', $value: 'spin 1s linear infinite' },
   },
 };
 

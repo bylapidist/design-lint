@@ -1,6 +1,7 @@
 import type ts from 'typescript';
 import type { z } from 'zod';
 import type { Environment } from './environment.js';
+import type { DtifJsonPointer, DtifSourceLocation } from './dtif/session.js';
 
 export interface VariableDefinition {
   id: string;
@@ -8,10 +9,11 @@ export interface VariableDefinition {
 }
 
 /**
- * W3C Design Tokens Format token node.
+ * DTIF design token node.
  */
 export interface Token {
-  $value: unknown;
+  $value?: unknown;
+  $ref?: string;
   $type?: string;
   $description?: string;
   $extensions?: Record<string, unknown>;
@@ -19,7 +21,7 @@ export interface Token {
 }
 
 /**
- * W3C Design Tokens Format group node.
+ * DTIF design token group.
  */
 export type TokenGroup = {
   $type?: string;
@@ -31,15 +33,39 @@ export type TokenGroup = {
 };
 
 /**
- * Root token group with optional $schema.
+ * DTIF document root with optional metadata.
  */
-export type RootTokenGroup = TokenGroup & { $schema?: string };
+export type RootTokenGroup = TokenGroup & {
+  $schema?: string;
+  $version?: string;
+  $overrides?: Record<string, unknown>;
+};
 
 /**
- * W3C Design Tokens tree.
+ * DTIF design token tree.
  */
 export type DesignTokens = RootTokenGroup;
 
+/**
+ * DTIF-native token view that uses JSON pointers for identity.
+ *
+ * @todo Replace usages of {@link FlattenedToken} with this once the DTIF
+ * parser pipeline is wired through the linter.
+ */
+export interface ResolvedTokenView {
+  pointer: DtifJsonPointer;
+  value: unknown;
+  type?: string;
+  aliases?: DtifJsonPointer[];
+  metadata: {
+    description?: string;
+    extensions?: Record<string, unknown>;
+    deprecated?: boolean | string;
+    source?: DtifSourceLocation;
+  };
+}
+
+/** Legacy flattened view built around dot-separated paths. */
 export interface FlattenedToken {
   path: string;
   value: unknown;

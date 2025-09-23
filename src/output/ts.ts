@@ -1,10 +1,11 @@
 import type { DesignTokens } from '../core/types.js';
+import { TokenRegistry } from '../core/token-registry.js';
 import {
-  getFlattenedTokens,
   sortTokensByPath,
   toConstantName,
   type NameTransform,
 } from '../utils/tokens/index.js';
+import { formatTokenValue } from '../utils/tokens/format-token-value.js';
 
 export interface TsOutputOptions {
   /** Optional transform applied to token path segments before generating declarations */
@@ -16,26 +17,25 @@ export interface TsOutputOptions {
 /**
  * Generate a TypeScript module exporting a typed token object for each theme.
  */
-export function generateTsDeclarations(
+export async function generateTsDeclarations(
   tokensByTheme: Record<string, DesignTokens>,
   options: TsOutputOptions = {},
-): string {
+): Promise<string> {
   const { nameTransform } = options;
   const themes = Object.keys(tokensByTheme);
   const lines: string[] = ['export const tokens = {'];
+  const registry = await TokenRegistry.create(tokensByTheme, {
+    nameTransform,
+    onWarn: options.onWarn,
+  });
 
   for (const theme of themes) {
     lines.push(`  ${JSON.stringify(theme)}: {`);
-    const flat = sortTokensByPath(
-      getFlattenedTokens(tokensByTheme, theme, {
-        nameTransform,
-        onWarn: options.onWarn,
-      }),
-    );
+    const flat = sortTokensByPath(registry.getTokens(theme));
     for (const t of flat) {
       const key = toConstantName(t.path);
-      const value = JSON.stringify(t.value);
-      lines.push(`    ${key}: ${value},`);
+      const value = formatTokenValue(t, { colorSpace: 'rgb' });
+      lines.push(`    ${key}: ${JSON.stringify(value)},`);
     }
     lines.push('  },');
   }

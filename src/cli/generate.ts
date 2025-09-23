@@ -51,20 +51,20 @@ export async function generateOutputs(
       let content = '';
       switch (target.format) {
         case 'css':
-          content = generateCssVariables(tokensByTheme, {
+          content = await generateCssVariables(tokensByTheme, {
             nameTransform,
             selectors: target.selectors,
             onWarn: logger?.warn,
           });
           break;
         case 'js':
-          content = generateJsConstants(tokensByTheme, {
+          content = await generateJsConstants(tokensByTheme, {
             nameTransform,
             onWarn: logger?.warn,
           });
           break;
         case 'ts':
-          content = generateTsDeclarations(tokensByTheme, {
+          content = await generateTsDeclarations(tokensByTheme, {
             nameTransform,
             onWarn: logger?.warn,
           });

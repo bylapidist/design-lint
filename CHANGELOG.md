@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD038 -->
 # @lapidist/design-lint
 
 ## 5.5.0
@@ -14,10 +15,10 @@
 - 054e4ce: allow empty dashArray in strokeStyle tokens
 - 054e4ce: support hex string color tokens alongside object format
 - 054e4ce: clamp gradient stop positions to the [0, 1] range
-- 054e4ce: remove non-spec $metadata property; the spec says, "The properties `$description`, `$extensions`, `$deprecated`, `$type`, and `$schema` are reserved for use by this specification."
+- 054e4ce: remove non-spec $metadata property; the spec says the properties `$description`, `$extensions`, `$deprecated`, `$type`, and `$schema` are reserved for use by this specification.
 - 054e4ce: validate color component ranges, alpha bounds, and hex format
 - 054e4ce: fail when token aliases cannot be resolved
-- 054e4ce: require `letterSpacing` in typography tokens; the spec says, "The value MUST be an object with the following properties: `fontFamily`, `fontSize`, `fontWeight`, `letterSpacing`, `lineHeight`."
+- 054e4ce: require `letterSpacing` in typography tokens; the spec says the value MUST be an object with the following properties: `fontFamily`, `fontSize`, `fontWeight`, `letterSpacing`, `lineHeight`.
 - 054e4ce: require shadow tokens to specify spread
 - 054e4ce: reject slash-separated alias paths; the spec says, "For a design token to reference another, its value MUST be a string containing the period-separated (`.`) path to the token it's referencing enclosed in curly brackets."
 - 054e4ce: fix color normalization to use proper syntax for non-srgb color spaces
@@ -142,8 +143,8 @@
 ### Minor Changes
 
 - 3be455d: add location data to flattened tokens and expose getTokenLocation helper
-- 3be455d: align token utilities with W3C Design Tokens format and support root $schema
-- 3be455d: feat(core): add function to flatten W3C Design Tokens tree
+- 3be455d: align token utilities with the legacy design tokens format and support root $schema
+- 3be455d: feat(core): add function to flatten the legacy design tokens tree
 - 3be455d: use Momoa to parse design token files with YAML support and clearer errors
 - 3be455d: remove legacy token migration utilities and stop accepting legacy token groups
 - 3be455d: add token transform registry and parseDesignTokens transform support
@@ -173,15 +174,15 @@
 - 3be455d: handle primitive token values in token parser
 - 3be455d: handle token spec edge cases like alias type mismatches, case-insensitive path collisions, and unknown composite properties
 - 3be455d: avoid reporting alias tokens as unused when tracking token usage
-- 3be455d: introduce W3C token model scaffolding and export token types
+- 3be455d: introduce legacy token model scaffolding and export token types
 - 3be455d: ensure inline config tokens are loaded when no token provider is supplied
 - 3be455d: load config tokens from external `.tokens` files
 - 3be455d: merge tokens from all themes when no theme is specified
 - 3be455d: migrate legacy token groups during config load
-- 3be455d: migrate legacy token groups to W3C Design Tokens format
+- 3be455d: migrate legacy token groups to the previous design tokens format
 - 3be455d: refactor token file parser to Node adapter to keep core environment agnostic
 - 3be455d: validate color tokens using culori and allow normalizing colors
-- 3be455d: preserve $extensions and $deprecated metadata in W3C token parser and flattener
+- 3be455d: preserve $extensions and $deprecated metadata in the legacy token parser and flattener
 - 3be455d: refactor linter to provide per-theme flattened tokens to rules
 - 3be455d: fix getTokenCompletions to list token paths by theme
 - 3be455d: reject legacy shorthand token syntax and enforce $type/$value
