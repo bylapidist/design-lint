@@ -46,7 +46,7 @@ This rule is not auto-fixable.
 
 ```css
 .box { border-radius: 4px; }
-.box { border-radius: md; }
+.box { border-radius: var(--border-radius-lg); }
 ```
 
 ## When Not To Use
