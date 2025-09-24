@@ -55,9 +55,17 @@ jobs:
           cat > designlint.config.json <<'EOF'
           {
             "tokens": {
+              "$version": "1.0.0",
               "color": {
-                "old": { "$type": "color", "$value": "#000", "$deprecated": "Use {color.new}" },
-                "new": { "$type": "color", "$value": "#fff" }
+                "old": {
+                  "$type": "color",
+                  "$value": { "colorSpace": "srgb", "components": [0, 0, 0] },
+                  "$deprecated": { "$replacement": "#/color/new" }
+                },
+                "new": {
+                  "$type": "color",
+                  "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+                }
               }
             },
             "rules": {
@@ -101,9 +109,17 @@ jobs:
           cat > designlint.config.js <<'EOF'
           module.exports = {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                }
               }
             },
             rules: {
@@ -117,9 +133,17 @@ jobs:
           cat > designlint.config.cjs <<'EOF'
           module.exports = {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                }
               }
             },
             rules: {
@@ -133,9 +157,17 @@ jobs:
           cat > designlint.config.mjs <<'EOF'
           export default {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                }
               }
             },
             rules: {
@@ -151,9 +183,17 @@ jobs:
 
           export default {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                }
               }
             },
             rules: {
@@ -169,9 +209,17 @@ jobs:
 
           export default {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                }
               }
             },
             rules: {
@@ -186,6 +234,7 @@ jobs:
           {
             "tokens": {
               "default": {
+                "$version": "1.0.0",
                 "spacing": {
                   "scale-100": {
                     "$type": "dimension",
@@ -205,8 +254,12 @@ jobs:
           npx design-lint file.ts --format json || true
           cat > gen.tokens.json <<'EOF'
           {
+            "$version": "1.0.0",
             "color": {
-              "red": { "$type": "color", "$value": "#ff0000" }
+              "red": {
+                "$type": "color",
+                "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
+              }
             }
           }
           EOF

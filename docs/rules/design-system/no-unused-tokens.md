@@ -21,9 +21,16 @@ Given this configuration:
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "color": {
-      "primary": { "$type": "color", "$value": "#000000" },
-      "unused": { "$type": "color", "$value": "{color.primary}" }
+      "primary": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0, 0, 0]
+        }
+      },
+      "unused": { "$type": "color", "$ref": "#/color/primary" }
     }
   },
   "rules": { "design-system/no-unused-tokens": "warn" }

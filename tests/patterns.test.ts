@@ -6,13 +6,21 @@ import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 
+const srgb = (components: [number, number, number]) => ({
+  colorSpace: 'srgb',
+  components,
+});
+
 void test('lintTargets uses patterns option to include custom extensions', async () => {
   const tmp = makeTmpDir();
   const file = path.join(tmp, 'bad.foo');
   fs.writeFileSync(file, "const color = '#ffffff';");
   const baseConfig = {
     tokens: {
-      color: { $type: 'color', primary: { $value: '#000000' } },
+      $version: '1.0.0',
+      color: {
+        primary: { $type: 'color', $value: srgb([0, 0, 0]) },
+      },
     },
     rules: { 'design-token/colors': 'error' },
   };

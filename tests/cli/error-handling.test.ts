@@ -32,10 +32,14 @@ void test('fails on unresolved aliases', () => {
   fs.writeFileSync(
     path.join(dir, 'tokens.tokens.json'),
     JSON.stringify({
+      $version: '1.0.0',
       color: {
-        red: { $type: 'color', $value: '#ff0000' },
-        bad1: { $type: 'color', $value: '{color.missing}' },
-        bad2: { $type: 'color', $value: '{color.missing}' },
+        red: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+        bad1: { $type: 'color', $ref: '#/color/missing' },
+        bad2: { $type: 'color', $ref: '#/color/missing' },
       },
     }),
   );

@@ -11,10 +11,26 @@ This guide shows a minimal setup that writes CSS variables, JavaScript constants
 
 ```jsonc
 // tokens/default.tokens.json
-{ "color": { "primary": { "$value": "#fff" } } }
+{
+  "$version": "1.0.0",
+  "color": {
+    "primary": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+    }
+  }
+}
 
 // tokens/dark.tokens.json
-{ "color": { "primary": { "$value": "#000" } } }
+{
+  "$version": "1.0.0",
+  "color": {
+    "primary": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [0, 0, 0] }
+    }
+  }
+}
 ```
 
 ## Configuration
