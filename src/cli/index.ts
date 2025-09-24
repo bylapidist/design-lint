@@ -19,7 +19,6 @@ import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
 import { initConfig } from './init-config.js';
 import { exportTokens } from './tokens.js';
-import { generateOutputs } from './generate.js';
 import { validateConfig } from './validate-config.js';
 import { createLogger, type Logger } from './logger.js';
 
@@ -139,27 +138,6 @@ function createProgram(version: string, logger: Logger) {
       },
     );
 
-  program
-    .command('generate')
-    .description('Generate token outputs as configured')
-    .option('--config <path>', 'Path to configuration file')
-    .option('--watch', 'Watch token files and regenerate on changes')
-    .action(
-      async (opts: { config?: string; watch?: boolean }, cmd: Command) => {
-        try {
-          const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
-          await generateOutputs(
-            {
-              ...opts,
-              config: opts.config ?? parent.config,
-            },
-            logger,
-          );
-        } catch (err) {
-          logger.error(err);
-        }
-      },
-    );
   return program;
 }
 

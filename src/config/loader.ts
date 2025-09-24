@@ -45,7 +45,6 @@ export async function loadConfig(
     rules: {},
     ignoreFiles: [],
     plugins: [],
-    output: [],
     configPath: result?.filepath
       ? realpathIfExists(result.filepath)
       : undefined,

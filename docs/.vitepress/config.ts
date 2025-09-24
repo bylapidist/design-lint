@@ -66,7 +66,6 @@ const examplesSidebar = [
       { text: 'Vue', link: '/examples/vue/' },
       { text: 'Plugin authoring', link: '/examples/plugin/' },
       { text: 'Custom formatter', link: '/examples/formatter/' },
-      { text: 'Token outputs', link: '/examples/token-outputs' },
     ],
   },
 ];

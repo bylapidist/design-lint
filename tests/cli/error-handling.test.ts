@@ -48,7 +48,6 @@ void test('fails on unresolved aliases', () => {
     JSON.stringify({
       tokens: { default: './tokens.tokens.json' },
       rules: {},
-      output: [],
     }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');

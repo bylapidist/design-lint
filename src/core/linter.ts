@@ -24,13 +24,6 @@ import { FILE_TYPE_MAP } from './file-types.js';
 import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
 import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
 
-export interface OutputTarget {
-  format: 'css' | 'js' | 'ts';
-  file: string;
-  nameTransform?: NameTransform;
-  selectors?: Record<string, string>;
-}
-
 export interface Config {
   tokens?:
     | DesignTokens
@@ -44,7 +37,6 @@ export interface Config {
   patterns?: string[];
   wrapTokensWithVar?: boolean;
   nameTransform?: NameTransform;
-  output?: OutputTarget[];
 }
 
 interface ResolvedConfig extends Omit<Config, 'tokens'> {

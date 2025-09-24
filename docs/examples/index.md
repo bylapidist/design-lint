@@ -13,7 +13,6 @@ Explore these hands-on examples to see design-lint in action.
 - [Vue](./vue/README.md) – lints Vue Single File Components.
 - [Formatter](./formatter/README.md) – custom formatter producing plain text.
 - [Plugin](./plugin/README.md) – scaffold for authoring a new rule plugin.
-- [Token outputs](./token-outputs.md) – generate CSS, JavaScript and TypeScript tokens.
 
 ## See also
 - [Getting Started](../usage.md)
