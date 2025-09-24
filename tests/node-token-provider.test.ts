@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { NodeTokenProvider } from '../src/adapters/node/token-provider.js';
 import { getDtifFlattenedTokens } from '../src/utils/tokens/dtif-cache.js';
+import { createDtifTheme } from './helpers/dtif.js';
 import type { DesignTokens } from '../src/core/types.js';
 
 const tokens = {
@@ -73,4 +74,24 @@ void test('accepts theme records with tokens at the root', async () => {
   const provider = new NodeTokenProvider(themes);
   const result = await provider.load();
   assert.deepEqual(result, themes);
+});
+
+void test('accepts theme records created with createDtifTheme', async () => {
+  const themes = {
+    light: createDtifTheme({
+      'color.primary': { type: 'color', value: '#fff' },
+    }),
+    dark: createDtifTheme({
+      'color.primary': { type: 'color', value: '#000' },
+    }),
+  } as const;
+
+  const provider = new NodeTokenProvider(themes);
+  const result = await provider.load();
+
+  assert.deepEqual(Object.keys(result).sort(), ['dark', 'light']);
+  const cached = getDtifFlattenedTokens(result.light);
+  assert(cached);
+  assert.equal(cached.length, 1);
+  assert.equal(cached[0]?.pointer, '#/color/primary');
 });

@@ -2,6 +2,7 @@ import type { LintResult, DesignTokens, DtifFlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
 import { guards, collections } from '../utils/index.js';
 import { extractVarName } from '../utils/tokens/index.js';
+import { getTokenPath } from '../utils/tokens/token-view.js';
 import {
   ensureDtifFlattenedTokens,
   getDtifFlattenedTokens,
@@ -212,13 +213,6 @@ function toTrackedValue(value: unknown): string | undefined {
     return `${String(value.value)}${value.unit}`;
   }
   return undefined;
-}
-
-function getTokenPath(token: DtifFlattenedToken): string {
-  if (token.segments.length > 0) {
-    return token.segments.join('.');
-  }
-  return token.pointer;
 }
 
 function isDtifFlattenedTokenLike(value: unknown): value is DtifFlattenedToken {

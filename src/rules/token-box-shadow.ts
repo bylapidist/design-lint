@@ -1,9 +1,11 @@
 import valueParser from 'postcss-value-parser';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards, collections } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   data: { isRecord },
+  domain: { isTokenInGroup },
 } = guards;
 const { toArray } = collections;
 
@@ -16,7 +18,7 @@ export const boxShadowRule = tokenRule({
   tokens: 'shadow',
   message:
     'design-token/box-shadow requires shadow tokens; configure tokens with $type "shadow" under a "shadows" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const allowed = new Set<string>();
     const parseDim = (v: unknown): string | null => {
       if (typeof v === 'string') return v;
@@ -48,10 +50,10 @@ export const boxShadowRule = tokenRule({
       }
       return parts.join(', ');
     };
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('shadows.')) continue;
-      const val = toString(value);
-      if (val) allowed.add(normalize(val));
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'shadows')) continue;
+      const value = toString(token.value);
+      if (value) allowed.add(normalize(value));
     }
     return allowed;
   },

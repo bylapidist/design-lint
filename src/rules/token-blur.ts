@@ -1,10 +1,12 @@
 import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   data: { isRecord },
+  domain: { isTokenInGroup },
 } = guards;
 
 interface BlurRuleOptions {
@@ -21,13 +23,13 @@ export const blurRule = tokenRule<BlurRuleOptions>({
   tokens: 'dimension',
   message:
     'design-token/blur requires blur tokens; configure tokens with $type "dimension" under a "blurs" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const parse = (val: unknown): number | null =>
       isRecord(val) && typeof val.value === 'number' ? val.value : null;
     const allowed = new Set<number>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('blurs.')) continue;
-      const num = parse(value);
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'blurs')) continue;
+      const num = parse(token.value);
       if (num !== null) allowed.add(num);
     }
     return allowed;

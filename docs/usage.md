@@ -97,10 +97,29 @@ npx design-lint validate --config designlint.config.json
 ```
 
 ## Export resolved tokens
-Use the `tokens` subcommand to write flattened tokens to a file or stdout. Alias references are resolved and metadata like `$extensions` is preserved:
+Use the `tokens` subcommand to write the canonical flattened DTIF tokens to a file or stdout. Each theme maps JSON pointers to the `DtifFlattenedToken` entries produced by the parser, including metadata and resolution details:
 
 ```bash
 npx design-lint tokens --out tokens.json
+```
+
+The output resembles:
+
+```json
+{
+  "default": {
+    "#/color/red": {
+      "pointer": "#/color/red",
+      "segments": ["color", "red"],
+      "name": "red",
+      "type": "color",
+      "value": { "colorSpace": "srgb", "components": [1, 0, 0] },
+      "metadata": {
+        "extensions": { "vendor.ext": { "foo": "bar" } }
+      }
+    }
+  }
+}
 ```
 
 Use `--theme` to export tokens for a specific theme.

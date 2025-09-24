@@ -1,16 +1,14 @@
 import type { DesignTokens, DtifFlattenedToken } from '../core/types.js';
 import {
   getFlattenedTokens,
-  sortTokensByPath,
   toConstantName,
   type NameTransform,
 } from '../utils/tokens/index.js';
+import { getTokenPath } from '../utils/tokens/token-view.js';
 
 export interface JsOutputOptions {
   /** Optional transform applied to token path segments before generating constants */
   nameTransform?: NameTransform;
-  /** Optional warning callback for alias resolution or other notices */
-  onWarn?: (msg: string) => void;
 }
 
 /**
@@ -29,17 +27,20 @@ export function generateJsConstants(
   const lines: string[] = [];
 
   for (const theme of themes) {
-    const flat = sortTokensByPath(
-      getFlattenedTokens(tokensByTheme, theme, {
-        nameTransform,
-        onWarn: options.onWarn,
-      }),
-    );
-    for (const t of flat) {
-      const base = toConstantName(t.path);
+    const dtifTokens = getFlattenedTokens(tokensByTheme, theme, {
+      nameTransform,
+    });
+    const entries = dtifTokens
+      .map((token) => ({
+        token,
+        path: getTokenPath(token, nameTransform),
+      }))
+      .sort((a, b) => a.path.localeCompare(b.path));
+    for (const { path, token } of entries) {
+      const base = toConstantName(path);
       const constName =
         theme === 'default' ? base : `${base}_${theme.toUpperCase()}`;
-      const value = JSON.stringify(t.value);
+      const value = JSON.stringify(token.value);
       lines.push(`export const ${constName} = ${value};`);
     }
   }

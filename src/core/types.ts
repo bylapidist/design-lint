@@ -86,59 +86,9 @@ export interface TokenDiagnostic {
 }
 
 /**
- * Legacy token node produced by the pre-DTIF parser.
- */
-export interface Token {
-  $value: unknown;
-  $type?: string;
-  $description?: string;
-  $extensions?: Record<string, unknown>;
-  $deprecated?: boolean | string;
-}
-
-/**
- * Legacy token group produced by the pre-DTIF parser.
- */
-export type TokenGroup = {
-  $type?: string;
-  $description?: string;
-  $extensions?: Record<string, unknown>;
-  $deprecated?: boolean | string;
-} & {
-  [name: string]: TokenGroup | Token | undefined;
-};
-
-/**
- * Legacy token root with optional schema reference.
- */
-export type RootTokenGroup = TokenGroup & { $schema?: string };
-
-/**
  * Canonical DTIF token document.
  */
 export type DesignTokens = TokenDocument;
-
-/**
- * Legacy design tokens tree maintained until the DTIF migration completes.
- *
- * The type remains available for internal compatibility during the DTIF
- * migration but will be removed alongside the legacy parser in a future major
- * release.
- */
-export type LegacyDesignTokens = RootTokenGroup;
-
-export interface FlattenedToken {
-  path: string;
-  value: unknown;
-  type?: string;
-  aliases?: string[];
-  metadata: {
-    description?: string;
-    extensions?: Record<string, unknown>;
-    deprecated?: boolean | string;
-    loc: { line: number; column: number };
-  };
-}
 
 export interface LintMessage {
   ruleId: string;
@@ -160,7 +110,12 @@ export interface LintResult {
 
 export interface RuleContext<TOptions = unknown> {
   report: (msg: Omit<LintMessage, 'ruleId' | 'severity'>) => void;
-  getFlattenedTokens: (type?: string, theme?: string) => FlattenedToken[];
+  getDtifTokens: (type?: string, theme?: string) => DtifFlattenedToken[];
+  /**
+   * Derive the normalized token path for a DTIF flattened token using the
+   * runtime name transform configured for the linter.
+   */
+  getTokenPath: (token: DtifFlattenedToken) => string;
   options?: TOptions;
   metadata?: Record<string, unknown>;
   sourceId: string;

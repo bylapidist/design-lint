@@ -8,3 +8,4 @@ export * from './is-rule-module.js';
 export * from './is-theme-record.js';
 export * from './is-token.js';
 export * from './is-token-group.js';
+export * from './dtif-token.js';

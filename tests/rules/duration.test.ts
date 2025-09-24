@@ -3,21 +3,19 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
-const tokens = {
-  durations: {
-    $type: 'duration',
-    fast: { $value: { value: 200, unit: 'ms' } },
-    slow: { $value: { value: 400, unit: 'ms' } },
-  },
-};
+const tokens = createDtifTheme({
+  'durations.fast': { type: 'duration', value: { value: 200, unit: 'ms' } },
+  'durations.slow': { type: 'duration', value: { value: 400, unit: 'ms' } },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/duration': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

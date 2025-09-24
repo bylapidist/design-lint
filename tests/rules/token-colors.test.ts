@@ -3,14 +3,17 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
 function createLinter(rule: unknown = 'error') {
-  const tokens = { colors: { $type: 'color', primary: { $value: '#ffffff' } } };
+  const tokens = createDtifTheme({
+    'colors.primary': { type: 'color', value: '#ffffff' },
+  });
   return initLinter(
     { tokens, rules: { 'design-token/colors': rule } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

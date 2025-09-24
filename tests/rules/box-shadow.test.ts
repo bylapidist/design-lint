@@ -3,37 +3,37 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
-const tokens = {
-  shadows: {
-    $type: 'shadow',
-    sm: {
-      $value: {
-        offsetX: { value: 0, unit: 'px' },
-        offsetY: { value: 1, unit: 'px' },
-        blur: { value: 2, unit: 'px' },
-        spread: { value: 0, unit: 'px' },
-        color: 'rgba(0,0,0,0.1)',
-      },
-    },
-    lg: {
-      $value: {
-        offsetX: { value: 0, unit: 'px' },
-        offsetY: { value: 2, unit: 'px' },
-        blur: { value: 4, unit: 'px' },
-        spread: { value: 0, unit: 'px' },
-        color: 'rgba(0,0,0,0.2)',
-      },
+const tokens = createDtifTheme({
+  'shadows.sm': {
+    type: 'shadow',
+    value: {
+      offsetX: { value: 0, unit: 'px' },
+      offsetY: { value: 1, unit: 'px' },
+      blur: { value: 2, unit: 'px' },
+      spread: { value: 0, unit: 'px' },
+      color: 'rgba(0,0,0,0.1)',
     },
   },
-};
+  'shadows.lg': {
+    type: 'shadow',
+    value: {
+      offsetX: { value: 0, unit: 'px' },
+      offsetY: { value: 2, unit: 'px' },
+      blur: { value: 4, unit: 'px' },
+      spread: { value: 0, unit: 'px' },
+      color: 'rgba(0,0,0,0.2)',
+    },
+  },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/box-shadow': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

@@ -3,21 +3,19 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
-const tokens = {
-  borderWidths: {
-    $type: 'dimension',
-    sm: { $value: { value: 1, unit: 'px' } },
-    md: { $value: { value: 2, unit: 'px' } },
-  },
-};
+const tokens = createDtifTheme({
+  'borderWidths.sm': { type: 'dimension', value: { value: 1, unit: 'px' } },
+  'borderWidths.md': { type: 'dimension', value: { value: 2, unit: 'px' } },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/border-width': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

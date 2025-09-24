@@ -4,6 +4,10 @@ import assert from 'node:assert/strict';
 import type { DesignTokens, DtifFlattenedToken } from '../../src/core/types.js';
 import { getFlattenedTokens } from '../../src/utils/tokens/index.js';
 import { attachDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js';
+import {
+  getTokenPath,
+  pointerToTokenPath,
+} from '../../src/utils/tokens/token-view.js';
 
 const paletteUri = new URL('memory://get-flattened-tokens.test.json');
 
@@ -66,18 +70,29 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
   const light = { $version: '1.0.0' } as unknown as DesignTokens;
   attachDtifFlattenedTokens(light, [lightPrimary, lightSecondary]);
 
-  const flat = getFlattenedTokens({ light }, 'light');
+  const dtifTokens = getFlattenedTokens({ light }, 'light');
   assert.deepEqual(
-    flat.map((token) => token.path),
+    dtifTokens.map((token) => getTokenPath(token)),
     ['palette.primary', 'palette.secondary'],
   );
 
-  const primary = flat.find((token) => token.path === 'palette.primary');
+  const primary = dtifTokens.find(
+    (token) => token.pointer === '#/palette/primary',
+  );
   assert(primary);
-  assert.equal(primary.metadata.deprecated, '#/palette/secondary');
-  assert.deepEqual(primary.metadata.loc, { line: 4, column: 5 });
+  assert.equal(
+    primary.metadata.deprecated?.$replacement,
+    '#/palette/secondary',
+  );
+  assert.deepEqual(primary.location?.span?.start, {
+    line: 4,
+    column: 5,
+    offset: 32,
+  });
 
-  const secondary = flat.find((token) => token.path === 'palette.secondary');
+  const secondary = dtifTokens.find(
+    (token) => token.pointer === '#/palette/secondary',
+  );
   assert(secondary);
   assert.deepEqual(secondary.metadata.extensions, {
     'vendor.example': { note: true },
@@ -90,21 +105,29 @@ void test('getFlattenedTokens merges tokens from all themes when none is specifi
   const dark = { $version: '1.0.0' } as unknown as DesignTokens;
   attachDtifFlattenedTokens(dark, [darkSecondary]);
 
-  const flat = getFlattenedTokens({ light, dark });
-  assert.deepEqual(flat.map((token) => token.path).sort(), [
-    'palette.primary',
-    'palette.secondary',
-  ]);
+  const dtifTokens = getFlattenedTokens({ light, dark });
+  const paths = dtifTokens.map((token) => getTokenPath(token)).sort();
+  assert.deepEqual(paths, ['palette.primary', 'palette.secondary']);
 });
 
 void test('getFlattenedTokens resolves aliases', () => {
   const theme = { $version: '1.0.0' } as unknown as DesignTokens;
   attachDtifFlattenedTokens(theme, [lightPrimary, aliasToken]);
 
-  const flat = getFlattenedTokens({ default: theme }, 'default');
-  const alias = flat.find((token) => token.path === 'palette.primaryAlias');
+  const dtifTokens = getFlattenedTokens({ default: theme }, 'default');
+  const alias = dtifTokens.find(
+    (token) => token.pointer === '#/palette/primaryAlias',
+  );
   assert(alias);
-  assert.deepEqual(alias.aliases, ['palette.primary']);
+  const resolution = alias.resolution;
+  assert(resolution);
+  const trace = resolution.trace;
+  assert(trace);
+  const tracePointer = trace.find(
+    (step) => step.kind === 'token' && step.pointer === '#/palette/primary',
+  );
+  assert(tracePointer);
+  assert.equal(pointerToTokenPath(tracePointer.pointer), 'palette.primary');
 });
 
 void test('getFlattenedTokens applies name transforms', () => {
@@ -121,13 +144,11 @@ void test('getFlattenedTokens applies name transforms', () => {
   ];
   attachDtifFlattenedTokens(theme, tokens);
 
-  const flat = getFlattenedTokens({ theme }, undefined, {
+  const dtifTokens = getFlattenedTokens({ theme }, undefined, {
     nameTransform: 'camelCase',
   });
-  assert.deepEqual(
-    flat.map((token) => token.path),
-    ['colorGroup.primaryColor'],
-  );
+  const paths = dtifTokens.map((token) => getTokenPath(token, 'camelCase'));
+  assert.deepEqual(paths, ['colorGroup.primaryColor']);
 });
 
 void test('getFlattenedTokens rejects primitive token values', () => {
@@ -162,17 +183,12 @@ void test('getFlattenedTokens accepts flattened DTIF tokens', () => {
     nameTransform: 'camelCase',
   });
 
-  assert.deepEqual(flat, [
-    {
-      path: 'colorGroup.primaryColor',
-      value: '#fff',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-  ]);
+  assert.equal(flat.length, 1);
+  assert.strictEqual(flat[0], tokens.default[0]);
+
+  const [token] = flat;
+  assert(token);
+  assert.equal(getTokenPath(token, 'camelCase'), 'colorGroup.primaryColor');
+  assert.equal(token.value, '#fff');
+  assert.equal(token.type, 'color');
 });

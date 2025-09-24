@@ -1,7 +1,11 @@
 import valueParser from 'postcss-value-parser';
-import { rules } from '../utils/index.js';
+import type { DtifFlattenedToken } from '../core/types.js';
+import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
+const {
+  domain: { isTokenInGroup },
+} = guards;
 
 const normalize = (val: string): string =>
   valueParser.stringify(valueParser(val).nodes).trim();
@@ -12,13 +16,13 @@ export const animationRule = tokenRule({
   tokens: 'string',
   message:
     'design-token/animation requires animation tokens; configure tokens with $type "string" under an "animations" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const allowed = new Set<string>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('animations.')) continue;
-      const val = value;
-      if (typeof val === 'string') {
-        allowed.add(normalize(val));
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'animations')) continue;
+      const value = token.value;
+      if (typeof value === 'string') {
+        allowed.add(normalize(value));
       }
     }
     return allowed;

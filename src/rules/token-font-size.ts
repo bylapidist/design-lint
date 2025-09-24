@@ -1,8 +1,10 @@
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   data: { isRecord },
+  domain: { isTokenInGroup },
 } = guards;
 
 const parseSize = (val: unknown): number | null => {
@@ -32,11 +34,11 @@ export const fontSizeRule = tokenRule({
   tokens: 'dimension',
   message:
     'design-token/font-size requires font size tokens; configure tokens with $type "dimension" under a "fontSizes" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const sizes = new Set<number>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('fontSizes.')) continue;
-      const num = parseSize(value);
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'fontSizes')) continue;
+      const num = parseSize(token.value);
       if (num !== null) sizes.add(num);
     }
     return sizes;

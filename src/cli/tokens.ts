@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { loadConfig } from '../config/loader.js';
 import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
 
@@ -26,34 +27,24 @@ interface TokensCommandOptions {
  * is provided.
  *
  * @param options - Command options controlling theme selection and output path.
- * @param onWarn - Optional callback for alias resolution or parse warnings.
  */
 export async function exportTokens(
   options: TokensCommandOptions,
-  onWarn?: (msg: string) => void,
 ): Promise<void> {
   const config = await loadConfig(process.cwd(), options.config);
   const tokensByTheme = toThemeRecord(config.tokens);
   const themes = options.theme ? [options.theme] : Object.keys(tokensByTheme);
-  const output: Record<string, Record<string, unknown>> = {};
+  const output: Record<string, Record<string, DtifFlattenedToken>> = {};
 
   for (const theme of themes) {
-    const flat = getFlattenedTokens(tokensByTheme, theme, {
+    const dtifTokens = getFlattenedTokens(tokensByTheme, theme, {
       nameTransform: config.nameTransform,
-      onWarn,
     });
-    output[theme] = {};
-    for (const { path: p, value, type, aliases, metadata } of flat) {
-      // Prevent prototype pollution from malicious keys
-      if (p === '__proto__' || p === 'constructor' || p === 'prototype')
-        continue;
-      output[theme][p] = {
-        value,
-        type,
-        ...(aliases ? { aliases } : {}),
-        ...metadata,
-      };
+    const themeOutput: Record<string, DtifFlattenedToken> = {};
+    for (const token of dtifTokens) {
+      themeOutput[token.pointer] = token;
     }
+    output[theme] = themeOutput;
   }
 
   const json = JSON.stringify(output, null, 2);
