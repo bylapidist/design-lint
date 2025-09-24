@@ -133,7 +133,13 @@ async function loadFromFigma(): Promise<DesignTokens> {
   // convert tokens here and return a DTIF-compatible object
   return {
     $version: '1.0.0',
-    color: { primary: { $type: 'color', $value: '#0af' } },
+    color: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0.66, 1] },
+      },
+      accent: { $type: 'color', $ref: '#/color/primary' },
+    },
   } satisfies DesignTokens;
 }
 ```

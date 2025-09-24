@@ -14,9 +14,10 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "zIndex": {
       "modal": { "$type": "number", "$value": 1000 },
-      "dropdown": { "$type": "number", "$value": "{zIndex.modal}" }
+      "dropdown": { "$type": "number", "$ref": "#/zIndex/modal" }
     }
   },
   "rules": { "design-token/z-index": "error" }

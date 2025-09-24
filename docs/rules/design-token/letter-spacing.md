@@ -14,16 +14,20 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "letterSpacings": {
-      "tight": { "$type": "dimension", "$value": { "value": -0.05, "unit": "rem" } },
-      "loose": { "$type": "dimension", "$value": "{letterSpacings.tight}" }
+      "tight": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": -0.05, "unit": "rem" }
+      },
+      "loose": { "$type": "dimension", "$ref": "#/letterSpacings/tight" }
     }
   },
   "rules": { "design-token/letter-spacing": "error" }
 }
 ```
 
-Letter-spacing tokens use the `dimension` type.
+Letter-spacing tokens use the `dimension` type with `dimensionType` set to `length`.
 
 ## Options
 No additional options.
