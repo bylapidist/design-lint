@@ -238,7 +238,11 @@ jobs:
                 "spacing": {
                   "scale-100": {
                     "$type": "dimension",
-                    "$value": { "value": 4, "unit": "px" }
+                    "$value": {
+                      "dimensionType": "length",
+                      "value": 4,
+                      "unit": "px"
+                    }
                   }
                 }
               }
