@@ -35,3 +35,53 @@ void test('getTokenStringValue returns literals while skipping aliases', () => {
     '{color.primary}',
   );
 });
+
+void test('getTokenStringValue returns DTIF color hex values', () => {
+  const token: DtifFlattenedToken = {
+    ...baseToken,
+    pointer: '#/color/old',
+    segments: ['color', 'old'],
+    name: 'old',
+    type: 'color',
+    value: {
+      colorSpace: 'srgb',
+      components: [0, 0, 0],
+      hex: '#000000',
+    },
+  };
+  assert.equal(getTokenStringValue(token), '#000000');
+});
+
+void test('getTokenStringValue formats DTIF colors without hex', () => {
+  const token: DtifFlattenedToken = {
+    ...baseToken,
+    pointer: '#/color/new',
+    segments: ['color', 'new'],
+    name: 'new',
+    type: 'color',
+    value: {
+      colorSpace: 'srgb',
+      components: [1, 0, 0],
+    },
+  };
+  assert.equal(getTokenStringValue(token), 'color(srgb 1 0 0)');
+});
+
+void test('getTokenStringValue reads DTIF color fallbacks', () => {
+  const token: DtifFlattenedToken = {
+    ...baseToken,
+    pointer: '#/color/fallback',
+    segments: ['color', 'fallback'],
+    name: 'fallback',
+    type: 'color',
+    value: [
+      { $ref: '#/color/new' },
+      {
+        colorSpace: 'srgb',
+        components: [1, 1, 1],
+        hex: '#ffffff',
+      },
+    ],
+  };
+  assert.equal(getTokenStringValue(token), '#ffffff');
+});

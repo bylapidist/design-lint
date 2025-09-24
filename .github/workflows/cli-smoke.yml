@@ -59,12 +59,20 @@ jobs:
               "color": {
                 "old": {
                   "$type": "color",
-                  "$value": { "colorSpace": "srgb", "components": [0, 0, 0] },
+                  "$value": {
+                    "colorSpace": "srgb",
+                    "components": [0, 0, 0],
+                    "hex": "#000000"
+                  },
                   "$deprecated": { "$replacement": "#/color/new" }
                 },
                 "new": {
                   "$type": "color",
-                  "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+                  "$value": {
+                    "colorSpace": "srgb",
+                    "components": [1, 1, 1],
+                    "hex": "#ffffff"
+                  }
                 }
               }
             },
@@ -113,12 +121,20 @@ jobs:
               color: {
                 old: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
                   $deprecated: { $replacement: '#/color/new' }
                 },
                 new: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
                 }
               }
             },
@@ -137,12 +153,20 @@ jobs:
               color: {
                 old: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
                   $deprecated: { $replacement: '#/color/new' }
                 },
                 new: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
                 }
               }
             },
@@ -161,12 +185,20 @@ jobs:
               color: {
                 old: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
                   $deprecated: { $replacement: '#/color/new' }
                 },
                 new: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
                 }
               }
             },
@@ -187,12 +219,20 @@ jobs:
               color: {
                 old: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
                   $deprecated: { $replacement: '#/color/new' }
                 },
                 new: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
                 }
               }
             },
@@ -213,12 +253,20 @@ jobs:
               color: {
                 old: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
                   $deprecated: { $replacement: '#/color/new' }
                 },
                 new: {
                   $type: 'color',
-                  $value: { colorSpace: 'srgb', components: [1, 1, 1] }
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
                 }
               }
             },
