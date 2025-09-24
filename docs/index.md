@@ -10,9 +10,6 @@ hero:
   name: design-lint
   text: Design systems that ship consistently
   tagline: Keep components, tokens, and styles aligned with a DTIF-native linter built for teams.
-  image:
-    src: /logo.svg
-    alt: "@lapidist/design-lint logo"
   actions:
     - theme: brand
       text: Get started
