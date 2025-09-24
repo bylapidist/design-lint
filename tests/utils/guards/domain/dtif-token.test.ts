@@ -4,14 +4,11 @@ import {
   getTokenStringValue,
   isTokenInGroup,
 } from '../../../../src/utils/guards/domain/dtif-token.js';
-import type { DtifFlattenedToken } from '../../../../src/core/types.js';
+import { createDtifToken } from '../../../helpers/dtif.js';
 
-const baseToken: DtifFlattenedToken = {
-  pointer: '#/spacing/md',
-  segments: ['spacing', 'md'],
-  name: 'md',
-  metadata: {},
-};
+const baseToken = createDtifToken('spacing.md', {
+  type: 'dimension',
+});
 
 void test('isTokenInGroup returns true when the first segment matches', () => {
   assert.equal(isTokenInGroup(baseToken, 'spacing'), true);
@@ -19,16 +16,16 @@ void test('isTokenInGroup returns true when the first segment matches', () => {
 });
 
 void test('getTokenStringValue returns literals while skipping aliases', () => {
-  const literal: DtifFlattenedToken = {
-    ...baseToken,
+  const literal = createDtifToken('spacing.md', {
+    type: 'dimension',
     value: '4px',
-  };
+  });
   assert.equal(getTokenStringValue(literal), '4px');
 
-  const alias: DtifFlattenedToken = {
-    ...baseToken,
+  const alias = createDtifToken('spacing.md', {
+    type: 'dimension',
     value: '{color.primary}',
-  };
+  });
   assert.equal(getTokenStringValue(alias), undefined);
   assert.equal(
     getTokenStringValue(alias, { allowAliases: true }),
@@ -37,42 +34,30 @@ void test('getTokenStringValue returns literals while skipping aliases', () => {
 });
 
 void test('getTokenStringValue returns DTIF color hex values', () => {
-  const token: DtifFlattenedToken = {
-    ...baseToken,
-    pointer: '#/color/old',
-    segments: ['color', 'old'],
-    name: 'old',
+  const token = createDtifToken('color.old', {
     type: 'color',
     value: {
       colorSpace: 'srgb',
       components: [0, 0, 0],
       hex: '#000000',
     },
-  };
+  });
   assert.equal(getTokenStringValue(token), '#000000');
 });
 
 void test('getTokenStringValue formats DTIF colors without hex', () => {
-  const token: DtifFlattenedToken = {
-    ...baseToken,
-    pointer: '#/color/new',
-    segments: ['color', 'new'],
-    name: 'new',
+  const token = createDtifToken('color.new', {
     type: 'color',
     value: {
       colorSpace: 'srgb',
       components: [1, 0, 0],
     },
-  };
+  });
   assert.equal(getTokenStringValue(token), 'color(srgb 1 0 0)');
 });
 
 void test('getTokenStringValue reads DTIF color fallbacks', () => {
-  const token: DtifFlattenedToken = {
-    ...baseToken,
-    pointer: '#/color/fallback',
-    segments: ['color', 'fallback'],
-    name: 'fallback',
+  const token = createDtifToken('color.fallback', {
     type: 'color',
     value: [
       { $ref: '#/color/new' },
@@ -82,6 +67,6 @@ void test('getTokenStringValue reads DTIF color fallbacks', () => {
         hex: '#ffffff',
       },
     ],
-  };
+  });
   assert.equal(getTokenStringValue(token), '#ffffff');
 });

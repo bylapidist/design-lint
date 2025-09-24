@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { toThemeRecord } from '../../../src/utils/tokens/index.js';
 import { attachDtifFlattenedTokens } from '../../../src/utils/tokens/dtif-cache.js';
-import type { DtifFlattenedToken } from '../../../src/core/types.js';
+import { createDtifToken } from '../../helpers/dtif.js';
 
 const srgb = (components: [number, number, number]) => ({
   colorSpace: 'srgb',
@@ -42,15 +42,11 @@ void test('treat DTIF documents with cached flattening as single theme', () => {
       },
     },
   } satisfies Record<string, unknown>;
-  const flattened: DtifFlattenedToken[] = [
-    {
-      pointer: '#/color/red',
-      segments: ['color', 'red'],
-      name: 'red',
+  const flattened = [
+    createDtifToken('color.red', {
       type: 'color',
       value: { colorSpace: 'srgb', components: [1, 0, 0] },
-      metadata: {},
-    },
+    }),
   ];
   attachDtifFlattenedTokens(tokens, flattened);
   const record = toThemeRecord(tokens);

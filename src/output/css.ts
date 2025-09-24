@@ -47,11 +47,29 @@ export function generateCssVariables(
     const lines: string[] = [`${selector} {`];
     for (const { path, token } of entries) {
       const varName = `--${path.replace(/\./g, '-')}`;
-      lines.push(`  ${varName}: ${String(token.value)};`);
+      lines.push(`  ${varName}: ${formatTokenValue(token)};`);
     }
     lines.push('}');
     blocks.push(lines.join('\n'));
   }
 
   return blocks.join('\n\n');
+}
+
+function formatTokenValue(token: DtifFlattenedToken): string {
+  const value = token.value;
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return String(value);
+  }
+
+  if (value === undefined) {
+    return '';
+  }
+
+  return JSON.stringify(value);
 }

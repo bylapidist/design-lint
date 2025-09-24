@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
+import { ensureDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js';
 import type { LintDocument } from '../../src/core/environment.js';
 
 void test('design-system/no-unused-tokens reports unused tokens', async () => {
@@ -37,6 +38,7 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   const tokens = {
     $version: '1.0.0',
     color: {
+      primary: { $type: 'string', $value: '#ffffff' },
       unused: {
         $type: 'string',
         $value: '#123456',
@@ -45,6 +47,9 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
       },
     },
   };
+  await ensureDtifFlattenedTokens(tokens, {
+    uri: 'memory://tests/no-unused-tokens/default.json',
+  });
   const linter = initLinter(
     {
       tokens,
@@ -55,7 +60,7 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
-    getText: () => Promise.resolve(''),
+    getText: () => Promise.resolve('const color = "#ffffff";'),
   };
   const { results } = await linter.lintDocuments([doc]);
   const msg = results
@@ -64,9 +69,23 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   assert(msg);
   assert(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
-  assert.deepEqual(msg.metadata.deprecated, {
-    $replacement: '#/color/primary',
-  });
+  const { deprecated } = msg.metadata;
+  assert(deprecated && typeof deprecated === 'object');
+  assert('supersededBy' in deprecated);
+  const supersededBy = deprecated.supersededBy;
+  assert(
+    supersededBy &&
+      typeof supersededBy === 'object' &&
+      'pointer' in supersededBy &&
+      typeof supersededBy.pointer === 'string',
+  );
+  assert.equal(supersededBy.pointer, '#/color/primary');
+  if ('uri' in supersededBy && typeof supersededBy.uri === 'string') {
+    assert.equal(
+      supersededBy.uri,
+      'memory://tests/no-unused-tokens/default.json',
+    );
+  }
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });
 

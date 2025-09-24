@@ -1,15 +1,13 @@
 import type {
-  Diagnostic,
-  DiagnosticCode,
   JsonPointer as DtifJsonPointer,
-  ResolvedToken,
-  SourceSpan,
+  TokenDiagnostic as ParserTokenDiagnostic,
+  DtifFlattenedToken as ParserFlattenedToken,
+  TokenMetadataSnapshot,
+  ResolvedTokenView,
 } from '@lapidist/dtif-parser';
 import type {
-  DeprecationMetadata,
   DesignToken as DtifToken,
   DesignTokenInterchangeFormat,
-  ExtensionsMap,
   TokenCollection as DtifCollection,
 } from '@lapidist/dtif-schema';
 import type ts from 'typescript';
@@ -26,63 +24,15 @@ export type JsonPointer = DtifJsonPointer;
 export type TokenDocument = DesignTokenInterchangeFormat;
 export type TokenNode = DtifToken;
 export type TokenCollectionNode = DtifCollection;
-export type TokenExtensions = ExtensionsMap;
-export type TokenDeprecation = DeprecationMetadata;
+export type TokenMetadata = TokenMetadataSnapshot;
 
-export interface TokenLocation {
-  uri?: URL;
-  pointer?: JsonPointer;
-  span?: SourceSpan;
-}
+export type TokenResolution = ResolvedTokenView;
 
-export interface TokenMetadata {
-  description?: string;
-  extensions?: TokenExtensions;
-  deprecated?: TokenDeprecation;
-  lastModified?: string;
-  lastUsed?: string;
-  usageCount?: number;
-  author?: string;
-  tags?: string[];
-  hash?: string;
-}
+export type TokenDiagnostic = ParserTokenDiagnostic;
 
-export type TokenResolution = Pick<
-  ResolvedToken,
-  | 'pointer'
-  | 'uri'
-  | 'type'
-  | 'value'
-  | 'source'
-  | 'overridesApplied'
-  | 'warnings'
-  | 'trace'
->;
-
-export interface DtifFlattenedToken {
-  pointer: JsonPointer;
-  segments: readonly string[];
-  name: string;
-  type?: string;
-  value?: unknown;
+export interface DtifFlattenedToken extends ParserFlattenedToken {
   metadata: TokenMetadata;
   resolution?: TokenResolution;
-  location?: TokenLocation;
-}
-
-export interface TokenDiagnosticRelated {
-  message: string;
-  pointer?: JsonPointer;
-  location?: TokenLocation;
-}
-
-export interface TokenDiagnostic {
-  code: DiagnosticCode;
-  message: string;
-  severity: Diagnostic['severity'];
-  pointer?: JsonPointer;
-  location?: TokenLocation;
-  related?: readonly TokenDiagnosticRelated[];
 }
 
 /**

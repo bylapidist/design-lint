@@ -11,11 +11,17 @@ function dtifToken(
   segments: readonly string[],
 ): DtifFlattenedToken {
   return {
+    id: pointer,
     pointer,
-    segments,
+    path: segments,
     name: segments[segments.length - 1] ?? '',
-    metadata: {},
-  };
+    metadata: {
+      description: undefined,
+      extensions: {},
+      deprecated: undefined,
+      source: { uri: 'memory://dtif', line: 1, column: 1 },
+    },
+  } satisfies DtifFlattenedToken;
 }
 
 void test('sortTokensByPath orders DTIF tokens by pointer-derived path', () => {

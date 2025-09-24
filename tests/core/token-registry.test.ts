@@ -8,6 +8,7 @@ import type {
   JsonPointer,
 } from '../../src/core/types.js';
 import { TokenRegistry } from '../../src/core/token-registry.js';
+import { createDtifToken } from '../helpers/dtif.js';
 
 async function flattenDocument(
   document: DesignTokens,
@@ -152,14 +153,10 @@ void test('TokenRegistry merges DTIF tokens across themes by pointer', async () 
 void test('TokenRegistry indexes flattened DTIF tokens', () => {
   const dtifTokens: Record<string, readonly DtifFlattenedToken[]> = {
     default: [
-      {
-        pointer: '#/ColorGroup/PrimaryColor',
-        segments: ['ColorGroup', 'PrimaryColor'],
-        name: 'PrimaryColor',
+      createDtifToken('ColorGroup.PrimaryColor', {
         type: 'color',
         value: '#fff',
-        metadata: {},
-      },
+      }),
     ],
   };
 

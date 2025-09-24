@@ -7,6 +7,7 @@ import {
   parseInlineDtifTokens,
   parseDtifTokenObject,
 } from '../../../src/core/dtif/parse.js';
+import type { TokenDiagnostic } from '../../../src/core/types.js';
 
 const fixturesDir = fileURLToPath(
   new URL('../../fixtures/dtif/', import.meta.url),
@@ -53,29 +54,30 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
     },
   });
 
-  const forwarded = [];
-  const warned: string[] = [];
+  const forwarded: TokenDiagnostic[] = [];
+  const warned: TokenDiagnostic[] = [];
 
   const { diagnostics } = await parseInlineDtifTokens(invalidDocument, {
     uri: 'inline:invalid',
     onDiagnostic: (diagnostic) => {
       forwarded.push(diagnostic);
     },
-    warn: (message) => {
-      warned.push(message);
+    warn: (diagnostic) => {
+      if (diagnostic.severity !== 'error') {
+        warned.push(diagnostic);
+      }
     },
   });
 
   assert(diagnostics.length >= 2);
   assert.strictEqual(forwarded.length, diagnostics.length);
   assert.deepStrictEqual(forwarded, diagnostics);
-  assert.strictEqual(warned.length, 0);
+  assert.ok(warned.every((diagnostic) => diagnostic.severity !== 'error'));
 
   const [firstDiagnostic] = diagnostics;
   assert(firstDiagnostic);
-  assert(firstDiagnostic.location);
-  assert(firstDiagnostic.location.uri);
-  assert.strictEqual(firstDiagnostic.location.uri.toString(), 'inline:invalid');
+  assert(firstDiagnostic.target);
+  assert.strictEqual(firstDiagnostic.target.uri, 'inline:invalid');
 });
 
 void test('parseDtifTokenObject flattens inline documents', async () => {

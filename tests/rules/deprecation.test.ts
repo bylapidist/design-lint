@@ -2,21 +2,26 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
+import { ensureDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js';
 
 void test('design-system/deprecation flags deprecated token', async () => {
+  const tokens = {
+    $version: '1.0.0',
+    colors: {
+      old: {
+        $type: 'string',
+        $value: 'colors.old',
+        $deprecated: { $replacement: '#/colors/new' },
+      },
+      new: { $type: 'string', $value: 'colors.new' },
+    },
+  };
+  await ensureDtifFlattenedTokens(tokens, {
+    uri: 'memory://tests/deprecation/default.json',
+  });
   const linter = initLinter(
     {
-      tokens: {
-        $version: '1.0.0',
-        colors: {
-          old: {
-            $type: 'string',
-            $value: 'colors.old',
-            $deprecated: { $replacement: '#/colors/new' },
-          },
-          new: { $type: 'string', $value: 'colors.new' },
-        },
-      },
+      tokens,
       rules: { 'design-system/deprecation': 'error' },
     },
     new FileSource(),
@@ -31,19 +36,23 @@ void test('design-system/deprecation flags deprecated token', async () => {
 });
 
 void test('design-system/deprecation ignores tokens in non-style jsx attributes', async () => {
+  const tokens = {
+    $version: '1.0.0',
+    colors: {
+      old: {
+        $type: 'string',
+        $value: 'colors.old',
+        $deprecated: { $replacement: '#/colors/new' },
+      },
+      new: { $type: 'string', $value: 'colors.new' },
+    },
+  };
+  await ensureDtifFlattenedTokens(tokens, {
+    uri: 'memory://tests/deprecation/default.json',
+  });
   const linter = initLinter(
     {
-      tokens: {
-        $version: '1.0.0',
-        colors: {
-          old: {
-            $type: 'string',
-            $value: 'colors.old',
-            $deprecated: { $replacement: '#/colors/new' },
-          },
-          new: { $type: 'string', $value: 'colors.new' },
-        },
-      },
+      tokens,
       rules: { 'design-system/deprecation': 'error' },
     },
     new FileSource(),

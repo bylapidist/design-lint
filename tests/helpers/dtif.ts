@@ -9,7 +9,7 @@ import { attachDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js'
 export interface DtifTokenInit {
   type?: string;
   value?: unknown;
-  metadata?: TokenMetadata;
+  metadata?: Partial<TokenMetadata>;
   resolution?: TokenResolution;
 }
 
@@ -33,13 +33,15 @@ export function createDtifToken(
   init: DtifTokenInit,
 ): DtifFlattenedToken {
   const segments = path.split('.');
+  const pointer = toPointer(segments);
   return {
-    pointer: toPointer(segments),
-    segments,
+    id: pointer,
+    pointer,
     name: segments[segments.length - 1] ?? '',
+    path: segments,
     type: init.type,
     value: init.value,
-    metadata: init.metadata ?? {},
+    metadata: createTokenMetadata(init.metadata),
     resolution: init.resolution,
   } satisfies DtifFlattenedToken;
 }
@@ -97,7 +99,7 @@ function createTokenNode(init: DtifTokenInit): Record<string, unknown> {
 
 function applyTokenMetadata(
   target: Record<string, unknown>,
-  metadata: TokenMetadata | undefined,
+  metadata: Partial<TokenMetadata> | undefined,
 ): void {
   if (!metadata) {
     return;
@@ -111,24 +113,23 @@ function applyTokenMetadata(
   if (metadata.deprecated !== undefined) {
     target.$deprecated = metadata.deprecated;
   }
-  if (metadata.lastModified !== undefined) {
-    target.$lastModified = metadata.lastModified;
-  }
-  if (metadata.lastUsed !== undefined) {
-    target.$lastUsed = metadata.lastUsed;
-  }
-  if (metadata.usageCount !== undefined) {
-    target.$usageCount = metadata.usageCount;
-  }
-  if (metadata.author !== undefined) {
-    target.$author = metadata.author;
-  }
-  if (metadata.tags !== undefined) {
-    target.$tags = metadata.tags;
-  }
-  if (metadata.hash !== undefined) {
-    target.$hash = metadata.hash;
-  }
+}
+
+function createTokenMetadata(
+  metadata: Partial<TokenMetadata> | undefined,
+): TokenMetadata {
+  return {
+    description: metadata?.description,
+    extensions: metadata?.extensions ?? {},
+    deprecated: metadata?.deprecated,
+    source:
+      metadata?.source ??
+      ({
+        uri: 'memory://dtif',
+        line: 1,
+        column: 1,
+      } satisfies TokenMetadata['source']),
+  } satisfies TokenMetadata;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -14,7 +14,7 @@ export function isTokenInGroup(
   token: DtifFlattenedToken,
   group: string,
 ): boolean {
-  return token.segments.length > 1 && token.segments[0] === group;
+  return token.path.length > 1 && token.path[0] === group;
 }
 
 /**
