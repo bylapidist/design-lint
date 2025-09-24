@@ -1,6 +1,7 @@
 <template>
   <div class="container" :style="{ padding: 5, color: '#ffffff' }">
     Hello
+    <button>Click</button>
   </div>
 </template>
 

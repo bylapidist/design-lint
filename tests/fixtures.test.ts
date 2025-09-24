@@ -31,18 +31,51 @@ const fixtures: Fixture[] = [
   },
   {
     name: 'svelte',
-    files: ['src/App.module.css', 'src/App.svelte', 'src/Multi.svelte'],
+    files: [
+      'designlint.config.json',
+      'src/App.module.css',
+      'src/App.svelte',
+      'src/ControlFlow.svelte',
+      'src/Directive.svelte',
+    ],
   },
   {
     name: 'vue',
-    files: ['src/App.module.css', 'src/App.vue', 'src/Multi.vue'],
+    files: [
+      'designlint.config.json',
+      'src/App.module.css',
+      'src/App.vue',
+      'src/Multi.vue',
+    ],
   },
-  { name: 'nextjs', files: ['styles/Home.module.css', 'pages/index.tsx'] },
-  { name: 'nuxt', files: ['pages/index.module.css', 'pages/index.vue'] },
-  { name: 'remix', files: ['app/styles.module.css', 'app/routes/_index.tsx'] },
+  {
+    name: 'nextjs',
+    files: [
+      'designlint.config.json',
+      'styles/Home.module.css',
+      'pages/index.tsx',
+    ],
+  },
+  {
+    name: 'nuxt',
+    files: [
+      'designlint.config.json',
+      'pages/index.module.css',
+      'pages/index.vue',
+    ],
+  },
+  {
+    name: 'remix',
+    files: [
+      'app/styles.module.css',
+      'app/routes/_index.tsx',
+      'designlint.config.json',
+    ],
+  },
   {
     name: 'web-components',
     files: [
+      'designlint.config.json',
       'src/component.css',
       'src/component.tsx',
       'src/component.mjs',
