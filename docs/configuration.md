@@ -58,6 +58,7 @@ Inline example:
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "color": {
       "primary": {
         "$type": "color",
@@ -66,8 +67,14 @@ Inline example:
       "secondary": { "$type": "color", "$ref": "#/color/primary" }
     },
     "space": {
-      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
-      "md": { "$type": "dimension", "$value": { "value": 8, "unit": "px" } }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 8, "unit": "px" }
+      }
     }
   }
 }
@@ -80,6 +87,7 @@ Organise tokens by category—such as `color`, `space`, or `typography`—to mir
   "tokens": {
     "light": "./light.tokens.json",
     "dark": {
+      "$version": "1.0.0",
       "color": {
         "primary": {
           "$type": "color",
@@ -169,12 +177,13 @@ import { defineConfig } from '@lapidist/design-lint';
 
 export default defineConfig({
   tokens: {
+    $version: '1.0.0',
     color: {
       primary: {
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [1, 0, 0] },
       },
-      secondary: { $type: 'color', $value: '{color.primary}' },
+      secondary: { $type: 'color', $ref: '#/color/primary' },
     },
   },
   rules: { 'design-token/colors': 'error' },

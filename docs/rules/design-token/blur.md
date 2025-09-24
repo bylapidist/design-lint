@@ -14,14 +14,20 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "blurs": {
-      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
-      "md": { "$type": "dimension", "$value": "{blurs.sm}" }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
+      },
+      "md": { "$type": "dimension", "$ref": "#/blurs/sm" }
     }
   },
   "rules": { "design-token/blur": "error" }
 }
 ```
+
+Blur tokens use the `dimension` type with `dimensionType` set to `length`.
 
 ## Options
 No additional options.

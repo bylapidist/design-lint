@@ -14,25 +14,39 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
+    "color": {
+      "shadow": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0, 0, 0],
+          "hex": "#000000",
+          "alpha": 0.1
+        }
+      }
+    },
     "shadows": {
       "sm": {
         "$type": "shadow",
         "$value": {
-          "offsetX": { "value": 0, "unit": "px" },
-          "offsetY": { "value": 1, "unit": "px" },
-          "blur": { "value": 2, "unit": "px" },
-          "spread": { "value": 0, "unit": "px" },
-          "color": "rgba(0,0,0,0.1)"
+          "shadowType": "css.box-shadow",
+          "offsetX": { "dimensionType": "length", "value": 0, "unit": "px" },
+          "offsetY": { "dimensionType": "length", "value": 1, "unit": "px" },
+          "blur": { "dimensionType": "length", "value": 2, "unit": "px" },
+          "spread": { "dimensionType": "length", "value": 0, "unit": "px" },
+          "color": { "$ref": "#/color/shadow" }
         }
       },
-      "md": { "$type": "shadow", "$value": "{shadows.sm}" }
+      "md": { "$type": "shadow", "$ref": "#/shadows/sm" }
     }
   },
   "rules": { "design-token/box-shadow": "error" }
 }
 ```
 
-Shadow tokens use the `shadow` type with sub-values for offsets, blur, spread, and color.
+Shadow tokens use the `shadow` type with a `shadowType` context and sub-values for offsets,
+blur, spread, and color.
 
 ## Options
 No additional options.
