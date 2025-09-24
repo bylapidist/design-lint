@@ -51,7 +51,7 @@ This rule is not auto-fixable.
 
 ```css
 .box { margin: 8px; }
-.box { margin: md; }
+.box { margin: var(--spacing-md); }
 .box { margin: calc(100% - 5px); }
 .box { margin: var(--space, 5px); }
 ```
