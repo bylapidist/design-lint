@@ -3,7 +3,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sarifFormatter } from '../../../src/formatters/index.js';
+import { sarifFormatter } from '../../../src/formatters/sarif/sarif-formatter.js';
 import type { LintResult } from '../../../src/core/types.js';
 
 interface SarifLog {
