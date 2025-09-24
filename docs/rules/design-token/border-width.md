@@ -20,7 +20,10 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
         "$type": "dimension",
         "$value": { "dimensionType": "length", "value": 1, "unit": "px" }
       },
-      "lg": { "$type": "dimension", "$ref": "#/borderWidths/sm" }
+      "lg": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
+      }
     }
   },
   "rules": { "design-token/border-width": "error" }
@@ -46,7 +49,7 @@ This rule is not auto-fixable.
 
 ```css
 .box { border-width: 1px; }
-.box { border-width: sm; }
+.box { border-width: 4px; }
 ```
 
 ## When Not To Use
