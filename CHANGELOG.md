@@ -1,5 +1,86 @@
 # @lapidist/design-lint
 
+## 6.0.0
+
+### Major Changes
+
+- 8e9d6a1: BREAKING: the `design-lint tokens` command now writes canonical DTIF flattened tokens keyed by JSON pointer instead of the legacy `{ value, type, aliases }` view. Consumers should read `DtifFlattenedToken` records from the generated JSON.
+- 8e9d6a1: redirect `flattenDesignTokens` and `getFlattenedTokens` to return canonical DTIF entries and require callers to derive legacy token views explicitly during the migration.
+- 8e9d6a1: refactor flattening utilities and registry to return DTIF-backed token views with normalized metadata and expose the underlying DTIF entry on rule contexts.
+- 8e9d6a1: require DTIF token documents to hydrate flattened caches before flattening or indexing them, surfacing errors when caches are missing while keeping the legacy parser fallback for non-DTIF trees.
+- 8e9d6a1: Remove the legacy flattened token view from rule contexts. `RuleContext` now
+  exposes only `getDtifTokens` and `getTokenPath`, the `FlattenedToken` type and
+  `createTokenView` helper are gone, and the `tokenRule` utility passes canonical
+  DTIF tokens to `getAllowed`. Update custom rules to read DTIF data directly.
+- 8e9d6a1: Remove the `generate` CLI command and the related configuration outputs. Projects should invoke the exported output helpers from custom scripts instead.
+- 8e9d6a1: stop exporting the legacy `LegacyDesignTokens` type from the core entry point
+  and mark it as deprecated to prepare for the DTIF-only public API
+- 8e9d6a1: Remove the legacy flatten adapter exports now that the DTIF token view helpers
+  replace `LegacyFlattenedToken`, `toLegacyFlattenedTokens`, and
+  `toLegacyFlattenedToken`. Consumers should rely on `createTokenView` and
+  pointer-based helpers when converting DTIF records to path-keyed structures.
+- 8e9d6a1: remove the legacy `parseDesignTokens*` helpers in favor of the DTIF parser APIs
+- 8e9d6a1: remove the legacy `Token`, `TokenGroup`, and `LegacyDesignTokens` type exports in favor of the DTIF-native `TokenNode` and `TokenCollectionNode` aliases, and update the token guards to recognise `$ref` entries.
+- 8e9d6a1: Remove the deprecated `onWarn` callbacks from flatten helpers, CLI token exports, output generators, and `createLinter` so the DTIF pipeline no longer exposes legacy warning hooks.
+- 8e9d6a1: remove the legacy TokenParseError wrapper in favor of surfacing DtifTokenParseError directly from the Node parser
+- 8e9d6a1: Remove `TokenRegistry#getToken` and `TokenRegistry#getTokens`, relying on the
+  DTIF registry APIs for lookups while rule contexts derive flattened token views
+  from the canonical DTIF cache.
+- 8e9d6a1: remove the unused `onWarn` option from `TokenRegistry` now that DTIF tokens power the registry exclusively
+- 8e9d6a1: remove the registerTokenTransform API and associated transform registry from the legacy parser while updating documentation to reflect the DTIF-only pipeline
+
+### Minor Changes
+
+- 8e9d6a1: Cache flattened DTIF tokens on normalized documents so synchronous helpers can reuse async parse results.
+- 8e9d6a1: Switch inline token normalization to the DTIF parser while falling back to the legacy pipeline for non-DTIF documents, updating config utilities to operate asynchronously and exporting a helper for parsing in-memory DTIF objects.
+- 8e9d6a1: Add DTIF-aware Node parser helpers that load token files through the canonical
+  session, surface diagnostics as rich errors, and expose the flattened resolver
+  output for tooling.
+- 8e9d6a1: expose DTIF parse helpers that flatten documents, surface resolver state, and forward diagnostics
+- 8e9d6a1: Add shared DTIF token guard utilities and update built-in token rules and docs to rely on the canonical helpers instead of legacy-specific checks.
+- 8e9d6a1: expose `RuleContext#getTokenPath` so plugin rules can derive normalized names from DTIF tokens and migrate the deprecation rule to consume DTIF metadata directly
+- 8e9d6a1: Expose DTIF flattened tokens to `tokenRule` helpers so rules can compute allowed values without relying on the legacy flattening view.
+
+### Patch Changes
+
+- 8e9d6a1: attach flattened DTIF tokens to documents returned by the Node token reader
+- 8e9d6a1: ensure the Node token provider hydrates DTIF flattened token caches before returning inline token documents and cover the behavior in unit tests
+- 8e9d6a1: Ensure DTIF cache hydration stores empty flattened arrays when documents contain no tokens so synchronous consumers can detect processed inline payloads without reparsing.
+- 8e9d6a1: clarify API and plugin documentation for DTIF parser helpers
+- 8e9d6a1: Update the deprecation rule to parse DTIF replacement pointers and surface pointer-based suggestions.
+- 8e9d6a1: migrate dimension-based border and spacing rules to derive allowed values from DTIF tokens while retaining the legacy view fallback
+- 8e9d6a1: Teach the duration rule to prefer DTIF tokens when building its allowed set.
+- 8e9d6a1: Validate configuration token files with the DTIF parser before falling back to
+  the legacy reader so DTIF diagnostics surface for invalid documents while
+  keeping DTCG compatibility during the migration.
+- 8e9d6a1: Expose DTIF flattened tokens with source locations to prepare for migrating runtime parsing.
+- 8e9d6a1: ensure the token tracker hydrates DTIF flattened caches before collecting values and migrate the associated tests to DTIF token fixtures so usage reporting works without legacy fallbacks
+- 8e9d6a1: Allow flattening helpers and the token registry to consume pre-flattened DTIF tokens so downstream utilities can operate on DTIF parse results.
+- 8e9d6a1: Add DTIF flattening utility and tests to prepare for parser migration.
+- 8e9d6a1: add helpers that adapt flattened DTIF tokens into the legacy flattened token structure used by existing utilities
+- 8e9d6a1: migrate the Node token parser to canonical DTIF parsing with legacy flatten conversion and error bridging
+- 8e9d6a1: Allow token output generators to accept pre-flattened DTIF tokens and cover the behavior in tests.
+- 8e9d6a1: stop reading legacy DTCG token files in the Node adapter and surface DTIF errors instead
+- 8e9d6a1: refactor token registry to use DTIF flattened tokens as the primary store
+- 8e9d6a1: expose canonical DTIF token access on rule contexts alongside the legacy flattening view
+- 8e9d6a1: add dtif parser session wrapper and seed dtif fixtures
+- 8e9d6a1: allow token sort helpers to operate on DTIF flattened tokens with optional name transforms
+- 8e9d6a1: add utilities that index flattened DTIF tokens by pointer and normalized names to prepare for pointer-based registries
+- 8e9d6a1: expose DTIF token accessors on the runtime registry so consumers can read pointer-based entries
+- 8e9d6a1: add a DTIF token registry that indexes flattened tokens by pointer and transformed names for theme-aware lookups
+- 8e9d6a1: migrate the animation, blur, box shadow, color, font, letter-spacing, line-height, outline, and z-index token rules to derive their allowed values directly from DTIF tokens before falling back to the legacy view
+- 8e9d6a1: Track DTIF flattened tokens in the unused token tracker so reports surface pointer metadata and no longer rely on legacy flattened token caches.
+- 8e9d6a1: Require the TokenRegistry to consume DTIF documents or flattened arrays so cached DTIF entries back all lookups.
+- 8e9d6a1: ensure inline configuration tokens reject non-DTIF structures and report invalid inputs consistently
+- 8e9d6a1: centralize DTIF cache hydration behind a shared helper so inline configuration
+  and Node environments reuse the same parse-and-attach logic.
+- 8e9d6a1: exclude CHANGELOG.md from markdownlint checks
+- 8e9d6a1: fix CLI smoke test tokens to use valid DTIF dimension values
+- 8e9d6a1: chore: drop momoa-based DTCG parser dependencies from the runtime manifest
+- 8e9d6a1: migrate the CLI integration tests to DTIF token fixtures so coverage exercises the canonical parser and fix theme record detection so single DTIF documents exported by the CLI no longer trigger legacy parsing errors
+- 8e9d6a1: Rewrite the core flattening unit tests to use handcrafted DTIF flattened token fixtures so they no longer depend on parsing token documents during the migration.
+- 8e9d6a1: Update inline token fixtures, tests, and docs to use the current DTIF format so smoke tests parse tokens correctly.
+
 ## 5.5.0
 
 ### Minor Changes
