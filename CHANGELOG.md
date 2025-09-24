@@ -1,5 +1,13 @@
 # @lapidist/design-lint
 
+## 6.0.1
+
+### Patch Changes
+
+- f9b3fd1: fix invalid CSS examples in design token rule docs
+- a5c2b07: remove local token validators now that dtif parser enforces token shapes
+- a5c2b07: chore: upgrade to dtif parser, schema, and validator packages to v0.3.1.
+
 ## 6.0.0
 
 ### Major Changes
