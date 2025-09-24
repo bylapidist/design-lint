@@ -1,4 +1,4 @@
-import type { Token } from '../types.js';
+import type { TokenNode } from '../types.js';
 import { validateColor } from './color.js';
 import { validateDimension } from './dimension.js';
 import { validateNumber } from './number.js';
@@ -16,7 +16,7 @@ import { validateTypography } from './typography.js';
 export type TokenValidator = (
   value: unknown,
   path: string,
-  tokenMap: Map<string, Token>,
+  tokenMap: Map<string, TokenNode>,
 ) => void;
 
 export const validatorRegistry = new Map<string, TokenValidator>([

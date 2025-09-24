@@ -1,9 +1,11 @@
 import ts from 'typescript';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
+  domain: { isTokenInGroup },
 } = guards;
 
 const parse = (val: string): number | null => {
@@ -27,11 +29,11 @@ export const lineHeightRule = tokenRule({
   tokens: 'number',
   message:
     'design-token/line-height requires line height tokens; configure tokens with $type "number" under a "lineHeights" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const allowed = new Set<number>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('lineHeights.')) continue;
-      const val = value;
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'lineHeights')) continue;
+      const val = token.value;
       if (typeof val === 'number') allowed.add(val);
     }
     return allowed;

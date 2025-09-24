@@ -14,16 +14,20 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "borderRadius": {
-      "sm": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
-      "lg": { "$type": "dimension", "$value": "{borderRadius.sm}" }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 2, "unit": "px" }
+      },
+      "lg": { "$type": "dimension", "$ref": "#/borderRadius/sm" }
     }
   },
   "rules": { "design-token/border-radius": "error" }
 }
 ```
 
-Border radius tokens use the `dimension` type.
+Border radius tokens use the `dimension` type with `dimensionType` set to `length`.
 
 ## Options
 No additional options.

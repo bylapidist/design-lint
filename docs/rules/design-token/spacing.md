@@ -14,9 +14,13 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "spacing": {
-      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
-      "md": { "$type": "dimension", "$value": "{spacing.sm}" }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
+      },
+      "md": { "$type": "dimension", "$ref": "#/spacing/sm" }
     }
   },
   "rules": {
@@ -25,7 +29,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 }
 ```
 
-Spacing tokens use the `dimension` type.
+Spacing tokens use the `dimension` type with `dimensionType` set to `length`.
 
 ## Options
 - `base` (`number`): values must be multiples of this number. Defaults to `4`.

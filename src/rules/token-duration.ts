@@ -1,10 +1,12 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
+  domain: { isTokenInGroup },
 } = guards;
 
 export const durationRule = tokenRule({
@@ -13,7 +15,7 @@ export const durationRule = tokenRule({
   tokens: 'duration',
   message:
     'design-token/duration requires duration tokens; configure tokens with $type "duration" under a "durations" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const parse = (val: unknown): number | null => {
       if (typeof val === 'object' && val !== null) {
         const unit: unknown = Reflect.get(val, 'unit');
@@ -25,9 +27,10 @@ export const durationRule = tokenRule({
       return null;
     };
     const allowed = new Set<number>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('durations.')) continue;
-      const num = parse(value);
+    for (const token of dtifTokens) {
+      if (token.type && token.type !== 'duration') continue;
+      if (!isTokenInGroup(token, 'durations')) continue;
+      const num = parse(token.value);
       if (num !== null) allowed.add(num);
     }
     return allowed;

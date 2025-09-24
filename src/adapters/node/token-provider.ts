@@ -2,6 +2,7 @@ import type { VariableProvider } from '../../core/environment.js';
 import type { DesignTokens } from '../../core/types.js';
 import type { Config } from '../../core/linter.js';
 import { guards } from '../../utils/index.js';
+import { ensureDtifFlattenedTokens } from '../../utils/tokens/dtif-cache.js';
 
 const {
   domain: { isDesignTokens, isThemeRecord },
@@ -24,8 +25,16 @@ export class NodeTokenProvider implements VariableProvider {
     }
   }
 
-  load(): Promise<Record<string, DesignTokens>> {
-    return Promise.resolve(this.tokens);
+  async load(): Promise<Record<string, DesignTokens>> {
+    const entries = Object.entries(this.tokens);
+    await Promise.all(
+      entries.map(([theme, tokens]) =>
+        ensureDtifFlattenedTokens(tokens, {
+          uri: `memory://node-token-provider/${theme}.json`,
+        }),
+      ),
+    );
+    return this.tokens;
   }
 
   getTokens(): Record<string, DesignTokens> | undefined {

@@ -1,3 +1,17 @@
+import type {
+  Diagnostic,
+  DiagnosticCode,
+  JsonPointer as DtifJsonPointer,
+  ResolvedToken,
+  SourceSpan,
+} from '@lapidist/dtif-parser';
+import type {
+  DeprecationMetadata,
+  DesignToken as DtifToken,
+  DesignTokenInterchangeFormat,
+  ExtensionsMap,
+  TokenCollection as DtifCollection,
+} from '@lapidist/dtif-schema';
 import type ts from 'typescript';
 import type { z } from 'zod';
 import type { Environment } from './environment.js';
@@ -7,51 +21,74 @@ export interface VariableDefinition {
   modes?: Record<string, string | number>;
 }
 
-/**
- * W3C Design Tokens Format token node.
- */
-export interface Token {
-  $value: unknown;
-  $type?: string;
-  $description?: string;
-  $extensions?: Record<string, unknown>;
-  $deprecated?: boolean | string;
+export type JsonPointer = DtifJsonPointer;
+
+export type TokenDocument = DesignTokenInterchangeFormat;
+export type TokenNode = DtifToken;
+export type TokenCollectionNode = DtifCollection;
+export type TokenExtensions = ExtensionsMap;
+export type TokenDeprecation = DeprecationMetadata;
+
+export interface TokenLocation {
+  uri?: URL;
+  pointer?: JsonPointer;
+  span?: SourceSpan;
 }
 
-/**
- * W3C Design Tokens Format group node.
- */
-export type TokenGroup = {
-  $type?: string;
-  $description?: string;
-  $extensions?: Record<string, unknown>;
-  $deprecated?: boolean | string;
-} & {
-  [name: string]: TokenGroup | Token | undefined;
-};
+export interface TokenMetadata {
+  description?: string;
+  extensions?: TokenExtensions;
+  deprecated?: TokenDeprecation;
+  lastModified?: string;
+  lastUsed?: string;
+  usageCount?: number;
+  author?: string;
+  tags?: string[];
+  hash?: string;
+}
 
-/**
- * Root token group with optional $schema.
- */
-export type RootTokenGroup = TokenGroup & { $schema?: string };
+export type TokenResolution = Pick<
+  ResolvedToken,
+  | 'pointer'
+  | 'uri'
+  | 'type'
+  | 'value'
+  | 'source'
+  | 'overridesApplied'
+  | 'warnings'
+  | 'trace'
+>;
 
-/**
- * W3C Design Tokens tree.
- */
-export type DesignTokens = RootTokenGroup;
-
-export interface FlattenedToken {
-  path: string;
-  value: unknown;
+export interface DtifFlattenedToken {
+  pointer: JsonPointer;
+  segments: readonly string[];
+  name: string;
   type?: string;
-  aliases?: string[];
-  metadata: {
-    description?: string;
-    extensions?: Record<string, unknown>;
-    deprecated?: boolean | string;
-    loc: { line: number; column: number };
-  };
+  value?: unknown;
+  metadata: TokenMetadata;
+  resolution?: TokenResolution;
+  location?: TokenLocation;
 }
+
+export interface TokenDiagnosticRelated {
+  message: string;
+  pointer?: JsonPointer;
+  location?: TokenLocation;
+}
+
+export interface TokenDiagnostic {
+  code: DiagnosticCode;
+  message: string;
+  severity: Diagnostic['severity'];
+  pointer?: JsonPointer;
+  location?: TokenLocation;
+  related?: readonly TokenDiagnosticRelated[];
+}
+
+/**
+ * Canonical DTIF token document.
+ */
+export type DesignTokens = TokenDocument;
 
 export interface LintMessage {
   ruleId: string;
@@ -73,7 +110,12 @@ export interface LintResult {
 
 export interface RuleContext<TOptions = unknown> {
   report: (msg: Omit<LintMessage, 'ruleId' | 'severity'>) => void;
-  getFlattenedTokens: (type?: string, theme?: string) => FlattenedToken[];
+  getDtifTokens: (type?: string, theme?: string) => DtifFlattenedToken[];
+  /**
+   * Derive the normalized token path for a DTIF flattened token using the
+   * runtime name transform configured for the linter.
+   */
+  getTokenPath: (token: DtifFlattenedToken) => string;
   options?: TOptions;
   metadata?: Record<string, unknown>;
   sourceId: string;

@@ -6,7 +6,7 @@ sidebar_position: 12
 
 # Migration from Style Dictionary
 
-Design systems often start with [Style Dictionary](https://amzn.github.io/style-dictionary/#/). The `generate` command in design-lint provides a similar token build pipeline while adhering strictly to the W3C Design Tokens format.
+Design systems often start with [Style Dictionary](https://amzn.github.io/style-dictionary/#/). design-lint focuses on linting and validation rather than bundled token builds, but you can reproduce common outputs with a small script.
 
 ## Before
 A typical Style Dictionary setup transforms tokens into multiple outputs:
@@ -23,24 +23,55 @@ module.exports = {
 ```
 
 ## After
-The equivalent design-lint configuration loads the same sources and declares output targets. design-lint resolves aliases, flattens tokens and writes each target with a single command:
+Define tokens in `designlint.config.ts` using DTIF-compliant documents. The configuration powers linting and drives the build script:
 
 ```ts
 // designlint.config.ts
 export default {
   tokens: { default: 'tokens/default.tokens.json' },
-  output: [
-    { format: 'css', file: 'dist/tokens.css' },
-    { format: 'js', file: 'dist/tokens.js' },
-    { format: 'ts', file: 'dist/tokens.d.ts' }
-  ]
+  nameTransform: 'kebab-case',
 };
 ```
 
-Run the build:
+Create a Node script that loads the configuration and emits the desired artifacts:
 
-```bash
-npx design-lint generate
+```ts
+// scripts/build-tokens.ts
+import fs from 'node:fs';
+import path from 'node:path';
+import {
+  loadConfig,
+  generateCssVariables,
+  generateJsConstants,
+  generateTsDeclarations,
+} from '@lapidist/design-lint';
+
+const config = await loadConfig(process.cwd(), 'designlint.config.ts');
+const tokensByTheme = config.tokens ?? {};
+
+fs.mkdirSync('dist', { recursive: true });
+fs.writeFileSync(
+  path.join('dist', 'tokens.css'),
+  generateCssVariables(tokensByTheme, { nameTransform: config.nameTransform }),
+);
+fs.writeFileSync(
+  path.join('dist', 'tokens.js'),
+  generateJsConstants(tokensByTheme, { nameTransform: config.nameTransform }),
+);
+fs.writeFileSync(
+  path.join('dist', 'tokens.d.ts'),
+  generateTsDeclarations(tokensByTheme, { nameTransform: config.nameTransform }),
+);
 ```
 
-design-lint emits CSS variables, JavaScript constants and TypeScript declarations without custom transforms. Theme variants and naming transforms can be added incrementally as needed.
+Add the script to `package.json`:
+
+```json
+{
+  "scripts": {
+    "build:tokens": "tsx scripts/build-tokens.ts"
+  }
+}
+```
+
+Run `npm run build:tokens` after linting to keep generated files up to date. This approach keeps the linting workflow lightweight while offering the same outputs produced by Style Dictionary.

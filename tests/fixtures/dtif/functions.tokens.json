@@ -1,0 +1,28 @@
+{
+  "$version": "1.0.0",
+  "spacing": {
+    "base": {
+      "$type": "dimension",
+      "$value": {
+        "dimensionType": "length",
+        "value": 8,
+        "unit": "px"
+      },
+      "$description": "Base spacing unit"
+    },
+    "double": {
+      "$type": "dimension",
+      "$value": {
+        "fn": "css.calc",
+        "parameters": [
+          {
+            "$ref": "#/spacing/base"
+          },
+          "*",
+          2
+        ]
+      },
+      "$description": "Derived spacing using a calc() function"
+    }
+  }
+}

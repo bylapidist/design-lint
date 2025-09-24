@@ -13,12 +13,12 @@ import { guards } from '../utils/index.js';
  * Validation schema for configuration files.
  *
  * Uses [Zod](https://zod.dev/) to ensure user-supplied configuration matches
- * expected shapes and that token definitions adhere to the W3C Design Tokens
- * format.
+ * expected shapes and that token definitions adhere to the DTIF token
+ * document structure.
  */
 
 const {
-  domain: { isTokenGroup },
+  domain: { isDesignTokens },
 } = guards;
 
 /**
@@ -42,10 +42,10 @@ const ruleSettingSchema = z.union([
 ]);
 
 /**
- * Schema ensuring a value follows the W3C Design Tokens format.
+ * Schema ensuring a value follows the DTIF token document structure.
  */
-const designTokensSchema = z.custom<DesignTokens>(isTokenGroup, {
-  message: 'Tokens must be W3C Design Tokens objects',
+const designTokensSchema = z.custom<DesignTokens>(isDesignTokens, {
+  message: 'Tokens must be DTIF token documents',
 });
 
 /**
@@ -82,15 +82,6 @@ const nameTransformSchema = z
   .enum(['kebab-case', 'camelCase', 'PascalCase'])
   .optional();
 
-const outputTargetSchema = z
-  .object({
-    format: z.enum(['css', 'js', 'ts']),
-    file: z.string(),
-    nameTransform: nameTransformSchema,
-    selectors: z.record(z.string(), z.string()).optional(),
-  })
-  .strict();
-
 /**
  * Zod schema describing a valid linter configuration.
  */
@@ -105,7 +96,6 @@ export const configSchema: z.ZodType<Config> = z
     patterns: z.array(z.string()).optional(),
     wrapTokensWithVar: z.boolean().optional(),
     nameTransform: nameTransformSchema,
-    output: z.array(outputTargetSchema).optional(),
   })
   .strict();
 

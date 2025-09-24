@@ -3,17 +3,18 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
-const tokens = {
-  blurs: { $type: 'dimension', sm: { $value: { value: 4, unit: 'px' } } },
-};
+const tokens = createDtifTheme({
+  'blurs.sm': { type: 'dimension', value: { value: 4, unit: 'px' } },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/blur': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

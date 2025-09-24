@@ -41,10 +41,12 @@ my-plugin/
 ```
 
 ### 2. Implement rules and metadata
-Rules receive a `RuleContext` which exposes `getFlattenedTokens` for accessing
-design tokens by type. The helper returns an array of flattened tokens for the
-current theme. The plugin can also expose a `name`, `version`, and an `init`
-hook that receives the runtime environment.
+Rules receive a `RuleContext` which exposes `getDtifTokens` for accessing
+canonical DTIF entries by type. The records include pointers, normalized
+segments, resolved values, and metadata describing aliases or deprecations.
+Use `getTokenPath(token)` to derive the dot-delimited path for a DTIF token with
+the configured name transform. The plugin can also expose a `name`, `version`,
+and an `init` hook that receives the runtime environment.
 
 ```ts
 // index.ts
@@ -54,7 +56,11 @@ const noRawColors: RuleModule<unknown> = {
   name: 'acme/no-raw-colors',
   meta: { description: 'disallow hex colors' },
   create(ctx) {
-    const allowed = new Set(ctx.getFlattenedTokens('color').map(t => t.$value));
+    const allowed = new Set(
+      ctx.getDtifTokens('color')
+        .map((t) => t.value)
+        .filter((value): value is string => typeof value === 'string'),
+    );
     return {
       Declaration(node) {
         if (node.property === 'color' && /^#/.test(node.value) && !allowed.has(node.value)) {
@@ -97,29 +103,44 @@ const rule: RuleModule<{ ignore?: string[] }> = {
 };
 ```
 
-### 3. Register token transforms
-If your plugin consumes design tokens from other tools, provide a transform to
-convert them to the W3C format. Register the transform inside `init`:
+### 3. Bridge non-DTIF token sources
+If your plugin consumes design tokens from other tools, convert them to DTIF
+before validation. Parse the converted document through the canonical parser so
+downstream rules receive pointer-aware data:
 
 ```ts
 import {
-  registerTokenTransform,
+  parseDtifTokenObject,
   type DesignTokens,
   type PluginModule,
 } from '@lapidist/design-lint';
 
 const plugin: PluginModule = {
   rules: [noRawColors],
-  init() {
-    registerTokenTransform((tokens: DesignTokens) => convertFromFigma(tokens));
+  async init() {
+    const figmaTokens = await loadFromFigma();
+    const { document } = await parseDtifTokenObject(figmaTokens, {
+      uri: 'figma://project/tokens.json',
+    });
+    if (!document) throw new Error('Failed to convert tokens to DTIF');
+    // persist document.data for the linter or your tooling
   },
 };
 
 export default plugin;
 
-function convertFromFigma(tokens: DesignTokens): DesignTokens {
-  // convert tokens here
-  return tokens;
+async function loadFromFigma(): Promise<DesignTokens> {
+  // convert tokens here and return a DTIF-compatible object
+  return {
+    $version: '1.0.0',
+    color: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0.66, 1] },
+      },
+      accent: { $type: 'color', $ref: '#/color/primary' },
+    },
+  } satisfies DesignTokens;
 }
 ```
 

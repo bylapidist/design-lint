@@ -12,7 +12,6 @@ This page explains every option in `designlint.config.*`. It targets developers 
 - [Basic config](#basic-config)
 - [Tokens](#tokens)
 - [Name transforms](#name-transforms)
-- [Token outputs](#token-outputs)
 - [Rules and severity](#rules-and-severity)
 - [Plugins](#plugins)
 - [Overrides](#overrides)
@@ -39,7 +38,7 @@ Each option tunes a specific aspect of design-lint. Use the table below as a qui
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `tokens` | object | `undefined` | A [W3C Design Tokens](./glossary.md#design-tokens) tree or a map of themes. Theme values may be inline token objects or paths to `.tokens` files. |
+| `tokens` | object | `undefined` | A [DTIF token document](./glossary.md#design-tokens) or a map of themes. Theme values may be inline DTIF objects or paths to `.tokens` files. |
 | `rules` | object | `undefined` | Enables [rules](./rules/index.md) and sets their severity. |
 | `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
 | `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
@@ -47,27 +46,33 @@ Each option tunes a specific aspect of design-lint. Use the table below as a qui
 | `concurrency` | number | `os.cpus()` | Maximum parallel workers. Lower the value when running multiple linters in CI to avoid resource contention. |
 | `wrapTokensWithVar` | boolean | `false` | Wrap token values with `var()` when autofixing CSS. Useful when migrating legacy codebases to CSS variables. |
 | `nameTransform` | string | `undefined` | Convert token paths to `kebab-case`, `camelCase`, or `PascalCase`. |
-| `output` | object[] | `[]` | Token output targets for `design-lint generate`. Each target defines a `format` and destination `file` with optional `nameTransform` or `selectors`. |
 
 
 ## Tokens
-Tokens describe the design system in a machine-readable form. Provide a W3C Design Tokens object directly or supply a map of theme names.
+Tokens describe the design system in a machine-readable form. Provide a DTIF document directly or supply a map of theme names.
 
 Inline example:
 
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "color": {
       "primary": {
         "$type": "color",
         "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
       },
-      "secondary": { "$type": "color", "$value": "{color.primary}" }
+      "secondary": { "$type": "color", "$ref": "#/color/primary" }
     },
     "space": {
-      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } },
-      "md": { "$type": "dimension", "$value": { "value": 8, "unit": "px" } }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 8, "unit": "px" }
+      }
     }
   }
 }
@@ -80,12 +85,13 @@ Organise tokens by category—such as `color`, `space`, or `typography`—to mir
   "tokens": {
     "light": "./light.tokens.json",
     "dark": {
+      "$version": "1.0.0",
       "color": {
         "primary": {
           "$type": "color",
           "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
         },
-        "secondary": { "$type": "color", "$value": "{color.primary}" }
+        "secondary": { "$type": "color", "$ref": "#/color/primary" }
       }
     }
   }
@@ -109,22 +115,7 @@ Token paths are normalized to dot notation. Set `nameTransform` to convert those
 }
 ```
 
-Individual output targets may override this option.
-
-## Token outputs
-Use the `output` array to configure files written by `design-lint generate`.
-
-```json
-{
-  "output": [
-    { "format": "css", "file": "dist/tokens.css" },
-    { "format": "js", "file": "dist/tokens.js" },
-    { "format": "ts", "file": "dist/tokens.d.ts" }
-  ]
-}
-```
-
-Each target may also specify its own `nameTransform` or a map of theme `selectors` for CSS generation.
+Flattened token exports and completion suggestions use the configured transform.
 
 ## Rules and severity
 Enable a rule by adding it to the `rules` map with a severity:
@@ -169,12 +160,13 @@ import { defineConfig } from '@lapidist/design-lint';
 
 export default defineConfig({
   tokens: {
+    $version: '1.0.0',
     color: {
       primary: {
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [1, 0, 0] },
       },
-      secondary: { $type: 'color', $value: '{color.primary}' },
+      secondary: { $type: 'color', $ref: '#/color/primary' },
     },
   },
   rules: { 'design-token/colors': 'error' },

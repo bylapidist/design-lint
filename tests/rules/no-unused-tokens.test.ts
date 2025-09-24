@@ -6,9 +6,10 @@ import type { LintDocument } from '../../src/core/environment.js';
 
 void test('design-system/no-unused-tokens reports unused tokens', async () => {
   const tokens = {
+    $version: '1.0.0',
     color: {
-      primary: { $value: '#000000', $type: 'color' },
-      unused: { $value: '#123456', $type: 'color' },
+      primary: { $type: 'string', $value: '#000000' },
+      unused: { $type: 'string', $value: '#123456' },
     },
   };
   const linter = initLinter(
@@ -34,11 +35,12 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
 
 void test('design-system/no-unused-tokens includes token metadata', async () => {
   const tokens = {
+    $version: '1.0.0',
     color: {
       unused: {
+        $type: 'string',
         $value: '#123456',
-        $type: 'color',
-        $deprecated: 'deprecated',
+        $deprecated: { $replacement: '#/color/primary' },
         $extensions: { 'vendor.foo': true },
       },
     },
@@ -62,14 +64,17 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   assert(msg);
   assert(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
-  assert.equal(msg.metadata.deprecated, 'deprecated');
+  assert.deepEqual(msg.metadata.deprecated, {
+    $replacement: '#/color/primary',
+  });
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });
 
 void test('design-system/no-unused-tokens passes when tokens used', async () => {
   const tokens = {
+    $version: '1.0.0',
     color: {
-      primary: { $value: '#000000', $type: 'color' },
+      primary: { $type: 'string', $value: '#000000' },
     },
   };
   const linter = initLinter(
@@ -93,9 +98,10 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
 
 void test('design-system/no-unused-tokens can ignore tokens', async () => {
   const tokens = {
+    $version: '1.0.0',
     color: {
-      primary: { $value: '#000000', $type: 'color' },
-      unused: { $value: '#123456', $type: 'color' },
+      primary: { $type: 'string', $value: '#000000' },
+      unused: { $type: 'string', $value: '#123456' },
     },
   };
   const linter = initLinter(
@@ -121,7 +127,8 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
 
 void test('design-system/no-unused-tokens matches hex case-insensitively', async () => {
   const tokens = {
-    color: { primary: { $value: '#abcdef', $type: 'color' } },
+    $version: '1.0.0',
+    color: { primary: { $type: 'string', $value: '#abcdef' } },
   };
   const linter = initLinter(
     {

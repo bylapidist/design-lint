@@ -3,21 +3,19 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
-const tokens = {
-  fontWeights: {
-    $type: 'fontWeight',
-    regular: { $value: 400 },
-    bold: { $value: 700 },
-  },
-};
+const tokens = createDtifTheme({
+  'fontWeights.regular': { type: 'fontWeight', value: 400 },
+  'fontWeights.bold': { type: 'fontWeight', value: 700 },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/font-weight': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

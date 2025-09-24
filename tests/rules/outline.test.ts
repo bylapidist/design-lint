@@ -4,19 +4,20 @@ import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 import { registerTokenValidator } from '../../src/core/token-validators/index.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
 registerTokenValidator('string', () => undefined);
 
-const tokens = {
-  outlines: { $type: 'string', focus: { $value: '2px solid #000' } },
-};
+const tokens = createDtifTheme({
+  'outlines.focus': { type: 'string', value: '2px solid #000' },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/outline': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

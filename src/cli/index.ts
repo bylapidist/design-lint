@@ -8,7 +8,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import { supportsColor } from 'chalk';
-import { TokenParseError } from '../adapters/node/token-parser.js';
+import { DtifTokenParseError } from '../adapters/node/token-parser.js';
 import { guards } from '../utils/index.js';
 
 const {
@@ -19,7 +19,6 @@ import { executeLint, type ExecuteOptions } from './execute.js';
 import { watchMode } from './watch.js';
 import { initConfig } from './init-config.js';
 import { exportTokens } from './tokens.js';
-import { generateOutputs } from './generate.js';
 import { validateConfig } from './validate-config.js';
 import { createLogger, type Logger } from './logger.js';
 
@@ -129,40 +128,16 @@ function createProgram(version: string, logger: Logger) {
       ) => {
         try {
           const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
-          await exportTokens(
-            {
-              ...opts,
-              config: opts.config ?? parent.config,
-            },
-            logger.warn,
-          );
+          await exportTokens({
+            ...opts,
+            config: opts.config ?? parent.config,
+          });
         } catch (err) {
           logger.error(err);
         }
       },
     );
 
-  program
-    .command('generate')
-    .description('Generate token outputs as configured')
-    .option('--config <path>', 'Path to configuration file')
-    .option('--watch', 'Watch token files and regenerate on changes')
-    .action(
-      async (opts: { config?: string; watch?: boolean }, cmd: Command) => {
-        try {
-          const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
-          await generateOutputs(
-            {
-              ...opts,
-              config: opts.config ?? parent.config,
-            },
-            logger,
-          );
-        } catch (err) {
-          logger.error(err);
-        }
-      },
-    );
   return program;
 }
 
@@ -200,16 +175,13 @@ export async function run(argv = process.argv.slice(2)): Promise<void> {
     if (options.color === false) useColor = false;
     const patterns = files.length ? files : ['.'];
     try {
-      const env = await prepareEnvironment(
-        { ...options, patterns },
-        logger.warn,
-      );
+      const env = await prepareEnvironment({ ...options, patterns });
       const services = { ...env, useColor };
       const { exitCode } = await executeLint(patterns, options, services);
       process.exitCode = exitCode;
       if (options.watch) await watchMode(patterns, options, services);
     } catch (err) {
-      logger.error(err instanceof TokenParseError ? err.format() : err);
+      logger.error(err instanceof DtifTokenParseError ? err.format() : err);
     }
   });
 

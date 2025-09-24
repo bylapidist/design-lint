@@ -1,58 +1,108 @@
 ---
-title: Overview
-description: "Welcome to @lapidist/design-lint. Learn how it helps you enforce your design system across projects."
-sidebar_position: 1
+layout: home
+title: "@lapidist/design-lint"
+titleTemplate: Align design and delivery with automated linting
+description: >-
+  @lapidist/design-lint keeps product code bases aligned with Design Token Interchange
+  Format (DTIF) sources by pairing token awareness with framework integrations and
+  extensible rule sets.
+hero:
+  name: design-lint
+  text: Design systems that ship consistently
+  tagline: Keep components, tokens, and styles aligned with a DTIF-native linter built for teams.
+  image:
+    src: /logo.svg
+    alt: "@lapidist/design-lint logo"
+  actions:
+    - theme: brand
+      text: Get started
+      link: /usage
+    - theme: alt
+      text: Browse the rules
+      link: /rules/
+    - theme: minimal
+      text: Explore examples
+      link: /examples/index
+features:
+  - icon: 🧭
+    title: Guided adoption
+    details: Follow practical guides, migration steps, and troubleshooting recipes to roll the linter out across teams.
+  - icon: 🪄
+    title: Token-native automation
+    details: Parse DTIF documents, enforce naming, and validate usage with dedicated design-system and token rules.
+  - icon: 🚦
+    title: CI ready
+    details: Deterministic diagnostics, formatter outputs, and caching make lint feedback fast in local and pipeline runs.
 ---
 
-# @lapidist/design-lint
+<!-- markdownlint-disable MD033 -->
 
-@lapidist/design-lint keeps code and style sheets aligned with your design system. It understands design tokens, knows about modern frameworks, and runs wherever Node.js \>=22 is available. The project exclusively supports the [W3C Design Tokens format](./glossary.md#design-tokens), making it a reference implementation of the standard.
+<section class="home-section" aria-labelledby="why-design-lint">
 
-## Table of contents
-- [Why design-lint?](#why-design-lint)
-- [Who is this for?](#who-is-this-for)
-- [Use cases](#use-cases)
-- [Comparison with generic linters](#comparison-with-generic-linters)
-- [Quick navigation](#quick-navigation)
-- [What's new](#whats-new)
-- [See also](#see-also)
+## Why teams choose design-lint {#why-design-lint}
 
-## Why design-lint?
-Design decisions often live outside your source tree. design-lint brings those decisions into your build by validating code against centrally managed [design tokens](./glossary.md#design-tokens) and custom rules. You get consistent UI implementation, fewer regressions, and a shared vocabulary between designers and engineers.
+design-lint brings design decisions into your repositories so visual integrity stays intact
+from pull request to production. By understanding Design Token Interchange Format (DTIF)
+files natively, the linter speaks the same language as your design platform and codebase.
 
-## Who is this for?
-- **Front-end developers** ensuring components follow the design system.
-- **Plugin authors** extending the rule set for their organisation.
-- **CI engineers** running lint checks in automated pipelines.
-- **Contributors** interested in the internals or adding new features.
+### Purpose-built for design tokens
 
-## Use cases
-- Enforce design-system components and tokens across repositories.
-- Validate typography, spacing, and color usage in multiple languages.
-- Lint large monorepos with caching and watch mode for quick feedback.
+- Normalise typography, colour, spacing, and motion values with the canonical DTIF parser.
+- Align components and styling to shared tokens instead of duplicating constants per
+  project.
+- Catch drift early with granular diagnostics that explain what to fix and why it matters.
 
-## Comparison with generic linters
+### Shared context for designers and engineers
 
-| Feature | design-lint | Generic linters |
-| --- | --- | --- |
-| Token awareness | Built-in token parser and validators | Not provided |
-| Multi-language support | JavaScript, TypeScript, style sheets, Vue, Svelte, JSX | Usually language-specific |
-| Extensibility | [Rules](./rules/index.md), [formatters](./formatters.md), [plugins](./plugins.md) | Often limited to syntax rules |
-| Design-system focus | First-class | Requires custom tooling |
+- Give engineers the same terminology designers use when reviewing UI implementation.
+- Extend the core rule set to cover organisation-specific patterns and naming schemes.
+- Surface actionable feedback in editors, terminals, and continuous integration jobs.
 
+</section>
 
-## Quick navigation
-- [Get started](./usage.md)
-- [Configure the linter](./configuration.md)
-- [Explore the API](./api.md)
-- [Rule reference](./rules/index.md)
-- [Examples](./examples/index.md)
+<section class="home-section" aria-labelledby="make-tokens-actionable">
 
-## What's new
-See the [CHANGELOG](https://github.com/bylapidist/design-lint/blob/main/CHANGELOG.md) for the latest features and fixes. For guidance on interpreting entries, read the [changelog guide](./changelog-guide.md).
+## Make tokens actionable in any stack {#make-tokens-actionable}
 
-## See also
-- [Glossary](./glossary.md)
-- [Troubleshooting](./troubleshooting.md)
-- [Contributing](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md)
-- [Migration from Style Dictionary](./migration.md)
+design-lint recognises frameworks and file types common to design system work so teams can
+adopt linting without changing their tools.
+
+- Enforce component usage and props across React, Vue, Svelte, and vanilla projects.
+- Lint styles authored in CSS, CSS-in-JS, and preprocessors while respecting token
+  semantics.
+- Generate consistent output through built-in formatters or your own custom pipeline.
+
+> “design-lint let us retire bespoke lint scripts and rely on a single, token-aware tool.” – Early adopter feedback
+
+</section>
+
+<section class="home-section" aria-labelledby="automation">
+
+## Automate with confidence {#automation}
+
+Integrate the linter wherever code ships to production. Deterministic results make it easy
+to gate pull requests or fail builds when design conventions regress.
+
+- Command-line usage fits into npm scripts, Nx workspaces, and other task runners.
+- CI recipes cover GitHub Actions, GitLab CI/CD, and other popular platforms.
+- Cached runs and incremental linting keep feedback loops fast for large repositories.
+
+</section>
+
+<section class="home-section" aria-labelledby="get-involved">
+
+## Get involved {#get-involved}
+
+The project welcomes feedback from teams putting design-lint into practice.
+
+- Share migration stories, workflows, and fixes in the [guides](/usage) to help others.
+- Contribute new [rules](/rules/) or [formatters](/formatters) that capture your
+  organisation's needs.
+- Explore the [examples](/examples/index) to start quickly or open a PR when you improve
+  them.
+
+Join us in building automation that keeps design systems and implementation in sync.
+
+</section>
+
+<!-- markdownlint-enable MD033 -->

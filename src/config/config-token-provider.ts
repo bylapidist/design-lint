@@ -14,13 +14,13 @@ const { normalizeTokens } = tokens;
  * Provides design tokens declared directly in a {@link Config} object.
  *
  * The provider normalizes the `tokens` property to a consistent theme record
- * and validates each token set using {@link parseDesignTokens}.
+ * and validates each token set using the DTIF parser.
  *
  * @example
  * ```ts
  * import { ConfigTokenProvider } from '@lapidist/design-lint/config';
  * const provider = new ConfigTokenProvider({ tokens: {} });
- * const themes = provider.load();
+ * const themes = await provider.load();
  * ```
  */
 export class ConfigTokenProvider {
@@ -41,11 +41,11 @@ export class ConfigTokenProvider {
   /**
    * Load and validate tokens from the configuration.
    *
-   * @returns A theme record keyed by theme name.
-   * @throws {TokenParseError} When token parsing fails.
+   * @returns A promise that resolves to a theme record keyed by theme name.
+   * @throws {DtifTokenParseError} When token parsing fails.
    * @throws {Error} When token definitions are invalid.
    */
-  load(): Record<string, DesignTokens> {
+  async load(): Promise<Record<string, DesignTokens>> {
     return normalizeTokens(this.config.tokens);
   }
 }

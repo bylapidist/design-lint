@@ -1,201 +1,141 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+
+import type { DesignTokens, DtifFlattenedToken } from '../../src/core/types.js';
 import { flattenDesignTokens } from '../../src/utils/tokens/index.js';
-import type { DesignTokens } from '../../src/core/types.js';
-import { registerTokenValidator } from '../../src/core/token-validators/index.js';
+import { attachDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js';
+import {
+  getTokenPath,
+  pointerToTokenPath,
+} from '../../src/utils/tokens/token-view.js';
 
-void test('flattenDesignTokens collects token paths and inherits types', () => {
-  registerTokenValidator('special', () => undefined);
-  const tokens: DesignTokens = {
-    colors: {
-      $type: 'color',
-      red: { $value: '#ff0000' },
-      accent: { $value: '#00ff00', $type: 'special' },
-      nested: {
-        green: { $value: '#00ff00' },
-      },
+const documentUri = new URL('memory://flatten-design-tokens.test.json');
+
+const backgroundToken: DtifFlattenedToken = {
+  pointer: '#/color/button/background',
+  segments: ['color', 'button', 'background'],
+  name: 'background',
+  type: 'color',
+  value: { colorSpace: 'srgb', components: [0, 0.435, 1] },
+  metadata: {
+    description: 'Solid brand fill',
+    extensions: { 'org.example.export': { legacyHex: '#006FFF' } },
+  },
+  resolution: {
+    pointer: '#/color/button/background',
+    trace: [{ kind: 'token', pointer: '#/color/button/background' }],
+  },
+  location: {
+    pointer: '#/color/button/background',
+    span: {
+      uri: documentUri,
+      start: { line: 5, column: 3, offset: 42 },
+      end: { line: 5, column: 28, offset: 67 },
     },
-    size: {
-      spacing: {
-        $type: 'dimension',
-        small: { $value: { value: 4, unit: 'px' } },
-      },
+  },
+};
+
+const aliasToken: DtifFlattenedToken = {
+  pointer: '#/color/button/text',
+  segments: ['color', 'button', 'text'],
+  name: 'text',
+  type: 'color',
+  value: { colorSpace: 'srgb', components: [0, 0.435, 1] },
+  metadata: {
+    description: 'Alias to the background color',
+    deprecated: { $replacement: '#/typography/button/text' },
+  },
+  resolution: {
+    pointer: '#/color/button/text',
+    trace: [
+      { kind: 'token', pointer: '#/color/button/background' },
+      { kind: 'token', pointer: '#/color/button/text' },
+    ],
+  },
+  location: {
+    pointer: '#/color/button/text',
+    span: {
+      uri: documentUri,
+      start: { line: 6, column: 5, offset: 82 },
+      end: { line: 6, column: 24, offset: 101 },
     },
-  };
+  },
+};
+
+void test('flattenDesignTokens returns canonical DTIF entries', () => {
+  const tokens = [backgroundToken, aliasToken] as const;
   const flat = flattenDesignTokens(tokens);
-  assert.deepEqual(flat, [
-    {
-      path: 'colors.red',
-      value: '#ff0000',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-    {
-      path: 'colors.accent',
-      value: '#00ff00',
-      type: 'special',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-    {
-      path: 'colors.nested.green',
-      value: '#00ff00',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-    {
-      path: 'size.spacing.small',
-      value: { value: 4, unit: 'px' },
-      type: 'dimension',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-  ]);
+
+  assert.equal(flat.length, 2);
+  assert.strictEqual(flat[0], tokens[0]);
+  assert.strictEqual(flat[1], tokens[1]);
 });
 
-void test('flattenDesignTokens preserves $extensions and inherits $deprecated', () => {
-  const ext = { 'org.example.tool': { foo: 1 } };
-  const tokens: DesignTokens = {
-    theme: {
-      $type: 'color',
-      $deprecated: true,
-      base: { $value: '#000', $extensions: ext },
-      active: { $value: '#fff', $deprecated: false },
+void test('getTokenPath derives normalized names for DTIF tokens', () => {
+  const primaryToken: DtifFlattenedToken = {
+    pointer: '#/ColorGroup/PrimaryColor',
+    segments: ['ColorGroup', 'PrimaryColor'],
+    name: 'PrimaryColor',
+    type: 'color',
+    value: '#ff0000',
+    metadata: {},
+    resolution: {
+      pointer: '#/ColorGroup/PrimaryColor',
+      trace: [{ kind: 'token', pointer: '#/ColorGroup/PrimaryColor' }],
     },
   };
-  const flat = flattenDesignTokens(tokens);
-  assert.deepEqual(
-    flat.find((t) => t.path === 'theme.base')?.metadata.extensions,
-    ext,
+  const alias: DtifFlattenedToken = {
+    pointer: '#/ColorGroup/SecondaryColor',
+    segments: ['ColorGroup', 'SecondaryColor'],
+    name: 'SecondaryColor',
+    type: 'color',
+    value: '#ff0000',
+    metadata: {},
+    resolution: {
+      pointer: '#/ColorGroup/SecondaryColor',
+      trace: [
+        { kind: 'token', pointer: '#/ColorGroup/PrimaryColor' },
+        { kind: 'token', pointer: '#/ColorGroup/SecondaryColor' },
+      ],
+    },
+  };
+
+  const flattened = flattenDesignTokens([primaryToken, alias]);
+  const paths = flattened
+    .map((token) => getTokenPath(token, 'kebab-case'))
+    .sort();
+
+  assert.deepEqual(paths, [
+    'color-group.primary-color',
+    'color-group.secondary-color',
+  ]);
+
+  const resolution = alias.resolution;
+  assert(resolution);
+  const trace = resolution.trace;
+  assert(trace);
+  const aliasPointer = trace.find(
+    (step) => step.kind === 'token' && step.pointer !== alias.pointer,
   );
+  assert(aliasPointer);
   assert.equal(
-    flat.find((t) => t.path === 'theme.base')?.metadata.deprecated,
-    true,
-  );
-  assert.equal(
-    flat.find((t) => t.path === 'theme.active')?.metadata.deprecated,
-    false,
+    pointerToTokenPath(aliasPointer.pointer, 'kebab-case'),
+    'color-group.primary-color',
   );
 });
 
-void test('flattenDesignTokens resolves alias references', () => {
-  const tokens: DesignTokens = {
-    color: {
-      $type: 'color',
-      base: { $value: '#fff' },
-      primary: { $value: '{color.base}' },
-    },
-  };
-  const flat = flattenDesignTokens(tokens);
-  assert.deepEqual(flat, [
-    {
-      path: 'color.base',
-      value: '#fff',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-    {
-      path: 'color.primary',
-      value: '#fff',
-      type: 'color',
-      aliases: ['color.base'],
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-  ]);
+void test('flattenDesignTokens reuses cached DTIF flattened tokens', () => {
+  const document = { $version: '1.0.0' } as unknown as DesignTokens;
+  attachDtifFlattenedTokens(document, [backgroundToken, aliasToken]);
+
+  const flat = flattenDesignTokens(document);
+  assert.equal(flat.length, 2);
+  assert.strictEqual(flat[0], backgroundToken);
+  assert.strictEqual(flat[1], aliasToken);
 });
 
-void test('flattenDesignTokens rejects circular aliases', () => {
-  const tokens: DesignTokens = {
-    color: {
-      $type: 'color',
-      a: { $value: '{color.b}' },
-      b: { $value: '{color.a}' },
-    },
-  };
-  assert.throws(() => flattenDesignTokens(tokens), /circular alias reference/i);
-});
+void test('flattenDesignTokens throws when document lacks cached DTIF tokens', () => {
+  const document = { $version: '1.0.0' } as unknown as DesignTokens;
 
-void test('flattenDesignTokens rejects unknown aliases', () => {
-  const tokens: DesignTokens = {
-    color: {
-      $type: 'color',
-      a: { $value: '{color.missing}' },
-    },
-  };
-  assert.throws(() => flattenDesignTokens(tokens), /references unknown token/i);
-});
-
-void test('flattenDesignTokens rejects slash-separated aliases', () => {
-  const tokens: DesignTokens = {
-    color: {
-      $type: 'color',
-      base: { $value: '#fff' },
-      primary: { $value: '{color/base}' },
-    },
-  };
-  assert.throws(() => flattenDesignTokens(tokens));
-});
-
-void test('flattenDesignTokens applies name transforms', () => {
-  const tokens: DesignTokens = {
-    ColorGroup: {
-      $type: 'color',
-      primaryColor: { $value: '#000' },
-      secondaryColor: { $value: '{ColorGroup.primaryColor}' },
-    },
-  };
-  const flat = flattenDesignTokens(tokens, { nameTransform: 'kebab-case' });
-  assert.deepEqual(flat, [
-    {
-      path: 'color-group.primary-color',
-      value: '#000',
-      type: 'color',
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-    {
-      path: 'color-group.secondary-color',
-      value: '#000',
-      type: 'color',
-      aliases: ['color-group.primary-color'],
-      metadata: {
-        description: undefined,
-        extensions: undefined,
-        deprecated: undefined,
-        loc: { line: 1, column: 1 },
-      },
-    },
-  ]);
+  assert.throws(() => flattenDesignTokens(document), /requires DTIF documents/);
 });

@@ -59,19 +59,44 @@ Key methods:
 - `defineConfig(config)` – provide type checking for config files.
 - `getFormatter(name)` – load a formatter by name or path.
 - `applyFixes(text, messages)` – apply non-overlapping fixes.
-- `registerTokenTransform(transform)` – convert design tokens before validation;
-  returns an unregister function.
-- `parseDesignTokens(tokens, getLoc?, options?)` – validate and flatten design tokens.
-- `readDesignTokensFile(path)` – load and validate a `.tokens` or `.tokens.json` file.
-- `parseDesignTokensFile(path)` – read and parse a design tokens file, returning flattened tokens.
-- `TokenParseError` – error type exposing file location details for token parsing failures.
+- `parseDtifTokens(input, options?)` – run the canonical DTIF parser on a
+  document, URL, or `ParseInput` record and receive flattened pointer tokens.
+- `parseInlineDtifTokens(content, options?)` – parse an inline DTIF string or
+  buffer with optional virtual URI metadata.
+- `parseDtifTokenObject(document, options?)` – serialise an in-memory token
+  object and validate it through the DTIF parser.
+- `parseDtifTokensFromFile(path, options?)` – parse a DTIF file from disk while
+  capturing diagnostics and resolver output.
+- `flattenDesignTokens(tokens, options?)` – return canonical flattened DTIF
+  entries sourced from the parser cache. Use
+  `getTokenPath(token, transform?)` to derive normalized paths for these
+  records when emitting path-based identifiers.
+- `RuleContext#getDtifTokens(type?, theme?)` – read the canonical DTIF tokens
+  that back rule contexts without materializing compatibility views.
+- `RuleContext#getTokenPath(token)` – derive the normalized path for a DTIF
+  token using the configured name transform.
+- `TokenRegistry#getDtifTokenByPointer(pointer, theme?)` /
+  `TokenRegistry#getDtifTokenByName(name, theme?)` /
+  `TokenRegistry#getDtifTokens(theme?)` – retrieve the cached DTIF entries that
+  power the registry when parsing DTIF documents.
+- `indexDtifTokens(tokens)` / `createDtifNameIndex(tokens)` – build pointer-
+  based lookup maps for flattened DTIF tokens.
+- `DtifTokenRegistry(tokensByTheme, options?)` – aggregate flattened DTIF
+  tokens by theme with optional name transforms.
+- `parseDtifTokensFile(path)` / `readDtifTokensFile(path)` – Node-focused
+  helpers that parse DTIF files and either return flattened tokens or the
+  parsed `TokenDocument`.
+- `DtifTokenParseError` – error type that surfaces canonical DTIF diagnostics
+  with file, pointer, and position metadata.
 
-### Token transforms
-Design token objects may originate from sources like Figma or Tokens Studio.
-Use `registerTokenTransform()` to supply converters that adapt these formats
-to the [W3C Design Tokens specification](./glossary.md#design-tokens).
-Transforms run before token normalization and validation.
-`parseDesignTokens()` also accepts a `transforms` array for per-call transforms.
+### DTIF parsing helpers
+design-lint embeds the
+[Lapidist DTIF parser](https://github.com/bylapidist/dtif/blob/main/docs/guides/dtif-parser.md)
+to validate documents against the official schema, resolve `$ref` pointers, and
+return flattened tokens in declaration order. Use `parseDtifTokens` for
+programmatic parsing and `parseDtifTokensFromFile` or the Node adapter helpers
+when reading from disk. Each API surfaces the full diagnostic bag from the
+parser so tooling can present precise feedback to users.
 
 ## Types
 design-lint ships with TypeScript definitions for `Config`, `LintResult`, `RuleModule`, and more:

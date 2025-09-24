@@ -7,8 +7,16 @@ import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 
 const tokens = {
-  old: { $type: 'color', $value: '#000', $deprecated: 'Use {new}' },
-  new: { $type: 'color', $value: '#fff' },
+  $version: '1.0.0',
+  old: {
+    $type: 'color',
+    $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+    $deprecated: { $replacement: '#/new' },
+  },
+  new: {
+    $type: 'color',
+    $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+  },
 };
 
 void test('lintTargets ignores common directories by default', async () => {

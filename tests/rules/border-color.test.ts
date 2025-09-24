@@ -3,16 +3,17 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
 void test('design-token/border-color reports invalid value', async () => {
-  const tokens = {
-    borderColors: { $type: 'color', primary: { $value: '#ffffff' } },
-  };
+  const tokens = createDtifTheme({
+    'borderColors.primary': { type: 'color', value: '#ffffff' },
+  });
   const linter = initLinter(
     { tokens, rules: { 'design-token/border-color': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
   const res = await linter.lintText('.a{border-color:#000000;}', 'file.css');
@@ -20,14 +21,14 @@ void test('design-token/border-color reports invalid value', async () => {
 });
 
 void test('design-token/border-color accepts valid values', async () => {
-  const tokens = {
-    borderColors: { $type: 'color', primary: { $value: '#ffffff' } },
-  };
+  const tokens = createDtifTheme({
+    'borderColors.primary': { type: 'color', value: '#ffffff' },
+  });
   const linter = initLinter(
     { tokens, rules: { 'design-token/border-color': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
   const res = await linter.lintText('.a{border-color:#ffffff;}', 'file.css');

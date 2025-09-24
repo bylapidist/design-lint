@@ -1,10 +1,16 @@
-import type { LintResult, DesignTokens, FlattenedToken } from './types.js';
+import type { LintResult, DesignTokens, DtifFlattenedToken } from './types.js';
 import type { TokenProvider } from './environment.js';
 import { guards, collections } from '../utils/index.js';
-import { getFlattenedTokens, extractVarName } from '../utils/tokens/index.js';
+import { extractVarName } from '../utils/tokens/index.js';
+import { getTokenPath } from '../utils/tokens/token-view.js';
+import {
+  ensureDtifFlattenedTokens,
+  getDtifFlattenedTokens,
+} from '../utils/tokens/dtif-cache.js';
 
 const {
   data: { isRecord },
+  domain: { isDesignTokens },
 } = guards;
 const { isArray } = collections;
 
@@ -37,8 +43,13 @@ interface UnusedRuleConfig {
   ignored: Set<string>;
 }
 
+interface TrackedTokenInfo {
+  token: DtifFlattenedToken;
+  path: string;
+}
+
 export class TokenTracker {
-  private allTokenValues = new Map<string, FlattenedToken>();
+  private allTokenValues = new Map<string, TrackedTokenInfo>();
   private usedTokenValues = new Set<string>();
   private unusedTokenRules: UnusedRuleConfig[] = [];
   private provider?: TokenProvider;
@@ -51,6 +62,18 @@ export class TokenTracker {
   private async loadTokens(): Promise<void> {
     if (this.loaded) return;
     const tokens = await this.provider?.load();
+    if (tokens) {
+      await Promise.all(
+        Object.entries(tokens).map(async ([theme, doc]) => {
+          if (theme.startsWith('$')) return;
+          if (isDesignTokens(doc)) {
+            await ensureDtifFlattenedTokens(doc, {
+              uri: `memory://token-tracker/${encodeURIComponent(theme)}.json`,
+            });
+          }
+        }),
+      );
+    }
     this.allTokenValues = collectTokenValues(tokens);
     this.loaded = true;
   }
@@ -103,8 +126,9 @@ export class TokenTracker {
             column: 1,
             metadata: {
               path: info.path,
-              deprecated: info.metadata.deprecated,
-              extensions: info.metadata.extensions,
+              pointer: info.token.pointer,
+              deprecated: info.token.metadata.deprecated,
+              extensions: info.token.metadata.extensions,
             },
           })),
         });
@@ -115,30 +139,19 @@ export class TokenTracker {
 }
 
 function collectTokenValues(
-  tokensByTheme?: Record<string, DesignTokens>,
-): Map<string, FlattenedToken> {
-  const values = new Map<string, FlattenedToken>();
+  tokensByTheme?: Record<string, DesignTokens | readonly DtifFlattenedToken[]>,
+): Map<string, TrackedTokenInfo> {
+  const values = new Map<string, TrackedTokenInfo>();
   if (!tokensByTheme) return values;
-  for (const theme of Object.keys(tokensByTheme)) {
+  for (const [theme, tokens] of Object.entries(tokensByTheme)) {
     if (theme.startsWith('$')) continue;
-    for (const flat of getFlattenedTokens(tokensByTheme, theme)) {
-      const val = flat.value;
-      if (typeof val === 'string') {
-        if (val.includes('*')) continue;
-        const name = extractVarName(val);
-        const key = name ?? val;
-        if (!values.has(key)) values.set(key, flat);
-        continue;
-      }
-      if (typeof val === 'number') {
-        const key = String(val);
-        if (!values.has(key)) values.set(key, flat);
-        continue;
-      }
-      if (isValueWithUnit(val)) {
-        const key = `${String(val.value)}${val.unit}`;
-        if (!values.has(key)) values.set(key, flat);
-        continue;
+    const dtifTokens = resolveDtifTokens(tokens);
+    if (!dtifTokens) continue;
+    for (const token of dtifTokens) {
+      const key = toTrackedValue(token.value);
+      if (!key) continue;
+      if (!values.has(key)) {
+        values.set(key, { token, path: getTokenPath(token) });
       }
     }
   }
@@ -170,5 +183,42 @@ function isValueWithUnit(
     isRecord(value) &&
     typeof Reflect.get(value, 'value') === 'number' &&
     typeof Reflect.get(value, 'unit') === 'string'
+  );
+}
+
+function resolveDtifTokens(
+  tokens: DesignTokens | readonly DtifFlattenedToken[],
+): readonly DtifFlattenedToken[] | undefined {
+  if (Array.isArray(tokens) && tokens.every(isDtifFlattenedTokenLike)) {
+    return tokens;
+  }
+  if (isDesignTokens(tokens)) {
+    return getDtifFlattenedTokens(tokens);
+  }
+  return undefined;
+}
+
+function toTrackedValue(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    if (value.includes('*')) {
+      return undefined;
+    }
+    const name = extractVarName(value);
+    return name ?? value;
+  }
+  if (typeof value === 'number') {
+    return String(value);
+  }
+  if (isValueWithUnit(value)) {
+    return `${String(value.value)}${value.unit}`;
+  }
+  return undefined;
+}
+
+function isDtifFlattenedTokenLike(value: unknown): value is DtifFlattenedToken {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof Reflect.get(value, 'pointer') === 'string'
   );
 }

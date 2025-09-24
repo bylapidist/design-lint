@@ -55,9 +55,25 @@ jobs:
           cat > designlint.config.json <<'EOF'
           {
             "tokens": {
+              "$version": "1.0.0",
               "color": {
-                "old": { "$type": "color", "$value": "#000", "$deprecated": "Use {color.new}" },
-                "new": { "$type": "color", "$value": "#fff" }
+                "old": {
+                  "$type": "color",
+                  "$value": {
+                    "colorSpace": "srgb",
+                    "components": [0, 0, 0],
+                    "hex": "#000000"
+                  },
+                  "$deprecated": { "$replacement": "#/color/new" }
+                },
+                "new": {
+                  "$type": "color",
+                  "$value": {
+                    "colorSpace": "srgb",
+                    "components": [1, 1, 1],
+                    "hex": "#ffffff"
+                  }
+                }
               }
             },
             "rules": {
@@ -101,9 +117,25 @@ jobs:
           cat > designlint.config.js <<'EOF'
           module.exports = {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
+                }
               }
             },
             rules: {
@@ -117,9 +149,25 @@ jobs:
           cat > designlint.config.cjs <<'EOF'
           module.exports = {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
+                }
               }
             },
             rules: {
@@ -133,9 +181,25 @@ jobs:
           cat > designlint.config.mjs <<'EOF'
           export default {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
+                }
               }
             },
             rules: {
@@ -151,9 +215,25 @@ jobs:
 
           export default {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
+                }
               }
             },
             rules: {
@@ -169,9 +249,25 @@ jobs:
 
           export default {
             tokens: {
+              $version: '1.0.0',
               color: {
-                old: { $type: 'color', $value: '#000', $deprecated: 'Use {color.new}' },
-                new: { $type: 'color', $value: '#fff' }
+                old: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [0, 0, 0],
+                    hex: '#000000'
+                  },
+                  $deprecated: { $replacement: '#/color/new' }
+                },
+                new: {
+                  $type: 'color',
+                  $value: {
+                    colorSpace: 'srgb',
+                    components: [1, 1, 1],
+                    hex: '#ffffff'
+                  }
+                }
               }
             },
             rules: {
@@ -186,10 +282,15 @@ jobs:
           {
             "tokens": {
               "default": {
+                "$version": "1.0.0",
                 "spacing": {
                   "scale-100": {
                     "$type": "dimension",
-                    "$value": { "value": 4, "unit": "px" }
+                    "$value": {
+                      "dimensionType": "length",
+                      "value": 4,
+                      "unit": "px"
+                    }
                   }
                 }
               }
@@ -205,23 +306,21 @@ jobs:
           npx design-lint file.ts --format json || true
           cat > gen.tokens.json <<'EOF'
           {
+            "$version": "1.0.0",
             "color": {
-              "red": { "$type": "color", "$value": "#ff0000" }
+              "red": {
+                "$type": "color",
+                "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
+              }
             }
           }
           EOF
           cat > gen.config.json <<'EOF'
           {
             "tokens": { "default": "./gen.tokens.json" },
-            "rules": {},
-            "output": [
-              { "format": "css", "file": "tokens.css" }
-            ]
+            "rules": {}
           }
           EOF
-          npx design-lint generate --config gen.config.json
-          test -f tokens.css
-          cat tokens.css
           npx design-lint tokens --config gen.config.json --out tokens.out.json
           test -f tokens.out.json
           cat tokens.out.json

@@ -1,6 +1,10 @@
-import { rules } from '../utils/index.js';
+import type { DtifFlattenedToken } from '../core/types.js';
+import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
+const {
+  domain: { isTokenInGroup },
+} = guards;
 
 export const fontFamilyRule = tokenRule({
   name: 'design-token/font-family',
@@ -8,11 +12,11 @@ export const fontFamilyRule = tokenRule({
   tokens: 'fontFamily',
   message:
     'design-token/font-family requires font tokens; configure tokens with $type "fontFamily" under a "fonts" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const fonts = new Set<string>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('fonts.')) continue;
-      const val = value;
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'fonts')) continue;
+      const val = token.value;
       if (typeof val === 'string') fonts.add(val);
     }
     return fonts;

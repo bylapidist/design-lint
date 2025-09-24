@@ -4,7 +4,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { rules } from '../../../src/utils/index.js';
-import type { RuleContext } from '../../../src/core/types.js';
+import type {
+  RuleContext,
+  DtifFlattenedToken,
+} from '../../../src/core/types.js';
 
 const { tokenRule } = rules;
 
@@ -20,7 +23,8 @@ void test('tokenRule reports when tokens are missing', () => {
   const reports: unknown[] = [];
   const ctx: RuleContext = {
     report: (m) => reports.push(m),
-    getFlattenedTokens: () => [],
+    getDtifTokens: () => [],
+    getTokenPath: (token) => token.pointer,
     sourceId: 'x',
   };
   const listener = rule.create(ctx);
@@ -35,10 +39,12 @@ void test('tokenRule passes allowed values to create', () => {
     meta: { description: 'example', category: 'design-token' },
     tokens: 'number',
     message: 'no tokens',
-    getAllowed(tokens) {
+    getAllowed(_ctx, tokens) {
       const s = new Set<number>();
       for (const t of tokens) {
-        if (typeof t.value === 'number') s.add(t.value);
+        if (typeof t.value === 'number') {
+          s.add(t.value);
+        }
       }
       return s;
     },
@@ -48,22 +54,54 @@ void test('tokenRule passes allowed values to create', () => {
     },
   });
   const reports: unknown[] = [];
+  const token: DtifFlattenedToken = {
+    pointer: '#/a',
+    segments: ['a'],
+    name: 'a',
+    type: 'number',
+    value: 2,
+    metadata: {},
+  };
   const ctx: RuleContext = {
     report: (m) => reports.push(m),
-    getFlattenedTokens: () => [
-      {
-        path: 'a',
-        value: 2,
-        metadata: {
-          description: undefined,
-          extensions: undefined,
-          deprecated: undefined,
-          loc: { line: 1, column: 1 },
-        },
-      },
-    ],
+    getDtifTokens: () => [token],
+    getTokenPath: () => 'a',
     sourceId: 'x',
   };
   rule.create(ctx);
   assert.ok(received?.has(2));
+});
+
+void test('tokenRule forwards DTIF tokens to getAllowed', () => {
+  let received: readonly DtifFlattenedToken[] | undefined;
+  const token: DtifFlattenedToken = {
+    pointer: '#/opacity/low',
+    segments: ['opacity', 'low'],
+    name: 'opacity.low',
+    type: 'number',
+    value: 0.2,
+    metadata: {},
+  };
+  const rule = tokenRule({
+    name: 'design-token/example',
+    meta: { description: 'example', category: 'design-token' },
+    tokens: 'number',
+    message: 'no tokens',
+    getAllowed(_ctx, dtifTokens = []) {
+      received = dtifTokens;
+      return new Set([1]);
+    },
+    create: () => ({}),
+  });
+  const reports: unknown[] = [];
+  const ctx: RuleContext = {
+    report: (m) => reports.push(m),
+    getDtifTokens: () => [token],
+    getTokenPath: () => 'opacity.low',
+    sourceId: 'x',
+  };
+  rule.create(ctx);
+  assert.ok(received);
+  assert.equal(received.length, 1);
+  assert.equal(received[0], token);
 });

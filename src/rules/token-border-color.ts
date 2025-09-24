@@ -1,9 +1,13 @@
 import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
-import { rules, color } from '../utils/index.js';
+import type { DtifFlattenedToken } from '../core/types.js';
+import { rules, guards, color } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const { detectColorFormat } = color;
+const {
+  domain: { getTokenStringValue },
+} = guards;
 
 export const borderColorRule = tokenRule({
   name: 'design-token/border-color',
@@ -14,15 +18,14 @@ export const borderColorRule = tokenRule({
   tokens: 'color',
   message:
     'design-token/border-color requires color tokens; configure tokens with $type "color" to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     return new Set(
-      tokens
-        .map(({ value }) => {
-          return typeof value === 'string' && !value.startsWith('{')
-            ? value.toLowerCase()
-            : null;
+      dtifTokens
+        .map((token) => {
+          const value = getTokenStringValue(token);
+          return value ? value.toLowerCase() : null;
         })
-        .filter((v): v is string => v !== null),
+        .filter((value): value is string => value !== null),
     );
   },
   create(context, allowed) {

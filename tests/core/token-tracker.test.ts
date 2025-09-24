@@ -12,8 +12,14 @@ function makeProvider(tokens: DesignTokens): TokenProvider {
 
 void test('TokenTracker reports unused tokens', async () => {
   const tokens: DesignTokens = {
-    color: { red: { $value: '#ff0000', $type: 'color' } },
-    spacing: { four: { $value: { value: 4, unit: 'px' }, $type: 'dimension' } },
+    $version: '1.0.0',
+    color: { red: { $type: 'string', $value: '#ff0000' } },
+    spacing: {
+      four: {
+        $type: 'dimension',
+        $value: { dimensionType: 'length', value: 4, unit: 'px' },
+      },
+    },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
   await tracker.configure([
@@ -31,9 +37,10 @@ void test('TokenTracker reports unused tokens', async () => {
 
 void test('hexColor classifier tracks custom property usage', async () => {
   const tokens: DesignTokens = {
+    $version: '1.0.0',
     color: {
-      used: { $value: '#111111', $type: 'color' },
-      unused: { $value: '#222222', $type: 'color' },
+      used: { $type: 'string', $value: '#111111' },
+      unused: { $type: 'string', $value: '#222222' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -52,9 +59,10 @@ void test('hexColor classifier tracks custom property usage', async () => {
 
 void test('hexColor classifier is case-insensitive', async () => {
   const tokens: DesignTokens = {
+    $version: '1.0.0',
     color: {
-      brand: { $value: '#ABCDEF', $type: 'color' },
-      other: { $value: '#123456', $type: 'color' },
+      brand: { $type: 'string', $value: '#ABCDEF' },
+      other: { $type: 'string', $value: '#123456' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -73,9 +81,16 @@ void test('hexColor classifier is case-insensitive', async () => {
 
 void test('numeric classifier matches number tokens', async () => {
   const tokens: DesignTokens = {
+    $version: '1.0.0',
     spacing: {
-      four: { $value: { value: 4, unit: 'px' }, $type: 'dimension' },
-      eight: { $value: { value: 8, unit: 'px' }, $type: 'dimension' },
+      four: {
+        $type: 'dimension',
+        $value: { dimensionType: 'length', value: 4, unit: 'px' },
+      },
+      eight: {
+        $type: 'dimension',
+        $value: { dimensionType: 'length', value: 8, unit: 'px' },
+      },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -94,9 +109,10 @@ void test('numeric classifier matches number tokens', async () => {
 
 void test('string classifier matches plain string tokens', async () => {
   const tokens: DesignTokens = {
+    $version: '1.0.0',
     color: {
-      used: { $value: '#ff0000', $type: 'color' },
-      unused: { $value: '#0000ff', $type: 'color' },
+      used: { $type: 'string', $value: '#ff0000' },
+      unused: { $type: 'string', $value: '#0000ff' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -115,9 +131,10 @@ void test('string classifier matches plain string tokens', async () => {
 
 void test('TokenTracker resolves alias tokens when tracking usage', async () => {
   const tokens: DesignTokens = {
+    $version: '1.0.0',
     color: {
-      red: { $value: '#ff0000', $type: 'color' },
-      primary: { $value: '{color.red}', $type: 'color' },
+      red: { $type: 'string', $value: '#ff0000' },
+      primary: { $type: 'string', $ref: '#/color/red' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -135,11 +152,12 @@ void test('TokenTracker resolves alias tokens when tracking usage', async () => 
 
 void test('TokenTracker includes token metadata in reports', async () => {
   const tokens: DesignTokens = {
+    $version: '1.0.0',
     color: {
       unused: {
+        $type: 'string',
         $value: '#123456',
-        $type: 'color',
-        $deprecated: 'deprecated',
+        $deprecated: { $replacement: '#/color/replacement' },
         $extensions: { 'vendor.foo': true },
       },
     },
@@ -157,6 +175,9 @@ void test('TokenTracker includes token metadata in reports', async () => {
   const msg = reports[0].messages[0];
   assert(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
-  assert.equal(msg.metadata.deprecated, 'deprecated');
+  assert.equal(msg.metadata.pointer, '#/color/unused');
+  assert.deepEqual(msg.metadata.deprecated, {
+    $replacement: '#/color/replacement',
+  });
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });

@@ -50,7 +50,8 @@ for (const c of cases) {
       options: undefined,
       report: (m) =>
         messages.push({ ...m, severity: 'error', ruleId: rule.name }),
-      getFlattenedTokens: () => [],
+      getDtifTokens: () => [],
+      getTokenPath: (token) => token.pointer,
     };
     const listener = rule.create(ctx);
     await parser(c.text, c.sourceId, [listener], messages);

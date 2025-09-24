@@ -197,7 +197,7 @@ void test('supports custom plugin loaders', async () => {
         name: 'mock/rule',
         meta: { description: 'mock rule' },
         create: (ctx) => {
-          ctx.getFlattenedTokens('color');
+          ctx.getDtifTokens('color');
           return {};
         },
       };
@@ -240,22 +240,4 @@ void test('exposes plugin metadata', async () => {
   assert.deepEqual(meta, [
     { path: pluginPath, name: 'init-plugin', version: '1.0.0' },
   ]);
-});
-
-void test('plugin init can transform tokens before load', async () => {
-  const pluginPath = path.join(
-    __dirname,
-    'fixtures',
-    'token-transform-plugin.ts',
-  );
-  const linter = initLinter(
-    {
-      plugins: [pluginPath],
-      tokens: { color: { red: { $type: 'color', $value: '#f00' } } },
-    },
-    { documentSource: new FileSource(), pluginLoader: new NodePluginLoader() },
-  );
-  await linter.lintText('const a = 1;', 'file.ts');
-  const completions = linter.getTokenCompletions();
-  assert.ok(completions.default.includes('color.blue'));
 });

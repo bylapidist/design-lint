@@ -5,8 +5,8 @@ const rule: RuleModule<unknown> = {
   name: 'plugin/test',
   meta: { description: 'test rule' },
   create(context) {
-    // ensure getFlattenedTokens is callable for plugin rules
-    context.getFlattenedTokens('color');
+    // ensure getDtifTokens is callable for plugin rules
+    context.getDtifTokens('color');
     return {
       onNode(node) {
         if (node.kind === ts.SyntaxKind.SourceFile) {

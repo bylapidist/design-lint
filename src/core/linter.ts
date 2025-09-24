@@ -21,13 +21,8 @@ import type { CacheProvider } from './cache-provider.js';
 import { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
 import { FILE_TYPE_MAP } from './file-types.js';
-
-export interface OutputTarget {
-  format: 'css' | 'js' | 'ts';
-  file: string;
-  nameTransform?: NameTransform;
-  selectors?: Record<string, string>;
-}
+import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
+import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
 
 export interface Config {
   tokens?:
@@ -42,7 +37,6 @@ export interface Config {
   patterns?: string[];
   wrapTokensWithVar?: boolean;
   nameTransform?: NameTransform;
-  output?: OutputTarget[];
 }
 
 interface ResolvedConfig extends Omit<Config, 'tokens'> {
@@ -69,7 +63,6 @@ export class Linter {
           tokensReady: Promise<Record<string, DesignTokens>>;
         }
       | Environment,
-    onWarn?: (msg: string) => void,
   ) {
     const isEnv = (val: unknown): val is Environment =>
       typeof val === 'object' && val !== null && 'documentSource' in val;
@@ -91,12 +84,13 @@ export class Linter {
       env = depsOrEnv;
       const inlineTokens = config.tokens;
       const provider: TokenProvider = env.tokenProvider ?? {
-        load: () => {
+        async load() {
           if (inlineTokens && isDesignTokens(inlineTokens)) {
-            new TokenRegistry({ default: inlineTokens });
-            return Promise.resolve({ default: inlineTokens });
+            await ensureDtifFlattenedTokens(inlineTokens);
+            return { default: inlineTokens };
           }
-          return Promise.resolve({});
+          const empty: Record<string, DesignTokens> = {};
+          return empty;
         },
       };
       resolvedConfig = {
@@ -121,7 +115,6 @@ export class Linter {
       this.tokensByTheme = t;
       this.tokenRegistry = new TokenRegistry(t, {
         nameTransform: this.config.nameTransform,
-        onWarn,
       });
     });
 
@@ -183,10 +176,20 @@ export class Linter {
   getTokenCompletions(): Record<string, string[]> {
     const completions: Record<string, string[]> = {};
     if (!this.tokenRegistry) return completions;
+    const transform = this.config.nameTransform;
     for (const theme of Object.keys(this.tokensByTheme)) {
-      const flat = this.tokenRegistry.getTokens(theme);
-      if (flat.length) {
-        completions[theme] = flat.map((t) => t.path);
+      const dtifTokens = this.tokenRegistry.getDtifTokens(theme);
+      if (!dtifTokens.length) continue;
+      const seen = new Set<string>();
+      const paths: string[] = [];
+      for (const token of dtifTokens) {
+        const path = deriveTokenPath(token, transform);
+        if (seen.has(path)) continue;
+        seen.add(path);
+        paths.push(path);
+      }
+      if (paths.length) {
+        completions[theme] = paths;
       }
     }
     return completions;
@@ -265,10 +268,12 @@ export class Linter {
         options,
         metadata,
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
-        getFlattenedTokens: (type?: string, theme?: string) => {
-          const tokens = this.tokenRegistry?.getTokens(theme) ?? [];
+        getDtifTokens: (type?: string, theme?: string) => {
+          const tokens = this.tokenRegistry?.getDtifTokens(theme) ?? [];
           return type ? tokens.filter((t) => t.type === type) : tokens;
         },
+        getTokenPath: (token) =>
+          deriveTokenPath(token, this.config.nameTransform),
       };
       return rule.create(ctx);
     });

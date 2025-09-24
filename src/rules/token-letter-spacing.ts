@@ -1,10 +1,12 @@
 import ts from 'typescript';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
   data: { isRecord },
+  domain: { isTokenInGroup },
 } = guards;
 
 const parse = (val: unknown): number | null => {
@@ -39,12 +41,12 @@ export const letterSpacingRule = tokenRule({
   tokens: 'dimension',
   message:
     'design-token/letter-spacing requires letter-spacing tokens; configure tokens with $type "dimension" under a "letterSpacings" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const numeric = new Set<number>();
     const values = new Set<string>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('letterSpacings.')) continue;
-      const val = value;
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'letterSpacings')) continue;
+      const val = token.value;
       const num = parse(val);
       if (num !== null) numeric.add(num);
       if (

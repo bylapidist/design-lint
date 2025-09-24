@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { z } from 'zod';
-import type { RuleModule } from '../core/types.js';
+import type { RuleModule, TokenMetadata } from '../core/types.js';
+import { pointerToTokenPath } from '../utils/tokens/token-view.js';
 import { guards } from '../utils/index.js';
 
 const {
@@ -16,17 +17,20 @@ export const deprecationRule: RuleModule = {
   },
   create(context) {
     const deprecated = new Map<string, { reason?: string; suggest?: string }>();
-    for (const { path, metadata } of context.getFlattenedTokens()) {
-      const dep = metadata.deprecated;
-      if (!dep) continue;
-      let reason: string | undefined;
-      let suggest: string | undefined;
-      if (typeof dep === 'string') {
-        reason = dep;
-        const m = /\{([^}]+)\}/.exec(dep);
-        if (m) suggest = m[1];
-      }
-      deprecated.set(path, { reason, suggest });
+    const dtifTokens = context.getDtifTokens();
+    const pathByPointer = new Map<string, string>();
+    for (const token of dtifTokens) {
+      pathByPointer.set(token.pointer, context.getTokenPath(token));
+    }
+    for (const token of dtifTokens) {
+      const path = pathByPointer.get(token.pointer);
+      if (!path) continue;
+      const info = parseDeprecatedMetadata(
+        token.metadata.deprecated,
+        pathByPointer,
+      );
+      if (!info) continue;
+      deprecated.set(path, info);
     }
     if (deprecated.size === 0) {
       context.report({
@@ -82,3 +86,48 @@ export const deprecationRule: RuleModule = {
     };
   },
 };
+
+function parseDeprecatedMetadata(
+  value: TokenMetadata['deprecated'] | string | undefined,
+  pathByPointer: Map<string, string>,
+): { reason?: string; suggest?: string } | undefined {
+  if (!value) return undefined;
+
+  if (value === true) {
+    return {};
+  }
+
+  if (typeof value === 'string') {
+    const suggestion = pointerToReplacementName(value, pathByPointer);
+    if (suggestion) {
+      return { reason: `Use ${suggestion}`, suggest: suggestion };
+    }
+    return { reason: value };
+  }
+
+  if (typeof value === 'object') {
+    const pointer = Reflect.get(value, '$replacement');
+    if (typeof pointer === 'string') {
+      const suggestion = pointerToReplacementName(pointer, pathByPointer);
+      if (suggestion) {
+        return { reason: `Use ${suggestion}`, suggest: suggestion };
+      }
+    }
+    return {};
+  }
+
+  return undefined;
+}
+
+function pointerToReplacementName(
+  pointer: string,
+  pathByPointer: Map<string, string>,
+): string | undefined {
+  if (!pointer) return undefined;
+  if (pathByPointer.has(pointer)) {
+    return pathByPointer.get(pointer);
+  }
+  if (!pointer.startsWith('#')) return undefined;
+  const name = pointerToTokenPath(pointer);
+  return name ?? undefined;
+}

@@ -1,10 +1,12 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
+  domain: { isTokenInGroup },
 } = guards;
 
 export const opacityRule = tokenRule({
@@ -13,12 +15,12 @@ export const opacityRule = tokenRule({
   tokens: 'number',
   message:
     'design-token/opacity requires opacity tokens; configure tokens with $type "number" under an "opacity" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const allowed = new Set<number>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('opacity.')) continue;
-      if (typeof value === 'number') {
-        allowed.add(value);
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'opacity')) continue;
+      if (typeof token.value === 'number') {
+        allowed.add(token.value);
       }
     }
     return allowed;

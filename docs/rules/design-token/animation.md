@@ -14,9 +14,10 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "animations": {
       "spin": { "$type": "string", "$value": "spin 1s linear infinite" },
-      "wiggle": { "$type": "string", "$value": "{animations.spin}" }
+      "wiggle": { "$type": "string", "$ref": "#/animations/spin" }
     }
   },
   "rules": { "design-token/animation": "error" }

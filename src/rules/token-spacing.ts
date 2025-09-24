@@ -1,11 +1,13 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
+  domain: { isTokenInGroup },
 } = guards;
 
 interface SpacingOptions {
@@ -28,16 +30,13 @@ export const spacingRule = tokenRule<SpacingOptions>({
   tokens: 'dimension',
   message:
     'design-token/spacing requires spacing tokens; configure tokens with $type "dimension" under a "spacing" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const allowed = new Set<number>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('spacing.')) continue;
-      const val = value;
-      if (val && typeof val === 'object') {
-        const num: unknown = Reflect.get(val, 'value');
-        if (typeof num === 'number') {
-          allowed.add(num);
-        }
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'spacing')) continue;
+      const value = toDimensionValue(token.value);
+      if (value !== null) {
+        allowed.add(value);
       }
     }
     return allowed;
@@ -133,3 +132,11 @@ export const spacingRule = tokenRule<SpacingOptions>({
     };
   },
 });
+
+function toDimensionValue(value: unknown): number | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  const raw: unknown = Reflect.get(value, 'value');
+  return typeof raw === 'number' ? raw : null;
+}

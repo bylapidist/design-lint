@@ -16,4 +16,8 @@ export {
 export { toThemeRecord } from './theme.js';
 export { extractVarName } from './css.js';
 export { TOKEN_FILE_GLOB } from './files.js';
-export { compareTokenPath, sortTokensByPath } from './sort.js';
+export {
+  compareTokenPath,
+  sortTokensByPath,
+  type SortTokensOptions,
+} from './sort.js';

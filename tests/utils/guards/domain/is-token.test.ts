@@ -7,6 +7,7 @@ import { isToken } from '../../../../src/utils/guards/domain/is-token.js';
 
 void test('isToken identifies token objects', () => {
   assert.equal(isToken({ $value: '#fff' }), true);
+  assert.equal(isToken({ $ref: '#/color/primary' }), true);
   assert.equal(isToken({}), false);
   assert.equal(isToken(null), false);
 });

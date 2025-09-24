@@ -14,16 +14,20 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "borderWidths": {
-      "sm": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
-      "lg": { "$type": "dimension", "$value": "{borderWidths.sm}" }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "dimensionType": "length", "value": 1, "unit": "px" }
+      },
+      "lg": { "$type": "dimension", "$ref": "#/borderWidths/sm" }
     }
   },
   "rules": { "design-token/border-width": "error" }
 }
 ```
 
-Border width tokens use the `dimension` type.
+Border width tokens use the `dimension` type with `dimensionType` set to `length`.
 
 ## Options
 No additional options.

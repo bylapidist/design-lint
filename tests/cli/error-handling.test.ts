@@ -32,10 +32,14 @@ void test('fails on unresolved aliases', () => {
   fs.writeFileSync(
     path.join(dir, 'tokens.tokens.json'),
     JSON.stringify({
+      $version: '1.0.0',
       color: {
-        red: { $type: 'color', $value: '#ff0000' },
-        bad1: { $type: 'color', $value: '{color.missing}' },
-        bad2: { $type: 'color', $value: '{color.missing}' },
+        red: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+        bad1: { $type: 'color', $ref: '#/color/missing' },
+        bad2: { $type: 'color', $ref: '#/color/missing' },
       },
     }),
   );
@@ -44,7 +48,6 @@ void test('fails on unresolved aliases', () => {
     JSON.stringify({
       tokens: { default: './tokens.tokens.json' },
       rules: {},
-      output: [],
     }),
   );
   const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
@@ -61,5 +64,5 @@ void test('fails on unresolved aliases', () => {
     { cwd: dir, encoding: 'utf8' },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /references unknown token/i);
+  assert.match(res.stderr, /Failed to parse DTIF document/i);
 });

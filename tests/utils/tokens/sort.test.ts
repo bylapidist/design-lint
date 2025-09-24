@@ -4,29 +4,43 @@ import {
   compareTokenPath,
   sortTokensByPath,
 } from '../../../src/utils/tokens/index.js';
-import type { FlattenedToken } from '../../../src/core/types.js';
+import type { DtifFlattenedToken } from '../../../src/core/types.js';
 
-function token(path: string): FlattenedToken {
+function dtifToken(
+  pointer: string,
+  segments: readonly string[],
+): DtifFlattenedToken {
   return {
-    path,
-    value: path,
-    metadata: { loc: { line: 1, column: 1 } },
+    pointer,
+    segments,
+    name: segments[segments.length - 1] ?? '',
+    metadata: {},
   };
 }
 
-void test('sortTokensByPath orders tokens alphabetically by path', () => {
-  const tokens = [token('b.beta'), token('a.alpha')];
+void test('sortTokensByPath orders DTIF tokens by pointer-derived path', () => {
+  const tokens = [
+    dtifToken('#/b/beta', ['b', 'beta']),
+    dtifToken('#/a/alpha', ['a', 'alpha']),
+  ];
   const sorted = sortTokensByPath(tokens);
   assert.deepEqual(
-    sorted.map((t) => t.path),
-    ['a.alpha', 'b.beta'],
+    sorted.map((t) => t.pointer),
+    ['#/a/alpha', '#/b/beta'],
   );
-  assert.equal(tokens[0].path, 'b.beta');
+  assert.equal(tokens[0].pointer, '#/b/beta');
 });
 
-void test('compareTokenPath sorts by path', () => {
-  const a = token('a');
-  const b = token('b');
-  assert.ok(compareTokenPath(a, b) < 0);
-  assert.ok(compareTokenPath(b, a) > 0);
+void test('compareTokenPath applies name transforms for DTIF tokens', () => {
+  const brandColors = dtifToken('#/BrandColors/Primary', [
+    'BrandColors',
+    'Primary',
+  ]);
+  const brand = dtifToken('#/brand/Secondary', ['brand', 'Secondary']);
+  assert.ok(
+    compareTokenPath(brandColors, brand, { nameTransform: 'kebab-case' }) < 0,
+  );
+  assert.ok(
+    compareTokenPath(brand, brandColors, { nameTransform: 'kebab-case' }) > 0,
+  );
 });

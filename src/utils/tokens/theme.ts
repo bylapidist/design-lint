@@ -7,6 +7,7 @@
 import type { Config } from '../../core/linter.js';
 import type { DesignTokens } from '../../core/types.js';
 import { isDesignTokens, isThemeRecord } from '../guards/domain/index.js';
+import { getDtifFlattenedTokens } from './dtif-cache.js';
 
 /**
  * Normalize a configuration's token definitions into a theme record.
@@ -23,7 +24,22 @@ export function toThemeRecord(
   tokens: Config['tokens'],
 ): Record<string, DesignTokens> {
   if (!tokens) return {};
-  if (isThemeRecord(tokens)) return tokens;
+  if (getDtifFlattenedTokens(tokens)) {
+    if (isDesignTokens(tokens)) {
+      return { default: tokens };
+    }
+    return {};
+  }
+  if (isThemeRecord(tokens)) {
+    const themes: Record<string, DesignTokens> = {};
+    for (const [key, value] of Object.entries(tokens)) {
+      if (key.startsWith('$')) continue;
+      if (isDesignTokens(value)) {
+        themes[key] = value;
+      }
+    }
+    return themes;
+  }
   if (isDesignTokens(tokens)) return { default: tokens };
   return {};
 }

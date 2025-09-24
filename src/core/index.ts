@@ -21,12 +21,16 @@ export type {
   RuleContext,
   RuleListener,
   DesignTokens,
-  Token,
-  TokenGroup,
+  TokenNode,
+  TokenCollectionNode,
   PluginModule,
   CSSDeclaration,
   Fix,
-  FlattenedToken,
+  DtifFlattenedToken,
+  TokenDiagnostic,
+  TokenResolution,
+  TokenMetadata,
+  TokenLocation,
   ColorFormat,
 } from './types.js';
 export {
@@ -41,9 +45,23 @@ export {
   type FlattenOptions,
 } from '../utils/tokens/index.js';
 export {
-  parseDesignTokens,
-  getTokenLocation,
-  registerTokenTransform,
-  type TokenTransform,
-} from './parser/index.js';
+  parseDtifTokens,
+  parseDtifTokensFromFile,
+  parseInlineDtifTokens,
+  parseDtifTokenObject,
+} from './dtif/parse.js';
+export type {
+  ParseDtifTokensOptions,
+  ParseInlineDtifTokensOptions,
+  DtifParseResult,
+} from './dtif/parse.js';
+export {
+  indexDtifTokens,
+  createDtifNameIndex,
+  pointerSegmentsToName,
+} from './dtif/token-index.js';
+export {
+  DtifTokenRegistry,
+  type DtifTokenRegistryOptions,
+} from './dtif/token-registry.js';
 export { TokenRegistry, type TokenRegistryOptions } from './token-registry.js';
