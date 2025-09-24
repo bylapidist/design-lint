@@ -39,7 +39,6 @@ void test('returns default config when none found', async () => {
     rules: {},
     ignoreFiles: [],
     plugins: [],
-    output: [],
     configPath: undefined,
   });
 });
@@ -91,20 +90,6 @@ void test('parses nameTransform option', async () => {
   );
   const loaded = await loadConfig(tmp);
   assert.equal(loaded.nameTransform, 'PascalCase');
-});
-
-void test('parses output targets', async () => {
-  const tmp = makeTmpDir();
-  const configPath = path.join(tmp, 'designlint.config.json');
-  fs.writeFileSync(
-    configPath,
-    JSON.stringify({
-      tokens: {},
-      output: [{ format: 'css', file: 'out.css' }],
-    }),
-  );
-  const loaded = await loadConfig(tmp);
-  assert.deepEqual(loaded.output, [{ format: 'css', file: 'out.css' }]);
 });
 
 void test('rejects bare string token values', async () => {

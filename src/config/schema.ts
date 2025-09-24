@@ -82,15 +82,6 @@ const nameTransformSchema = z
   .enum(['kebab-case', 'camelCase', 'PascalCase'])
   .optional();
 
-const outputTargetSchema = z
-  .object({
-    format: z.enum(['css', 'js', 'ts']),
-    file: z.string(),
-    nameTransform: nameTransformSchema,
-    selectors: z.record(z.string(), z.string()).optional(),
-  })
-  .strict();
-
 /**
  * Zod schema describing a valid linter configuration.
  */
@@ -105,7 +96,6 @@ export const configSchema: z.ZodType<Config> = z
     patterns: z.array(z.string()).optional(),
     wrapTokensWithVar: z.boolean().optional(),
     nameTransform: nameTransformSchema,
-    output: z.array(outputTargetSchema).optional(),
   })
   .strict();
 

@@ -270,15 +270,9 @@ jobs:
           cat > gen.config.json <<'EOF'
           {
             "tokens": { "default": "./gen.tokens.json" },
-            "rules": {},
-            "output": [
-              { "format": "css", "file": "tokens.css" }
-            ]
+            "rules": {}
           }
           EOF
-          npx design-lint generate --config gen.config.json
-          test -f tokens.css
-          cat tokens.css
           npx design-lint tokens --config gen.config.json --out tokens.out.json
           test -f tokens.out.json
           cat tokens.out.json

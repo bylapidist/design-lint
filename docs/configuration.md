@@ -12,7 +12,6 @@ This page explains every option in `designlint.config.*`. It targets developers 
 - [Basic config](#basic-config)
 - [Tokens](#tokens)
 - [Name transforms](#name-transforms)
-- [Token outputs](#token-outputs)
 - [Rules and severity](#rules-and-severity)
 - [Plugins](#plugins)
 - [Overrides](#overrides)
@@ -47,7 +46,6 @@ Each option tunes a specific aspect of design-lint. Use the table below as a qui
 | `concurrency` | number | `os.cpus()` | Maximum parallel workers. Lower the value when running multiple linters in CI to avoid resource contention. |
 | `wrapTokensWithVar` | boolean | `false` | Wrap token values with `var()` when autofixing CSS. Useful when migrating legacy codebases to CSS variables. |
 | `nameTransform` | string | `undefined` | Convert token paths to `kebab-case`, `camelCase`, or `PascalCase`. |
-| `output` | object[] | `[]` | Token output targets for `design-lint generate`. Each target defines a `format` and destination `file` with optional `nameTransform` or `selectors`. |
 
 
 ## Tokens
@@ -117,22 +115,7 @@ Token paths are normalized to dot notation. Set `nameTransform` to convert those
 }
 ```
 
-Individual output targets may override this option.
-
-## Token outputs
-Use the `output` array to configure files written by `design-lint generate`.
-
-```json
-{
-  "output": [
-    { "format": "css", "file": "dist/tokens.css" },
-    { "format": "js", "file": "dist/tokens.js" },
-    { "format": "ts", "file": "dist/tokens.d.ts" }
-  ]
-}
-```
-
-Each target may also specify its own `nameTransform` or a map of theme `selectors` for CSS generation.
+Flattened token exports and completion suggestions use the configured transform.
 
 ## Rules and severity
 Enable a rule by adding it to the `rules` map with a severity:

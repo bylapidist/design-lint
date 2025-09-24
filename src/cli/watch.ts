@@ -1,7 +1,7 @@
 /**
  * @packageDocumentation
  *
- * Watch mode for continuous linting and token generation.
+ * Watch mode for continuous linting.
  */
 
 import fs from 'fs';
@@ -23,7 +23,6 @@ import {
   type ExecuteServices,
   type ExecuteOptions,
 } from './execute.js';
-import { generateOutputs } from './generate.js';
 import { TOKEN_FILE_GLOB } from '../utils/tokens/index.js';
 
 export interface WatchState {
@@ -64,8 +63,7 @@ export interface WatchServices extends ExecuteServices {
 }
 
 /**
- * Run the CLI in watch mode, re-linting and regenerating token outputs on
- * file changes.
+ * Run the CLI in watch mode, re-linting files when watched sources change.
  *
  * @param targets - Initial lint targets.
  * @param options - CLI options controlling execution.
@@ -90,7 +88,6 @@ export async function watchMode(
     process.exitCode = exitCode;
     return ignoreFiles;
   };
-  await generateOutputs({ config: options.config });
   await startWatch({
     targets,
     options,
@@ -186,7 +183,6 @@ export async function startWatch(ctx: WatchOptions) {
   const runAndUpdate = async (paths: string[]) => {
     const prev = ignoreFilePaths;
     const newIgnore = await runLint(paths);
-    await generateOutputs({ config: options.config });
     const toAdd = newIgnore.filter((p) => !prev.includes(p));
     if (toAdd.length) watcher.add(toAdd);
     const toRemove = prev.filter((p) => !newIgnore.includes(p));
