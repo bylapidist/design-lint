@@ -88,35 +88,32 @@ export const deprecationRule: RuleModule = {
 };
 
 function parseDeprecatedMetadata(
-  value: TokenMetadata['deprecated'] | string | undefined,
+  value: TokenMetadata['deprecated'] | undefined,
   pathByPointer: Map<string, string>,
 ): { reason?: string; suggest?: string } | undefined {
   if (!value) return undefined;
 
-  if (value === true) {
-    return {};
+  const pointer = value.supersededBy?.pointer;
+  const suggestion = pointer
+    ? pointerToReplacementName(pointer, pathByPointer)
+    : undefined;
+
+  const reasonParts: string[] = [];
+  if (value.reason) {
+    reasonParts.push(value.reason);
+  }
+  if (value.since) {
+    reasonParts.push(`since ${value.since}`);
   }
 
-  if (typeof value === 'string') {
-    const suggestion = pointerToReplacementName(value, pathByPointer);
-    if (suggestion) {
-      return { reason: `Use ${suggestion}`, suggest: suggestion };
-    }
-    return { reason: value };
+  if (!reasonParts.length && suggestion) {
+    reasonParts.push(`Use ${suggestion}`);
   }
 
-  if (typeof value === 'object') {
-    const pointer = Reflect.get(value, '$replacement');
-    if (typeof pointer === 'string') {
-      const suggestion = pointerToReplacementName(pointer, pathByPointer);
-      if (suggestion) {
-        return { reason: `Use ${suggestion}`, suggest: suggestion };
-      }
-    }
-    return {};
-  }
-
-  return undefined;
+  return {
+    reason: reasonParts.length > 0 ? reasonParts.join(' ') : undefined,
+    suggest: suggestion,
+  };
 }
 
 function pointerToReplacementName(

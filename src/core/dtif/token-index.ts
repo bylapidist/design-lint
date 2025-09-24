@@ -17,7 +17,7 @@ export function createDtifNameIndex(
 ): Map<string, DtifFlattenedToken> {
   const map = new Map<string, DtifFlattenedToken>();
   for (const token of tokens) {
-    const name = pointerSegmentsToName(token.segments, transform);
+    const name = pointerSegmentsToName(token.path, transform);
     map.set(name, token);
   }
   return map;

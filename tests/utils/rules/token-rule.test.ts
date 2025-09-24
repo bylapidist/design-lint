@@ -55,12 +55,13 @@ void test('tokenRule passes allowed values to create', () => {
   });
   const reports: unknown[] = [];
   const token: DtifFlattenedToken = {
+    id: '#/a',
     pointer: '#/a',
-    segments: ['a'],
+    path: ['a'],
     name: 'a',
     type: 'number',
     value: 2,
-    metadata: {},
+    metadata: { extensions: {} },
   };
   const ctx: RuleContext = {
     report: (m) => reports.push(m),
@@ -75,12 +76,13 @@ void test('tokenRule passes allowed values to create', () => {
 void test('tokenRule forwards DTIF tokens to getAllowed', () => {
   let received: readonly DtifFlattenedToken[] | undefined;
   const token: DtifFlattenedToken = {
+    id: '#/opacity/low',
     pointer: '#/opacity/low',
-    segments: ['opacity', 'low'],
+    path: ['opacity', 'low'],
     name: 'opacity.low',
     type: 'number',
     value: 0.2,
-    metadata: {},
+    metadata: { extensions: {} },
   };
   const rule = tokenRule({
     name: 'design-token/example',

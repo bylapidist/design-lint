@@ -109,10 +109,11 @@ The output resembles:
   "default": {
     "#/color/red": {
       "pointer": "#/color/red",
-      "segments": ["color", "red"],
+      "path": ["color", "red"],
       "name": "red",
       "type": "color",
       "value": { "colorSpace": "srgb", "components": [1, 0, 0] },
+      "raw": { "colorSpace": "srgb", "components": [1, 0, 0] },
       "metadata": {
         "extensions": { "vendor.ext": { "foo": "bar" } }
       }

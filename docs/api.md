@@ -60,7 +60,8 @@ Key methods:
 - `getFormatter(name)` – load a formatter by name or path.
 - `applyFixes(text, messages)` – apply non-overlapping fixes.
 - `parseDtifTokens(input, options?)` – run the canonical DTIF parser on a
-  document, URL, or `ParseInput` record and receive flattened pointer tokens.
+  document, URL, or `ParseInput` record and receive flattened pointer tokens
+  enriched with metadata and resolution snapshots.
 - `parseInlineDtifTokens(content, options?)` – parse an inline DTIF string or
   buffer with optional virtual URI metadata.
 - `parseDtifTokenObject(document, options?)` – serialise an in-memory token
@@ -87,7 +88,7 @@ Key methods:
   helpers that parse DTIF files and either return flattened tokens or the
   parsed `TokenDocument`.
 - `DtifTokenParseError` – error type that surfaces canonical DTIF diagnostics
-  with file, pointer, and position metadata.
+  with file URIs and source ranges.
 
 ### DTIF parsing helpers
 design-lint embeds the

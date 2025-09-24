@@ -17,8 +17,8 @@ export function getTokenPath(
     return fromPointer;
   }
 
-  if (token.segments.length > 0) {
-    return normalizePath(joinSegments(token.segments), transform);
+  if (token.path.length > 0) {
+    return normalizePath(joinSegments(token.path), transform);
   }
 
   if (token.name) {

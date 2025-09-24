@@ -9,12 +9,13 @@ import type { DtifFlattenedToken } from '../../../src/core/types.js';
 
 void test('getTokenPath normalizes pointer segments with transforms', () => {
   const token: DtifFlattenedToken = {
+    id: '#/ColorGroup/PrimaryColor',
     pointer: '#/ColorGroup/PrimaryColor',
-    segments: ['ColorGroup', 'PrimaryColor'],
+    path: ['ColorGroup', 'PrimaryColor'],
     name: 'PrimaryColor',
     type: 'color',
     value: '#fff',
-    metadata: {},
+    metadata: { extensions: {} },
   };
 
   assert.equal(getTokenPath(token), 'ColorGroup.PrimaryColor');
@@ -23,23 +24,25 @@ void test('getTokenPath normalizes pointer segments with transforms', () => {
 
 void test('getTokenPath falls back to segments and token names when pointer path is absent', () => {
   const withoutPointer: DtifFlattenedToken = {
+    id: '#',
     pointer: '#',
-    segments: ['color', 'background'],
+    path: ['color', 'background'],
     name: 'background',
     type: 'color',
     value: '#fff',
-    metadata: {},
+    metadata: { extensions: {} },
   };
 
   assert.equal(getTokenPath(withoutPointer), 'color.background');
 
   const withoutSegments: DtifFlattenedToken = {
+    id: '#',
     pointer: '#',
-    segments: [],
+    path: [],
     name: 'AccentColor',
     type: 'color',
     value: '#000',
-    metadata: {},
+    metadata: { extensions: {} },
   };
 
   assert.equal(getTokenPath(withoutSegments, 'kebab-case'), 'accent-color');

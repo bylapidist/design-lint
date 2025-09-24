@@ -11,10 +11,11 @@ function dtifToken(
   segments: readonly string[],
 ): DtifFlattenedToken {
   return {
+    id: pointer,
     pointer,
-    segments,
+    path: segments,
     name: segments[segments.length - 1] ?? '',
-    metadata: {},
+    metadata: { extensions: {} },
   };
 }
 

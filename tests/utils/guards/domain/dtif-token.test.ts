@@ -7,10 +7,11 @@ import {
 import type { DtifFlattenedToken } from '../../../../src/core/types.js';
 
 const baseToken: DtifFlattenedToken = {
+  id: '#/spacing/md',
   pointer: '#/spacing/md',
-  segments: ['spacing', 'md'],
+  path: ['spacing', 'md'],
   name: 'md',
-  metadata: {},
+  metadata: { extensions: {} },
 };
 
 void test('isTokenInGroup returns true when the first segment matches', () => {
@@ -40,7 +41,8 @@ void test('getTokenStringValue returns DTIF color hex values', () => {
   const token: DtifFlattenedToken = {
     ...baseToken,
     pointer: '#/color/old',
-    segments: ['color', 'old'],
+    id: '#/color/old',
+    path: ['color', 'old'],
     name: 'old',
     type: 'color',
     value: {
@@ -56,7 +58,8 @@ void test('getTokenStringValue formats DTIF colors without hex', () => {
   const token: DtifFlattenedToken = {
     ...baseToken,
     pointer: '#/color/new',
-    segments: ['color', 'new'],
+    id: '#/color/new',
+    path: ['color', 'new'],
     name: 'new',
     type: 'color',
     value: {
@@ -71,7 +74,8 @@ void test('getTokenStringValue reads DTIF color fallbacks', () => {
   const token: DtifFlattenedToken = {
     ...baseToken,
     pointer: '#/color/fallback',
-    segments: ['color', 'fallback'],
+    id: '#/color/fallback',
+    path: ['color', 'fallback'],
     name: 'fallback',
     type: 'color',
     value: [

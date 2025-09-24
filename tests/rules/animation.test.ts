@@ -3,10 +3,7 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
-import { registerTokenValidator } from '../../src/core/token-validators/index.js';
 import { createDtifTheme } from '../helpers/dtif.js';
-
-registerTokenValidator('string', () => undefined);
 
 const tokens = createDtifTheme({
   'animations.spin': { type: 'string', value: 'spin 1s linear infinite' },

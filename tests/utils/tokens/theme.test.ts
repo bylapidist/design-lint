@@ -44,12 +44,14 @@ void test('treat DTIF documents with cached flattening as single theme', () => {
   } satisfies Record<string, unknown>;
   const flattened: DtifFlattenedToken[] = [
     {
+      id: '#/color/red',
       pointer: '#/color/red',
-      segments: ['color', 'red'],
+      path: ['color', 'red'],
       name: 'red',
       type: 'color',
       value: { colorSpace: 'srgb', components: [1, 0, 0] },
-      metadata: {},
+      raw: { colorSpace: 'srgb', components: [1, 0, 0] },
+      metadata: { extensions: {} },
     },
   ];
   attachDtifFlattenedTokens(tokens, flattened);

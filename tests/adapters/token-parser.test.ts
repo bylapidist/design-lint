@@ -119,7 +119,7 @@ void test('readDtifTokensFile surfaces DTIF diagnostics for invalid documents', 
     (err: unknown) => {
       assert.ok(err instanceof DtifTokenParseError);
       assert.strictEqual(err.source, file);
-      assert.match(err.format(), /#/);
+      assert.match(err.format(), /#\/color\/missing/);
       return true;
     },
   );

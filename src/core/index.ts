@@ -30,7 +30,6 @@ export type {
   TokenDiagnostic,
   TokenResolution,
   TokenMetadata,
-  TokenLocation,
   ColorFormat,
 } from './types.js';
 export {

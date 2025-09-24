@@ -1,13 +1,33 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { TokenTracker } from '../../src/core/token-tracker.js';
-import type { DesignTokens } from '../../src/core/types.js';
+import type { DesignTokens, TokenDeprecation } from '../../src/core/types.js';
 import type { TokenProvider } from '../../src/core/environment.js';
 
 function makeProvider(tokens: DesignTokens): TokenProvider {
   return {
     load: () => Promise.resolve({ default: tokens }),
   };
+}
+
+interface TokenReportMetadata {
+  path: string;
+  pointer: string;
+  deprecated?: TokenDeprecation;
+  extensions: Record<string, unknown>;
+}
+
+function assertTokenMetadata(
+  value: unknown,
+): asserts value is TokenReportMetadata {
+  assert.ok(isRecord(value), 'Expected metadata to be an object');
+  assert.strictEqual(typeof value.path, 'string');
+  assert.strictEqual(typeof value.pointer, 'string');
+  assert.ok(isRecord(value.extensions));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 void test('TokenTracker reports unused tokens', async () => {
@@ -173,11 +193,12 @@ void test('TokenTracker includes token metadata in reports', async () => {
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   const msg = reports[0].messages[0];
-  assert(msg.metadata);
+  assertTokenMetadata(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
   assert.equal(msg.metadata.pointer, '#/color/unused');
-  assert.deepEqual(msg.metadata.deprecated, {
-    $replacement: '#/color/replacement',
-  });
+  assert.equal(
+    msg.metadata.deprecated?.supersededBy?.pointer,
+    '#/color/replacement',
+  );
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });

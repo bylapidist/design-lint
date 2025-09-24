@@ -42,11 +42,11 @@ my-plugin/
 
 ### 2. Implement rules and metadata
 Rules receive a `RuleContext` which exposes `getDtifTokens` for accessing
-canonical DTIF entries by type. The records include pointers, normalized
-segments, resolved values, and metadata describing aliases or deprecations.
-Use `getTokenPath(token)` to derive the dot-delimited path for a DTIF token with
-the configured name transform. The plugin can also expose a `name`, `version`,
-and an `init` hook that receives the runtime environment.
+canonical DTIF entries by type. The records include pointers, normalized path
+segments, resolved values, and metadata describing aliases or deprecations. Use
+`getTokenPath(token)` to derive the dot-delimited path for a DTIF token with the
+configured name transform. The plugin can also expose a `name`, `version`, and
+an `init` hook that receives the runtime environment.
 
 ```ts
 // index.ts

@@ -59,22 +59,26 @@ void test('buildRuleContexts exposes DTIF tokens on the rule context', () => {
   };
   const tokens: DtifFlattenedToken[] = [
     {
+      id: '#/palette/primary',
       pointer: '#/palette/primary',
-      segments: ['palette', 'primary'],
+      path: ['palette', 'primary'],
       name: 'primary',
       type: 'color',
       value: '#fff',
-      metadata: {},
+      raw: '#fff',
+      metadata: { extensions: {} },
     },
   ];
   const darkTokens: DtifFlattenedToken[] = [
     {
+      id: '#/palette/primary',
       pointer: '#/palette/primary',
-      segments: ['palette', 'primary'],
+      path: ['palette', 'primary'],
       name: 'primary',
       type: 'color',
       value: '#000',
-      metadata: {},
+      raw: '#000',
+      metadata: { extensions: {} },
     },
   ];
   helper.tokenRegistry = new TokenRegistry({
