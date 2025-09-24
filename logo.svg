@@ -21,7 +21,4 @@
     <rect x="24.5" y="11" width="9.5" height="9.5" rx="2.4" />
     <rect x="10" y="24.5" width="9.5" height="9.5" rx="2.4" />
   </g>
-  <g filter="url(#accentShadow)">
-    <rect x="24.5" y="24.5" width="9.5" height="9.5" rx="2.4" fill="url(#accent)" transform="rotate(12 29.25 29.25)" />
-  </g>
 </svg>
