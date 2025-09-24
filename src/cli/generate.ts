@@ -34,11 +34,11 @@ interface GenerateCommandOptions {
  * optionally watches token files and the config file to regenerate on changes.
  *
  * @param options - Command options controlling config path and watch mode.
- * @param logger - Optional logger for warnings and errors during generation.
+ * @param logger - Optional logger for reporting errors during generation.
  */
 export async function generateOutputs(
   options: GenerateCommandOptions,
-  logger?: { warn: (msg: string) => void; error: (err: unknown) => void },
+  logger?: { warn?: (msg: string) => void; error: (err: unknown) => void },
 ): Promise<void> {
   const cwd = process.cwd();
 
@@ -54,19 +54,16 @@ export async function generateOutputs(
           content = generateCssVariables(tokensByTheme, {
             nameTransform,
             selectors: target.selectors,
-            onWarn: logger?.warn,
           });
           break;
         case 'js':
           content = generateJsConstants(tokensByTheme, {
             nameTransform,
-            onWarn: logger?.warn,
           });
           break;
         case 'ts':
           content = generateTsDeclarations(tokensByTheme, {
             nameTransform,
-            onWarn: logger?.warn,
           });
           break;
       }

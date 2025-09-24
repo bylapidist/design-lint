@@ -3,17 +3,19 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
-const tokens = {
-  lineHeights: { $type: 'number', base: { $value: 1.5 }, tight: { $value: 2 } },
-};
+const tokens = createDtifTheme({
+  'lineHeights.base': { type: 'number', value: 1.5 },
+  'lineHeights.tight': { type: 'number', value: 2 },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/line-height': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

@@ -13,7 +13,6 @@ function isDesignTokens(val: unknown): val is DesignTokens {
 export function setupLinter(
   config: Config,
   env: Environment,
-  onWarn?: (msg: string) => void,
 ): { linter: Linter; service: LintService } {
   const inlineTokens = config.tokens;
   const defaultProvider: TokenProvider = {
@@ -46,15 +45,11 @@ export function setupLinter(
       );
       return tokensByTheme;
     });
-  const linter = new Linter(
-    resolvedConfig,
-    {
-      ruleRegistry,
-      tokenTracker,
-      tokensReady,
-    },
-    onWarn,
-  );
+  const linter = new Linter(resolvedConfig, {
+    ruleRegistry,
+    tokenTracker,
+    tokensReady,
+  });
   const service = new LintService(linter, resolvedConfig, env);
   linter.setService(service);
   return { linter, service };

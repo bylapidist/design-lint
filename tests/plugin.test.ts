@@ -197,7 +197,7 @@ void test('supports custom plugin loaders', async () => {
         name: 'mock/rule',
         meta: { description: 'mock rule' },
         create: (ctx) => {
-          ctx.getFlattenedTokens('color');
+          ctx.getDtifTokens('color');
           return {};
         },
       };

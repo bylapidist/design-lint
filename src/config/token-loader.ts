@@ -6,7 +6,7 @@
 import path from 'node:path';
 import {
   DtifTokenParseError,
-  readDesignTokensFile,
+  readDtifTokensFile,
 } from '../adapters/node/token-parser.js';
 import type { DesignTokens } from '../core/types.js';
 import { guards, tokens } from '../utils/index.js';
@@ -99,7 +99,7 @@ export async function loadTokens(
     if (typeof val === 'string') {
       const filePath = path.resolve(baseDir, val);
       try {
-        themes[theme] = await readDesignTokensFile(filePath);
+        themes[theme] = await readDtifTokensFile(filePath);
       } catch (err) {
         if (err instanceof DtifTokenParseError) throw err;
         throw wrapTokenError(theme, err, 'read');

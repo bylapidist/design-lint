@@ -67,12 +67,18 @@ Key methods:
   object and validate it through the DTIF parser.
 - `parseDtifTokensFromFile(path, options?)` – parse a DTIF file from disk while
   capturing diagnostics and resolver output.
-- `flattenDesignTokens(tokens, options?)` – adapt flattened DTIF arrays or
-  token documents that have been parsed through the DTIF helpers into the legacy
-  `FlattenedToken` structure consumed by existing rules and generators.
+- `flattenDesignTokens(tokens, options?)` – return canonical flattened DTIF
+  entries sourced from the parser cache. Use
+  `getTokenPath(token, transform?)` to derive normalized paths for these
+  records when emitting path-based identifiers.
+- `RuleContext#getDtifTokens(type?, theme?)` – read the canonical DTIF tokens
+  that back rule contexts without materializing compatibility views.
+- `RuleContext#getTokenPath(token)` – derive the normalized path for a DTIF
+  token using the configured name transform.
 - `TokenRegistry#getDtifTokenByPointer(pointer, theme?)` /
+  `TokenRegistry#getDtifTokenByName(name, theme?)` /
   `TokenRegistry#getDtifTokens(theme?)` – retrieve the cached DTIF entries that
-  back the legacy registry when parsing DTIF documents.
+  power the registry when parsing DTIF documents.
 - `indexDtifTokens(tokens)` / `createDtifNameIndex(tokens)` – build pointer-
   based lookup maps for flattened DTIF tokens.
 - `DtifTokenRegistry(tokensByTheme, options?)` – aggregate flattened DTIF

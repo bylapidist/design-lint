@@ -1,9 +1,11 @@
 import ts from 'typescript';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
+  domain: { isTokenInGroup },
 } = guards;
 
 export const fontWeightRule = tokenRule({
@@ -12,18 +14,19 @@ export const fontWeightRule = tokenRule({
   tokens: 'fontWeight',
   message:
     'design-token/font-weight requires font weight tokens; configure tokens with $type "fontWeight" under a "fontWeights" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const numeric = new Set<number>();
     const values = new Set<string>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('fontWeights.')) continue;
-      const val = value;
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'fontWeights')) continue;
+      const val = token.value;
       if (typeof val === 'number') {
         numeric.add(val);
         values.add(String(val));
       } else if (typeof val === 'string') {
-        values.add(val.trim());
-        const num = Number(val);
+        const trimmed = val.trim();
+        values.add(trimmed);
+        const num = Number(trimmed);
         if (!isNaN(num)) numeric.add(num);
       }
     }

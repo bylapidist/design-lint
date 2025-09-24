@@ -1,12 +1,14 @@
 import ts from 'typescript';
 import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
   data: { isRecord },
+  domain: { isTokenInGroup },
 } = guards;
 
 interface BorderWidthOptions {
@@ -23,14 +25,16 @@ export const borderWidthRule = tokenRule<BorderWidthOptions>({
   tokens: 'dimension',
   message:
     'design-token/border-width requires border width tokens; configure tokens with $type "dimension" under a "borderWidths" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const parse = (val: unknown): number | null =>
       isRecord(val) && typeof val.value === 'number' ? val.value : null;
     const allowed = new Set<number>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('borderWidths.')) continue;
-      const num = parse(value);
-      if (num !== null) allowed.add(num);
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'borderWidths')) continue;
+      const num = parse(token.value);
+      if (num !== null) {
+        allowed.add(num);
+      }
     }
     return allowed;
   },

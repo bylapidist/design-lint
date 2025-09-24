@@ -41,11 +41,12 @@ my-plugin/
 ```
 
 ### 2. Implement rules and metadata
-Rules receive a `RuleContext` which exposes `getFlattenedTokens` for accessing
-resolved DTIF values by type. The helper returns an array of flattened tokens
-for the current theme, including the normalized `path`, resolved `value`, and
-metadata captured during parsing. The plugin can also expose a `name`,
-`version`, and an `init` hook that receives the runtime environment.
+Rules receive a `RuleContext` which exposes `getDtifTokens` for accessing
+canonical DTIF entries by type. The records include pointers, normalized
+segments, resolved values, and metadata describing aliases or deprecations.
+Use `getTokenPath(token)` to derive the dot-delimited path for a DTIF token with
+the configured name transform. The plugin can also expose a `name`, `version`,
+and an `init` hook that receives the runtime environment.
 
 ```ts
 // index.ts
@@ -55,7 +56,11 @@ const noRawColors: RuleModule<unknown> = {
   name: 'acme/no-raw-colors',
   meta: { description: 'disallow hex colors' },
   create(ctx) {
-    const allowed = new Set(ctx.getFlattenedTokens('color').map((t) => t.value));
+    const allowed = new Set(
+      ctx.getDtifTokens('color')
+        .map((t) => t.value)
+        .filter((value): value is string => typeof value === 'string'),
+    );
     return {
       Declaration(node) {
         if (node.property === 'color' && /^#/.test(node.value) && !allowed.has(node.value)) {

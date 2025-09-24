@@ -1,9 +1,11 @@
 import ts from 'typescript';
+import type { DtifFlattenedToken } from '../core/types.js';
 import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
 const {
   ast: { isStyleValue },
+  domain: { isTokenInGroup },
 } = guards;
 
 export const zIndexRule = tokenRule({
@@ -12,11 +14,11 @@ export const zIndexRule = tokenRule({
   tokens: 'number',
   message:
     'design-token/z-index requires z-index tokens; configure tokens with $type "number" under a "zIndex" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const allowed = new Set<number>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('zIndex.')) continue;
-      const val = value;
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'zIndex')) continue;
+      const val = token.value;
       if (typeof val === 'number') allowed.add(val);
     }
     return allowed;

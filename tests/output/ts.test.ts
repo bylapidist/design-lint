@@ -1,21 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateTsDeclarations } from '../../src/output/ts.js';
-import type { DesignTokens, DtifFlattenedToken } from '../../src/core/types.js';
+import type { DtifFlattenedToken } from '../../src/core/types.js';
+import { createDtifTheme, createDtifToken } from '../helpers/dtif.js';
 
 void test('generateTsDeclarations emits typed object with themes', () => {
-  const tokens: Record<string, DesignTokens> = {
-    default: {
-      ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#fff' },
-      },
-    },
-    dark: {
-      ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#000' },
-      },
-    },
-  };
+  const tokens = {
+    default: createDtifTheme({
+      'ColorPalette.PrimaryColor': { type: 'color', value: '#fff' },
+    }),
+    dark: createDtifTheme({
+      'ColorPalette.PrimaryColor': { type: 'color', value: '#000' },
+    }),
+  } as const;
 
   const ts = generateTsDeclarations(tokens, { nameTransform: 'kebab-case' });
   const expected = [
@@ -54,15 +51,10 @@ void test('generateTsDeclarations accepts flattened DTIF tokens', () => {
 });
 
 function createDtifTokens(value: string): readonly DtifFlattenedToken[] {
-  const tokens: DtifFlattenedToken[] = [
-    {
-      pointer: '#/ColorPalette/PrimaryColor',
-      segments: ['ColorPalette', 'PrimaryColor'],
-      name: 'ColorPalette.PrimaryColor',
+  return [
+    createDtifToken('ColorPalette.PrimaryColor', {
       type: 'color',
       value,
-      metadata: {},
-    },
+    }),
   ];
-  return tokens;
 }

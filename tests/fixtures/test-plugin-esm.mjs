@@ -6,7 +6,7 @@ export const plugin = {
       name: 'plugin/esm',
       meta: { description: 'esm rule' },
       create(context) {
-        context.getFlattenedTokens('color');
+        context.getDtifTokens('color');
         return {
           onNode(node) {
             if (node.kind === ts.SyntaxKind.SourceFile) {

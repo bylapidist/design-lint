@@ -1,7 +1,11 @@
 import valueParser from 'postcss-value-parser';
-import { rules } from '../utils/index.js';
+import type { DtifFlattenedToken } from '../core/types.js';
+import { rules, guards } from '../utils/index.js';
 
 const { tokenRule } = rules;
+const {
+  domain: { isTokenInGroup },
+} = guards;
 
 const normalize = (val: string): string =>
   valueParser.stringify(valueParser(val).nodes).trim();
@@ -12,11 +16,11 @@ export const outlineRule = tokenRule({
   tokens: 'string',
   message:
     'design-token/outline requires outline tokens; configure tokens with $type "string" under an "outlines" group to enable this rule.',
-  getAllowed(tokens) {
+  getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const allowed = new Set<string>();
-    for (const { path, value } of tokens) {
-      if (!path.startsWith('outlines.')) continue;
-      const val = value;
+    for (const token of dtifTokens) {
+      if (!isTokenInGroup(token, 'outlines')) continue;
+      const val = token.value;
       if (typeof val === 'string') allowed.add(normalize(val));
     }
     return allowed;

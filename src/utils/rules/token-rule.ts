@@ -1,5 +1,5 @@
 import type {
-  FlattenedToken,
+  DtifFlattenedToken,
   RuleContext,
   RuleListener,
   RuleModule,
@@ -33,8 +33,8 @@ interface TokenRuleConfig<TOptions, TAllowed> {
    * Computes the set of allowed values based on available tokens.
    */
   getAllowed: (
-    tokens: FlattenedToken[],
     context: RuleContext<TOptions>,
+    tokens: readonly DtifFlattenedToken[],
   ) => TAllowed;
   /** Creates the actual rule listener using the allowed set. */
   create: (context: RuleContext<TOptions>, allowed: TAllowed) => RuleListener;
@@ -87,11 +87,11 @@ export function tokenRule<TOptions = unknown, TAllowed = Set<unknown>>(
       // single token type or multiple types.
       const types = toArray(config.tokens);
 
-      // Retrieve and flatten the available tokens for each requested type.
-      const tokens = types.flatMap((t) => context.getFlattenedTokens(t));
+      // Retrieve the available tokens for each requested type.
+      const dtifTokens = types.flatMap((t) => context.getDtifTokens(t));
 
       // Compute the set of allowed values using the rule's callback.
-      const allowed = config.getAllowed(tokens, context);
+      const allowed = config.getAllowed(context, dtifTokens);
 
       // Determine whether the allowed set is effectively empty, either via a
       // custom `isEmpty` check or by inspecting a `size` property when present.

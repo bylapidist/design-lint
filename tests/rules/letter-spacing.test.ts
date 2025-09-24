@@ -3,21 +3,25 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
-const tokens = {
-  letterSpacings: {
-    $type: 'dimension',
-    tight: { $value: { value: -0.05, unit: 'rem' } },
-    none: { $value: { value: 0, unit: 'rem' } },
+const tokens = createDtifTheme({
+  'letterSpacings.tight': {
+    type: 'dimension',
+    value: { value: -0.05, unit: 'rem' },
   },
-};
+  'letterSpacings.none': {
+    type: 'dimension',
+    value: { value: 0, unit: 'rem' },
+  },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/letter-spacing': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

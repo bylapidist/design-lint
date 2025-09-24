@@ -4,22 +4,20 @@ import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
 import { registerTokenValidator } from '../../src/core/token-validators/index.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
 registerTokenValidator('string', () => undefined);
 
-const tokens = {
-  animations: {
-    $type: 'string',
-    spin: { $value: 'spin 1s linear infinite' },
-  },
-};
+const tokens = createDtifTheme({
+  'animations.spin': { type: 'string', value: 'spin 1s linear infinite' },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/animation': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

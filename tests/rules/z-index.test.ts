@@ -3,17 +3,18 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { createDtifTheme } from '../helpers/dtif.js';
 
-const tokens = {
-  zIndex: { $type: 'number', modal: { $value: 100 } },
-};
+const tokens = createDtifTheme({
+  'zIndex.modal': { type: 'number', value: 100 },
+});
 
 function createLinter() {
   return initLinter(
     { tokens, rules: { 'design-token/z-index': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider({ default: tokens }),
+      tokenProvider: new NodeTokenProvider(tokens),
     },
   );
 }

@@ -21,12 +21,11 @@ export type {
   RuleContext,
   RuleListener,
   DesignTokens,
-  Token,
-  TokenGroup,
+  TokenNode,
+  TokenCollectionNode,
   PluginModule,
   CSSDeclaration,
   Fix,
-  FlattenedToken,
   DtifFlattenedToken,
   TokenDiagnostic,
   TokenResolution,
@@ -45,7 +44,6 @@ export {
   type NameTransform,
   type FlattenOptions,
 } from '../utils/tokens/index.js';
-export { parseDesignTokens, getTokenLocation } from './parser/index.js';
 export {
   parseDtifTokens,
   parseDtifTokensFromFile,
@@ -57,10 +55,6 @@ export type {
   ParseInlineDtifTokensOptions,
   DtifParseResult,
 } from './dtif/parse.js';
-export {
-  toLegacyFlattenedTokens,
-  toLegacyFlattenedToken,
-} from './dtif/legacy-adapter.js';
 export {
   indexDtifTokens,
   createDtifNameIndex,

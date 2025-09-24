@@ -4,9 +4,8 @@ export { NodePluginLoader } from './plugin-loader.js';
 export { NodeCacheProvider } from './node-cache-provider.js';
 export { createNodeEnvironment } from './environment.js';
 export {
-  parseDesignTokensFile,
-  readDesignTokensFile,
   parseDtifTokensFile,
   readDtifTokensFile,
   DtifTokenParseError,
+  type NodeParseTokensOptions,
 } from './token-parser.js';

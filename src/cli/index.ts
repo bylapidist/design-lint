@@ -129,13 +129,10 @@ function createProgram(version: string, logger: Logger) {
       ) => {
         try {
           const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
-          await exportTokens(
-            {
-              ...opts,
-              config: opts.config ?? parent.config,
-            },
-            logger.warn,
-          );
+          await exportTokens({
+            ...opts,
+            config: opts.config ?? parent.config,
+          });
         } catch (err) {
           logger.error(err);
         }
@@ -200,10 +197,7 @@ export async function run(argv = process.argv.slice(2)): Promise<void> {
     if (options.color === false) useColor = false;
     const patterns = files.length ? files : ['.'];
     try {
-      const env = await prepareEnvironment(
-        { ...options, patterns },
-        logger.warn,
-      );
+      const env = await prepareEnvironment({ ...options, patterns });
       const services = { ...env, useColor };
       const { exitCode } = await executeLint(patterns, options, services);
       process.exitCode = exitCode;

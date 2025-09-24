@@ -1,21 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generateCssVariables } from '../../src/output/css.js';
-import type { DesignTokens, DtifFlattenedToken } from '../../src/core/types.js';
+import type { DtifFlattenedToken } from '../../src/core/types.js';
+import { createDtifTheme, createDtifToken } from '../helpers/dtif.js';
 
 void test('generateCssVariables emits blocks for each theme with transformed names', () => {
-  const tokens: Record<string, DesignTokens> = {
-    default: {
-      ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#fff' },
-      },
-    },
-    dark: {
-      ColorPalette: {
-        PrimaryColor: { $type: 'color', $value: '#000' },
-      },
-    },
-  };
+  const tokens = {
+    default: createDtifTheme({
+      'ColorPalette.PrimaryColor': { type: 'color', value: '#fff' },
+    }),
+    dark: createDtifTheme({
+      'ColorPalette.PrimaryColor': { type: 'color', value: '#000' },
+    }),
+  } as const;
 
   const css = generateCssVariables(tokens, { nameTransform: 'kebab-case' });
   const expected = [
@@ -50,23 +47,17 @@ void test('generateCssVariables accepts flattened DTIF tokens', () => {
 });
 
 void test('generateCssVariables sorts themes with default first', () => {
-  const tokens: Record<string, DesignTokens> = {
-    dark: {
-      color: {
-        primary: { $type: 'color', $value: '#000' },
-      },
-    },
-    default: {
-      color: {
-        primary: { $type: 'color', $value: '#fff' },
-      },
-    },
-    light: {
-      color: {
-        primary: { $type: 'color', $value: '#eee' },
-      },
-    },
-  };
+  const tokens = {
+    dark: createDtifTheme({
+      'color.primary': { type: 'color', value: '#000' },
+    }),
+    default: createDtifTheme({
+      'color.primary': { type: 'color', value: '#fff' },
+    }),
+    light: createDtifTheme({
+      'color.primary': { type: 'color', value: '#eee' },
+    }),
+  } as const;
 
   const css = generateCssVariables(tokens);
   const expected = [
@@ -86,15 +77,10 @@ void test('generateCssVariables sorts themes with default first', () => {
 });
 
 function createDtifTokens(value: string): readonly DtifFlattenedToken[] {
-  const tokens: DtifFlattenedToken[] = [
-    {
-      pointer: '#/ColorPalette/PrimaryColor',
-      segments: ['ColorPalette', 'PrimaryColor'],
-      name: 'ColorPalette.PrimaryColor',
+  return [
+    createDtifToken('ColorPalette.PrimaryColor', {
       type: 'color',
       value,
-      metadata: {},
-    },
+    }),
   ];
-  return tokens;
 }

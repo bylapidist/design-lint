@@ -78,12 +78,10 @@ export interface PrepareEnvironmentOptions {
  * and ignore settings.
  *
  * @param options - Runtime options controlling config, caching, and patterns.
- * @param onWarn - Optional warning callback for token parsing.
  * @returns Fully prepared environment state.
  */
 export async function prepareEnvironment(
   options: PrepareEnvironmentOptions,
-  onWarn?: (msg: string) => void,
 ): Promise<Environment> {
   const [{ loadConfig }, { createLinter }, { loadIgnore }] = await Promise.all([
     import('../config/loader.js'),
@@ -109,7 +107,7 @@ export async function prepareEnvironment(
   });
   const cache = env.cacheProvider;
   const linterRef = {
-    current: createLinter(config, env, onWarn),
+    current: createLinter(config, env),
   };
   const pluginPaths = await linterRef.current.getPluginPaths();
 

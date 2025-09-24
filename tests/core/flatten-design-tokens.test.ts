@@ -4,6 +4,10 @@ import assert from 'node:assert/strict';
 import type { DesignTokens, DtifFlattenedToken } from '../../src/core/types.js';
 import { flattenDesignTokens } from '../../src/utils/tokens/index.js';
 import { attachDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js';
+import {
+  getTokenPath,
+  pointerToTokenPath,
+} from '../../src/utils/tokens/token-view.js';
 
 const documentUri = new URL('memory://flatten-design-tokens.test.json');
 
@@ -58,46 +62,16 @@ const aliasToken: DtifFlattenedToken = {
   },
 };
 
-void test('flattenDesignTokens converts flattened DTIF tokens to legacy shape', () => {
-  const flat = flattenDesignTokens([backgroundToken, aliasToken]);
+void test('flattenDesignTokens returns canonical DTIF entries', () => {
+  const tokens = [backgroundToken, aliasToken] as const;
+  const flat = flattenDesignTokens(tokens);
 
-  const background = flat.find(
-    (token) => token.path === 'color.button.background',
-  );
-  assert(background);
-  assert.equal(background.type, 'color');
-  assert.deepEqual(background.value, {
-    colorSpace: 'srgb',
-    components: [0, 0.435, 1],
-  });
-  assert.equal(background.metadata.description, 'Solid brand fill');
-  assert.deepEqual(background.metadata.loc, { line: 5, column: 3 });
-
-  const alias = flat.find((token) => token.path === 'color.button.text');
-  assert(alias);
-  assert.equal(alias.type, 'color');
-  assert.deepEqual(alias.aliases, ['color.button.background']);
-  assert.deepEqual(alias.value, background.value);
-  assert.deepEqual(alias.metadata.loc, { line: 6, column: 5 });
+  assert.equal(flat.length, 2);
+  assert.strictEqual(flat[0], tokens[0]);
+  assert.strictEqual(flat[1], tokens[1]);
 });
 
-void test('flattenDesignTokens preserves DTIF metadata', () => {
-  const flat = flattenDesignTokens([backgroundToken, aliasToken]);
-
-  const background = flat.find(
-    (token) => token.path === 'color.button.background',
-  );
-  assert(background);
-  assert.deepEqual(background.metadata.extensions, {
-    'org.example.export': { legacyHex: '#006FFF' },
-  });
-
-  const alias = flat.find((token) => token.path === 'color.button.text');
-  assert(alias);
-  assert.equal(alias.metadata.deprecated, '#/typography/button/text');
-});
-
-void test('flattenDesignTokens applies name transforms to DTIF tokens', () => {
+void test('getTokenPath derives normalized names for DTIF tokens', () => {
   const primaryToken: DtifFlattenedToken = {
     pointer: '#/ColorGroup/PrimaryColor',
     segments: ['ColorGroup', 'PrimaryColor'],
@@ -126,20 +100,28 @@ void test('flattenDesignTokens applies name transforms to DTIF tokens', () => {
     },
   };
 
-  const flat = flattenDesignTokens([primaryToken, alias], {
-    nameTransform: 'kebab-case',
-  });
+  const flattened = flattenDesignTokens([primaryToken, alias]);
+  const paths = flattened
+    .map((token) => getTokenPath(token, 'kebab-case'))
+    .sort();
 
-  assert.deepEqual(flat.map((token) => token.path).sort(), [
+  assert.deepEqual(paths, [
     'color-group.primary-color',
     'color-group.secondary-color',
   ]);
 
-  const transformedAlias = flat.find(
-    (token) => token.path === 'color-group.secondary-color',
+  const resolution = alias.resolution;
+  assert(resolution);
+  const trace = resolution.trace;
+  assert(trace);
+  const aliasPointer = trace.find(
+    (step) => step.kind === 'token' && step.pointer !== alias.pointer,
   );
-  assert(transformedAlias);
-  assert.deepEqual(transformedAlias.aliases, ['color-group.primary-color']);
+  assert(aliasPointer);
+  assert.equal(
+    pointerToTokenPath(aliasPointer.pointer, 'kebab-case'),
+    'color-group.primary-color',
+  );
 });
 
 void test('flattenDesignTokens reuses cached DTIF flattened tokens', () => {
@@ -147,8 +129,9 @@ void test('flattenDesignTokens reuses cached DTIF flattened tokens', () => {
   attachDtifFlattenedTokens(document, [backgroundToken, aliasToken]);
 
   const flat = flattenDesignTokens(document);
-  const paths = flat.map((token) => token.path).sort();
-  assert.deepEqual(paths, ['color.button.background', 'color.button.text']);
+  assert.equal(flat.length, 2);
+  assert.strictEqual(flat[0], backgroundToken);
+  assert.strictEqual(flat[1], aliasToken);
 });
 
 void test('flattenDesignTokens throws when document lacks cached DTIF tokens', () => {

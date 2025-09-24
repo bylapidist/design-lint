@@ -19,7 +19,7 @@ async function flattenDocument(
   return result.tokens;
 }
 
-void test('getToken retrieves tokens by theme and resolves aliases', async () => {
+void test('TokenRegistry retrieves DTIF tokens by theme and pointer', async () => {
   const defaultDoc: DesignTokens = {
     $version: '1.0.0',
     copy: {
@@ -52,10 +52,6 @@ void test('getToken retrieves tokens by theme and resolves aliases', async () =>
     dark: darkTokens,
   });
 
-  assert.equal(registry.getToken('copy.headline.primary')?.value, 'Hello');
-  assert.equal(registry.getToken('copy.headline.secondary')?.value, 'Hello');
-  assert.equal(registry.getToken('copy.headline.primary', 'dark')?.value, 'Hi');
-
   const pointer: JsonPointer = '#/copy/headline/primary';
   const defaultToken = registry.getDtifTokenByPointer(pointer);
   assert(defaultToken);
@@ -65,10 +61,22 @@ void test('getToken retrieves tokens by theme and resolves aliases', async () =>
   assert(darkToken);
   assert.equal(darkToken.value, 'Hi');
 
+  const canonical = registry.getDtifTokenByName('copy.headline.primary');
+  assert(canonical);
+  assert.equal(canonical.pointer, '#/copy/headline/primary');
+  assert.equal(canonical.value, 'Hello');
+
   const aliasToken = registry.getDtifTokenByName('copy.headline.secondary');
   assert(aliasToken);
   assert.equal(aliasToken.pointer, '#/copy/headline/secondary');
   assert.equal(aliasToken.value, 'Hello');
+
+  const darkPrimary = registry.getDtifTokenByName(
+    'copy.headline.primary',
+    'dark',
+  );
+  assert(darkPrimary);
+  assert.equal(darkPrimary.value, 'Hi');
 
   const dtifAll = registry.getDtifTokens();
   assert(dtifAll.some((token) => token.pointer === pointer));
@@ -76,7 +84,7 @@ void test('getToken retrieves tokens by theme and resolves aliases', async () =>
   assert.equal(dtifDark.length, darkTokens.length);
 });
 
-void test('getToken normalizes paths and applies name transforms', async () => {
+void test('TokenRegistry applies name transforms for DTIF lookups', async () => {
   const doc: DesignTokens = {
     $version: '1.0.0',
     ColorGroup: {
@@ -94,15 +102,13 @@ void test('getToken normalizes paths and applies name transforms', async () => {
     { nameTransform: 'kebab-case' },
   );
 
-  assert.equal(registry.getToken('ColorGroup.PrimaryColor')?.value, 'brand');
-  assert.equal(registry.getToken('color-group.primary-color')?.value, 'brand');
-
   const dtif = registry.getDtifTokenByName('color-group.primary-color');
   assert(dtif);
   assert.equal(dtif.pointer, '#/ColorGroup/PrimaryColor');
+  assert.equal(dtif.value, 'brand');
 });
 
-void test('getTokens returns flattened tokens and dedupes across themes', async () => {
+void test('TokenRegistry merges DTIF tokens across themes by pointer', async () => {
   const defaultDoc: DesignTokens = {
     $version: '1.0.0',
     copy: {
@@ -134,15 +140,13 @@ void test('getTokens returns flattened tokens and dedupes across themes', async 
     dark: darkTokens,
   });
 
-  const all = registry.getTokens();
+  const all = registry.getDtifTokens();
   assert.equal(all.length, 1);
-  const [first] = all;
-  assert(first);
-  assert.equal(first.path, 'copy.button.label');
+  assert.equal(all[0]?.value, 'Submit');
 
-  const dark = registry.getTokens('dark');
+  const dark = registry.getDtifTokens('dark');
   assert.equal(dark.length, 1);
-  assert.equal(dark[0].value, 'Send');
+  assert.equal(dark[0]?.value, 'Send');
 });
 
 void test('TokenRegistry indexes flattened DTIF tokens', () => {
@@ -163,15 +167,14 @@ void test('TokenRegistry indexes flattened DTIF tokens', () => {
     nameTransform: 'kebab-case',
   });
 
-  const token = registry.getToken('color-group.primary-color');
-  assert(token);
-  assert.equal(token.value, '#fff');
-  assert.equal(token.path, 'color-group.primary-color');
-
   const dtifToken = registry.getDtifTokenByPointer('#/ColorGroup/PrimaryColor');
   assert(dtifToken);
   assert.equal(dtifToken.value, '#fff');
   assert.equal(dtifToken.pointer, '#/ColorGroup/PrimaryColor');
+
+  const nameLookup = registry.getDtifTokenByName('color-group.primary-color');
+  assert(nameLookup);
+  assert.equal(nameLookup.pointer, '#/ColorGroup/PrimaryColor');
 });
 
 void test('TokenRegistry requires cached DTIF tokens for documents', () => {
@@ -183,5 +186,21 @@ void test('TokenRegistry requires cached DTIF tokens for documents', () => {
         default: document,
       }),
     /Missing cached DTIF tokens/,
+  );
+});
+
+void test('TokenRegistry rejects non-DTIF token records', () => {
+  const legacyTokens = {
+    color: {
+      base: { $type: 'color', $value: '#fff' },
+    },
+  };
+
+  assert.throws(
+    () =>
+      new TokenRegistry({
+        default: legacyTokens as unknown as DesignTokens,
+      }),
+    /requires DTIF token documents/,
   );
 });
