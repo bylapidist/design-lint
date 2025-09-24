@@ -10,6 +10,7 @@ import type {
 import type { Linter } from '../../src/core/linter.js';
 import { parserRegistry } from '../../src/core/parser-registry.js';
 import { TokenRegistry } from '../../src/core/token-registry.js';
+import { createDtifToken } from '../helpers/dtif.js';
 
 const env: Environment = {
   documentSource: {
@@ -57,25 +58,17 @@ void test('buildRuleContexts exposes DTIF tokens on the rule context', () => {
     buildRuleContexts: Linter['buildRuleContexts'];
     tokenRegistry: TokenRegistry;
   };
-  const tokens: DtifFlattenedToken[] = [
-    {
-      pointer: '#/palette/primary',
-      segments: ['palette', 'primary'],
-      name: 'primary',
+  const tokens = [
+    createDtifToken('palette.primary', {
       type: 'color',
       value: '#fff',
-      metadata: {},
-    },
+    }),
   ];
-  const darkTokens: DtifFlattenedToken[] = [
-    {
-      pointer: '#/palette/primary',
-      segments: ['palette', 'primary'],
-      name: 'primary',
+  const darkTokens = [
+    createDtifToken('palette.primary', {
       type: 'color',
       value: '#000',
-      metadata: {},
-    },
+    }),
   ];
   helper.tokenRegistry = new TokenRegistry({
     default: tokens,

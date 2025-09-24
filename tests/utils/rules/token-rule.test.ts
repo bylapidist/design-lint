@@ -8,6 +8,7 @@ import type {
   RuleContext,
   DtifFlattenedToken,
 } from '../../../src/core/types.js';
+import { createDtifToken } from '../../helpers/dtif.js';
 
 const { tokenRule } = rules;
 
@@ -54,14 +55,10 @@ void test('tokenRule passes allowed values to create', () => {
     },
   });
   const reports: unknown[] = [];
-  const token: DtifFlattenedToken = {
-    pointer: '#/a',
-    segments: ['a'],
-    name: 'a',
+  const token = createDtifToken('a', {
     type: 'number',
     value: 2,
-    metadata: {},
-  };
+  });
   const ctx: RuleContext = {
     report: (m) => reports.push(m),
     getDtifTokens: () => [token],
@@ -74,14 +71,10 @@ void test('tokenRule passes allowed values to create', () => {
 
 void test('tokenRule forwards DTIF tokens to getAllowed', () => {
   let received: readonly DtifFlattenedToken[] | undefined;
-  const token: DtifFlattenedToken = {
-    pointer: '#/opacity/low',
-    segments: ['opacity', 'low'],
-    name: 'opacity.low',
+  const token = createDtifToken('opacity.low', {
     type: 'number',
     value: 0.2,
-    metadata: {},
-  };
+  });
   const rule = tokenRule({
     name: 'design-token/example',
     meta: { description: 'example', category: 'design-token' },

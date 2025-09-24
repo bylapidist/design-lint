@@ -1,66 +1,68 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import type { DesignTokens, DtifFlattenedToken } from '../../src/core/types.js';
+import type { DesignTokens } from '../../src/core/types.js';
 import { flattenDesignTokens } from '../../src/utils/tokens/index.js';
 import { attachDtifFlattenedTokens } from '../../src/utils/tokens/dtif-cache.js';
 import {
   getTokenPath,
   pointerToTokenPath,
 } from '../../src/utils/tokens/token-view.js';
+import { createDtifToken } from '../helpers/dtif.js';
 
 const documentUri = new URL('memory://flatten-design-tokens.test.json');
 
-const backgroundToken: DtifFlattenedToken = {
-  pointer: '#/color/button/background',
-  segments: ['color', 'button', 'background'],
-  name: 'background',
+const documentSource = documentUri.toString();
+
+const backgroundToken = createDtifToken('color.button.background', {
   type: 'color',
   value: { colorSpace: 'srgb', components: [0, 0.435, 1] },
   metadata: {
     description: 'Solid brand fill',
     extensions: { 'org.example.export': { legacyHex: '#006FFF' } },
+    source: { uri: documentSource, line: 5, column: 3 },
   },
   resolution: {
-    pointer: '#/color/button/background',
-    trace: [{ kind: 'token', pointer: '#/color/button/background' }],
+    id: '#/color/button/background',
+    type: 'color',
+    value: { colorSpace: 'srgb', components: [0, 0.435, 1] },
+    raw: { colorSpace: 'srgb', components: [0, 0.435, 1] },
+    references: [],
+    resolutionPath: [
+      { uri: documentSource, pointer: '#/color/button/background' },
+    ],
+    appliedAliases: [],
   },
-  location: {
-    pointer: '#/color/button/background',
-    span: {
-      uri: documentUri,
-      start: { line: 5, column: 3, offset: 42 },
-      end: { line: 5, column: 28, offset: 67 },
-    },
-  },
-};
+});
 
-const aliasToken: DtifFlattenedToken = {
-  pointer: '#/color/button/text',
-  segments: ['color', 'button', 'text'],
-  name: 'text',
+const aliasToken = createDtifToken('color.button.text', {
   type: 'color',
   value: { colorSpace: 'srgb', components: [0, 0.435, 1] },
   metadata: {
     description: 'Alias to the background color',
-    deprecated: { $replacement: '#/typography/button/text' },
+    deprecated: {
+      supersededBy: {
+        pointer: '#/typography/button/text',
+        uri: documentSource,
+      },
+    },
+    source: { uri: documentSource, line: 6, column: 5 },
   },
   resolution: {
-    pointer: '#/color/button/text',
-    trace: [
-      { kind: 'token', pointer: '#/color/button/background' },
-      { kind: 'token', pointer: '#/color/button/text' },
+    id: '#/color/button/text',
+    type: 'color',
+    value: { colorSpace: 'srgb', components: [0, 0.435, 1] },
+    raw: { colorSpace: 'srgb', components: [0, 0.435, 1] },
+    references: [{ uri: documentSource, pointer: '#/color/button/background' }],
+    resolutionPath: [
+      { uri: documentSource, pointer: '#/color/button/background' },
+      { uri: documentSource, pointer: '#/color/button/text' },
+    ],
+    appliedAliases: [
+      { uri: documentSource, pointer: '#/color/button/background' },
     ],
   },
-  location: {
-    pointer: '#/color/button/text',
-    span: {
-      uri: documentUri,
-      start: { line: 6, column: 5, offset: 82 },
-      end: { line: 6, column: 24, offset: 101 },
-    },
-  },
-};
+});
 
 void test('flattenDesignTokens returns canonical DTIF entries', () => {
   const tokens = [backgroundToken, aliasToken] as const;
@@ -72,33 +74,41 @@ void test('flattenDesignTokens returns canonical DTIF entries', () => {
 });
 
 void test('getTokenPath derives normalized names for DTIF tokens', () => {
-  const primaryToken: DtifFlattenedToken = {
-    pointer: '#/ColorGroup/PrimaryColor',
-    segments: ['ColorGroup', 'PrimaryColor'],
-    name: 'PrimaryColor',
+  const primaryToken = createDtifToken('ColorGroup.PrimaryColor', {
     type: 'color',
     value: '#ff0000',
-    metadata: {},
     resolution: {
-      pointer: '#/ColorGroup/PrimaryColor',
-      trace: [{ kind: 'token', pointer: '#/ColorGroup/PrimaryColor' }],
+      id: '#/ColorGroup/PrimaryColor',
+      type: 'color',
+      value: '#ff0000',
+      raw: '#ff0000',
+      references: [],
+      resolutionPath: [
+        { uri: documentSource, pointer: '#/ColorGroup/PrimaryColor' },
+      ],
+      appliedAliases: [],
     },
-  };
-  const alias: DtifFlattenedToken = {
-    pointer: '#/ColorGroup/SecondaryColor',
-    segments: ['ColorGroup', 'SecondaryColor'],
-    name: 'SecondaryColor',
+  });
+  const alias = createDtifToken('ColorGroup.SecondaryColor', {
     type: 'color',
     value: '#ff0000',
-    metadata: {},
     resolution: {
-      pointer: '#/ColorGroup/SecondaryColor',
-      trace: [
-        { kind: 'token', pointer: '#/ColorGroup/PrimaryColor' },
-        { kind: 'token', pointer: '#/ColorGroup/SecondaryColor' },
+      id: '#/ColorGroup/SecondaryColor',
+      type: 'color',
+      value: '#ff0000',
+      raw: '#ff0000',
+      references: [
+        { uri: documentSource, pointer: '#/ColorGroup/PrimaryColor' },
+      ],
+      resolutionPath: [
+        { uri: documentSource, pointer: '#/ColorGroup/PrimaryColor' },
+        { uri: documentSource, pointer: '#/ColorGroup/SecondaryColor' },
+      ],
+      appliedAliases: [
+        { uri: documentSource, pointer: '#/ColorGroup/PrimaryColor' },
       ],
     },
-  };
+  });
 
   const flattened = flattenDesignTokens([primaryToken, alias]);
   const paths = flattened
@@ -112,10 +122,8 @@ void test('getTokenPath derives normalized names for DTIF tokens', () => {
 
   const resolution = alias.resolution;
   assert(resolution);
-  const trace = resolution.trace;
-  assert(trace);
-  const aliasPointer = trace.find(
-    (step) => step.kind === 'token' && step.pointer !== alias.pointer,
+  const aliasPointer = resolution.resolutionPath.find(
+    (step) => step.pointer !== alias.pointer,
   );
   assert(aliasPointer);
   assert.equal(

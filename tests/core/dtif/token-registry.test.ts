@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import { parseDtifTokensFromFile } from '../../../src/core/dtif/parse.js';
 import { DtifTokenRegistry } from '../../../src/core/dtif/token-registry.js';
-import type { DtifFlattenedToken } from '../../../src/core/types.js';
+import { createDtifToken } from '../../helpers/dtif.js';
 
 const fixturesDir = fileURLToPath(
   new URL('../../fixtures/dtif/', import.meta.url),
@@ -27,15 +27,11 @@ void test('DtifTokenRegistry retrieves tokens by pointer with theme fallback', a
 });
 
 void test('DtifTokenRegistry applies name transforms for lookups', () => {
-  const tokens: DtifFlattenedToken[] = [
-    {
-      pointer: '#/ColorGroup/PrimaryColor',
-      segments: ['ColorGroup', 'PrimaryColor'],
-      name: 'PrimaryColor',
+  const tokens = [
+    createDtifToken('ColorGroup.PrimaryColor', {
       type: 'color',
       value: '#fff',
-      metadata: {},
-    },
+    }),
   ];
 
   const registry = new DtifTokenRegistry(
@@ -51,22 +47,14 @@ void test('DtifTokenRegistry applies name transforms for lookups', () => {
 });
 
 void test('DtifTokenRegistry dedupes tokens across themes', () => {
-  const shared: DtifFlattenedToken = {
-    pointer: '#/color/base',
-    segments: ['color', 'base'],
-    name: 'base',
+  const shared = createDtifToken('color.base', {
     type: 'color',
     value: '#ccc',
-    metadata: {},
-  };
-  const darkOnly: DtifFlattenedToken = {
-    pointer: '#/color/dark',
-    segments: ['color', 'dark'],
-    name: 'dark',
+  });
+  const darkOnly = createDtifToken('color.dark', {
     type: 'color',
     value: '#000',
-    metadata: {},
-  };
+  });
 
   const registry = new DtifTokenRegistry({
     default: [shared],

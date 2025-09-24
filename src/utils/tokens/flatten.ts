@@ -88,7 +88,7 @@ function toTokenKey(
   token: DtifFlattenedToken,
   transform?: NameTransform,
 ): string {
-  const base = token.segments.join('.');
+  const base = token.path.join('.');
   return transform ? normalizePath(base, transform) : base;
 }
 

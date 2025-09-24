@@ -8,63 +8,58 @@ import {
   getTokenPath,
   pointerToTokenPath,
 } from '../../src/utils/tokens/token-view.js';
+import { createDtifToken } from '../helpers/dtif.js';
 
 const paletteUri = new URL('memory://get-flattened-tokens.test.json');
+const paletteSource = paletteUri.toString();
 
-const lightPrimary: DtifFlattenedToken = {
-  pointer: '#/palette/primary',
-  segments: ['palette', 'primary'],
-  name: 'primary',
+const lightPrimary = createDtifToken('palette.primary', {
   type: 'color',
   value: '#ffffff',
   metadata: {
-    deprecated: { $replacement: '#/palette/secondary' },
-  },
-  location: {
-    pointer: '#/palette/primary',
-    span: {
-      uri: paletteUri,
-      start: { line: 4, column: 5, offset: 32 },
-      end: { line: 4, column: 20, offset: 47 },
+    deprecated: {
+      supersededBy: { pointer: '#/palette/secondary', uri: paletteSource },
     },
+    source: { uri: paletteSource, line: 4, column: 5 },
   },
-};
+});
 
-const lightSecondary: DtifFlattenedToken = {
-  pointer: '#/palette/secondary',
-  segments: ['palette', 'secondary'],
-  name: 'secondary',
+const lightSecondary = createDtifToken('palette.secondary', {
   type: 'color',
   value: '#000000',
   metadata: {
     extensions: { 'vendor.example': { note: true } },
+    source: { uri: paletteSource, line: 6, column: 5 },
   },
-};
+});
 
-const aliasToken: DtifFlattenedToken = {
-  pointer: '#/palette/primaryAlias',
-  segments: ['palette', 'primaryAlias'],
-  name: 'primaryAlias',
+const aliasToken = createDtifToken('palette.primaryAlias', {
   type: 'color',
   value: '#ffffff',
-  metadata: {},
   resolution: {
-    pointer: '#/palette/primaryAlias',
-    trace: [
-      { kind: 'token', pointer: '#/palette/primary' },
-      { kind: 'token', pointer: '#/palette/primaryAlias' },
+    id: '#/palette/primaryAlias',
+    type: 'color',
+    value: '#ffffff',
+    raw: '#ffffff',
+    references: [{ uri: paletteSource, pointer: '#/palette/primary' }],
+    resolutionPath: [
+      { uri: paletteSource, pointer: '#/palette/primary' },
+      { uri: paletteSource, pointer: '#/palette/primaryAlias' },
     ],
+    appliedAliases: [{ uri: paletteSource, pointer: '#/palette/primary' }],
   },
-};
+  metadata: {
+    source: { uri: paletteSource, line: 8, column: 5 },
+  },
+});
 
-const darkSecondary: DtifFlattenedToken = {
-  pointer: '#/palette/secondary',
-  segments: ['palette', 'secondary'],
-  name: 'secondary',
+const darkSecondary = createDtifToken('palette.secondary', {
   type: 'color',
   value: '#111111',
-  metadata: {},
-};
+  metadata: {
+    source: { uri: paletteSource, line: 12, column: 5 },
+  },
+});
 
 void test('getFlattenedTokens flattens tokens for specified theme and preserves metadata', () => {
   const light = { $version: '1.0.0' } as unknown as DesignTokens;
@@ -81,13 +76,13 @@ void test('getFlattenedTokens flattens tokens for specified theme and preserves 
   );
   assert(primary);
   assert.equal(
-    primary.metadata.deprecated?.$replacement,
+    primary.metadata.deprecated?.supersededBy?.pointer,
     '#/palette/secondary',
   );
-  assert.deepEqual(primary.location?.span?.start, {
+  assert.deepEqual(primary.metadata.source, {
+    uri: paletteSource,
     line: 4,
     column: 5,
-    offset: 32,
   });
 
   const secondary = dtifTokens.find(
@@ -121,26 +116,20 @@ void test('getFlattenedTokens resolves aliases', () => {
   assert(alias);
   const resolution = alias.resolution;
   assert(resolution);
-  const trace = resolution.trace;
-  assert(trace);
-  const tracePointer = trace.find(
-    (step) => step.kind === 'token' && step.pointer === '#/palette/primary',
+  const pathStep = resolution.resolutionPath.find(
+    (step) => step.pointer === '#/palette/primary',
   );
-  assert(tracePointer);
-  assert.equal(pointerToTokenPath(tracePointer.pointer), 'palette.primary');
+  assert(pathStep);
+  assert.equal(pointerToTokenPath(pathStep.pointer), 'palette.primary');
 });
 
 void test('getFlattenedTokens applies name transforms', () => {
   const theme = { $version: '1.0.0' } as unknown as DesignTokens;
   const tokens: DtifFlattenedToken[] = [
-    {
-      pointer: '#/ColorGroup/PrimaryColor',
-      segments: ['ColorGroup', 'PrimaryColor'],
-      name: 'PrimaryColor',
+    createDtifToken('ColorGroup.PrimaryColor', {
       type: 'color',
       value: '#fff',
-      metadata: {},
-    },
+    }),
   ];
   attachDtifFlattenedTokens(theme, tokens);
 
@@ -168,14 +157,10 @@ void test('getFlattenedTokens rejects primitive token values', () => {
 void test('getFlattenedTokens accepts flattened DTIF tokens', () => {
   const tokens: Record<string, readonly DtifFlattenedToken[]> = {
     default: [
-      {
-        pointer: '#/ColorGroup/PrimaryColor',
-        segments: ['ColorGroup', 'PrimaryColor'],
-        name: 'PrimaryColor',
+      createDtifToken('ColorGroup.PrimaryColor', {
         type: 'color',
         value: '#fff',
-        metadata: {},
-      },
+      }),
     ],
   };
 

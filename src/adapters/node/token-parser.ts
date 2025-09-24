@@ -3,11 +3,12 @@ import {
   type DtifParseResult,
   type ParseDtifTokensOptions,
 } from '../../core/dtif/parse.js';
+import { formatTokenDiagnostic as formatParserTokenDiagnostic } from '@lapidist/dtif-parser';
 import type { TokenDiagnostic, TokenDocument } from '../../core/types.js';
 import { attachDtifFlattenedTokens } from '../../utils/tokens/dtif-cache.js';
 
 export interface NodeParseTokensOptions extends ParseDtifTokensOptions {
-  onWarn?: (msg: string) => void;
+  onWarn?: (diagnostic: TokenDiagnostic) => void;
 }
 
 function assertSupportedFile(filePath: string | URL): void {
@@ -92,27 +93,9 @@ function createDtifErrorMessage(
 ): string {
   const header = `Failed to parse DTIF document: ${source}`;
   const details = diagnostics.map((diagnostic) =>
-    formatTokenDiagnostic(source, diagnostic),
+    formatParserTokenDiagnostic(diagnostic, { color: false }),
   );
   return [header, ...details.map((line) => `  - ${line}`)].join('\n');
-}
-
-function formatTokenDiagnostic(
-  defaultSource: string,
-  diagnostic: TokenDiagnostic,
-): string {
-  const uri = diagnostic.location?.uri?.toString() ?? defaultSource;
-  const span = diagnostic.location?.span;
-  const position =
-    span &&
-    Number.isFinite(span.start.line) &&
-    Number.isFinite(span.start.column)
-      ? `${String(span.start.line)}:${String(span.start.column)}`
-      : undefined;
-  const pointer = diagnostic.pointer ? ` ${diagnostic.pointer}` : '';
-  const severity = diagnostic.severity.toUpperCase();
-  const prefix = position ? `${uri}:${position}` : uri;
-  return `${prefix} ${severity}${pointer}: ${diagnostic.message}`;
 }
 
 function assertIsTokenDocument(

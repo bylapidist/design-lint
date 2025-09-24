@@ -4,6 +4,10 @@ import { TokenTracker } from '../../src/core/token-tracker.js';
 import type { DesignTokens } from '../../src/core/types.js';
 import type { TokenProvider } from '../../src/core/environment.js';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 function makeProvider(tokens: DesignTokens): TokenProvider {
   return {
     load: () => Promise.resolve({ default: tokens }),
@@ -160,6 +164,7 @@ void test('TokenTracker includes token metadata in reports', async () => {
         $deprecated: { $replacement: '#/color/replacement' },
         $extensions: { 'vendor.foo': true },
       },
+      replacement: { $type: 'string', $value: '#abcdef' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -170,14 +175,30 @@ void test('TokenTracker includes token metadata in reports', async () => {
       severity: 'warn',
     },
   ]);
+  await tracker.trackUsage('color: #abcdef;');
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   const msg = reports[0].messages[0];
   assert(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
   assert.equal(msg.metadata.pointer, '#/color/unused');
-  assert.deepEqual(msg.metadata.deprecated, {
-    $replacement: '#/color/replacement',
-  });
+  const { deprecated } = msg.metadata;
+  if (isRecord(deprecated) && 'supersededBy' in deprecated) {
+    const supersededBy = deprecated.supersededBy;
+    if (isRecord(supersededBy)) {
+      const pointer =
+        'pointer' in supersededBy && typeof supersededBy.pointer === 'string'
+          ? supersededBy.pointer
+          : undefined;
+      assert.equal(pointer, '#/color/replacement');
+      const uri =
+        'uri' in supersededBy && typeof supersededBy.uri === 'string'
+          ? supersededBy.uri
+          : undefined;
+      if (uri) {
+        assert.equal(uri, 'memory://token-tracker/default.json');
+      }
+    }
+  }
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });

@@ -5,42 +5,33 @@ import {
   getTokenPath,
   pointerToTokenPath,
 } from '../../../src/utils/tokens/token-view.js';
-import type { DtifFlattenedToken } from '../../../src/core/types.js';
+import { createDtifToken } from '../../helpers/dtif.js';
 
 void test('getTokenPath normalizes pointer segments with transforms', () => {
-  const token: DtifFlattenedToken = {
-    pointer: '#/ColorGroup/PrimaryColor',
-    segments: ['ColorGroup', 'PrimaryColor'],
-    name: 'PrimaryColor',
+  const token = createDtifToken('ColorGroup.PrimaryColor', {
     type: 'color',
     value: '#fff',
-    metadata: {},
-  };
+  });
 
   assert.equal(getTokenPath(token), 'ColorGroup.PrimaryColor');
   assert.equal(getTokenPath(token, 'kebab-case'), 'color-group.primary-color');
 });
 
 void test('getTokenPath falls back to segments and token names when pointer path is absent', () => {
-  const withoutPointer: DtifFlattenedToken = {
-    pointer: '#',
-    segments: ['color', 'background'],
-    name: 'background',
+  const withoutPointer = createDtifToken('color.background', {
     type: 'color',
     value: '#fff',
-    metadata: {},
-  };
+  });
+  withoutPointer.pointer = '#';
 
   assert.equal(getTokenPath(withoutPointer), 'color.background');
 
-  const withoutSegments: DtifFlattenedToken = {
-    pointer: '#',
-    segments: [],
-    name: 'AccentColor',
+  const withoutSegments = createDtifToken('AccentColor', {
     type: 'color',
     value: '#000',
-    metadata: {},
-  };
+  });
+  withoutSegments.pointer = '#';
+  withoutSegments.path = [];
 
   assert.equal(getTokenPath(withoutSegments, 'kebab-case'), 'accent-color');
 });
