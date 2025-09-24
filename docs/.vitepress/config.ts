@@ -102,11 +102,9 @@ export default defineConfig({
           { text: 'Changelog guide', link: '/changelog-guide' },
         ],
       },
-      { text: 'GitHub', link: 'https://github.com/bylapidist/design-lint' },
     ],
     socialLinks: [
       { icon: 'github', link: 'https://github.com/bylapidist/design-lint' },
-      { icon: 'linkedin', link: 'https://www.linkedin.com/company/lapidist' },
     ],
     sidebar: {
       '/rules/': rulesSidebar,
@@ -124,7 +122,6 @@ export default defineConfig({
     },
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2023-present Lapidist',
     },
   },
   markdown: {
