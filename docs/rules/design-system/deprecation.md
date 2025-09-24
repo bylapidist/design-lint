@@ -14,14 +14,24 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 ```json
 {
   "tokens": {
+    "$version": "1.0.0",
     "color": {
       "old": {
         "$type": "color",
-        "$value": "#000",
-        "$deprecated": "Use {color.new}"
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0, 0, 0]
+        },
+        "$deprecated": { "$replacement": "#/color/new" }
       },
-      "new": { "$type": "color", "$value": "#fff" },
-      "alias": { "$type": "color", "$value": "{color.new}" }
+      "new": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [1, 1, 1]
+        }
+      },
+      "alias": { "$type": "color", "$ref": "#/color/new" }
     }
   },
   "rules": { "design-system/deprecation": "error" }

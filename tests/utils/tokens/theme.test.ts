@@ -4,25 +4,27 @@ import { toThemeRecord } from '../../../src/utils/tokens/index.js';
 import { attachDtifFlattenedTokens } from '../../../src/utils/tokens/dtif-cache.js';
 import type { DtifFlattenedToken } from '../../../src/core/types.js';
 
+const srgb = (components: [number, number, number]) => ({
+  colorSpace: 'srgb',
+  components,
+});
+
 void test('wrap single token object into default theme', () => {
-  const tokens: Record<string, { $type: string; $value: string }> = {
-    color: { $type: 'color', $value: '#fff' },
+  const tokens = {
+    color: { $type: 'color', $value: srgb([1, 1, 1]) },
   };
   const record = toThemeRecord(tokens);
   assert.deepEqual(Object.keys(record), ['default']);
-  assert.equal(record.default.color.$value, '#fff');
+  assert.deepEqual(record.default.color.$value, srgb([1, 1, 1]));
 });
 
 void test('preserve existing theme record', () => {
-  const tokens: Record<
-    string,
-    Record<string, { $type: string; $value: string }>
-  > = {
-    light: { color: { $type: 'color', $value: '#fff' } },
-    dark: { color: { $type: 'color', $value: '#000' } },
+  const tokens = {
+    light: { color: { $type: 'color', $value: srgb([1, 1, 1]) } },
+    dark: { color: { $type: 'color', $value: srgb([0, 0, 0]) } },
   };
   const record = toThemeRecord(tokens);
-  assert.equal(record.dark.color.$value, '#000');
+  assert.deepEqual(record.dark.color.$value, srgb([0, 0, 0]));
 });
 
 void test('return empty record for invalid input', () => {

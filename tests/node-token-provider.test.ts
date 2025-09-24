@@ -6,9 +6,14 @@ import { getDtifFlattenedTokens } from '../src/utils/tokens/dtif-cache.js';
 import { createDtifTheme } from './helpers/dtif.js';
 import type { DesignTokens } from '../src/core/types.js';
 
+const srgb = (components: [number, number, number]) => ({
+  colorSpace: 'srgb',
+  components,
+});
+
 const tokens = {
   color: {
-    primary: { $type: 'color', $value: '#fff' },
+    primary: { $type: 'color', $value: srgb([1, 1, 1]) },
   },
 };
 
@@ -68,8 +73,8 @@ void test('accepts explicit theme records without modification', async () => {
 
 void test('accepts theme records with tokens at the root', async () => {
   const themes = {
-    light: { primary: { $type: 'color', $value: '#fff' } },
-    dark: { primary: { $type: 'color', $value: '#000' } },
+    light: { primary: { $type: 'color', $value: srgb([1, 1, 1]) } },
+    dark: { primary: { $type: 'color', $value: srgb([0, 0, 0]) } },
   };
   const provider = new NodeTokenProvider(themes);
   const result = await provider.load();
@@ -79,10 +84,16 @@ void test('accepts theme records with tokens at the root', async () => {
 void test('accepts theme records created with createDtifTheme', async () => {
   const themes = {
     light: createDtifTheme({
-      'color.primary': { type: 'color', value: '#fff' },
+      'color.primary': {
+        type: 'color',
+        value: srgb([1, 1, 1]),
+      },
     }),
     dark: createDtifTheme({
-      'color.primary': { type: 'color', value: '#000' },
+      'color.primary': {
+        type: 'color',
+        value: srgb([0, 0, 0]),
+      },
     }),
   } as const;
 

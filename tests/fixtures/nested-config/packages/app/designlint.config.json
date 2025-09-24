@@ -1,7 +1,11 @@
 {
   "tokens": {
+    "$version": "1.0.0",
     "color": {
-      "primary": { "$type": "color", "$value": "#00ff00" }
+      "primary": {
+        "$type": "color",
+        "$value": { "colorSpace": "srgb", "components": [0, 1, 0] }
+      }
     }
   },
   "rules": { "design-token/colors": "error" }

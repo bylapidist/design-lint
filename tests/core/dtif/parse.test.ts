@@ -82,8 +82,14 @@ void test('parseDtifTokenObject flattens inline documents', async () => {
   const document = {
     $version: '1.0.0',
     color: {
-      primary: { $type: 'color', $value: '#000000' },
-      secondary: { $type: 'color', $value: '#ffffff' },
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+      },
+      secondary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+      },
     },
   };
 
