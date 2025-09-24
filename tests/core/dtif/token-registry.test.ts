@@ -29,12 +29,14 @@ void test('DtifTokenRegistry retrieves tokens by pointer with theme fallback', a
 void test('DtifTokenRegistry applies name transforms for lookups', () => {
   const tokens: DtifFlattenedToken[] = [
     {
+      id: '#/ColorGroup/PrimaryColor',
       pointer: '#/ColorGroup/PrimaryColor',
-      segments: ['ColorGroup', 'PrimaryColor'],
+      path: ['ColorGroup', 'PrimaryColor'],
       name: 'PrimaryColor',
       type: 'color',
       value: '#fff',
-      metadata: {},
+      raw: '#fff',
+      metadata: { extensions: {} },
     },
   ];
 
@@ -52,20 +54,24 @@ void test('DtifTokenRegistry applies name transforms for lookups', () => {
 
 void test('DtifTokenRegistry dedupes tokens across themes', () => {
   const shared: DtifFlattenedToken = {
+    id: '#/color/base',
     pointer: '#/color/base',
-    segments: ['color', 'base'],
+    path: ['color', 'base'],
     name: 'base',
     type: 'color',
     value: '#ccc',
-    metadata: {},
+    raw: '#ccc',
+    metadata: { extensions: {} },
   };
   const darkOnly: DtifFlattenedToken = {
+    id: '#/color/dark',
     pointer: '#/color/dark',
-    segments: ['color', 'dark'],
+    path: ['color', 'dark'],
     name: 'dark',
     type: 'color',
     value: '#000',
-    metadata: {},
+    raw: '#000',
+    metadata: { extensions: {} },
   };
 
   const registry = new DtifTokenRegistry({

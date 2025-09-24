@@ -17,7 +17,7 @@ export function createDtifTheme(
   entries: Record<string, DtifTokenInit>,
   overrides: Partial<DesignTokens> = {},
 ): DesignTokens {
-  const document = { $version: '1.0.0', ...overrides } as DesignTokens;
+  const document = { $version: '1.0.0', ...overrides } satisfies DesignTokens;
   for (const [path, init] of Object.entries(entries)) {
     applyTokenToDocument(document, path, init);
   }
@@ -34,12 +34,14 @@ export function createDtifToken(
 ): DtifFlattenedToken {
   const segments = path.split('.');
   return {
+    id: toPointer(segments),
     pointer: toPointer(segments),
-    segments,
+    path: segments,
     name: segments[segments.length - 1] ?? '',
     type: init.type,
     value: init.value,
-    metadata: init.metadata ?? {},
+    raw: init.value,
+    metadata: normalizeMetadata(init.metadata),
     resolution: init.resolution,
   } satisfies DtifFlattenedToken;
 }
@@ -105,30 +107,29 @@ function applyTokenMetadata(
   if (metadata.description !== undefined) {
     target.$description = metadata.description;
   }
-  if (metadata.extensions) {
-    target.$extensions = metadata.extensions;
+  if (Object.keys(metadata.extensions).length > 0) {
+    target.$extensions = { ...metadata.extensions };
   }
-  if (metadata.deprecated !== undefined) {
-    target.$deprecated = metadata.deprecated;
+  if (metadata.deprecated) {
+    const superseded = metadata.deprecated.supersededBy?.pointer;
+    if (superseded) {
+      target.$deprecated = { $ref: superseded };
+    } else if (metadata.deprecated.reason) {
+      target.$deprecated = metadata.deprecated.reason;
+    } else {
+      target.$deprecated = true;
+    }
   }
-  if (metadata.lastModified !== undefined) {
-    target.$lastModified = metadata.lastModified;
+}
+
+function normalizeMetadata(metadata: TokenMetadata | undefined): TokenMetadata {
+  if (!metadata) {
+    return { extensions: {} };
   }
-  if (metadata.lastUsed !== undefined) {
-    target.$lastUsed = metadata.lastUsed;
-  }
-  if (metadata.usageCount !== undefined) {
-    target.$usageCount = metadata.usageCount;
-  }
-  if (metadata.author !== undefined) {
-    target.$author = metadata.author;
-  }
-  if (metadata.tags !== undefined) {
-    target.$tags = metadata.tags;
-  }
-  if (metadata.hash !== undefined) {
-    target.$hash = metadata.hash;
-  }
+  return {
+    ...metadata,
+    extensions: { ...metadata.extensions },
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

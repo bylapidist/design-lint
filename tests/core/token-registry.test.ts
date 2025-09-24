@@ -153,12 +153,14 @@ void test('TokenRegistry indexes flattened DTIF tokens', () => {
   const dtifTokens: Record<string, readonly DtifFlattenedToken[]> = {
     default: [
       {
+        id: '#/ColorGroup/PrimaryColor',
         pointer: '#/ColorGroup/PrimaryColor',
-        segments: ['ColorGroup', 'PrimaryColor'],
+        path: ['ColorGroup', 'PrimaryColor'],
         name: 'PrimaryColor',
         type: 'color',
         value: '#fff',
-        metadata: {},
+        raw: '#fff',
+        metadata: { extensions: {} },
       },
     ],
   };

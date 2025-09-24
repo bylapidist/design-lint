@@ -7,7 +7,7 @@ import type { TokenDiagnostic, TokenDocument } from '../../core/types.js';
 import { attachDtifFlattenedTokens } from '../../utils/tokens/dtif-cache.js';
 
 export interface NodeParseTokensOptions extends ParseDtifTokensOptions {
-  onWarn?: (msg: string) => void;
+  onWarn?: (diagnostic: TokenDiagnostic) => void;
 }
 
 function assertSupportedFile(filePath: string | URL): void {
@@ -48,7 +48,10 @@ export async function parseDtifTokensFile(
   assertSupportedFile(filePath);
   const dtifOptions = toDtifOptions(options);
   const result = await parseDtifTokensFromFile(filePath, dtifOptions);
-  const errors = result.diagnostics.filter((d) => d.severity === 'error');
+  const errors = result.diagnostics.filter(
+    (diagnostic): diagnostic is TokenDiagnostic =>
+      diagnostic.severity === 'error',
+  );
   if (errors.length > 0) {
     throw new DtifTokenParseError(filePath, errors);
   }
@@ -101,18 +104,29 @@ function formatTokenDiagnostic(
   defaultSource: string,
   diagnostic: TokenDiagnostic,
 ): string {
-  const uri = diagnostic.location?.uri?.toString() ?? defaultSource;
-  const span = diagnostic.location?.span;
-  const position =
-    span &&
-    Number.isFinite(span.start.line) &&
-    Number.isFinite(span.start.column)
-      ? `${String(span.start.line)}:${String(span.start.column)}`
-      : undefined;
-  const pointer = diagnostic.pointer ? ` ${diagnostic.pointer}` : '';
+  const uri = diagnostic.target.uri || defaultSource;
+  const position = formatRangePosition(diagnostic.target.range);
   const severity = diagnostic.severity.toUpperCase();
   const prefix = position ? `${uri}:${position}` : uri;
-  return `${prefix} ${severity}${pointer}: ${diagnostic.message}`;
+  return `${prefix} ${severity}: ${diagnostic.message}`;
+}
+
+function formatRangePosition(
+  range: TokenDiagnostic['target']['range'],
+): string {
+  const line = range.start.line;
+  const character = range.start.character;
+  const lineText = Number.isFinite(line) ? String(line + 1) : undefined;
+  const columnText = Number.isFinite(character)
+    ? String(character + 1)
+    : undefined;
+  if (lineText && columnText) {
+    return `${lineText}:${columnText}`;
+  }
+  if (lineText) {
+    return lineText;
+  }
+  return '';
 }
 
 function assertIsTokenDocument(
@@ -134,13 +148,9 @@ function toDtifOptions(
   options?: NodeParseTokensOptions,
 ): ParseDtifTokensOptions | undefined {
   if (!options) return undefined;
-  const dtifOptions: ParseDtifTokensOptions = {};
-  if (options.onDiagnostic) {
-    dtifOptions.onDiagnostic = options.onDiagnostic;
+  const { onWarn, warn, ...rest } = options;
+  if (warn || onWarn) {
+    return { ...rest, warn: warn ?? onWarn } satisfies ParseDtifTokensOptions;
   }
-  const warn = options.warn ?? options.onWarn;
-  if (warn) {
-    dtifOptions.warn = warn;
-  }
-  return dtifOptions;
+  return { ...rest } satisfies ParseDtifTokensOptions;
 }

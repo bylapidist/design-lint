@@ -1,15 +1,7 @@
+import type { JsonPointer as DtifJsonPointer } from '@lapidist/dtif-parser';
 import type {
-  Diagnostic,
-  DiagnosticCode,
-  JsonPointer as DtifJsonPointer,
-  ResolvedToken,
-  SourceSpan,
-} from '@lapidist/dtif-parser';
-import type {
-  DeprecationMetadata,
   DesignToken as DtifToken,
   DesignTokenInterchangeFormat,
-  ExtensionsMap,
   TokenCollection as DtifCollection,
 } from '@lapidist/dtif-schema';
 import type ts from 'typescript';
@@ -26,63 +18,76 @@ export type JsonPointer = DtifJsonPointer;
 export type TokenDocument = DesignTokenInterchangeFormat;
 export type TokenNode = DtifToken;
 export type TokenCollectionNode = DtifCollection;
-export type TokenExtensions = ExtensionsMap;
-export type TokenDeprecation = DeprecationMetadata;
-
-export interface TokenLocation {
-  uri?: URL;
-  pointer?: JsonPointer;
-  span?: SourceSpan;
-}
-
 export interface TokenMetadata {
   description?: string;
-  extensions?: TokenExtensions;
+  extensions: Record<string, unknown>;
   deprecated?: TokenDeprecation;
-  lastModified?: string;
-  lastUsed?: string;
-  usageCount?: number;
-  author?: string;
-  tags?: string[];
-  hash?: string;
+  source?: {
+    uri: string;
+    line: number;
+    column: number;
+  };
 }
 
-export type TokenResolution = Pick<
-  ResolvedToken,
-  | 'pointer'
-  | 'uri'
-  | 'type'
-  | 'value'
-  | 'source'
-  | 'overridesApplied'
-  | 'warnings'
-  | 'trace'
->;
+export interface TokenDeprecation {
+  since?: string;
+  reason?: string;
+  supersededBy?: TokenPointer;
+}
+
+export interface TokenPointer {
+  uri: string;
+  pointer: JsonPointer;
+}
+
+export interface TokenResolution {
+  id: string;
+  type?: string;
+  value?: unknown;
+  raw?: unknown;
+  references: readonly TokenPointer[];
+  resolutionPath: readonly TokenPointer[];
+  appliedAliases: readonly TokenPointer[];
+}
 
 export interface DtifFlattenedToken {
+  id: string;
   pointer: JsonPointer;
-  segments: readonly string[];
+  path: readonly string[];
   name: string;
   type?: string;
   value?: unknown;
+  raw?: unknown;
   metadata: TokenMetadata;
   resolution?: TokenResolution;
-  location?: TokenLocation;
 }
 
-export interface TokenDiagnosticRelated {
-  message: string;
-  pointer?: JsonPointer;
-  location?: TokenLocation;
+export interface TokenPosition {
+  line: number;
+  character: number;
+}
+
+export interface TokenRange {
+  start: TokenPosition;
+  end: TokenPosition;
 }
 
 export interface TokenDiagnostic {
-  code: DiagnosticCode;
+  severity: 'error' | 'warning' | 'info';
+  code: string;
   message: string;
-  severity: Diagnostic['severity'];
-  pointer?: JsonPointer;
-  location?: TokenLocation;
-  related?: readonly TokenDiagnosticRelated[];
+  source: 'dtif-parser';
+  target: {
+    uri: string;
+    range: TokenRange;
+  };
+  related?: readonly {
+    message: string;
+    target: {
+      uri: string;
+      range: TokenRange;
+    };
+  }[];
 }
 
 /**

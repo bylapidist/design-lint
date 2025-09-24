@@ -3,6 +3,27 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import type { LintDocument } from '../../src/core/environment.js';
+import type { TokenDeprecation } from '../../src/core/types.js';
+
+interface TokenMetadataDetails {
+  path: string;
+  pointer: string;
+  deprecated?: TokenDeprecation;
+  extensions: Record<string, unknown>;
+}
+
+function assertTokenMetadata(
+  value: unknown,
+): asserts value is TokenMetadataDetails {
+  assert.ok(isRecord(value), 'Expected metadata to be an object');
+  assert.strictEqual(typeof value.path, 'string');
+  assert.strictEqual(typeof value.pointer, 'string');
+  assert.ok(isRecord(value.extensions));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 void test('design-system/no-unused-tokens reports unused tokens', async () => {
   const tokens = {
@@ -62,11 +83,15 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
     .flatMap((r) => r.messages)
     .find((m) => m.ruleId === 'design-system/no-unused-tokens');
   assert(msg);
-  assert(msg.metadata);
+  assertTokenMetadata(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
-  assert.deepEqual(msg.metadata.deprecated, {
-    $replacement: '#/color/primary',
-  });
+  assert.equal(msg.metadata.pointer, '#/color/unused');
+  const deprecated = msg.metadata.deprecated;
+  assert(deprecated);
+  const superseded = deprecated.supersededBy;
+  assert(superseded);
+  assert.equal(superseded.pointer, '#/color/primary');
+  assert.equal(superseded.uri, 'memory://inline-config/default.json');
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });
 

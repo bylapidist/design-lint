@@ -7,6 +7,7 @@ import {
   parseInlineDtifTokens,
   parseDtifTokenObject,
 } from '../../../src/core/dtif/parse.js';
+import type { TokenDiagnostic } from '../../../src/core/types.js';
 
 const fixturesDir = fileURLToPath(
   new URL('../../fixtures/dtif/', import.meta.url),
@@ -34,6 +35,19 @@ void test('parseDtifTokensFromFile flattens tokens and exposes resolver state', 
     ],
   );
 
+  const alias = tokens.find((token) => token.pointer === '#/color/button/text');
+  assert(alias);
+  assert.deepStrictEqual(alias.path, ['color', 'button', 'text']);
+  const aliasDeprecation = alias.metadata.deprecated;
+  assert(aliasDeprecation);
+  assert.strictEqual(
+    aliasDeprecation.supersededBy?.pointer,
+    '#/typography/button/text',
+  );
+  const aliasSnapshot = alias.resolution;
+  assert(aliasSnapshot);
+  assert.strictEqual(aliasSnapshot.appliedAliases.length > 0, true);
+
   const aliasResolution = resolver.resolve('#/color/button/text');
   assert(aliasResolution.token);
   assert.deepStrictEqual(aliasResolution.token.value, {
@@ -53,7 +67,7 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
     },
   });
 
-  const forwarded = [];
+  const forwarded: TokenDiagnostic[] = [];
   const warned: string[] = [];
 
   const { diagnostics } = await parseInlineDtifTokens(invalidDocument, {
@@ -61,8 +75,8 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
     onDiagnostic: (diagnostic) => {
       forwarded.push(diagnostic);
     },
-    warn: (message) => {
-      warned.push(message);
+    warn: (diagnostic) => {
+      warned.push(`${diagnostic.code}: ${diagnostic.message}`);
     },
   });
 
@@ -73,9 +87,7 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
 
   const [firstDiagnostic] = diagnostics;
   assert(firstDiagnostic);
-  assert(firstDiagnostic.location);
-  assert(firstDiagnostic.location.uri);
-  assert.strictEqual(firstDiagnostic.location.uri.toString(), 'inline:invalid');
+  assert.strictEqual(firstDiagnostic.target.uri, 'inline:invalid');
 });
 
 void test('parseDtifTokenObject flattens inline documents', async () => {
