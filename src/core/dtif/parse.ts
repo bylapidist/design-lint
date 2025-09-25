@@ -73,7 +73,7 @@ export async function parseDtifTokenObject(
   const { uri, ...parseOptions } = options;
   const input: ParseTokensInput = {
     ...(uri ? { uri } : {}),
-    contents: JSON.stringify(document),
+    data: document,
   };
   return parseDtifTokens(input, parseOptions);
 }
