@@ -1,4 +1,5 @@
 import type {
+  ParseDataInputRecord,
   ParseInput,
   ParseInputRecord,
   ResolvedTokenView,
@@ -12,6 +13,7 @@ import {
   type ParseTokensOptions,
   type ParseTokensResult,
 } from '@lapidist/dtif-parser/parse-tokens';
+import type { DesignTokenInterchangeFormat } from '@lapidist/dtif-schema';
 import type {
   DtifFlattenedToken,
   TokenDeprecation,
@@ -67,11 +69,11 @@ export async function parseInlineDtifTokens(
 }
 
 export async function parseDtifTokenObject(
-  document: unknown,
+  document: DesignTokenInterchangeFormat,
   options: ParseInlineDtifTokensOptions = {},
 ): Promise<DtifParseResult> {
   const { uri, ...parseOptions } = options;
-  const input: ParseTokensInput = {
+  const input: ParseDataInputRecord = {
     ...(uri ? { uri } : {}),
     data: document,
   };
