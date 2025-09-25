@@ -68,7 +68,6 @@ The complete documentation is available under the [`docs/`](docs) directory and 
 | [Formatters](docs/formatters.md) | Describes built-in and custom output formats. |
 | [CI](docs/ci.md) | Includes examples for GitHub Actions and other providers. |
 | [API](docs/api.md) | Shows programmatic usage with TypeScript types. |
-| [Migration](docs/migration.md) | Move from Style Dictionary to design-lint's token pipeline. |
 | [Architecture](docs/architecture.md) | Explains how the linter works internally. |
 
 ## Contributing
