@@ -47,6 +47,17 @@ void test('isThemeRecord rejects invalid structures', () => {
     },
   };
   assert.equal(isThemeRecord(single), false);
+  const tokenDocument = {
+    color: {
+      $description: 'Surface colors',
+      primary: { $value: '#fff' },
+    },
+    typography: {
+      $description: 'Type ramps',
+      body: { $value: 'Inter' },
+    },
+  };
+  assert.equal(isThemeRecord(tokenDocument), false);
   const noShared = {
     light: { color: { $value: '#fff' } },
     dark: { size: { $value: '1rem' } },

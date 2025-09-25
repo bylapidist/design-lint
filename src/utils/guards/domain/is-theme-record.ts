@@ -2,7 +2,7 @@ import type { DesignTokens } from '../../../core/types.js';
 import { isRecord } from '../data/index.js';
 import { getDtifFlattenedTokens } from '../../tokens/dtif-cache.js';
 
-const TOKEN_METADATA_IGNORE = new Set(['$type', '$value', '$ref']);
+const THEME_METADATA_KEYS = new Set(['$version']);
 
 /**
  * Determines whether a value is a record of theme names mapping to design tokens.
@@ -88,6 +88,6 @@ export const isThemeRecord = (
 
 function hasThemeMetadata(theme: Record<string, unknown>): boolean {
   return Object.keys(theme).some(
-    (key) => key.startsWith('$') && !TOKEN_METADATA_IGNORE.has(key),
+    (key) => key.startsWith('$') && THEME_METADATA_KEYS.has(key),
   );
 }
