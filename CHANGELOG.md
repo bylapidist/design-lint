@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 6.0.2
+
+### Patch Changes
+
+- 59d5daf: Fix inline DTIF token parsing to route token objects through the parser data channel.
+
 ## 6.0.1
 
 ### Patch Changes
