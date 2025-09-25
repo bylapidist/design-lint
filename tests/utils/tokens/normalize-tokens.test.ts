@@ -56,6 +56,28 @@ void test('validates DTIF theme records', async () => {
   assert.equal(token.pointer, '#/color/primary');
 });
 
+void test('normalizes theme records without shared token keys when metadata present', async () => {
+  const tokens = await normalizeTokens({
+    light: {
+      $version: '1.0.0',
+      color: { primary: srgb([0, 0, 0]) },
+    },
+    dark: {
+      $version: '1.0.0',
+      space: { medium: { $type: 'dimension', $value: '1rem' } },
+    },
+  });
+  assert('light' in tokens);
+  assert('dark' in tokens);
+  assert.equal('default' in tokens, false);
+  const light = tokens.light as {
+    color: { primary: { $value: { components: number[] } } };
+  };
+  assert.deepEqual(light.color.primary.$value.components, [0, 0, 0]);
+  const dark = tokens.dark as { space: { medium: { $value: string } } };
+  assert.equal(dark.space.medium.$value, '1rem');
+});
+
 void test('throws on invalid tokens', async () => {
   await assert.rejects(
     normalizeTokens({

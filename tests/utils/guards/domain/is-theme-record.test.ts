@@ -13,6 +13,20 @@ void test('isThemeRecord detects multiple themes with shared tokens', () => {
   assert.equal(isThemeRecord(themes), true);
 });
 
+void test('isThemeRecord detects themes without shared tokens when metadata present', () => {
+  const themes = {
+    light: {
+      $version: '1.0.0',
+      color: { primary: { $value: '#fff' } },
+    },
+    dark: {
+      $version: '1.0.0',
+      typography: { body: { $value: 'Inter' } },
+    },
+  };
+  assert.equal(isThemeRecord(themes), true);
+});
+
 void test('isThemeRecord detects single theme with nested group', () => {
   const themes = {
     light: {
@@ -33,6 +47,17 @@ void test('isThemeRecord rejects invalid structures', () => {
     },
   };
   assert.equal(isThemeRecord(single), false);
+  const tokenDocument = {
+    color: {
+      $description: 'Surface colors',
+      primary: { $value: '#fff' },
+    },
+    typography: {
+      $description: 'Type ramps',
+      body: { $value: 'Inter' },
+    },
+  };
+  assert.equal(isThemeRecord(tokenDocument), false);
   const noShared = {
     light: { color: { $value: '#fff' } },
     dark: { size: { $value: '1rem' } },
