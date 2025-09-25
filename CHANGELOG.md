@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 6.0.3
+
+### Patch Changes
+
+- b60b5e7: fix isThemeRecord detection for metadata-only themes lacking shared tokens
+
 ## 6.0.2
 
 ### Patch Changes
