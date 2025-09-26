@@ -13,6 +13,17 @@
       "matchPackageNames": ["node"],
       "allowedVersions": ">=22 <23",
       "rangeStrategy": "replace"
+    },
+    {
+      "description": "Update DTIF packages together",
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "@lapidist/dtif-parser",
+        "@lapidist/dtif-schema",
+        "@lapidist/dtif-validator"
+      ],
+      "groupName": "dtif stack",
+      "groupSlug": "dtif"
     }
   ]
 }
