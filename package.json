@@ -99,7 +99,7 @@
     "markdownlint": "0.38.0",
     "markdownlint-cli": "0.45.0",
     "prettier": "3.6.2",
-    "tsx": "4.20.5",
+    "tsx": "4.20.6",
     "vitepress": "1.6.4"
   },
   "c8": {
