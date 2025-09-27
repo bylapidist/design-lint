@@ -9,7 +9,7 @@ description: >-
 hero:
   name: design-lint
   text: Design systems that ship consistently
-  tagline: "Keep components, tokens, and styles aligned with a [DTIF-native](https://dtif.lapidist.net) linter built for teams."
+  tagline: "Keep components, tokens, and styles aligned with a <a href=\"https://dtif.lapidist.net\">DTIF-native</a> linter built for teams."
   actions:
     - theme: brand
       text: Get started
