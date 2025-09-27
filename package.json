@@ -55,9 +55,9 @@
   "homepage": "https://design-lint.lapidist.net",
   "license": "MIT",
   "dependencies": {
-    "@lapidist/dtif-parser": "0.4.0",
-    "@lapidist/dtif-schema": "0.4.0",
-    "@lapidist/dtif-validator": "0.4.0",
+    "@lapidist/dtif-parser": "0.5.0",
+    "@lapidist/dtif-schema": "0.5.0",
+    "@lapidist/dtif-validator": "0.5.0",
     "@vue/compiler-sfc": "3.5.22",
     "ajv": "8.17.1",
     "chalk": "5.6.2",
