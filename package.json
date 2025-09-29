@@ -69,7 +69,7 @@
     "cosmiconfig-typescript-loader": "6.1.0",
     "culori": "4.0.2",
     "flat-cache": "6.1.14",
-    "globby": "14.1.0",
+    "globby": "15.0.0",
     "ignore": "7.0.5",
     "leven": "4.1.0",
     "p-limit": "7.1.1",
