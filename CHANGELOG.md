@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 6.0.4
+
+### Patch Changes
+
+- 4520b7a: fix hero tagline link markup on the docs homepage
+
 ## 6.0.3
 
 ### Patch Changes
