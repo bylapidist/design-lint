@@ -72,22 +72,24 @@ export interface TokenRange {
   end: TokenPosition;
 }
 
+export interface TokenDiagnosticTarget {
+  uri: string;
+  range?: TokenRange;
+  pointer?: JsonPointer;
+}
+
+export interface TokenDiagnosticRelatedInformation {
+  message: string;
+  target: TokenDiagnosticTarget;
+}
+
 export interface TokenDiagnostic {
   severity: 'error' | 'warning' | 'info';
   code: string;
   message: string;
   source: 'dtif-parser';
-  target: {
-    uri: string;
-    range: TokenRange;
-  };
-  related?: readonly {
-    message: string;
-    target: {
-      uri: string;
-      range: TokenRange;
-    };
-  }[];
+  target: TokenDiagnosticTarget;
+  related?: readonly TokenDiagnosticRelatedInformation[];
 }
 
 /**

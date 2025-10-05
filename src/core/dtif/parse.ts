@@ -3,9 +3,13 @@ import type {
   ParseInput,
   ParseInputRecord,
   ResolvedTokenView,
-  TokenDiagnostic as ParserTokenDiagnostic,
   TokenMetadataSnapshot,
   TokenPointer as ParserTokenPointer,
+  RawDocument as ParserRawDocument,
+  SourceMap as ParserSourceMap,
+  SourceSpan as ParserSourceSpan,
+  Diagnostic as ParserDiagnostic,
+  RelatedInformation as ParserRelatedInformation,
 } from '@lapidist/dtif-parser';
 import {
   parseTokens,
@@ -18,12 +22,15 @@ import type {
   DtifFlattenedToken,
   TokenDeprecation,
   TokenDiagnostic,
+  TokenDiagnosticRelatedInformation,
+  TokenDiagnosticTarget,
   TokenMetadata,
+  TokenRange,
   TokenPointer,
   TokenResolution,
 } from '../types.js';
 
-type TokenDiagnosticRelated = NonNullable<TokenDiagnostic['related']>[number];
+type TokenDiagnosticRelated = TokenDiagnosticRelatedInformation;
 
 export type ParseDtifTokensOptions = ParseTokensOptions;
 
@@ -94,6 +101,8 @@ function toDtifParseResult(result: ParseTokensResult): DtifParseResult {
     }
   }
 
+  const document = result.document;
+
   const tokens: DtifFlattenedToken[] = result.flattened.map((token) => ({
     id: token.id,
     pointer: token.pointer,
@@ -108,8 +117,10 @@ function toDtifParseResult(result: ParseTokensResult): DtifParseResult {
 
   return {
     tokens,
-    diagnostics: result.diagnostics.map(toTokenDiagnostic),
-    document: result.document,
+    diagnostics: result.diagnostics.map((diagnostic) =>
+      toTokenDiagnostic(diagnostic, document),
+    ),
+    document,
     graph: result.graph,
     resolver: result.resolver,
     metadataIndex,
@@ -179,43 +190,81 @@ function clonePointer(pointer: ParserTokenPointer): TokenPointer {
   return { uri: pointer.uri, pointer: pointer.pointer } satisfies TokenPointer;
 }
 
-function toTokenDiagnostic(diagnostic: ParserTokenDiagnostic): TokenDiagnostic {
+function toTokenDiagnostic(
+  diagnostic: ParserDiagnostic,
+  document: ParserRawDocument | undefined,
+): TokenDiagnostic {
   return {
     severity: diagnostic.severity,
     code: diagnostic.code,
     message: diagnostic.message,
-    source: diagnostic.source,
-    target: {
-      uri: diagnostic.target.uri,
-      range: {
-        start: {
-          line: diagnostic.target.range.start.line,
-          character: diagnostic.target.range.start.character,
-        },
-        end: {
-          line: diagnostic.target.range.end.line,
-          character: diagnostic.target.range.end.character,
-        },
-      },
-    },
-    related: diagnostic.related?.map(
-      (entry): TokenDiagnosticRelated =>
-        ({
-          message: entry.message,
-          target: {
-            uri: entry.target.uri,
-            range: {
-              start: {
-                line: entry.target.range.start.line,
-                character: entry.target.range.start.character,
-              },
-              end: {
-                line: entry.target.range.end.line,
-                character: entry.target.range.end.character,
-              },
-            },
-          },
-        }) satisfies TokenDiagnosticRelated,
+    source: 'dtif-parser',
+    target: toTokenDiagnosticTarget(diagnostic, document),
+    related: diagnostic.related?.map((entry) =>
+      toTokenDiagnosticRelated(entry, document),
     ),
   } satisfies TokenDiagnostic;
+}
+
+function toTokenDiagnosticRelated(
+  entry: ParserRelatedInformation,
+  document: ParserRawDocument | undefined,
+): TokenDiagnosticRelated {
+  return {
+    message: entry.message,
+    target: toTokenDiagnosticTarget(entry, document),
+  } satisfies TokenDiagnosticRelated;
+}
+
+type DiagnosticLike =
+  | Pick<ParserDiagnostic, 'pointer' | 'span'>
+  | Pick<ParserRelatedInformation, 'pointer' | 'span'>;
+
+function toTokenDiagnosticTarget(
+  diagnostic: DiagnosticLike,
+  document: ParserRawDocument | undefined,
+): TokenDiagnosticTarget {
+  const span = resolveDiagnosticSpan(
+    diagnostic,
+    document ? document.sourceMap : undefined,
+  );
+  const uri = span
+    ? span.uri.toString()
+    : document
+      ? document.identity.uri.toString()
+      : '';
+
+  return {
+    uri,
+    range: span ? toTokenRange(span) : undefined,
+    pointer: diagnostic.pointer,
+  } satisfies TokenDiagnosticTarget;
+}
+
+function resolveDiagnosticSpan(
+  diagnostic: DiagnosticLike,
+  sourceMap: ParserSourceMap | undefined,
+): ParserSourceSpan | undefined {
+  if (diagnostic.span) {
+    return diagnostic.span;
+  }
+
+  if (!diagnostic.pointer || !sourceMap) {
+    return undefined;
+  }
+
+  return sourceMap.pointers.get(diagnostic.pointer);
+}
+
+function toTokenRange(span: ParserSourceSpan): TokenRange {
+  return {
+    start: {
+      line: span.start.line,
+      character: span.start.column,
+    },
+    end: {
+      line: span.end.line,
+      character: span.end.column,
+    },
+  } satisfies TokenRange;
 }
