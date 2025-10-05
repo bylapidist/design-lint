@@ -6,8 +6,11 @@ import {
 import type { TokenDiagnostic, TokenDocument } from '../../core/types.js';
 import { attachDtifFlattenedTokens } from '../../utils/tokens/dtif-cache.js';
 
-export interface NodeParseTokensOptions extends ParseDtifTokensOptions {
+type BaseParseOptions = Omit<ParseDtifTokensOptions, 'warn' | 'onDiagnostic'>;
+
+export interface NodeParseTokensOptions extends BaseParseOptions {
   onWarn?: (diagnostic: TokenDiagnostic) => void;
+  warn?: (diagnostic: TokenDiagnostic) => void;
 }
 
 function assertSupportedFile(filePath: string | URL): void {
@@ -48,6 +51,7 @@ export async function parseDtifTokensFile(
   assertSupportedFile(filePath);
   const dtifOptions = toDtifOptions(options);
   const result = await parseDtifTokensFromFile(filePath, dtifOptions);
+  notifyWarnings(result, options);
   const errors = result.diagnostics.filter(
     (diagnostic): diagnostic is TokenDiagnostic =>
       diagnostic.severity === 'error',
@@ -81,7 +85,8 @@ function getTokenDocument(
     );
   }
   const data = document.data;
-  assertIsTokenDocument(data, document.uri.toString());
+  const uri = document.identity.uri.toString();
+  assertIsTokenDocument(data, uri);
   return data;
 }
 
@@ -104,16 +109,21 @@ function formatTokenDiagnostic(
   defaultSource: string,
   diagnostic: TokenDiagnostic,
 ): string {
-  const uri = diagnostic.target.uri || defaultSource;
-  const position = formatRangePosition(diagnostic.target.range);
+  const target = diagnostic.target;
+  const uri = target.uri || defaultSource;
+  const position = formatRangePosition(target.range);
+  const pointer = target.pointer ? ` ${target.pointer}` : '';
   const severity = diagnostic.severity.toUpperCase();
   const prefix = position ? `${uri}:${position}` : uri;
-  return `${prefix} ${severity}: ${diagnostic.message}`;
+  return `${prefix}${pointer} ${severity}: ${diagnostic.message}`;
 }
 
 function formatRangePosition(
   range: TokenDiagnostic['target']['range'],
 ): string {
+  if (!range) {
+    return '';
+  }
   const line = range.start.line;
   const character = range.start.character;
   const lineText = Number.isFinite(line) ? String(line + 1) : undefined;
@@ -149,8 +159,29 @@ function toDtifOptions(
 ): ParseDtifTokensOptions | undefined {
   if (!options) return undefined;
   const { onWarn, warn, ...rest } = options;
-  if (warn || onWarn) {
-    return { ...rest, warn: warn ?? onWarn } satisfies ParseDtifTokensOptions;
-  }
+  void onWarn;
+  void warn;
   return { ...rest } satisfies ParseDtifTokensOptions;
+}
+
+function notifyWarnings(
+  result: DtifParseResult,
+  options?: NodeParseTokensOptions,
+): void {
+  if (!options) return;
+  const handlers = [options.warn, options.onWarn].filter(
+    (handler): handler is (diagnostic: TokenDiagnostic) => void =>
+      typeof handler === 'function',
+  );
+  if (handlers.length === 0) {
+    return;
+  }
+  for (const diagnostic of result.diagnostics) {
+    if (diagnostic.severity !== 'warning') {
+      continue;
+    }
+    for (const handler of handlers) {
+      handler(diagnostic);
+    }
+  }
 }
