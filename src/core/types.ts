@@ -1,8 +1,8 @@
 import type { JsonPointer as DtifJsonPointer } from '@lapidist/dtif-parser';
 import type {
-  DesignToken as DtifToken,
+  Token as DtifToken,
   DesignTokenInterchangeFormat,
-  TokenCollection as DtifCollection,
+  TokenMemberMap as DtifCollection,
 } from '@lapidist/dtif-schema';
 import type ts from 'typescript';
 import type { z } from 'zod';
