@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 6.0.5
+
+### Patch Changes
+
+- c7521bf: upgrade DTIF parser, schema, and validator dependencies to the latest release and align internal type aliases
+
 ## 6.0.4
 
 ### Patch Changes

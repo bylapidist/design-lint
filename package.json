@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint",
-  "version": "6.0.4",
+  "version": "6.0.5",
   "description": "Design system linter",
   "type": "module",
   "main": "dist/index.js",
