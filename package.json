@@ -90,7 +90,7 @@
     "@types/culori": "4.0.1",
     "@types/node": "24.9.1",
     "@types/picomatch": "4.0.2",
-    "@types/postcss-less": "4.0.6",
+    "@types/postcss-less": "4.0.7",
     "@types/write-file-atomic": "4.0.3",
     "@typescript-eslint/eslint-plugin": "8.46.2",
     "@typescript-eslint/parser": "8.46.2",
