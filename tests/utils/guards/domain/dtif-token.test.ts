@@ -89,3 +89,60 @@ void test('getTokenStringValue reads DTIF color fallbacks', () => {
   };
   assert.equal(getTokenStringValue(token), '#ffffff');
 });
+
+void test('getTokenStringValue reads values from token resolution', () => {
+  const token: DtifFlattenedToken = {
+    ...baseToken,
+    pointer: '#/color/resolution',
+    id: '#/color/resolution',
+    path: ['color', 'resolution'],
+    name: 'resolution',
+    type: 'color',
+    value: undefined,
+    resolution: {
+      id: '#/color/resolution',
+      references: [],
+      resolutionPath: [],
+      appliedAliases: [],
+      value: { colorSpace: 'srgb', components: [0.1, 0.2, 0.3], alpha: 0.5 },
+    },
+  };
+  assert.equal(getTokenStringValue(token), 'color(srgb 0.1 0.2 0.3 / 0.5)');
+});
+
+void test('getTokenStringValue accepts none components and aliases when allowed', () => {
+  const token: DtifFlattenedToken = {
+    ...baseToken,
+    pointer: '#/color/mixed',
+    id: '#/color/mixed',
+    path: ['color', 'mixed'],
+    name: 'mixed',
+    type: 'color',
+    value: { colorSpace: 'srgb', components: ['none', 0, 1] },
+    resolution: {
+      id: '#/color/mixed',
+      references: [],
+      resolutionPath: [],
+      appliedAliases: [],
+      value: '{color.brand}',
+    },
+  };
+  assert.equal(
+    getTokenStringValue(token, { allowAliases: true }),
+    '{color.brand}',
+  );
+  assert.equal(getTokenStringValue(token), 'color(srgb none 0 1)');
+});
+
+void test('getTokenStringValue returns undefined for invalid color objects', () => {
+  const token: DtifFlattenedToken = {
+    ...baseToken,
+    pointer: '#/color/invalid',
+    id: '#/color/invalid',
+    path: ['color', 'invalid'],
+    name: 'invalid',
+    type: 'color',
+    value: { colorSpace: 'srgb', components: [Number.NaN, 0, 0] },
+  };
+  assert.equal(getTokenStringValue(token), undefined);
+});

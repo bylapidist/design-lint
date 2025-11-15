@@ -184,3 +184,12 @@ void test('flattenDesignTokens throws when document lacks cached DTIF tokens', (
 
   assert.throws(() => flattenDesignTokens(document), /requires DTIF documents/);
 });
+
+void test('flattenDesignTokens rejects non-DTIF objects', () => {
+  const invalid = { colors: { primary: '#fff' } } as unknown as DesignTokens;
+
+  assert.throws(
+    () => flattenDesignTokens(invalid),
+    /Expected DTIF token documents or pre-flattened DTIF tokens/i,
+  );
+});
