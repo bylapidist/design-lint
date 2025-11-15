@@ -17,7 +17,7 @@ interface SarifLog {
         }[];
       };
     };
-    results: { ruleId: string; ruleIndex: number }[];
+    results: { ruleId: string; ruleIndex: number; level: string }[];
   }[];
 }
 
@@ -115,4 +115,42 @@ void test('sarif formatter includes rule categories', () => {
   const parsed: unknown = JSON.parse(out);
   const run = (parsed as SarifLog).runs[0];
   assert.equal(run.tool.driver.rules[0].properties?.category, 'design-token');
+});
+
+void test('sarif formatter updates categories from later results', () => {
+  const results: LintResult[] = [
+    {
+      sourceId: 'a.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'initial message',
+          severity: 'warning',
+          line: 1,
+          column: 1,
+        },
+      ],
+    },
+    {
+      sourceId: 'b.ts',
+      messages: [
+        {
+          ruleId: 'rule',
+          message: 'follow up message',
+          severity: 'warning',
+          line: 2,
+          column: 2,
+        },
+      ],
+      ruleCategories: { rule: 'lint' },
+    },
+  ];
+  const out = sarifFormatter(results);
+  const parsed: unknown = JSON.parse(out);
+  const run = (parsed as SarifLog).runs[0];
+  assert.equal(run.tool.driver.rules.length, 1);
+  assert.equal(run.tool.driver.rules[0].properties?.category, 'lint');
+  assert.equal(run.results[0].ruleId, 'rule');
+  assert.equal(run.results[0].ruleIndex, 0);
+  assert.equal(run.results[0].level, 'warning');
 });
