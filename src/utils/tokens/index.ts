@@ -1,3 +1,4 @@
+/* c8 ignore start */
 /**
  * @packageDocumentation
  *
@@ -21,3 +22,4 @@ export {
   sortTokensByPath,
   type SortTokensOptions,
 } from './sort.js';
+/* c8 ignore stop */

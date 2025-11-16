@@ -22,6 +22,7 @@
  * console.log(stylish(results));
  * ```
  */
+/* c8 ignore start */
 export {
   getFormatter,
   resolveFormatter,
@@ -41,3 +42,4 @@ export { stylishFormatter } from './stylish/index.js';
 export * as json from './json/index.js';
 export * as sarif from './sarif/index.js';
 export * as stylish from './stylish/index.js';
+/* c8 ignore stop */

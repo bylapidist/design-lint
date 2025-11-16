@@ -1,3 +1,4 @@
+/* c8 ignore start */
 export { FileSource } from './file-source.js';
 export { createFileDocument } from './file-document.js';
 export { NodePluginLoader } from './plugin-loader.js';
@@ -9,3 +10,4 @@ export {
   DtifTokenParseError,
   type NodeParseTokensOptions,
 } from './token-parser.js';
+/* c8 ignore stop */
