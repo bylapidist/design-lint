@@ -37,3 +37,27 @@ void test('NodeCacheProvider uses provided file location', async () => {
     .catch(() => false);
   assert.equal(exists, true);
 });
+
+void test('NodeCacheProvider enumerates and removes cache entries', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-test-'));
+  const file = path.join(dir, 'cache.json');
+  const cache = new NodeCacheProvider(file);
+
+  const first: LintResult = { sourceId: 'alpha', messages: [] };
+  const second: LintResult = { sourceId: 'beta', messages: [] };
+
+  await cache.set('alpha', { mtime: 1, result: first });
+  await cache.set('beta', { mtime: 2, result: second });
+
+  assert.deepEqual(new Set(await cache.keys()), new Set(['alpha', 'beta']));
+
+  await cache.remove('alpha');
+  assert.equal(await cache.get('alpha'), undefined);
+  assert.deepEqual(await cache.keys(), ['beta']);
+
+  await cache.save();
+  const reloaded = new NodeCacheProvider(file);
+  assert.equal(await reloaded.get('alpha'), undefined);
+  assert.deepEqual(await reloaded.get('beta'), { mtime: 2, result: second });
+  assert.deepEqual(await reloaded.keys(), ['beta']);
+});
