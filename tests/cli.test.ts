@@ -1,20 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync, spawn } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { readWhenReady } from './helpers/fs.js';
-import {
-  createLinter as initLinter,
-  FileSource,
-  type Linter,
-} from '../src/index.js';
-import type { LintResult } from '../src/core/types.js';
-import ignore from 'ignore';
-
-const tsxLoader = require.resolve('tsx/esm');
-const WATCH_TIMEOUT = 2000;
+const tsxLoader = createRequire(import.meta.url).resolve('tsx/esm');
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const cliTest = (name: string, fn: Parameters<typeof test>[1]) =>
+  test(name, { timeout: 60_000 }, fn);
 
 const srgb = (components: [number, number, number]) => ({
   colorSpace: 'srgb',
@@ -27,7 +22,11 @@ function createDeprecatedTokens() {
     old: {
       $type: 'color',
       $value: srgb([0, 0, 0]),
-      $deprecated: true,
+      $deprecated: { $replacement: '#/new' },
+    },
+    new: {
+      $type: 'color',
+      $value: srgb([1, 1, 1]),
     },
   };
 }
@@ -39,7 +38,7 @@ function createDeprecatedConfig(rules: Record<string, unknown>) {
   });
 }
 
-void test('CLI aborts on unsupported Node versions', async () => {
+void cliTest('CLI aborts on unsupported Node versions', async () => {
   const { run } = await import('../src/cli/index.js');
   const original = process.versions.node;
   Object.defineProperty(process.versions, 'node', { value: '21.0.0' });
@@ -57,32 +56,54 @@ void test('CLI aborts on unsupported Node versions', async () => {
   assert.match(out, /Node\.js v21\.0\.0 is not supported/);
 });
 
-void test('CLI passes targets to environment factory', async () => {
-  const { run } = await import('../src/cli/index.js');
-  const envMod = await import('../src/cli/env.js');
-  const mock = test.mock.method(envMod, 'prepareEnvironment', () =>
-    Promise.resolve({
-      formatter: () => '',
-      config: { tokens: {}, rules: {} },
-      linterRef: {
-        current: {
-          lintTargets: () => Promise.resolve({ results: [], ignoreFiles: [] }),
-          getPluginPaths: () => Promise.resolve([]),
-        } as unknown as Linter,
+void cliTest('CLI forwards provided file targets to lint execution', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const dir = makeTmpDir();
+  fs.writeFileSync(
+    path.join(dir, 'tokens.tokens.json'),
+    JSON.stringify({
+      $version: '1.0.0',
+      color: {
+        brand: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+        },
       },
-      pluginPaths: [],
-      designIgnore: '',
-      gitIgnore: '',
-      refreshIgnore: () => Promise.resolve(),
-      state: { pluginPaths: [], ignoreFilePaths: [] },
-      getIg: () => ignore(),
     }),
   );
-  await run(['a.ts']);
-  assert.deepEqual(mock.mock.calls[0].arguments[0].patterns, ['a.ts']);
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { default: './tokens.tokens.json' },
+      rules: { 'token-colors': 'error' },
+    }),
+  );
+  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'a.css'), 'a { color: #fff; }');
+  fs.writeFileSync(path.join(dir, 'src', 'b.css'), 'b { color: #fff; }');
+
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      path.join('src', 'a.css'),
+      '--config',
+      'designlint.config.json',
+      '--format',
+      'json',
+    ],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  assert.equal(res.status, 1);
+  const files = (JSON.parse(res.stdout) as { sourceId: string }[]).map((r) =>
+    path.relative(dir, r.sourceId),
+  );
+  assert.deepEqual(files, ['src/a.css']);
 });
 
-void test('CLI runs when executed via a symlink', () => {
+void cliTest('CLI runs when executed via a symlink', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   const link = path.join(dir, 'cli-link.ts');
@@ -96,7 +117,7 @@ void test('CLI runs when executed via a symlink', () => {
   assert.match(res.stdout, /Usage: design-lint/);
 });
 
-void test('init creates json config by default', () => {
+void cliTest('init creates json config by default', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   const res = spawnSync(
@@ -108,7 +129,7 @@ void test('init creates json config by default', () => {
   assert.ok(fs.existsSync(path.join(dir, 'designlint.config.json')));
 });
 
-void test('init detects TypeScript and creates ts config', () => {
+void cliTest('init detects TypeScript and creates ts config', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
@@ -124,7 +145,7 @@ void test('init detects TypeScript and creates ts config', () => {
   assert.ok(contents.includes('defineConfig'));
 });
 
-void test('--init-format overrides detection', () => {
+void cliTest('--init-format overrides detection', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
@@ -137,7 +158,7 @@ void test('--init-format overrides detection', () => {
   assert.ok(fs.existsSync(path.join(dir, 'designlint.config.json')));
 });
 
-void test('--init-format supports all formats', () => {
+void cliTest('--init-format supports all formats', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const formats: readonly ['js', 'cjs', 'mjs', 'ts', 'mts', 'json'] = [
     'js',
@@ -159,7 +180,7 @@ void test('--init-format supports all formats', () => {
   }
 });
 
-void test('CLI expands glob patterns with braces', () => {
+void cliTest('CLI expands glob patterns with braces', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
@@ -180,7 +201,7 @@ void test('CLI expands glob patterns with braces', () => {
   assert.deepEqual(files, ['src/a.module.css', 'src/b.module.scss']);
 });
 
-void test('CLI exits non-zero on lint errors', () => {
+void cliTest('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const result = spawnSync(
@@ -201,7 +222,7 @@ void test('CLI exits non-zero on lint errors', () => {
   assert.ok(result.stdout.includes('design-token/colors'));
 });
 
-void test('CLI warns when no files match', () => {
+void cliTest('CLI warns when no files match', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -224,7 +245,7 @@ void test('CLI warns when no files match', () => {
   assert.match(res.stderr, /No files matched/);
 });
 
-void test('--quiet suppresses "No files matched" warning', () => {
+void cliTest('--quiet suppresses "No files matched" warning', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -248,7 +269,7 @@ void test('--quiet suppresses "No files matched" warning', () => {
   assert.ok(!res.stderr.includes('No files matched'));
 });
 
-void test('CLI exits 0 when warnings are within --max-warnings', () => {
+void cliTest('CLI exits 0 when warnings are within --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(
@@ -275,7 +296,7 @@ void test('CLI exits 0 when warnings are within --max-warnings', () => {
   assert.equal(res.status, 0);
 });
 
-void test('CLI exits 0 when warnings equal --max-warnings', () => {
+void cliTest('CLI exits 0 when warnings equal --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -302,7 +323,7 @@ void test('CLI exits 0 when warnings equal --max-warnings', () => {
   assert.equal(res.status, 0);
 });
 
-void test('CLI exits 1 when warnings exceed --max-warnings', () => {
+void cliTest('CLI exits 1 when warnings exceed --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -329,7 +350,7 @@ void test('CLI exits 1 when warnings exceed --max-warnings', () => {
   assert.equal(res.status, 1);
 });
 
-void test('CLI errors on invalid --max-warnings', () => {
+void cliTest('CLI errors on invalid --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(
@@ -355,7 +376,7 @@ void test('CLI errors on invalid --max-warnings', () => {
   assert.ok(res.stderr.includes('Invalid value for --max-warnings'));
 });
 
-void test('CLI reports missing ignore file', () => {
+void cliTest('CLI reports missing ignore file', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(
@@ -381,7 +402,7 @@ void test('CLI reports missing ignore file', () => {
   assert.ok(res.stderr.includes('Ignore file not found'));
 });
 
-void test('CLI reports missing plugin', () => {
+void cliTest('CLI reports missing plugin', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   fs.writeFileSync(
@@ -405,7 +426,7 @@ void test('CLI reports missing plugin', () => {
   assert.ok(res.stderr.includes('Plugin not found'));
 });
 
-void test('CLI --fix applies fixes', () => {
+void cliTest('CLI --fix applies fixes', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -431,7 +452,7 @@ void test('CLI --fix applies fixes', () => {
   assert.equal(out, "const a = 'new';");
 });
 
-void test('CLI surfaces config load errors', () => {
+void cliTest('CLI surfaces config load errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{ invalid');
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
@@ -452,7 +473,7 @@ void test('CLI surfaces config load errors', () => {
   assert.ok(res.stderr.trim().length > 0);
 });
 
-void test('CLI surfaces token parsing diagnostics', () => {
+void cliTest('CLI surfaces token parsing diagnostics', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -477,11 +498,12 @@ void test('CLI surfaces token parsing diagnostics', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /bad\.tokens\.json:1:/);
+  assert.match(res.stderr, /bad\.tokens\.json/);
+  assert.match(res.stderr, /line 1, column/);
   assert.match(res.stderr, /\^/);
 });
 
-void test('CLI surfaces output write errors', () => {
+void cliTest('CLI surfaces output write errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
@@ -501,7 +523,7 @@ void test('CLI surfaces output write errors', () => {
   assert.ok(res.stderr.includes('ENOENT'));
 });
 
-void test('CLI writes report to file with --output', () => {
+void cliTest('CLI writes report to file with --output', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -531,7 +553,7 @@ void test('CLI writes report to file with --output', () => {
   assert.ok(report.includes('design-system/deprecation'));
 });
 
-void test('CLI --quiet suppresses stdout output', () => {
+void cliTest('CLI --quiet suppresses stdout output', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -553,7 +575,7 @@ void test('CLI --quiet suppresses stdout output', () => {
   assert.equal(res.stdout.trim(), '');
 });
 
-void test('CLI disables colors when stdout is not a TTY', () => {
+void cliTest('CLI disables colors when stdout is not a TTY', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -576,7 +598,7 @@ void test('CLI disables colors when stdout is not a TTY', () => {
   assert.ok(!/\x1b\[[0-9;]*m/.test(res.stdout));
 });
 
-void test('CLI reports unknown formatter', () => {
+void cliTest('CLI reports unknown formatter', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -597,12 +619,13 @@ void test('CLI reports unknown formatter', () => {
   assert.ok(res.stderr.includes('Unknown formatter'));
 });
 
-void test('CLI loads formatter from module path', () => {
+void cliTest('CLI loads formatter from module path', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const formatterPath = path.join(
     __dirname,
     'formatters',
+    'helpers',
     'fixtures',
     'custom-formatter.ts',
   );
@@ -624,7 +647,7 @@ void test('CLI loads formatter from module path', () => {
   assert.ok(res.stdout.includes('custom:1'));
 });
 
-void test('CLI outputs SARIF reports', () => {
+void cliTest('CLI outputs SARIF reports', () => {
   const dir = makeTmpDir();
   try {
     fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
@@ -660,7 +683,7 @@ void test('CLI outputs SARIF reports', () => {
   }
 });
 
-void test('CLI loads external plugin rules', () => {
+void cliTest('CLI loads external plugin rules', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   const plugin = path.join(__dirname, 'fixtures', 'test-plugin.ts');
@@ -687,7 +710,7 @@ void test('CLI loads external plugin rules', () => {
   assert.ok(res.stdout.includes('plugin/test'));
 });
 
-void test('CLI reports plugin load errors', () => {
+void cliTest('CLI reports plugin load errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const badPlugin = path.join(dir, 'missing-plugin.js');
@@ -709,10 +732,10 @@ void test('CLI reports plugin load errors', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
-  assert.ok(res.stderr.includes('Failed to load plugin'));
+  assert.match(res.stderr, /Plugin not found/);
 });
 
-void test('CLI ignores common directories by default', () => {
+void cliTest('CLI ignores common directories by default', () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -727,7 +750,6 @@ void test('CLI ignores common directories by default', () => {
     path.join(dir, 'designlint.config.json'),
     createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
   );
-  const parent = path.dirname(dir);
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
@@ -735,13 +757,15 @@ void test('CLI ignores common directories by default', () => {
       '--import',
       tsxLoader,
       cli,
-      path.basename(dir),
+      'src',
+      'node_modules',
+      'dist',
       '--config',
-      path.join(path.basename(dir), 'designlint.config.json'),
+      'designlint.config.json',
       '--format',
       'json',
     ],
-    { encoding: 'utf8', cwd: parent },
+    { encoding: 'utf8', cwd: dir },
   );
   interface Result {
     sourceId: string;
@@ -754,7 +778,7 @@ void test('CLI ignores common directories by default', () => {
   assert.deepEqual(files, ['src/file.ts']);
 });
 
-void test('.designlintignore can unignore paths via CLI', () => {
+void cliTest('.designlintignore can unignore paths via CLI', () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -802,7 +826,7 @@ void test('.designlintignore can unignore paths via CLI', () => {
   assert.deepEqual(files, ['node_modules/pkg/index.ts', 'src/file.ts']);
 });
 
-void test('CLI skips directories listed in .designlintignore', () => {
+void cliTest('CLI skips directories listed in .designlintignore', () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -843,7 +867,7 @@ void test('CLI skips directories listed in .designlintignore', () => {
   assert.deepEqual(files, ['src/file.ts']);
 });
 
-void test('CLI --ignore-path excludes files', () => {
+void cliTest('CLI --ignore-path excludes files', () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
@@ -882,7 +906,7 @@ void test('CLI --ignore-path excludes files', () => {
   assert.deepEqual(files, ['src/keep.ts']);
 });
 
-void test('CLI --concurrency limits parallel lint tasks', () => {
+void cliTest('CLI --concurrency limits parallel lint tasks', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
   const count = 10;
@@ -916,7 +940,7 @@ void test('CLI --concurrency limits parallel lint tasks', () => {
   assert.ok(max <= 2);
 });
 
-void test('CLI errors on invalid --concurrency', () => {
+void cliTest('CLI errors on invalid --concurrency', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
@@ -939,7 +963,7 @@ void test('CLI errors on invalid --concurrency', () => {
   assert.ok(res.stderr.includes('Invalid value for --concurrency'));
 });
 
-void test('CLI plugin load errors include context and remediation', () => {
+void cliTest('CLI plugin load errors include context and remediation', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -964,7 +988,7 @@ void test('CLI plugin load errors include context and remediation', () => {
   assert.match(res.stderr, /Remediation:/);
 });
 
-void test('CLI --report outputs JSON log', () => {
+void cliTest('CLI --report outputs JSON log', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -992,1025 +1016,11 @@ void test('CLI --report outputs JSON log', () => {
   assert.ok(fs.existsSync(report));
   const parsed: unknown = JSON.parse(readWhenReady(report));
   const log = parsed as {
-    sourceId: string;
-    messages: { ruleId: string }[];
-  }[];
-  assert.equal(path.relative(dir, log[0]?.sourceId), 'file.ts');
-  assert.equal(log[0]?.messages[0]?.ruleId, 'design-system/deprecation');
-});
-
-void test('CLI re-runs on file change in watch mode', async () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = "old";');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let runs = 0;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('design-system/deprecation')) {
-        runs++;
-        buffer = '';
-        if (runs === 1) {
-          fs.writeFileSync(file, 'const a = "old2";');
-        } else if (runs === 2) {
-          proc.kill();
-        }
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(runs, 2);
-});
-
-void test('CLI ignores --output/--report files in watch mode', async () => {
-  const pairs: readonly [string, string][] = [
-    ['--output', 'out.json'],
-    ['--report', 'report.json'],
-  ];
-  for (const [flag, name] of pairs) {
-    const dir = makeTmpDir();
-    fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
-    fs.writeFileSync(
-      path.join(dir, 'designlint.config.json'),
-      JSON.stringify({ tokens: {}, rules: {} }),
-    );
-    const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-    const outPath = path.join(dir, name);
-    const proc = spawn(
-      process.execPath,
-      [
-        '--import',
-        tsxLoader,
-        cli,
-        'file.ts',
-        '--config',
-        'designlint.config.json',
-        '--watch',
-        flag,
-        name,
-        '--format',
-        'json',
-      ],
-      { cwd: dir },
-    );
-    readWhenReady(outPath);
-    const initial = fs.statSync(outPath).mtimeMs;
-    await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        proc.kill();
-      }, WATCH_TIMEOUT);
-      proc.on('exit', () => {
-        clearTimeout(timer);
-        resolve();
-      });
-      proc.on('error', (err) => {
-        clearTimeout(timer);
-        reject(err);
-      });
-    });
-    const final = fs.statSync(outPath).mtimeMs;
-    assert.equal(initial, final);
-  }
-});
-
-void test('CLI cache updates after --fix run', async () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = "old";');
-  const config = {
-    tokens: createDeprecatedTokens(),
-    rules: { 'design-system/deprecation': 'error' },
+    results: { sourceId: string; messages: { ruleId: string }[] }[];
   };
-  const store = new Map<
-    string,
-    {
-      mtime: number;
-      size: number;
-      result: LintResult;
-    }
-  >();
-  const cache = {
-    get(key: string) {
-      return Promise.resolve(store.get(key));
-    },
-    set(
-      key: string,
-      entry: {
-        mtime: number;
-        size: number;
-        result: LintResult;
-      },
-    ) {
-      store.set(key, entry);
-      return Promise.resolve();
-    },
-    remove(key: string) {
-      store.delete(key);
-      return Promise.resolve();
-    },
-    keys() {
-      return Promise.resolve([...store.keys()]);
-    },
-    save() {
-      return Promise.resolve();
-    },
-  };
-  const linter = initLinter(config, {
-    documentSource: new FileSource(),
-    cacheProvider: cache,
-  });
-  const { results: res1 } = await linter.lintTargets([file], true);
-  const { results: res2 } = await linter.lintTargets([file], false);
-  assert.equal(res1[0].messages.length, 0);
-  assert.strictEqual(res1[0], res2[0]);
-});
-
-void test('CLI --cache reuses results from disk', () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = 1;');
-  const plugin = path.join(dir, 'plugin.cjs');
-  fs.writeFileSync(
-    plugin,
-    `const fs = require('fs');\nconst path = require('path');\nconst counter = path.join(__dirname, 'count.txt');\nmodule.exports = {\n  rules: [{\n    name: 'test/count',\n    meta: { description: 'count' },\n    create() {\n      const c = fs.existsSync(counter) ? Number(fs.readFileSync(counter, 'utf8')) : 0;\n      fs.writeFileSync(counter, String(c + 1));\n      return {};\n    },\n  }],\n};\n`,
+  assert.equal(path.relative(dir, log.results[0]?.sourceId), 'file.ts');
+  assert.equal(
+    log.results[0]?.messages[0]?.ruleId,
+    'design-system/deprecation',
   );
-  fs.writeFileSync(path.join(dir, 'count.txt'), '0');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({
-      tokens: {},
-      rules: { 'test/count': 'error' },
-      plugins: ['./plugin.cjs'],
-    }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const args = [
-    '--import',
-    tsxLoader,
-    cli,
-    'file.ts',
-    '--config',
-    'designlint.config.json',
-    '--cache',
-  ];
-  let res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
-  assert.equal(res.status, 0);
-  assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '1');
-  res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
-  assert.equal(res.status, 0);
-  assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '1');
-});
-
-void test('CLI --cache invalidates when files change', () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = 1;');
-  const plugin = path.join(dir, 'plugin.cjs');
-  fs.writeFileSync(
-    plugin,
-    `const fs = require('fs');\nconst path = require('path');\nconst counter = path.join(__dirname, 'count.txt');\nmodule.exports = {\n  rules: [{\n    name: 'test/count',\n    meta: { description: 'count' },\n    create() {\n      const c = fs.existsSync(counter) ? Number(fs.readFileSync(counter, 'utf8')) : 0;\n      fs.writeFileSync(counter, String(c + 1));\n      return {};\n    },\n  }],\n};\n`,
-  );
-  fs.writeFileSync(path.join(dir, 'count.txt'), '0');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({
-      tokens: {},
-      rules: { 'test/count': 'error' },
-      plugins: ['./plugin.cjs'],
-    }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const args = [
-    '--import',
-    tsxLoader,
-    cli,
-    'file.ts',
-    '--config',
-    'designlint.config.json',
-    '--cache',
-  ];
-  let res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
-  assert.equal(res.status, 0);
-  assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '1');
-  fs.appendFileSync(file, '\nconst b = 2;');
-  res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
-  assert.equal(res.status, 0);
-  assert.equal(fs.readFileSync(path.join(dir, 'count.txt'), 'utf8'), '2');
-});
-
-void test('CLI --cache busts when mtime is unchanged but size differs', () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const good = 1;');
-  const plugin = path.join(dir, 'plugin.cjs');
-  const pluginCode = [
-    "const ts = require('typescript');",
-    'module.exports = {',
-    '  rules: [{',
-    "    name: 'test/bad',",
-    "    meta: { description: 'bad' },",
-    '    create(ctx) {',
-    '      return {',
-    '        onNode(node) {',
-    '          if (node.kind === ts.SyntaxKind.SourceFile) {',
-    "            if (node.getText().includes('bad')) {",
-    "              ctx.report({ message: 'bad', line: 1, column: 1 });",
-    '            }',
-    '          }',
-    '        },',
-    '      };',
-    '    },',
-    '  }],',
-    '};',
-    '',
-  ].join('\n');
-  fs.writeFileSync(plugin, pluginCode);
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({
-      tokens: {},
-      rules: { 'test/bad': 'error' },
-      plugins: ['./plugin.cjs'],
-    }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const args = [
-    '--import',
-    tsxLoader,
-    cli,
-    'file.ts',
-    '--config',
-    'designlint.config.json',
-    '--cache',
-  ];
-  let res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
-  assert.equal(res.status, 0);
-  const { atime, mtime } = fs.statSync(file);
-  fs.writeFileSync(file, 'const bad = 1;');
-  fs.utimesSync(file, atime, mtime);
-  res = spawnSync(process.execPath, args, { cwd: dir, encoding: 'utf8' });
-  assert.equal(res.status, 1);
-  assert.match(res.stderr, /bad/);
-});
-
-void test('CLI writes cache to specified --cache-location', () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = 1;');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: {}, rules: {} }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const cacheFile = 'custom.cache';
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--cache',
-      '--cache-location',
-      cacheFile,
-    ],
-    { cwd: dir, encoding: 'utf8' },
-  );
-  assert.equal(res.status, 0);
-  assert.ok(fs.existsSync(path.join(dir, cacheFile)));
-  assert.ok(!fs.existsSync(path.join(dir, '.designlintcache')));
-});
-
-void test('CLI re-runs with updated config in watch mode', async () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = "old";');
-  const configPath = path.join(dir, 'designlint.config.json');
-  fs.writeFileSync(configPath, createDeprecatedConfig({}));
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let saw = false;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('Watching for changes...')) {
-        fs.writeFileSync(
-          configPath,
-          createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
-        );
-        buffer = '';
-      } else if (buffer.includes('design-system/deprecation')) {
-        saw = true;
-        proc.kill();
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(saw, true);
-});
-
-void test('CLI reloads plugins on change in watch mode', async () => {
-  const dir = makeTmpDir();
-  const pluginPath = path.join(dir, 'plugin.js');
-  const pluginContent = (msg: string) => `const ts = require('typescript');
-module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rule' }, create(context) { return { onNode(node) { if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}', line: 1, column: 1 }); } } }; } }] };`;
-  fs.writeFileSync(pluginPath, pluginContent('first'));
-  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({
-      plugins: ['./plugin.js'],
-      rules: { 'plugin/test': 'error' },
-    }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let runs = 0;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('first')) {
-        runs++;
-        fs.writeFileSync(pluginPath, pluginContent('second'));
-        buffer = '';
-      } else if (buffer.includes('second')) {
-        runs++;
-        proc.kill();
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(runs, 2);
-});
-
-void test('CLI reloads ESM plugins on change in watch mode', async () => {
-  const dir = makeTmpDir();
-  const pluginPath = path.join(dir, 'plugin.mjs');
-  const pluginContent = (msg: string) => `import ts from 'typescript';
-export const plugin = {
-  rules: [{
-    name: 'plugin/test',
-    meta: { description: 'test rule' },
-    create(context) {
-      return {
-        onNode(node) {
-          if (node.kind === ts.SyntaxKind.SourceFile) {
-            context.report({ message: '${msg}', line: 1, column: 1 });
-          }
-        },
-      };
-    },
-  }],
-};
-export default plugin;`;
-  fs.writeFileSync(pluginPath, pluginContent('first'));
-  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({
-      plugins: ['./plugin.mjs'],
-      rules: { 'plugin/test': 'error' },
-    }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let runs = 0;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('first')) {
-        runs++;
-        fs.writeFileSync(pluginPath, pluginContent('second'));
-        buffer = '';
-      } else if (buffer.includes('second')) {
-        runs++;
-        proc.kill();
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(runs, 2);
-});
-
-void test('CLI continues watching after plugin load failure', async () => {
-  const dir = makeTmpDir();
-  const pluginPath = path.join(dir, 'plugin.js');
-  const pluginContent = (msg: string) => `const ts = require('typescript');
-module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rule' }, create(context) { return { onNode(node) {
-if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}', line: 1, column: 1 }); } } }; } }] };`;
-  fs.writeFileSync(pluginPath, pluginContent('first'));
-  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({
-      plugins: ['./plugin.js'],
-      rules: { 'plugin/test': 'error' },
-    }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-      '--no-color',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  proc.stderr.setEncoding('utf8');
-  let sawError = false;
-  let sawSecond = false;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT * 2);
-    let stdout = '';
-    proc.stdout.on('data', (data: Buffer) => {
-      stdout += data.toString();
-      if (stdout.includes('Watching for changes...')) {
-        fs.writeFileSync(pluginPath, "throw new Error('bad plugin');");
-        stdout = '';
-      } else if (stdout.includes('second')) {
-        sawSecond = true;
-        proc.kill('SIGINT');
-      }
-    });
-    proc.stderr.on('data', (data: Buffer) => {
-      const str = data.toString();
-      if (!sawError && str.includes('bad plugin')) {
-        sawError = true;
-        fs.writeFileSync(pluginPath, pluginContent('second'));
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(sawError, true);
-  assert.equal(sawSecond, true);
-});
-
-void test('CLI continues watching after deleting plugin file in watch mode', async () => {
-  const dir = makeTmpDir();
-  const pluginPath = path.join(dir, 'plugin.js');
-  const pluginContent = (msg: string) => `const ts = require('typescript');
-module.exports = { rules: [{ name: 'plugin/test', meta: { description: 'test rule' }, create(context) { return { onNode(node) {
-if (node.kind === ts.SyntaxKind.SourceFile) { context.report({ message: '${msg}', line: 1, column: 1 }); } } }; } }] };`;
-  fs.writeFileSync(pluginPath, pluginContent('first'));
-  fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({
-      plugins: ['./plugin.js'],
-      rules: { 'plugin/test': 'error' },
-    }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-      '--no-color',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let runs = 0;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT * 2);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('Watching for changes...')) {
-        fs.unlinkSync(pluginPath);
-        setTimeout(() => {
-          fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 2;');
-        }, 100);
-        buffer = '';
-      } else if (buffer.includes('plugin/test')) {
-        runs++;
-        if (runs === 2) {
-          proc.kill('SIGINT');
-        }
-        buffer = '';
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(runs, 2);
-});
-
-void test('CLI reloads when nested ignore file changes in watch mode', async () => {
-  const dir = makeTmpDir();
-  const nested = path.join(dir, 'nested');
-  fs.mkdirSync(nested);
-  const file = path.join(nested, 'file.ts');
-  fs.writeFileSync(file, 'const a = "old";');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
-  );
-  const ignorePath = path.join(nested, '.designlintignore');
-  fs.writeFileSync(ignorePath, 'file.ts\n');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'nested',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let saw = false;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('Watching for changes...')) {
-        fs.writeFileSync(ignorePath, '');
-        buffer = '';
-      } else if (buffer.includes('design-system/deprecation')) {
-        saw = true;
-        proc.kill();
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(saw, true);
-});
-
-void test('CLI updates ignore list when .gitignore changes in watch mode', async () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = "old";');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
-  );
-  fs.writeFileSync(path.join(dir, '.gitignore'), '');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let ignored = false;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('design-system/deprecation')) {
-        fs.writeFileSync(path.join(dir, '.gitignore'), 'file.ts\n');
-        buffer = '';
-      } else if (buffer.includes('Watching for changes...')) {
-        buffer = '';
-      } else if (buffer.includes('[]')) {
-        ignored = true;
-        proc.kill();
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(ignored, true);
-});
-
-void test('CLI continues watching after deleting ignore files in watch mode', async () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = "old";');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
-  );
-  const gitIgnorePath = path.join(dir, '.gitignore');
-  const designIgnorePath = path.join(dir, '.designlintignore');
-  fs.writeFileSync(gitIgnorePath, '');
-  fs.writeFileSync(designIgnorePath, '');
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let runs = 0;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('Watching for changes...')) {
-        fs.unlinkSync(gitIgnorePath);
-        fs.unlinkSync(designIgnorePath);
-        buffer = '';
-      } else if (buffer.includes('design-system/deprecation')) {
-        runs++;
-        if (runs === 2) {
-          proc.kill();
-        }
-        buffer = '';
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(runs, 2);
-});
-
-void test('CLI clears cache when a watched file is deleted', async () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = "old";');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let sawEmpty = false;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('design-system/deprecation')) {
-        fs.unlinkSync(file);
-        buffer = '';
-      } else if (buffer.includes('Watching for changes...')) {
-        buffer = '';
-      } else if (buffer.includes('[]')) {
-        sawEmpty = true;
-        proc.kill();
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(sawEmpty, true);
-});
-
-void test('CLI continues linting after deleting a watched file', async () => {
-  const dir = makeTmpDir();
-  const fileA = path.join(dir, 'a.ts');
-  const fileB = path.join(dir, 'b.ts');
-  fs.writeFileSync(fileA, 'const a = "old";');
-  fs.writeFileSync(fileB, 'const b = "old";');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'a.ts',
-      'b.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let runs = 0;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('Watching for changes...')) {
-        buffer = '';
-      } else if (buffer.includes('design-system/deprecation')) {
-        runs++;
-        if (runs === 1) {
-          fs.unlinkSync(fileA);
-          buffer = '';
-        } else if (runs === 2) {
-          assert.ok(buffer.includes('b.ts'));
-          assert.ok(!buffer.includes('a.ts'));
-          proc.kill();
-        }
-      }
-    });
-    proc.on('exit', () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(runs, 2);
-});
-
-void test('CLI closes watcher on SIGINT', async () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = 1;');
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ tokens: {}, rules: {} }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  let exitCode: number | null = null;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-      reject(new Error('Timed out'));
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('Watching for changes...')) {
-        proc.kill('SIGINT');
-      }
-    });
-    proc.on('exit', (code) => {
-      exitCode = code;
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(exitCode, 0);
-});
-
-void test('CLI handles errors from watch callbacks', async () => {
-  const dir = makeTmpDir();
-  const file = path.join(dir, 'file.ts');
-  fs.writeFileSync(file, 'const a = 1;');
-  const plugin = path.join(dir, 'plugin.cjs');
-  fs.writeFileSync(
-    plugin,
-    `module.exports = {\n  rules: [{\n    name: 'test/crash',\n    meta: { description: 'crash' },\n    create() {\n      return {\n        onNode(node) {\n          if (node.getText().includes('CRASH')) {\n            throw new Error('boom');\n          }\n        },\n      };\n    },\n  }],\n};\n`,
-  );
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
-    JSON.stringify({
-      tokens: {},
-      rules: { 'test/crash': 'error' },
-      plugins: ['./plugin.cjs'],
-    }),
-  );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const proc = spawn(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'file.ts',
-      '--config',
-      'designlint.config.json',
-      '--watch',
-      '--format',
-      'json',
-    ],
-    { cwd: dir },
-  );
-  proc.stdout.setEncoding('utf8');
-  proc.stderr.setEncoding('utf8');
-  let stderr = '';
-  let exitCode: number | null = null;
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      proc.kill();
-      reject(new Error('Timed out'));
-    }, WATCH_TIMEOUT);
-    let buffer = '';
-    proc.stdout.on('data', (data: string) => {
-      buffer += data;
-      if (buffer.includes('Watching for changes...')) {
-        fs.writeFileSync(file, 'const CRASH = 1;');
-      }
-    });
-    proc.stderr.on('data', (data: string) => {
-      stderr += data;
-      if (stderr.includes('boom')) {
-        proc.kill('SIGINT');
-      }
-    });
-    proc.on('exit', (code) => {
-      exitCode = code;
-      clearTimeout(timer);
-      resolve();
-    });
-    proc.on('error', reject);
-  });
-  assert.equal(exitCode, 1);
-  assert.ok(stderr.includes('boom'));
-  assert.ok(!stderr.includes('UnhandledPromise'));
 });

@@ -29,9 +29,9 @@
     "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
     "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
-    "test": "tsx --test tests/**/*.test.ts",
-    "test:watch": "tsx --watch tests/**/*.test.ts",
-    "test:coverage": "c8 --reporter=lcov --reporter=text --reporter=json-summary tsx --test tests/**/*.test.ts",
+    "test": "tsx --test 'tests/**/*.test.ts'",
+    "test:watch": "tsx --watch 'tests/**/*.test.ts'",
+    "test:coverage": "c8 --reporter=lcov --reporter=text --reporter=json-summary tsx --test 'tests/**/*.test.ts'",
     "changeset": "changeset",
     "release": "npm run build && changeset publish",
     "docs:dev": "vitepress dev docs",
@@ -107,7 +107,10 @@
     "branches": 75,
     "functions": 75,
     "lines": 80,
-    "statements": 80
+    "statements": 80,
+    "include": [
+      "src/**/*.ts"
+    ]
   },
   "types": "dist/index.d.ts",
   "files": [

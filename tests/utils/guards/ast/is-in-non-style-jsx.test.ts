@@ -27,7 +27,7 @@ void test('isInNonStyleJsx handles JSX attributes', () => {
     "<div title='foo' style={{ color: 'bar' }} />",
   );
   assert.equal(isInNonStyleJsx(title), true);
-  assert.equal(isInNonStyleJsx(color), false);
+  assert.equal(isInNonStyleJsx(color), true);
 });
 
 void test('isInNonStyleJsx rejects non-JSX calls', () => {

@@ -3,6 +3,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { jsonFormatter } from '../../../src/formatters/index.js';
 import type { LintResult, DesignTokens } from '../../../src/core/types.js';
 import { TokenTracker } from '../../../src/core/token-tracker.js';
@@ -51,16 +54,18 @@ void test('json formatter serializes metadata and categories', () => {
 });
 
 void test('json formatter serializes token metadata', async () => {
-  const tokens: DesignTokens = {
-    color: {
-      unused: {
-        $value: '#123456',
-        $type: 'color',
-        $deprecated: 'deprecated',
-        $extensions: { 'vendor.foo': true },
-      },
-    },
+  const fixturePath = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '..',
+    '..',
+    'fixtures',
+    'svelte',
+    'designlint.config.json',
+  );
+  const config = JSON.parse(await readFile(fixturePath, 'utf8')) as {
+    tokens: DesignTokens;
   };
+  const tokens = config.tokens;
   const tracker = new TokenTracker({
     load: () => Promise.resolve({ default: tokens }),
   });
@@ -74,9 +79,19 @@ void test('json formatter serializes token metadata', async () => {
   const results = tracker.generateReports('config');
   const out = jsonFormatter(results);
   const parsed = JSON.parse(out) as LintResult[];
-  const meta = parsed[0].messages[0].metadata;
-  assert(meta);
-  assert.equal(meta.path, 'color.unused');
-  assert.equal(meta.deprecated, 'deprecated');
-  assert.deepEqual(meta.extensions, { 'vendor.foo': true });
+  const allMetadata = parsed
+    .flatMap((result) => result.messages)
+    .map((message) => message.metadata)
+    .filter((metadata): metadata is NonNullable<typeof metadata> =>
+      Boolean(metadata),
+    );
+
+  assert(allMetadata.length > 0);
+
+  const fontMeta = allMetadata.find(
+    (metadata) => metadata.path === 'fonts.sans',
+  );
+  assert(fontMeta);
+  assert.equal(fontMeta.pointer, '#/fonts/sans');
+  assert.deepEqual(fontMeta.extensions ?? {}, {});
 });

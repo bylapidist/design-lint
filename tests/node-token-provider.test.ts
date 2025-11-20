@@ -17,10 +17,13 @@ const tokens = {
   },
 };
 
-const primitiveTokens = {
+const primitiveTokens: DesignTokens = {
+  $version: '1.0.0',
   spacing: {
-    $type: 'dimension',
-    small: '4px',
+    small: {
+      $type: 'dimension',
+      $value: { value: 4, unit: 'px', dimensionType: 'length' },
+    },
   },
 };
 

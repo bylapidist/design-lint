@@ -12,10 +12,16 @@
       }
     },
     "spacing": {
-      "sm": { "$type": "dimension", "$value": { "value": 4, "unit": "px" } }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "value": 4, "unit": "px", "dimensionType": "length" }
+      }
     },
     "fontSizes": {
-      "sm": { "$type": "dimension", "$value": { "value": 12, "unit": "px" } }
+      "sm": {
+        "$type": "dimension",
+        "$value": { "value": 12, "unit": "px", "dimensionType": "length" }
+      }
     },
     "fonts": {
       "sans": { "$type": "fontFamily", "$value": "Arial" }

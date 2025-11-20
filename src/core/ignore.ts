@@ -34,9 +34,11 @@ export async function loadIgnore(
         path.resolve(process.cwd(), file),
         'utf8',
       );
-      ig.add(content);
-      const lines = content
+      const normalizedLines = content
         .split(/\r?\n/)
+        .map((line) => line.replace(/\\(?=[^#!\s])/g, '/'));
+      ig.add(normalizedLines.join('\n'));
+      const lines = normalizedLines
         .map((l) => l.trim())
         .filter((l) => l && !l.startsWith('#'));
       patterns.push(...lines);

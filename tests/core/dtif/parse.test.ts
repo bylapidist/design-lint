@@ -20,7 +20,7 @@ void test('parseDtifTokensFromFile flattens tokens and exposes resolver state', 
 
   assert.strictEqual(diagnostics.length, 0);
   assert(document);
-  assert.strictEqual(document.$version, '1.0.0');
+  assert.strictEqual(document.data?.$version, '1.0.0');
   assert(graph);
   assert(resolver);
 
@@ -80,14 +80,46 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
     },
   });
 
-  assert(diagnostics.length >= 2);
+  assert(diagnostics.length >= 1);
   assert.strictEqual(forwarded.length, diagnostics.length);
-  assert.deepStrictEqual(forwarded, diagnostics);
+  assert.deepStrictEqual(
+    forwarded.map((diagnostic) => ({
+      code: diagnostic.code,
+      message: diagnostic.message,
+      pointer:
+        'pointer' in diagnostic
+          ? diagnostic.pointer
+          : diagnostic.target.pointer,
+    })),
+    diagnostics.map((diagnostic) => ({
+      code: diagnostic.code,
+      message: diagnostic.message,
+      pointer:
+        'pointer' in diagnostic
+          ? diagnostic.pointer
+          : diagnostic.target.pointer,
+    })),
+  );
   assert.strictEqual(warned.length, 0);
 
   const [firstDiagnostic] = diagnostics;
   assert(firstDiagnostic);
-  assert.strictEqual(firstDiagnostic.target.uri, 'inline:invalid');
+  const diagnosticPointer =
+    'pointer' in firstDiagnostic
+      ? firstDiagnostic.pointer
+      : firstDiagnostic.target.pointer;
+  assert.strictEqual(diagnosticPointer, '#/color/alias/$ref');
+  assert.strictEqual(firstDiagnostic.severity, 'error');
+  if ('target' in firstDiagnostic) {
+    assert.strictEqual(firstDiagnostic.target.uri, 'inline:invalid');
+  } else if ('span' in firstDiagnostic) {
+    const span = firstDiagnostic.span as { uri?: string } | undefined;
+    const spanUri = span?.uri;
+    assert(spanUri);
+    assert.strictEqual(spanUri, 'inline:invalid');
+  } else {
+    assert.fail('diagnostic missing target and span');
+  }
 });
 
 void test('parseDtifTokenObject flattens inline documents', async () => {

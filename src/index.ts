@@ -4,6 +4,7 @@ import {
   setupLinter,
   type Config,
   type Environment,
+  type DocumentSource,
 } from './core/index.js';
 
 export * from './core/index.js';
@@ -18,13 +19,19 @@ export {
 } from './core/token-registry.js';
 export * from './output/index.js';
 
-export function createLinter(config: Config, env: Environment): Linter {
-  return setupLinter(config, env).linter;
+type EnvInput = Environment | DocumentSource;
+
+function toEnvironment(env: EnvInput): Environment {
+  if ('documentSource' in env) {
+    return env;
+  }
+  return { documentSource: env };
 }
 
-export function createLintService(
-  config: Config,
-  env: Environment,
-): LintService {
-  return setupLinter(config, env).service;
+export function createLinter(config: Config, env: EnvInput): Linter {
+  return setupLinter(config, toEnvironment(env)).linter;
+}
+
+export function createLintService(config: Config, env: EnvInput): LintService {
+  return setupLinter(config, toEnvironment(env)).service;
 }

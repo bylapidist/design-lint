@@ -9,37 +9,59 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 const tsxLoader = require.resolve('tsx/esm');
 
-const builtInRules = [
+const baselineRules = [
   'design-system/component-usage',
   'design-system/deprecation',
   'design-token/colors',
   'design-token/spacing',
   'design-token/font-size',
   'design-token/font-family',
-  'design-system/no-unused-tokens',
 ];
 
 interface Fixture {
   name: string;
   files: string[];
+  rules: string[];
 }
 
 const fixtures: Fixture[] = [
   {
     name: 'react-vite-css-modules',
     files: ['src/App.module.css', 'src/App.tsx', 'designlint.config.json'],
+    rules: [...baselineRules, 'design-system/no-unused-tokens'],
   },
   {
     name: 'svelte',
-    files: ['src/App.module.css', 'src/App.svelte', 'src/Multi.svelte'],
+    files: [
+      'src/App.module.css',
+      'src/App.svelte',
+      'src/ControlFlow.svelte',
+      'src/Directive.svelte',
+    ],
+    rules: baselineRules,
   },
   {
     name: 'vue',
     files: ['src/App.module.css', 'src/App.vue', 'src/Multi.vue'],
+    rules: baselineRules.filter(
+      (rule) => rule !== 'design-system/component-usage',
+    ),
   },
-  { name: 'nextjs', files: ['styles/Home.module.css', 'pages/index.tsx'] },
-  { name: 'nuxt', files: ['pages/index.module.css', 'pages/index.vue'] },
-  { name: 'remix', files: ['app/styles.module.css', 'app/routes/_index.tsx'] },
+  {
+    name: 'nextjs',
+    files: ['styles/Home.module.css', 'pages/index.tsx'],
+    rules: baselineRules,
+  },
+  {
+    name: 'nuxt',
+    files: ['pages/index.module.css', 'pages/index.vue'],
+    rules: baselineRules,
+  },
+  {
+    name: 'remix',
+    files: ['app/styles.module.css', 'app/routes/_index.tsx'],
+    rules: baselineRules,
+  },
   {
     name: 'web-components',
     files: [
@@ -50,10 +72,11 @@ const fixtures: Fixture[] = [
       'src/component.mts',
       'src/component.cts',
     ],
+    rules: baselineRules,
   },
 ];
 
-for (const { name, files } of fixtures) {
+for (const { name, files, rules } of fixtures) {
   void test(`CLI reports built-in rule violations in ${name} fixture`, () => {
     const fixture = path.join(__dirname, 'fixtures', name);
     const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
@@ -89,6 +112,6 @@ for (const { name, files } of fixtures) {
     const ruleSet = new Set(
       results.flatMap((r) => r.messages.map((m) => m.ruleId)),
     );
-    assert.deepEqual(Array.from(ruleSet).sort(), builtInRules.slice().sort());
+    assert.deepEqual(Array.from(ruleSet).sort(), rules.slice().sort());
   });
 }

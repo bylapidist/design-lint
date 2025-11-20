@@ -7,6 +7,8 @@ import { loadConfig } from '../src/config/loader.js';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+
 void test('lints large projects without crashing', async () => {
   const dir = path.join(__dirname, 'fixtures', 'large-project');
   const config = await loadConfig(dir);
