@@ -1,38 +1,22 @@
 import fs from 'node:fs';
+import { CacheManager } from '../../src/core/cache-manager.js';
 
-const fsp = fs.promises;
-interface FspLike {
-  readFile: typeof fsp.readFile;
-  stat: typeof fsp.stat;
-}
-const fspAny: FspLike = fsp;
-const origRead = fspAny.readFile;
-const origStat = fspAny.stat;
+const origProcess = CacheManager.prototype.processDocument;
 let active = 0;
 let max = 0;
-const delay = () => new Promise((r) => setTimeout(r, 10));
-const trackedRead: typeof origRead = async (...args) => {
+
+CacheManager.prototype.processDocument = async function processDocument(
+  ...args
+) {
   active++;
   max = Math.max(max, active);
-  await delay();
   try {
-    return await origRead(...args);
+    return await origProcess.apply(this, args);
   } finally {
     active--;
   }
 };
-const trackedStat: typeof origStat = async (...args) => {
-  active++;
-  max = Math.max(max, active);
-  await delay();
-  try {
-    return await origStat(...args);
-  } finally {
-    active--;
-  }
-};
-fspAny.readFile = trackedRead;
-fspAny.stat = trackedStat;
+
 process.on('exit', () => {
   const p = process.env.CONCURRENCY_OUTPUT;
   if (p) fs.writeFileSync(p, String(max), 'utf8');

@@ -27,7 +27,7 @@ function createDeprecatedTokens() {
     old: {
       $type: 'color',
       $value: srgb([0, 0, 0]),
-      $deprecated: { $ref: '#/new' },
+      $deprecated: { $replacement: '#/new' },
     },
     new: {
       $type: 'color',
@@ -503,7 +503,8 @@ void test('CLI surfaces token parsing diagnostics', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /bad\.tokens\.json:1:/);
+  assert.match(res.stderr, /bad\.tokens\.json/);
+  assert.match(res.stderr, /line 1, column/);
   assert.match(res.stderr, /\^/);
 });
 
@@ -629,6 +630,7 @@ void test('CLI loads formatter from module path', () => {
   const formatterPath = path.join(
     __dirname,
     'formatters',
+    'helpers',
     'fixtures',
     'custom-formatter.ts',
   );
@@ -735,7 +737,7 @@ void test('CLI reports plugin load errors', () => {
     { encoding: 'utf8', cwd: dir },
   );
   assert.notEqual(res.status, 0);
-  assert.ok(res.stderr.includes('Failed to load plugin'));
+  assert.match(res.stderr, /Plugin not found/);
 });
 
 void test('CLI ignores common directories by default', () => {
@@ -753,7 +755,6 @@ void test('CLI ignores common directories by default', () => {
     path.join(dir, 'designlint.config.json'),
     createDeprecatedConfig({ 'design-system/deprecation': 'error' }),
   );
-  const parent = path.dirname(dir);
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
     process.execPath,
@@ -761,13 +762,15 @@ void test('CLI ignores common directories by default', () => {
       '--import',
       tsxLoader,
       cli,
-      path.basename(dir),
+      'src',
+      'node_modules',
+      'dist',
       '--config',
-      path.join(path.basename(dir), 'designlint.config.json'),
+      'designlint.config.json',
       '--format',
       'json',
     ],
-    { encoding: 'utf8', cwd: parent },
+    { encoding: 'utf8', cwd: dir },
   );
   interface Result {
     sourceId: string;
@@ -1018,11 +1021,13 @@ void test('CLI --report outputs JSON log', () => {
   assert.ok(fs.existsSync(report));
   const parsed: unknown = JSON.parse(readWhenReady(report));
   const log = parsed as {
-    sourceId: string;
-    messages: { ruleId: string }[];
-  }[];
-  assert.equal(path.relative(dir, log[0]?.sourceId), 'file.ts');
-  assert.equal(log[0]?.messages[0]?.ruleId, 'design-system/deprecation');
+    results: { sourceId: string; messages: { ruleId: string }[] }[];
+  };
+  assert.equal(path.relative(dir, log.results[0]?.sourceId), 'file.ts');
+  assert.equal(
+    log.results[0]?.messages[0]?.ruleId,
+    'design-system/deprecation',
+  );
 });
 
 void test('CLI re-runs on file change in watch mode', async () => {
