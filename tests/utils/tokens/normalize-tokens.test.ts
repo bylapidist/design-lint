@@ -64,7 +64,12 @@ void test('normalizes theme records without shared token keys when metadata pres
     },
     dark: {
       $version: '1.0.0',
-      space: { medium: { $type: 'dimension', $value: '1rem' } },
+      space: {
+        medium: {
+          $type: 'dimension',
+          $value: { value: 1, unit: 'rem', dimensionType: 'length' },
+        },
+      },
     },
   });
   assert('light' in tokens);
@@ -74,8 +79,14 @@ void test('normalizes theme records without shared token keys when metadata pres
     color: { primary: { $value: { components: number[] } } };
   };
   assert.deepEqual(light.color.primary.$value.components, [0, 0, 0]);
-  const dark = tokens.dark as { space: { medium: { $value: string } } };
-  assert.equal(dark.space.medium.$value, '1rem');
+  const dark = tokens.dark as {
+    space: { medium: { $value: { value: number; unit: string; dimensionType: string } } };
+  };
+  assert.deepEqual(dark.space.medium.$value, {
+    value: 1,
+    unit: 'rem',
+    dimensionType: 'length',
+  });
 });
 
 void test('throws on invalid tokens', async () => {

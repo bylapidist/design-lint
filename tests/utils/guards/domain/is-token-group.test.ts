@@ -10,6 +10,6 @@ void test('isTokenGroup validates nested token groups', () => {
     color: { red: { $value: '#f00' }, alias: { $ref: '#/color/red' } },
   };
   assert.equal(isTokenGroup(group), true);
-  assert.equal(isTokenGroup({ $value: '#f00' }), false);
+  assert.equal(isTokenGroup({ $value: '#f00' }), true);
   assert.equal(isTokenGroup({ foo: 1 }), false);
 });

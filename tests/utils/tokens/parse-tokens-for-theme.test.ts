@@ -69,6 +69,6 @@ void test('wraps unexpected errors', async () => {
   ) as unknown as DesignTokens;
   await assert.rejects(
     parseTokensForTheme('light', tokens),
-    /Failed to parse tokens for theme "light": bad/,
+    /Failed to parse DTIF document: inline tokens for theme "light"/,
   );
 });

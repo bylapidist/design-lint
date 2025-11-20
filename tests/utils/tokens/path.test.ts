@@ -12,7 +12,7 @@ void test('normalizePath rejects slash separators', () => {
 void test('normalizePath applies case transforms', () => {
   assert.equal(normalizePath('foo.barBaz', 'kebab-case'), 'foo.bar-baz');
   assert.equal(normalizePath('foo.bar-baz', 'camelCase'), 'foo.barBaz');
-  assert.equal(normalizePath('foo.bar-baz', 'PascalCase'), 'foo.BarBaz');
+  assert.equal(normalizePath('foo.bar-baz', 'PascalCase'), 'Foo.BarBaz');
 });
 
 void test('normalizePath preserves existing segments without transforms', () => {

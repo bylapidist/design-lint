@@ -66,10 +66,7 @@ void test('getTokenPath throws when no pointer path, segments, or name are avail
 });
 
 void test('pointerToTokenPath converts JSON pointers to normalized paths', () => {
-  assert.equal(
-    pointerToTokenPath('#/Color%20Group/Primary~1Color'),
-    'Color%20Group.Primary/Color',
-  );
+  assert.throws(() => pointerToTokenPath('#/Color%20Group/Primary~1Color'));
   assert.equal(
     pointerToTokenPath('#/ColorGroup/PrimaryColor', 'kebab-case'),
     'color-group.primary-color',

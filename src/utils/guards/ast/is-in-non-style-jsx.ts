@@ -36,8 +36,9 @@ import { isHyperscriptCall } from './is-hyperscript-call.js';
  * @returns `true` if the node is inside non-style JSX (or JSX-like code), `false` otherwise.
  */
 export function isInNonStyleJsx(node: Node): boolean {
+  if (!node.parent) return false;
   // Walk up the AST starting from the node's parent until we reach the SourceFile (top of the AST)
-  for (let curr: Node = node.parent; !isSourceFile(curr); curr = curr.parent) {
+  for (let curr: Node = node.parent; curr && !isSourceFile(curr); curr = curr.parent) {
     // Check if we're in a JSX attribute: e.g., <div style={...} />
     // If it's a style attribute, return false (we are inside inline styles)
     if (isJsxAttribute(curr)) return !isStyleName(curr.name);
@@ -48,7 +49,8 @@ export function isInNonStyleJsx(node: Node): boolean {
       if (isStyleName(curr.name)) return false;
 
       // Climb further up to see if this object lives inside JSX or createElement/h() calls
-      for (let p: Node = curr.parent; !isSourceFile(p); p = p.parent) {
+      let parent = curr.parent;
+      for (let p: Node | undefined = parent; p && !isSourceFile(p); p = p.parent) {
         // If we hit another property named "style" higher up, we're still inside styles -> exclude
         if (isPropertyAssignment(p) && isStyleName(p.name)) return false;
 

@@ -15,6 +15,8 @@ import type { LintResult } from '../src/core/types.js';
 const tsxLoader = createRequire(import.meta.url).resolve('tsx/esm');
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const WATCH_TIMEOUT = 2000;
+const cliTest = (name: string, fn: Parameters<typeof test>[1]) =>
+  test(name, { timeout: 60_000 }, fn);
 
 const srgb = (components: [number, number, number]) => ({
   colorSpace: 'srgb',
@@ -43,7 +45,7 @@ function createDeprecatedConfig(rules: Record<string, unknown>) {
   });
 }
 
-void test('CLI aborts on unsupported Node versions', async () => {
+void cliTest('CLI aborts on unsupported Node versions', async () => {
   const { run } = await import('../src/cli/index.js');
   const original = process.versions.node;
   Object.defineProperty(process.versions, 'node', { value: '21.0.0' });
@@ -61,7 +63,7 @@ void test('CLI aborts on unsupported Node versions', async () => {
   assert.match(out, /Node\.js v21\.0\.0 is not supported/);
 });
 
-void test('CLI forwards provided file targets to lint execution', () => {
+void cliTest('CLI forwards provided file targets to lint execution', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   fs.writeFileSync(
@@ -108,7 +110,7 @@ void test('CLI forwards provided file targets to lint execution', () => {
   assert.deepEqual(files, ['src/a.css']);
 });
 
-void test('CLI runs when executed via a symlink', () => {
+void cliTest('CLI runs when executed via a symlink', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   const link = path.join(dir, 'cli-link.ts');
@@ -122,7 +124,7 @@ void test('CLI runs when executed via a symlink', () => {
   assert.match(res.stdout, /Usage: design-lint/);
 });
 
-void test('init creates json config by default', () => {
+void cliTest('init creates json config by default', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   const res = spawnSync(
@@ -134,7 +136,7 @@ void test('init creates json config by default', () => {
   assert.ok(fs.existsSync(path.join(dir, 'designlint.config.json')));
 });
 
-void test('init detects TypeScript and creates ts config', () => {
+void cliTest('init detects TypeScript and creates ts config', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
@@ -150,7 +152,7 @@ void test('init detects TypeScript and creates ts config', () => {
   assert.ok(contents.includes('defineConfig'));
 });
 
-void test('--init-format overrides detection', () => {
+void cliTest('--init-format overrides detection', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{}');
@@ -163,7 +165,7 @@ void test('--init-format overrides detection', () => {
   assert.ok(fs.existsSync(path.join(dir, 'designlint.config.json')));
 });
 
-void test('--init-format supports all formats', () => {
+void cliTest('--init-format supports all formats', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const formats: readonly ['js', 'cjs', 'mjs', 'ts', 'mts', 'json'] = [
     'js',
@@ -185,7 +187,7 @@ void test('--init-format supports all formats', () => {
   }
 });
 
-void test('CLI expands glob patterns with braces', () => {
+void cliTest('CLI expands glob patterns with braces', () => {
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
@@ -206,7 +208,7 @@ void test('CLI expands glob patterns with braces', () => {
   assert.deepEqual(files, ['src/a.module.css', 'src/b.module.scss']);
 });
 
-void test('CLI exits non-zero on lint errors', () => {
+void cliTest('CLI exits non-zero on lint errors', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const result = spawnSync(
@@ -227,7 +229,7 @@ void test('CLI exits non-zero on lint errors', () => {
   assert.ok(result.stdout.includes('design-token/colors'));
 });
 
-void test('CLI warns when no files match', () => {
+void cliTest('CLI warns when no files match', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -250,7 +252,7 @@ void test('CLI warns when no files match', () => {
   assert.match(res.stderr, /No files matched/);
 });
 
-void test('--quiet suppresses "No files matched" warning', () => {
+void cliTest('--quiet suppresses "No files matched" warning', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -274,7 +276,7 @@ void test('--quiet suppresses "No files matched" warning', () => {
   assert.ok(!res.stderr.includes('No files matched'));
 });
 
-void test('CLI exits 0 when warnings are within --max-warnings', () => {
+void cliTest('CLI exits 0 when warnings are within --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(
@@ -301,7 +303,7 @@ void test('CLI exits 0 when warnings are within --max-warnings', () => {
   assert.equal(res.status, 0);
 });
 
-void test('CLI exits 0 when warnings equal --max-warnings', () => {
+void cliTest('CLI exits 0 when warnings equal --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -328,7 +330,7 @@ void test('CLI exits 0 when warnings equal --max-warnings', () => {
   assert.equal(res.status, 0);
 });
 
-void test('CLI exits 1 when warnings exceed --max-warnings', () => {
+void cliTest('CLI exits 1 when warnings exceed --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -355,7 +357,7 @@ void test('CLI exits 1 when warnings exceed --max-warnings', () => {
   assert.equal(res.status, 1);
 });
 
-void test('CLI errors on invalid --max-warnings', () => {
+void cliTest('CLI errors on invalid --max-warnings', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(
@@ -381,7 +383,7 @@ void test('CLI errors on invalid --max-warnings', () => {
   assert.ok(res.stderr.includes('Invalid value for --max-warnings'));
 });
 
-void test('CLI reports missing ignore file', () => {
+void cliTest('CLI reports missing ignore file', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(
@@ -407,7 +409,7 @@ void test('CLI reports missing ignore file', () => {
   assert.ok(res.stderr.includes('Ignore file not found'));
 });
 
-void test('CLI reports missing plugin', () => {
+void cliTest('CLI reports missing plugin', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   fs.writeFileSync(
@@ -431,7 +433,7 @@ void test('CLI reports missing plugin', () => {
   assert.ok(res.stderr.includes('Plugin not found'));
 });
 
-void test('CLI --fix applies fixes', () => {
+void cliTest('CLI --fix applies fixes', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -457,7 +459,7 @@ void test('CLI --fix applies fixes', () => {
   assert.equal(out, "const a = 'new';");
 });
 
-void test('CLI surfaces config load errors', () => {
+void cliTest('CLI surfaces config load errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{ invalid');
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
@@ -478,7 +480,7 @@ void test('CLI surfaces config load errors', () => {
   assert.ok(res.stderr.trim().length > 0);
 });
 
-void test('CLI surfaces token parsing diagnostics', () => {
+void cliTest('CLI surfaces token parsing diagnostics', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -508,7 +510,7 @@ void test('CLI surfaces token parsing diagnostics', () => {
   assert.match(res.stderr, /\^/);
 });
 
-void test('CLI surfaces output write errors', () => {
+void cliTest('CLI surfaces output write errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
@@ -528,7 +530,7 @@ void test('CLI surfaces output write errors', () => {
   assert.ok(res.stderr.includes('ENOENT'));
 });
 
-void test('CLI writes report to file with --output', () => {
+void cliTest('CLI writes report to file with --output', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(
@@ -558,7 +560,7 @@ void test('CLI writes report to file with --output', () => {
   assert.ok(report.includes('design-system/deprecation'));
 });
 
-void test('CLI --quiet suppresses stdout output', () => {
+void cliTest('CLI --quiet suppresses stdout output', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -580,7 +582,7 @@ void test('CLI --quiet suppresses stdout output', () => {
   assert.equal(res.stdout.trim(), '');
 });
 
-void test('CLI disables colors when stdout is not a TTY', () => {
+void cliTest('CLI disables colors when stdout is not a TTY', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -603,7 +605,7 @@ void test('CLI disables colors when stdout is not a TTY', () => {
   assert.ok(!/\x1b\[[0-9;]*m/.test(res.stdout));
 });
 
-void test('CLI reports unknown formatter', () => {
+void cliTest('CLI reports unknown formatter', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const res = spawnSync(
@@ -624,7 +626,7 @@ void test('CLI reports unknown formatter', () => {
   assert.ok(res.stderr.includes('Unknown formatter'));
 });
 
-void test('CLI loads formatter from module path', () => {
+void cliTest('CLI loads formatter from module path', () => {
   const fixture = path.join(__dirname, 'fixtures', 'sample');
   const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
   const formatterPath = path.join(
@@ -652,7 +654,7 @@ void test('CLI loads formatter from module path', () => {
   assert.ok(res.stdout.includes('custom:1'));
 });
 
-void test('CLI outputs SARIF reports', () => {
+void cliTest('CLI outputs SARIF reports', () => {
   const dir = makeTmpDir();
   try {
     fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
@@ -688,7 +690,7 @@ void test('CLI outputs SARIF reports', () => {
   }
 });
 
-void test('CLI loads external plugin rules', () => {
+void cliTest('CLI loads external plugin rules', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   const plugin = path.join(__dirname, 'fixtures', 'test-plugin.ts');
@@ -715,7 +717,7 @@ void test('CLI loads external plugin rules', () => {
   assert.ok(res.stdout.includes('plugin/test'));
 });
 
-void test('CLI reports plugin load errors', () => {
+void cliTest('CLI reports plugin load errors', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const badPlugin = path.join(dir, 'missing-plugin.js');
@@ -740,7 +742,7 @@ void test('CLI reports plugin load errors', () => {
   assert.match(res.stderr, /Plugin not found/);
 });
 
-void test('CLI ignores common directories by default', () => {
+void cliTest('CLI ignores common directories by default', () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -783,7 +785,7 @@ void test('CLI ignores common directories by default', () => {
   assert.deepEqual(files, ['src/file.ts']);
 });
 
-void test('.designlintignore can unignore paths via CLI', () => {
+void cliTest('.designlintignore can unignore paths via CLI', () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -831,7 +833,7 @@ void test('.designlintignore can unignore paths via CLI', () => {
   assert.deepEqual(files, ['node_modules/pkg/index.ts', 'src/file.ts']);
 });
 
-void test('CLI skips directories listed in .designlintignore', () => {
+void cliTest('CLI skips directories listed in .designlintignore', () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'file.ts'), 'const a = "old";');
@@ -872,7 +874,7 @@ void test('CLI skips directories listed in .designlintignore', () => {
   assert.deepEqual(files, ['src/file.ts']);
 });
 
-void test('CLI --ignore-path excludes files', () => {
+void cliTest('CLI --ignore-path excludes files', () => {
   const dir = makeTmpDir();
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'src', 'keep.ts'), 'const a = "old";');
@@ -911,7 +913,7 @@ void test('CLI --ignore-path excludes files', () => {
   assert.deepEqual(files, ['src/keep.ts']);
 });
 
-void test('CLI --concurrency limits parallel lint tasks', () => {
+void cliTest('CLI --concurrency limits parallel lint tasks', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
   const count = 10;
@@ -945,7 +947,7 @@ void test('CLI --concurrency limits parallel lint tasks', () => {
   assert.ok(max <= 2);
 });
 
-void test('CLI errors on invalid --concurrency', () => {
+void cliTest('CLI errors on invalid --concurrency', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = 1;');
   fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
@@ -968,7 +970,7 @@ void test('CLI errors on invalid --concurrency', () => {
   assert.ok(res.stderr.includes('Invalid value for --concurrency'));
 });
 
-void test('CLI plugin load errors include context and remediation', () => {
+void cliTest('CLI plugin load errors include context and remediation', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
@@ -993,7 +995,7 @@ void test('CLI plugin load errors include context and remediation', () => {
   assert.match(res.stderr, /Remediation:/);
 });
 
-void test('CLI --report outputs JSON log', () => {
+void cliTest('CLI --report outputs JSON log', () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), 'const a = "old";');
   fs.writeFileSync(

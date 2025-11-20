@@ -48,6 +48,9 @@ export class FileSource implements DocumentSource {
       .map(realpathIfExists)
       .filter((file) => {
         const rel = path.relative(cwd, file).replace(/\\/g, '/');
+        if (rel.startsWith('../') || rel === '..') {
+          return true;
+        }
         const normalized = rel || file.replace(/\\/g, '/');
         return !ig.ignores(normalized);
       });

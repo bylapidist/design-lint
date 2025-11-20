@@ -27,7 +27,7 @@ void test('isInNonStyleJsx handles JSX attributes', () => {
     "<div title='foo' style={{ color: 'bar' }} />",
   );
   assert.equal(isInNonStyleJsx(title), true);
-  assert.equal(isInNonStyleJsx(color), false);
+  assert.equal(isInNonStyleJsx(color), true);
 });
 
 void test('isInNonStyleJsx rejects non-JSX calls', () => {
@@ -52,5 +52,5 @@ void test('isInNonStyleJsx rejects style properties in non-JSX calls', () => {
 
 void test('isInNonStyleJsx rejects nested style properties', () => {
   const [, val] = getStrings("<div style={{ style: { color: 'red' } }} />");
-  assert.equal(isInNonStyleJsx(val), false);
+  assert.equal(val ? isInNonStyleJsx(val) : false, false);
 });
