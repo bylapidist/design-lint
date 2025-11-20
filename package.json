@@ -63,7 +63,7 @@
     "chalk": "5.6.2",
     "chokidar": "4.0.3",
     "color-name": "2.0.2",
-    "color-string": "2.1.2",
+    "color-string": "2.1.4",
     "commander": "14.0.2",
     "cosmiconfig": "9.0.0",
     "cosmiconfig-typescript-loader": "6.2.0",
