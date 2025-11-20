@@ -8,7 +8,7 @@ const srgb = (components: [number, number, number]) => ({
   components,
 });
 
-void test('getTokenCompletions returns token paths by theme', async () => {
+void test('getTokenCompletions returns token paths by theme', () => {
   const linter = initLinter(
     {
       tokens: {

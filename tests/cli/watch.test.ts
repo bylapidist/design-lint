@@ -52,6 +52,7 @@ class FakeWatcher
 
   async close(): Promise<void> {
     this.closed = true;
+    await Promise.resolve();
   }
 }
 
@@ -178,18 +179,22 @@ function createWatchHarness(t: TestContext) {
   const cacheProvider = {
     keys: async () => {
       cacheKeySweeps++;
+      await Promise.resolve();
       return ['cache-a', 'cache-b'];
     },
     remove: async (key: string) => {
       cacheRemovals.push(key);
+      await Promise.resolve();
     },
   };
 
   const ig = ignore().add('**/ignored/**');
   const lintCalls: string[][] = [];
   let nextIgnoreFiles = [ignoreFile];
-  let runLintImpl: (paths: string[]) => Promise<string[]> = async () =>
-    nextIgnoreFiles;
+  let runLintImpl: (paths: string[]) => Promise<string[]> = async () => {
+    await Promise.resolve();
+    return nextIgnoreFiles;
+  };
 
   const setNextIgnoreFiles = (files: string[]) => {
     nextIgnoreFiles = files;
@@ -243,14 +248,18 @@ function createWatchHarness(t: TestContext) {
     useColor: true,
   };
 
-  const exitMock = test.mock.method(process, 'exit', () => undefined as never);
+  const exitCodes: number[] = [];
+  const exitMock = test.mock.method(process, 'exit', (code?: number) => {
+    exitCodes.push(code ?? 0);
+    return undefined as never;
+  });
   t.after(() => {
     exitMock.mock.restore();
   });
 
   const start = async (deps?: Partial<WatchDependencies>) => {
     const resolvedDeps: WatchDependencies = {
-      loadConfig: deps?.loadConfig ?? (async () => config),
+      loadConfig: deps?.loadConfig ?? (() => Promise.resolve(config)),
       createNodeEnvironment:
         deps?.createNodeEnvironment ?? (() => ({ cacheProvider } as unknown)),
       createLinter: deps?.createLinter ?? (() => linterRef.current),
@@ -300,6 +309,7 @@ function createWatchHarness(t: TestContext) {
     start,
     getWatcher,
     exitMock,
+    exitCodes,
   };
 }
 
@@ -315,7 +325,10 @@ void test('startWatch wires chokidar watchers and handles lint cycles', async (t
   const watchedPaths = watchCall.paths;
   const ignored = watchCall.options.ignored;
   assert.ok(typeof ignored === 'function');
-  const ignoredPredicate: MatchFunction = ignored as MatchFunction;
+  if (typeof ignored !== 'function') {
+    throw new Error('ignored option is not a function');
+  }
+  const ignoredPredicate: MatchFunction = ignored;
 
   assert.ok(watchedPaths.includes(harness.target));
   assert.ok(watchedPaths.includes(TOKEN_FILE_GLOB));
@@ -370,10 +383,22 @@ void test('startWatch wires chokidar watchers and handles lint cycles', async (t
 
   const sigint = harness.onceCalls.find((call) => call.event === 'SIGINT');
   const sigterm = harness.onceCalls.find((call) => call.event === 'SIGTERM');
-  assert.ok(sigint && sigterm);
-  sigint.handler();
+  if (!sigint) {
+    throw new Error('SIGINT handler missing');
+  }
+  if (!sigterm) {
+    throw new Error('SIGTERM handler missing');
+  }
+  const { handler } = sigint;
+  if (typeof handler !== 'function') {
+    throw new Error('SIGINT handler not callable');
+  }
+  const invokeSigint: (...args: unknown[]) => void = handler;
+  invokeSigint();
   await flush();
-  assert.equal(harness.exitMock.mock.calls.at(-1)?.arguments?.[0], 0);
+  assert.ok(harness.exitCodes.length > 0);
+  const lastExitCode = harness.exitCodes[harness.exitCodes.length - 1];
+  assert.equal(lastExitCode, 0);
   assert.equal(harness.getWatcher().closed, true);
 });
 
@@ -386,9 +411,9 @@ void test('startWatch reloads configuration and plugin registries on change', as
     [harness.pluginMjsPath],
   ];
   await harness.start({
-    loadConfig: async () => {
+    loadConfig: () => {
       loadCalls.push('config');
-      return harness.config;
+      return Promise.resolve(harness.config);
     },
     createLinter: () => ({
       getPluginPaths: () =>
@@ -420,9 +445,9 @@ void test('startWatch reloads when ignore files change', async (t) => {
   const harness = createWatchHarness(t);
   const reloads: string[] = [];
   await harness.start({
-    loadConfig: async () => {
+    loadConfig: () => {
       reloads.push('reload');
-      return harness.config;
+      return Promise.resolve(harness.config);
     },
   });
   const watcher = harness.getWatcher();
@@ -445,15 +470,16 @@ void test('startWatch surfaces lint and reload errors without exiting', async (t
   const harness = createWatchHarness(t);
   let shouldFailReload = true;
   harness.setRunLintImpl(async () => {
+    await Promise.resolve();
     throw new Error('lint boom');
   });
   await harness.start({
-    loadConfig: async () => {
+    loadConfig: () => {
       if (shouldFailReload) {
         shouldFailReload = false;
-        throw new Error('reload boom');
+        return Promise.reject(new Error('reload boom'));
       }
-      return harness.config;
+      return Promise.resolve(harness.config);
     },
   });
   const watcher = harness.getWatcher();
@@ -467,6 +493,7 @@ void test('startWatch surfaces lint and reload errors without exiting', async (t
   assert.ok(harness.errorMessages.some((msg) => msg.includes('reload boom')));
 
   harness.setRunLintImpl(async () => {
+    await Promise.resolve();
     harness.setNextIgnoreFiles([harness.ignoreFile]);
     return [harness.ignoreFile];
   });

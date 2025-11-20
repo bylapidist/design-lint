@@ -1,4 +1,4 @@
-import test, { mock } from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { createLinter as initLinter } from '../src/index.js';
@@ -24,19 +24,21 @@ void test('lintDocument matches lintTargets result', async () => {
 void test('lintDocument reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
   const file = path.join(fixtureDir, 'src', 'App.svelte');
-  const permissionError = new Error('Permission denied');
-  const doc: LintDocument = {
-    id: file,
-    type: 'svelte',
-    async getText() {
-      throw permissionError;
-    },
-  };
-  const documentSource: DocumentSource = {
-    async scan() {
-      return { documents: [doc], ignoreFiles: [] };
-    },
-  };
+    const permissionError = new Error('Permission denied');
+    const doc: LintDocument = {
+      id: file,
+      type: 'svelte',
+      async getText() {
+        await Promise.resolve();
+        throw permissionError;
+      },
+    };
+    const documentSource: DocumentSource = {
+      async scan() {
+        await Promise.resolve();
+        return { documents: [doc], ignoreFiles: [] };
+      },
+    };
   const linter = initLinter(config, documentSource);
   const res = await linter.lintDocument(doc);
   assert.equal(res.messages.length, 1);
@@ -48,19 +50,21 @@ void test('lintDocument reports unreadable file', async () => {
 void test('lintTargets reports unreadable file', async () => {
   const config = await loadConfig(fixtureDir);
   const file = path.join(fixtureDir, 'src', 'App.svelte');
-  const permissionError = new Error('Permission denied');
-  const doc: LintDocument = {
-    id: file,
-    type: 'svelte',
-    async getText() {
-      throw permissionError;
-    },
-  };
-  const documentSource: DocumentSource = {
-    async scan() {
-      return { documents: [doc], ignoreFiles: [] };
-    },
-  };
+    const permissionError = new Error('Permission denied');
+    const doc: LintDocument = {
+      id: file,
+      type: 'svelte',
+      async getText() {
+        await Promise.resolve();
+        throw permissionError;
+      },
+    };
+    const documentSource: DocumentSource = {
+      async scan() {
+        await Promise.resolve();
+        return { documents: [doc], ignoreFiles: [] };
+      },
+    };
   const linter = initLinter(config, documentSource);
   const { results } = await linter.lintTargets([file]);
   const res = results[0];

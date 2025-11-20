@@ -1,20 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync, spawn } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { readWhenReady } from './helpers/fs.js';
-import {
-  createLinter as initLinter,
-  FileSource,
-  type Linter,
-} from '../src/index.js';
-import type { LintResult } from '../src/core/types.js';
 const tsxLoader = createRequire(import.meta.url).resolve('tsx/esm');
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const WATCH_TIMEOUT = 2000;
 const cliTest = (name: string, fn: Parameters<typeof test>[1]) =>
   test(name, { timeout: 60_000 }, fn);
 

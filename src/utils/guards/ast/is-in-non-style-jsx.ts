@@ -10,6 +10,10 @@ import { isStyleName } from './is-style-name.js';
 import { isReactCreateElementCall } from './is-react-create-element-call.js';
 import { isHyperscriptCall } from './is-hyperscript-call.js';
 
+function isNodeLike(value: unknown): value is Node {
+  return typeof value === 'object' && value !== null && 'kind' in value;
+}
+
 /**
  * Determines whether a given TypeScript AST node is inside JSX (or JSX-like code)
  * and **not** within a `style` attribute or `style` property assignment.
@@ -36,9 +40,12 @@ import { isHyperscriptCall } from './is-hyperscript-call.js';
  * @returns `true` if the node is inside non-style JSX (or JSX-like code), `false` otherwise.
  */
 export function isInNonStyleJsx(node: Node): boolean {
-  if (!node.parent) return false;
-  // Walk up the AST starting from the node's parent until we reach the SourceFile (top of the AST)
-  for (let curr: Node = node.parent; curr && !isSourceFile(curr); curr = curr.parent) {
+  const maybeStart = Reflect.get(node, 'parent');
+  const start = isNodeLike(maybeStart) ? maybeStart : undefined;
+
+  for (let curr = start; curr; curr = curr.parent) {
+    if (isSourceFile(curr)) break;
+
     // Check if we're in a JSX attribute: e.g., <div style={...} />
     // If it's a style attribute, return false (we are inside inline styles)
     if (isJsxAttribute(curr)) return !isStyleName(curr.name);
@@ -49,18 +56,25 @@ export function isInNonStyleJsx(node: Node): boolean {
       if (isStyleName(curr.name)) return false;
 
       // Climb further up to see if this object lives inside JSX or createElement/h() calls
-      let parent = curr.parent;
-      for (let p: Node | undefined = parent; p && !isSourceFile(p); p = p.parent) {
+      const innerMaybe = Reflect.get(curr, 'parent');
+      const innerStart = isNodeLike(innerMaybe) ? innerMaybe : undefined;
+
+      for (let parent = innerStart; parent; parent = parent.parent) {
+        if (!isNodeLike(parent)) break;
+        if (isSourceFile(parent)) break;
+
+        const currentParent: Node = parent;
+
         // If we hit another property named "style" higher up, we're still inside styles -> exclude
-        if (isPropertyAssignment(p) && isStyleName(p.name)) return false;
+        if (isPropertyAssignment(currentParent) && isStyleName(currentParent.name)) return false;
 
         // If we find JSX (element, self-closing, or fragment), confirm we're in JSX -> include
-        if (isJsxLike(p)) return true;
+        if (isJsxLike(currentParent)) return true;
 
         // If we encounter a function call, check if it's React.createElement or h()
-        if (isCallExpression(p)) {
+        if (isCallExpression(currentParent)) {
           // React.createElement(...) or h(...) means JSX-like context -> include
-          if (isReactCreateElementCall(p) || isHyperscriptCall(p)) return true;
+          if (isReactCreateElementCall(currentParent) || isHyperscriptCall(currentParent)) return true;
 
           // Any other call expression isn't JSX-related, stop climbing here
           break;

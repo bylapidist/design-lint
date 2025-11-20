@@ -14,7 +14,7 @@ import { PluginError } from '../src/core/errors.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-process.on('unhandledRejection', () => {});
+process.on('unhandledRejection', () => undefined);
 
 void test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
@@ -65,7 +65,7 @@ void test('loads ESM plugin modules', async () => {
 void test('throws for invalid plugin modules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'invalid-plugin.ts');
   const loader = new NodePluginLoader();
-  const err = await loader.load(pluginPath).catch((e) => e);
+  const err = await loader.load(pluginPath).catch((error: unknown) => error);
   assert.ok(err instanceof PluginError);
   assert.equal(err.context, 'Plugin');
   assert.equal(err.remediation, 'Ensure the plugin exports a rules array.');
@@ -99,7 +99,7 @@ void test('throws for invalid plugin rules', async () => {
 void test('throws when plugin module missing', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'missing-plugin.js');
   const loader = new NodePluginLoader();
-  const err = await loader.load(pluginPath).catch((e) => e);
+  const err = await loader.load(pluginPath).catch((error: unknown) => error);
   assert.ok(err instanceof PluginError);
   assert.ok(err.context.includes('missing-plugin.js'));
   assert.equal(err.remediation, 'Ensure the plugin is installed and resolvable.');
@@ -177,6 +177,7 @@ void test('supports custom plugin loaders', async () => {
       _p: string,
       _c?: string,
     ): Promise<{ path: string; plugin: PluginModule }> {
+      await Promise.resolve();
       void _p;
       void _c;
       this.calls++;

@@ -86,14 +86,13 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
     forwarded.map((diagnostic) => ({
       code: diagnostic.code,
       message: diagnostic.message,
-      pointer: 'pointer' in diagnostic ? diagnostic.pointer : undefined,
+      pointer: 'pointer' in diagnostic ? diagnostic.pointer : diagnostic.target.pointer,
     })),
     diagnostics.map((diagnostic) => ({
       code: diagnostic.code,
       message: diagnostic.message,
-      pointer: 'pointer' in diagnostic
-        ? diagnostic.pointer
-        : diagnostic.target?.pointer,
+      pointer:
+        'pointer' in diagnostic ? diagnostic.pointer : diagnostic.target.pointer,
     })),
   );
   assert.strictEqual(warned.length, 0);
@@ -103,15 +102,19 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
   const diagnosticPointer =
     'pointer' in firstDiagnostic
       ? firstDiagnostic.pointer
-      : firstDiagnostic.target?.pointer;
+      : firstDiagnostic.target.pointer;
   assert.strictEqual(diagnosticPointer, '#/color/alias/$ref');
   assert.strictEqual(firstDiagnostic.severity, 'error');
-  assert.strictEqual(
-    'target' in firstDiagnostic && firstDiagnostic.target
-      ? firstDiagnostic.target.uri
-      : firstDiagnostic.span?.uri,
-    'inline:invalid',
-  );
+  if ('target' in firstDiagnostic) {
+    assert.strictEqual(firstDiagnostic.target.uri, 'inline:invalid');
+  } else if ('span' in firstDiagnostic) {
+    const span = firstDiagnostic.span as { uri?: string } | undefined;
+    const spanUri = span?.uri;
+    assert(spanUri);
+    assert.strictEqual(spanUri, 'inline:invalid');
+  } else {
+    assert.fail('diagnostic missing target and span');
+  }
 });
 
 void test('parseDtifTokenObject flattens inline documents', async () => {
