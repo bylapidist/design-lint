@@ -1024,4 +1024,3 @@ void cliTest('CLI --report outputs JSON log', () => {
     'design-system/deprecation',
   );
 });
-

@@ -148,7 +148,8 @@ function createWatchHarness(t: TestContext) {
   });
 
   let watcher: FakeWatcher | undefined;
-  const watchCalls: { paths: readonly string[]; options: ChokidarOptions }[] = [];
+  const watchCalls: { paths: readonly string[]; options: ChokidarOptions }[] =
+    [];
   const watchMock = test.mock.method<typeof chokidar, 'watch'>(
     chokidar,
     'watch',
@@ -261,7 +262,7 @@ function createWatchHarness(t: TestContext) {
     const resolvedDeps: WatchDependencies = {
       loadConfig: deps?.loadConfig ?? (() => Promise.resolve(config)),
       createNodeEnvironment:
-        deps?.createNodeEnvironment ?? (() => ({ cacheProvider } as unknown)),
+        deps?.createNodeEnvironment ?? (() => ({ cacheProvider }) as unknown),
       createLinter: deps?.createLinter ?? (() => linterRef.current),
     };
     const startPromise = startWatch(options, resolvedDeps);
@@ -318,7 +319,9 @@ void test('startWatch wires chokidar watchers and handles lint cycles', async (t
   await harness.start();
   const watcher = harness.getWatcher();
 
-  assert.ok(harness.logMessages.some((msg) => msg.includes('Watching for changes')));
+  assert.ok(
+    harness.logMessages.some((msg) => msg.includes('Watching for changes')),
+  );
   assert.equal(harness.refreshCalls.length, 1);
   const watchCall = harness.watchCalls[0];
   assert.ok(watchCall);
@@ -415,10 +418,11 @@ void test('startWatch reloads configuration and plugin registries on change', as
       loadCalls.push('config');
       return Promise.resolve(harness.config);
     },
-    createLinter: () => ({
-      getPluginPaths: () =>
-        Promise.resolve(pluginQueues.shift() ?? harness.state.pluginPaths),
-    }) as unknown as Linter,
+    createLinter: () =>
+      ({
+        getPluginPaths: () =>
+          Promise.resolve(pluginQueues.shift() ?? harness.state.pluginPaths),
+      }) as unknown as Linter,
   });
 
   const watcher = harness.getWatcher();

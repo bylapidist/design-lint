@@ -102,7 +102,10 @@ void test('throws when plugin module missing', async () => {
   const err = await loader.load(pluginPath).catch((error: unknown) => error);
   assert.ok(err instanceof PluginError);
   assert.ok(err.context.includes('missing-plugin.js'));
-  assert.equal(err.remediation, 'Ensure the plugin is installed and resolvable.');
+  assert.equal(
+    err.remediation,
+    'Ensure the plugin is installed and resolvable.',
+  );
   assert.ok(err.message.includes('Plugin not found'));
 });
 
@@ -110,7 +113,11 @@ void test('throws when plugin rule conflicts with existing rule', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'conflict-plugin.ts');
   const ruleMap = new Map<string, { rule: RuleModule; source: string }>();
   ruleMap.set('design-token/colors', {
-    rule: { name: 'design-token/colors', meta: { description: 'built-in' }, create: () => ({}) },
+    rule: {
+      name: 'design-token/colors',
+      meta: { description: 'built-in' },
+      create: () => ({}),
+    },
     source: 'built-in',
   });
   const manager = new PluginManager(
@@ -126,7 +133,10 @@ void test('throws when plugin rule conflicts with existing rule', async () => {
     (err) => {
       assert.ok(err instanceof PluginError);
       assert.ok(err.context.includes('conflict-plugin.ts'));
-      assert.equal(err.remediation, 'Use a unique rule name to avoid collisions.');
+      assert.equal(
+        err.remediation,
+        'Use a unique rule name to avoid collisions.',
+      );
       return err.message.includes('conflicts with rule');
     },
   );
@@ -148,7 +158,10 @@ void test('throws when two plugins define the same rule name', async () => {
     (err) => {
       assert.ok(err instanceof PluginError);
       assert.ok(err.context.includes('duplicate-rule-plugin.ts'));
-      assert.equal(err.remediation, 'Use a unique rule name to avoid collisions.');
+      assert.equal(
+        err.remediation,
+        'Use a unique rule name to avoid collisions.',
+      );
       assert.ok(err.message.includes(pluginA));
       assert.ok(err.message.includes(pluginB));
       return true;
@@ -216,7 +229,10 @@ void test('calls plugin init with environment', async () => {
   const linter = initLinter({ plugins: [pluginPath] }, env);
   await linter.getPluginMetadata();
   const req = createRequire(import.meta.url);
-  const mod = req(pluginPath) as { inits?: Environment[]; default?: { inits?: Environment[] } };
+  const mod = req(pluginPath) as {
+    inits?: Environment[];
+    default?: { inits?: Environment[] };
+  };
   const inits = mod.inits ?? mod.default?.inits ?? [];
   assert.equal(inits.length, 1);
   assert.strictEqual(inits[0], env);

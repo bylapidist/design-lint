@@ -86,13 +86,18 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
     forwarded.map((diagnostic) => ({
       code: diagnostic.code,
       message: diagnostic.message,
-      pointer: 'pointer' in diagnostic ? diagnostic.pointer : diagnostic.target.pointer,
+      pointer:
+        'pointer' in diagnostic
+          ? diagnostic.pointer
+          : diagnostic.target.pointer,
     })),
     diagnostics.map((diagnostic) => ({
       code: diagnostic.code,
       message: diagnostic.message,
       pointer:
-        'pointer' in diagnostic ? diagnostic.pointer : diagnostic.target.pointer,
+        'pointer' in diagnostic
+          ? diagnostic.pointer
+          : diagnostic.target.pointer,
     })),
   );
   assert.strictEqual(warned.length, 0);

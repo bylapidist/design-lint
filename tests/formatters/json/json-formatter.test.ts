@@ -82,11 +82,15 @@ void test('json formatter serializes token metadata', async () => {
   const allMetadata = parsed
     .flatMap((result) => result.messages)
     .map((message) => message.metadata)
-    .filter((metadata): metadata is NonNullable<typeof metadata> => Boolean(metadata));
+    .filter((metadata): metadata is NonNullable<typeof metadata> =>
+      Boolean(metadata),
+    );
 
   assert(allMetadata.length > 0);
 
-  const fontMeta = allMetadata.find((metadata) => metadata.path === 'fonts.sans');
+  const fontMeta = allMetadata.find(
+    (metadata) => metadata.path === 'fonts.sans',
+  );
   assert(fontMeta);
   assert.equal(fontMeta.pointer, '#/fonts/sans');
   assert.deepEqual(fontMeta.extensions ?? {}, {});

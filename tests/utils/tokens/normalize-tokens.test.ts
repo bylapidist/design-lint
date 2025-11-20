@@ -80,7 +80,11 @@ void test('normalizes theme records without shared token keys when metadata pres
   };
   assert.deepEqual(light.color.primary.$value.components, [0, 0, 0]);
   const dark = tokens.dark as {
-    space: { medium: { $value: { value: number; unit: string; dimensionType: string } } };
+    space: {
+      medium: {
+        $value: { value: number; unit: string; dimensionType: string };
+      };
+    };
   };
   assert.deepEqual(dark.space.medium.$value, {
     value: 1,

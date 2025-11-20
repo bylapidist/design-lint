@@ -43,7 +43,9 @@ const fixtures: Fixture[] = [
   {
     name: 'vue',
     files: ['src/App.module.css', 'src/App.vue', 'src/Multi.vue'],
-    rules: baselineRules.filter((rule) => rule !== 'design-system/component-usage'),
+    rules: baselineRules.filter(
+      (rule) => rule !== 'design-system/component-usage',
+    ),
   },
   {
     name: 'nextjs',

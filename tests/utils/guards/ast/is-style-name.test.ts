@@ -3,10 +3,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  type NodeArray,
-  type PropertyAssignment,
-} from 'typescript';
+import { type NodeArray, type PropertyAssignment } from 'typescript';
 import { getExpression } from '../../ast.js';
 import { guards } from '../../../../src/utils/index.js';
 
