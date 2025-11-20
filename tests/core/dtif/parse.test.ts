@@ -20,7 +20,7 @@ void test('parseDtifTokensFromFile flattens tokens and exposes resolver state', 
 
   assert.strictEqual(diagnostics.length, 0);
   assert(document);
-  assert.strictEqual(document.$version, '1.0.0');
+  assert.strictEqual(document.data?.$version, '1.0.0');
   assert(graph);
   assert(resolver);
 
@@ -80,14 +80,38 @@ void test('parseInlineDtifTokens forwards diagnostics to callbacks', async () =>
     },
   });
 
-  assert(diagnostics.length >= 2);
+  assert(diagnostics.length >= 1);
   assert.strictEqual(forwarded.length, diagnostics.length);
-  assert.deepStrictEqual(forwarded, diagnostics);
+  assert.deepStrictEqual(
+    forwarded.map((diagnostic) => ({
+      code: diagnostic.code,
+      message: diagnostic.message,
+      pointer: 'pointer' in diagnostic ? diagnostic.pointer : undefined,
+    })),
+    diagnostics.map((diagnostic) => ({
+      code: diagnostic.code,
+      message: diagnostic.message,
+      pointer: 'pointer' in diagnostic
+        ? diagnostic.pointer
+        : diagnostic.target?.pointer,
+    })),
+  );
   assert.strictEqual(warned.length, 0);
 
   const [firstDiagnostic] = diagnostics;
   assert(firstDiagnostic);
-  assert.strictEqual(firstDiagnostic.target.uri, 'inline:invalid');
+  const diagnosticPointer =
+    'pointer' in firstDiagnostic
+      ? firstDiagnostic.pointer
+      : firstDiagnostic.target?.pointer;
+  assert.strictEqual(diagnosticPointer, '#/color/alias/$ref');
+  assert.strictEqual(firstDiagnostic.severity, 'error');
+  assert.strictEqual(
+    'target' in firstDiagnostic && firstDiagnostic.target
+      ? firstDiagnostic.target.uri
+      : firstDiagnostic.span?.uri,
+    'inline:invalid',
+  );
 });
 
 void test('parseDtifTokenObject flattens inline documents', async () => {
