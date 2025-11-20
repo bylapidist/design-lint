@@ -1,5 +1,22 @@
 # @lapidist/design-lint
 
+## 6.0.6
+
+### Patch Changes
+
+- aae7f77: add framework parser tests covering css/ts/vue/svelte paths to raise coverage
+- aae7f77: add CLI init config coverage to keep test thresholds passing
+- aae7f77: Add Node cache provider regression tests so cache key enumeration and removal stay covered.
+- aae7f77: add coverage-focused tests for the Node plugin loader and token error helper
+- aae7f77: Add PluginManager coverage for metadata caching, invalid rule handling, and rule conflict detection.
+- aae7f77: add integration coverage for CLI watch mode reloading and ignore updates
+- ab41935: Speed up CLI integration tests by reusing the built CLI binary instead of re-transpiling with tsx for each case.
+- aae7f77: Harden the CLI concurrency tracker and JSX guard to keep test runs stable across environments.
+- aae7f77: Align DTIF-dependent tests and fixtures with valid schemas and update CLI fixture expectations.
+- aae7f77: ignore coverage for barrel modules that only re-export helpers so c8 no longer counts their generated helper bindings as uncovered functions
+- aae7f77: Improve DTIF token utilities test coverage to satisfy repository thresholds.
+- aae7f77: chore: restrict coverage collection to source files so CI ignores built artifacts
+
 ## 6.0.5
 
 ### Patch Changes
