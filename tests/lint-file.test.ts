@@ -7,6 +7,7 @@ import { FileSource } from '../src/adapters/node/file-source.js';
 import { createFileDocument } from '../src/adapters/node/file-document.js';
 import { loadConfig } from '../src/config/loader.js';
 
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
 void test('lintDocument matches lintTargets result', async () => {

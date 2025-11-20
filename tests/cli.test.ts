@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { spawnSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { readWhenReady } from './helpers/fs.js';
 import {
@@ -11,9 +12,8 @@ import {
   type Linter,
 } from '../src/index.js';
 import type { LintResult } from '../src/core/types.js';
-import ignore from 'ignore';
-
-const tsxLoader = require.resolve('tsx/esm');
+const tsxLoader = createRequire(import.meta.url).resolve('tsx/esm');
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const WATCH_TIMEOUT = 2000;
 
 const srgb = (components: [number, number, number]) => ({
@@ -27,7 +27,11 @@ function createDeprecatedTokens() {
     old: {
       $type: 'color',
       $value: srgb([0, 0, 0]),
-      $deprecated: true,
+      $deprecated: { $ref: '#/new' },
+    },
+    new: {
+      $type: 'color',
+      $value: srgb([1, 1, 1]),
     },
   };
 }
@@ -57,29 +61,51 @@ void test('CLI aborts on unsupported Node versions', async () => {
   assert.match(out, /Node\.js v21\.0\.0 is not supported/);
 });
 
-void test('CLI passes targets to environment factory', async () => {
-  const { run } = await import('../src/cli/index.js');
-  const envMod = await import('../src/cli/env.js');
-  const mock = test.mock.method(envMod, 'prepareEnvironment', () =>
-    Promise.resolve({
-      formatter: () => '',
-      config: { tokens: {}, rules: {} },
-      linterRef: {
-        current: {
-          lintTargets: () => Promise.resolve({ results: [], ignoreFiles: [] }),
-          getPluginPaths: () => Promise.resolve([]),
-        } as unknown as Linter,
+void test('CLI forwards provided file targets to lint execution', () => {
+  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
+  const dir = makeTmpDir();
+  fs.writeFileSync(
+    path.join(dir, 'tokens.tokens.json'),
+    JSON.stringify({
+      $version: '1.0.0',
+      color: {
+        brand: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+        },
       },
-      pluginPaths: [],
-      designIgnore: '',
-      gitIgnore: '',
-      refreshIgnore: () => Promise.resolve(),
-      state: { pluginPaths: [], ignoreFilePaths: [] },
-      getIg: () => ignore(),
     }),
   );
-  await run(['a.ts']);
-  assert.deepEqual(mock.mock.calls[0].arguments[0].patterns, ['a.ts']);
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: { default: './tokens.tokens.json' },
+      rules: { 'token-colors': 'error' },
+    }),
+  );
+  fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'a.css'), 'a { color: #fff; }');
+  fs.writeFileSync(path.join(dir, 'src', 'b.css'), 'b { color: #fff; }');
+
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      path.join('src', 'a.css'),
+      '--config',
+      'designlint.config.json',
+      '--format',
+      'json',
+    ],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  assert.equal(res.status, 1);
+  const files = (JSON.parse(res.stdout) as { sourceId: string }[]).map((r) =>
+    path.relative(dir, r.sourceId),
+  );
+  assert.deepEqual(files, ['src/a.css']);
 });
 
 void test('CLI runs when executed via a symlink', () => {

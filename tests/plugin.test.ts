@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import path from 'path';
+import path from 'node:path';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 import { loadConfig } from '../src/config/loader.js';
@@ -9,6 +9,8 @@ import type { PluginLoader } from '../src/core/plugin-loader.js';
 import type { PluginModule, RuleModule } from '../src/core/types.js';
 import type { Environment } from '../src/core/environment.js';
 import { PluginError } from '../src/core/errors.js';
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 void test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
