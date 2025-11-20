@@ -1,16 +1,24 @@
-import test from 'node:test';
+import test, { type TestOptions } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   spawnSync,
+  spawn,
   type SpawnSyncOptionsWithStringEncoding,
+  type SpawnOptions,
 } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { readWhenReady } from './helpers/fs.js';
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const cliTest = (name: string, fn: Parameters<typeof test>[1]) =>
-  test(name, { timeout: 60_000 }, fn);
+const cliTest = (
+  name: string,
+  options: TestOptions | Parameters<typeof test>[1],
+  fn?: Parameters<typeof test>[1],
+) =>
+  typeof options === 'function'
+    ? test(name, { timeout: 60_000, concurrency: true }, options)
+    : test(name, { timeout: 60_000, concurrency: true, ...options }, fn);
 
 const repoRoot = path.join(__dirname, '..');
 
@@ -36,12 +44,57 @@ type RunCliOptions = SpawnSyncOptionsWithStringEncoding & {
   nodeOptions?: string[];
 };
 
+type RunCliAsyncOptions = SpawnOptions & {
+  encoding?: BufferEncoding;
+  nodeOptions?: string[];
+  input?: string;
+};
+
 function runCli(args: string[], options: RunCliOptions = { encoding: 'utf8' }) {
   const { nodeOptions = [], ...spawnOptions } = options;
   return spawnSync(process.execPath, [...nodeOptions, compiledCli, ...args], {
     encoding: 'utf8',
     ...spawnOptions,
   });
+}
+
+async function runCliAsync(
+  args: string[],
+  options: RunCliAsyncOptions = { encoding: 'utf8' },
+) {
+  const {
+    nodeOptions = [],
+    encoding = 'utf8',
+    input,
+    ...spawnOptions
+  } = options;
+  return new Promise<{ status: number | null; stdout: string; stderr: string }>(
+    (resolve, reject) => {
+      const child = spawn(
+        process.execPath,
+        [...nodeOptions, compiledCli, ...args],
+        {
+          ...spawnOptions,
+        },
+      );
+
+      let stdout = '';
+      let stderr = '';
+      child.stdout?.setEncoding(encoding);
+      child.stderr?.setEncoding(encoding);
+      child.stdout?.on('data', (chunk: string) => {
+        stdout += chunk;
+      });
+      child.stderr?.on('data', (chunk: string) => {
+        stderr += chunk;
+      });
+      child.on('error', reject);
+      child.on('close', (status) => {
+        resolve({ status, stdout, stderr });
+      });
+      child.stdin?.end(input);
+    },
+  );
 }
 
 const srgb = (components: [number, number, number]) => ({
@@ -71,23 +124,27 @@ function createDeprecatedConfig(rules: Record<string, unknown>) {
   });
 }
 
-void cliTest('CLI aborts on unsupported Node versions', async () => {
-  const { run } = await import('../src/cli/index.js');
-  const original = process.versions.node;
-  Object.defineProperty(process.versions, 'node', { value: '21.0.0' });
-  const originalError = console.error;
-  let out = '';
-  console.error = (msg?: unknown) => {
-    out += String(msg);
-  };
-  const originalExit = process.exitCode;
-  await run([]);
-  Object.defineProperty(process.versions, 'node', { value: original });
-  console.error = originalError;
-  assert.equal(process.exitCode, 1);
-  process.exitCode = originalExit ?? 0;
-  assert.match(out, /Node\.js v21\.0\.0 is not supported/);
-});
+void cliTest(
+  'CLI aborts on unsupported Node versions',
+  { concurrency: false },
+  async () => {
+    const { run } = await import('../src/cli/index.js');
+    const original = process.versions.node;
+    Object.defineProperty(process.versions, 'node', { value: '21.0.0' });
+    const originalError = console.error;
+    let out = '';
+    console.error = (msg?: unknown) => {
+      out += String(msg);
+    };
+    const originalExit = process.exitCode;
+    await run([]);
+    Object.defineProperty(process.versions, 'node', { value: original });
+    console.error = originalError;
+    assert.equal(process.exitCode, 1);
+    process.exitCode = originalExit ?? 0;
+    assert.match(out, /Node\.js v21\.0\.0 is not supported/);
+  },
+);
 
 void cliTest('CLI forwards provided file targets to lint execution', () => {
   const dir = makeTmpDir();
@@ -168,7 +225,7 @@ void cliTest('--init-format overrides detection', () => {
   assert.ok(fs.existsSync(path.join(dir, 'designlint.config.json')));
 });
 
-void cliTest('--init-format supports all formats', () => {
+void cliTest('--init-format supports all formats', async () => {
   const formats: readonly ['js', 'cjs', 'mjs', 'ts', 'mts', 'json'] = [
     'js',
     'cjs',
@@ -177,12 +234,16 @@ void cliTest('--init-format supports all formats', () => {
     'mts',
     'json',
   ];
-  for (const fmt of formats) {
-    const dir = makeTmpDir();
-    const res = runCli(['init', '--init-format', fmt], { cwd: dir });
-    assert.equal(res.status, 0);
-    assert.ok(fs.existsSync(path.join(dir, `designlint.config.${fmt}`)));
-  }
+  await Promise.all(
+    formats.map(async (fmt) => {
+      const dir = makeTmpDir();
+      const res = await runCliAsync(['init', '--init-format', fmt], {
+        cwd: dir,
+      });
+      assert.equal(res.status, 0);
+      assert.ok(fs.existsSync(path.join(dir, `designlint.config.${fmt}`)));
+    }),
+  );
 });
 
 void cliTest('CLI expands glob patterns with braces', () => {
