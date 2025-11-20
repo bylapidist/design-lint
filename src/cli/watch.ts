@@ -111,7 +111,22 @@ export async function watchMode(
  *
  * @param ctx - Aggregated watch context including config and callbacks.
  */
-export async function startWatch(ctx: WatchOptions) {
+export interface WatchDependencies {
+  loadConfig: typeof loadConfig;
+  createNodeEnvironment: typeof createNodeEnvironment;
+  createLinter: typeof createLinter;
+}
+
+const defaultWatchDependencies: WatchDependencies = {
+  loadConfig,
+  createNodeEnvironment,
+  createLinter,
+};
+
+export async function startWatch(
+  ctx: WatchOptions,
+  deps: WatchDependencies = defaultWatchDependencies,
+) {
   let {
     targets,
     options,
@@ -197,7 +212,7 @@ export async function startWatch(ctx: WatchOptions) {
         ? createRequire(config.configPath)
         : createRequire(import.meta.url);
       for (const p of pluginPaths) Reflect.deleteProperty(req.cache, p);
-      config = await loadConfig(process.cwd(), options.config);
+      config = await deps.loadConfig(process.cwd(), options.config);
       if (cache) {
         const keys = await cache.keys();
         for (const k of keys) await cache.remove(k);
@@ -207,13 +222,13 @@ export async function startWatch(ctx: WatchOptions) {
           fs.unlinkSync(cacheLocation);
         } catch {}
       }
-      const env = createNodeEnvironment(config, {
+      const env = deps.createNodeEnvironment(config, {
         cacheLocation,
         configPath: config.configPath,
         patterns: config.patterns,
       });
       cache = env.cacheProvider;
-      linterRef.current = createLinter(config, env);
+      linterRef.current = deps.createLinter(config, env);
       await refreshIgnore();
       const newPluginPaths = await linterRef.current.getPluginPaths();
       const toRemove = pluginPaths.filter((p) => !newPluginPaths.includes(p));

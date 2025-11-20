@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -11,7 +11,11 @@ import chokidar, {
   type MatchFunction,
 } from 'chokidar';
 
-import { startWatch, type WatchOptions } from '../../src/cli/watch.ts';
+import {
+  startWatch,
+  type WatchOptions,
+  type WatchDependencies,
+} from '../../src/cli/watch.ts';
 import { TOKEN_FILE_GLOB } from '../../src/utils/tokens/index.js';
 import type { Linter } from '../../src/core/linter.js';
 
@@ -34,6 +38,7 @@ class FakeWatcher
 {
   public added: string[][] = [];
   public unwatched: string[][] = [];
+  public closed = false;
 
   add(paths: string | readonly string[]): this {
     this.added.push(toArray(paths));
@@ -46,7 +51,7 @@ class FakeWatcher
   }
 
   async close(): Promise<void> {
-    // no-op
+    this.closed = true;
   }
 }
 
@@ -63,7 +68,7 @@ function last<T>(items: readonly T[]): T | undefined {
   return items.length > 0 ? items[items.length - 1] : undefined;
 }
 
-void test('startWatch reloads configuration and updates watchers', async (t) => {
+function createWatchHarness(t: TestContext) {
   const dir = fs.mkdtempSync(path.join(process.cwd(), 'watch-test-'));
   t.after(() => {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -78,6 +83,8 @@ void test('startWatch reloads configuration and updates watchers', async (t) => 
   fs.mkdirSync(pluginDir, { recursive: true });
   const pluginPath = path.join(pluginDir, 'plugin-a.js');
   fs.writeFileSync(pluginPath, 'module.exports = {};\n');
+  const pluginMjsPath = path.join(pluginDir, 'plugin-b.mjs');
+  fs.writeFileSync(pluginMjsPath, 'export default {};\n');
 
   const ignoreFile = path.join(dir, '.designlintignore');
   fs.writeFileSync(ignoreFile, '# initial ignore\n');
@@ -100,6 +107,11 @@ void test('startWatch reloads configuration and updates watchers', async (t) => 
   const cacheLocation = path.join(dir, 'cache.json');
   fs.writeFileSync(cacheLocation, '{}');
 
+  const originalExitCode = process.exitCode;
+  t.after(() => {
+    process.exitCode = originalExitCode ?? 0;
+  });
+
   const logMessages: string[] = [];
   const originalLog = console.log;
   console.log = (...args: unknown[]) => {
@@ -107,6 +119,15 @@ void test('startWatch reloads configuration and updates watchers', async (t) => 
   };
   t.after(() => {
     console.log = originalLog;
+  });
+
+  const errorMessages: string[] = [];
+  const originalError = console.error;
+  console.error = (...args: unknown[]) => {
+    errorMessages.push(args.map((arg) => String(arg)).join(' '));
+  };
+  t.after(() => {
+    console.error = originalError;
   });
 
   const onceCalls: {
@@ -126,14 +147,7 @@ void test('startWatch reloads configuration and updates watchers', async (t) => 
   });
 
   let watcher: FakeWatcher | undefined;
-  const getWatcher = () => {
-    if (!watcher) {
-      throw new Error('watcher not initialized');
-    }
-    return watcher;
-  };
-  const watchCalls: { paths: readonly string[]; options: ChokidarOptions }[] =
-    [];
+  const watchCalls: { paths: readonly string[]; options: ChokidarOptions }[] = [];
   const watchMock = test.mock.method<typeof chokidar, 'watch'>(
     chokidar,
     'watch',
@@ -160,25 +174,39 @@ void test('startWatch reloads configuration and updates watchers', async (t) => 
   });
 
   const cacheRemovals: string[] = [];
+  let cacheKeySweeps = 0;
   const cacheProvider = {
-    keys: () => Promise.resolve<string[]>([]),
-    remove: (key: string) => {
+    keys: async () => {
+      cacheKeySweeps++;
+      return ['cache-a', 'cache-b'];
+    },
+    remove: async (key: string) => {
       cacheRemovals.push(key);
-      return Promise.resolve();
     },
   };
 
   const ig = ignore().add('**/ignored/**');
   const lintCalls: string[][] = [];
   let nextIgnoreFiles = [ignoreFile];
-  const runLint = (paths: string[]) => {
-    lintCalls.push(paths);
-    return Promise.resolve(nextIgnoreFiles);
+  let runLintImpl: (paths: string[]) => Promise<string[]> = async () =>
+    nextIgnoreFiles;
+
+  const setNextIgnoreFiles = (files: string[]) => {
+    nextIgnoreFiles = files;
   };
+  const setRunLintImpl = (impl: (paths: string[]) => Promise<string[]>) => {
+    runLintImpl = impl;
+  };
+  const runLint = async (paths: string[]) => {
+    lintCalls.push(paths);
+    return runLintImpl(paths);
+  };
+
   const reportErrors: unknown[] = [];
   const reportError = (err: unknown) => {
     reportErrors.push(err);
   };
+
   const refreshCalls: number[] = [];
   const refreshIgnore = () => {
     refreshCalls.push(Date.now());
@@ -191,6 +219,7 @@ void test('startWatch reloads configuration and updates watchers', async (t) => 
     plugins: [pluginPath],
     patterns: ['src/**/*.ts'],
   };
+  const targets = [target];
   const linterRef = {
     current: {
       getPluginPaths: () => Promise.resolve(state.pluginPaths),
@@ -198,8 +227,8 @@ void test('startWatch reloads configuration and updates watchers', async (t) => 
   };
 
   const options: WatchOptions = {
-    targets: [target],
-    options: { output: outputPath, report: reportPath },
+    targets,
+    options: { output: outputPath, report: reportPath, config: configPath },
     config,
     linterRef,
     refreshIgnore,
@@ -214,88 +243,234 @@ void test('startWatch reloads configuration and updates watchers', async (t) => 
     useColor: true,
   };
 
-  const startPromise = startWatch(options);
-  await flush();
-  const createdWatcher = getWatcher();
-  createdWatcher.emit('ready');
-  await startPromise;
+  const exitMock = test.mock.method(process, 'exit', () => undefined as never);
+  t.after(() => {
+    exitMock.mock.restore();
+  });
 
-  assert.ok(logMessages.some((msg) => msg.includes('Watching for changes')));
-  assert.equal(refreshCalls.length, 1);
-  if (watchCalls.length === 0) {
-    throw new Error('expected chokidar to be configured');
-  }
-  assert.equal(watchCalls.length, 1);
-  const watchCall = watchCalls[0];
+  const start = async (deps?: Partial<WatchDependencies>) => {
+    const resolvedDeps: WatchDependencies = {
+      loadConfig: deps?.loadConfig ?? (async () => config),
+      createNodeEnvironment:
+        deps?.createNodeEnvironment ?? (() => ({ cacheProvider } as unknown)),
+      createLinter: deps?.createLinter ?? (() => linterRef.current),
+    };
+    const startPromise = startWatch(options, resolvedDeps);
+    await flush();
+    getWatcher().emit('ready');
+    await startPromise;
+  };
+
+  const getWatcher = () => {
+    if (!watcher) {
+      throw new Error('watcher not initialized');
+    }
+    return watcher;
+  };
+
+  return {
+    dir,
+    target,
+    targets,
+    pluginPath,
+    pluginMjsPath,
+    ignoreFile,
+    additionalIgnore,
+    designIgnore,
+    gitIgnore,
+    configPath,
+    outputPath,
+    reportPath,
+    cacheLocation,
+    logMessages,
+    errorMessages,
+    onceCalls,
+    watchCalls,
+    lintCalls,
+    reportErrors,
+    cacheRemovals,
+    cacheKeySweeps,
+    unlinkCalls,
+    refreshCalls,
+    state,
+    config,
+    linterRef,
+    setNextIgnoreFiles,
+    setRunLintImpl,
+    start,
+    getWatcher,
+    exitMock,
+  };
+}
+
+void test('startWatch wires chokidar watchers and handles lint cycles', async (t) => {
+  const harness = createWatchHarness(t);
+  await harness.start();
+  const watcher = harness.getWatcher();
+
+  assert.ok(harness.logMessages.some((msg) => msg.includes('Watching for changes')));
+  assert.equal(harness.refreshCalls.length, 1);
+  const watchCall = harness.watchCalls[0];
+  assert.ok(watchCall);
   const watchedPaths = watchCall.paths;
-  const { ignored } = watchCall.options;
-  if (typeof ignored !== 'function') {
-    throw new Error('ignored predicate should be defined');
-  }
-  const ignoredPredicate: MatchFunction = ignored;
+  const ignored = watchCall.options.ignored;
+  assert.ok(typeof ignored === 'function');
+  const ignoredPredicate: MatchFunction = ignored as MatchFunction;
 
-  assert.ok(watchedPaths.includes(target));
+  assert.ok(watchedPaths.includes(harness.target));
   assert.ok(watchedPaths.includes(TOKEN_FILE_GLOB));
-  assert.ok(watchedPaths.includes(configPath));
-  assert.ok(watchedPaths.includes(designIgnore));
-  assert.ok(watchedPaths.includes(gitIgnore));
-  assert.ok(watchedPaths.includes(pluginPath));
-  assert.ok(watchedPaths.includes(ignoreFile));
+  assert.ok(watchedPaths.includes(harness.configPath));
+  assert.ok(watchedPaths.includes(harness.designIgnore));
+  assert.ok(watchedPaths.includes(harness.gitIgnore));
+  assert.ok(watchedPaths.includes(harness.pluginPath));
+  assert.ok(watchedPaths.includes(harness.ignoreFile));
 
   const ignoredFn = (p: string) => ignoredPredicate(p);
-  assert.equal(ignoredFn(configPath), false);
-  assert.equal(ignoredFn(designIgnore), false);
-  assert.equal(ignoredFn(pluginPath), false);
-  assert.equal(ignoredFn(ignoreFile), false);
-  assert.equal(ignoredFn(outputPath), true);
-  assert.equal(ignoredFn(reportPath), true);
+  assert.equal(ignoredFn(harness.configPath), false);
+  assert.equal(ignoredFn(harness.designIgnore), false);
+  assert.equal(ignoredFn(harness.pluginPath), false);
+  assert.equal(ignoredFn(harness.ignoreFile), false);
+  assert.equal(ignoredFn(harness.outputPath), true);
+  assert.equal(ignoredFn(harness.reportPath), true);
 
-  const ignoredPath = path.join(dir, 'ignored', 'file.ts');
+  const ignoredPath = path.join(harness.dir, 'ignored', 'file.ts');
   fs.mkdirSync(path.dirname(ignoredPath), { recursive: true });
   fs.writeFileSync(ignoredPath, '');
   assert.equal(ignoredFn(ignoredPath), true);
 
-  nextIgnoreFiles = [ignoreFile, additionalIgnore];
-  getWatcher().emit('change', target);
+  harness.setNextIgnoreFiles([harness.ignoreFile, harness.additionalIgnore]);
+  watcher.emit('change', harness.target);
   await flush();
   assert.deepEqual(
-    state.ignoreFilePaths.sort(),
-    [ignoreFile, additionalIgnore].sort(),
+    harness.state.ignoreFilePaths.sort(),
+    [harness.ignoreFile, harness.additionalIgnore].sort(),
   );
-  const fakeWatcher = getWatcher();
-  const lastAdded = last(fakeWatcher.added);
-  assert.ok(lastAdded);
-  assert.deepEqual(lastAdded, [additionalIgnore]);
+  assert.deepEqual(last(watcher.added), [harness.additionalIgnore]);
 
-  nextIgnoreFiles = [ignoreFile];
-  getWatcher().emit('change', target);
+  harness.setNextIgnoreFiles([harness.ignoreFile]);
+  watcher.emit('change', harness.target);
   await flush();
-  const lastUnwatched = last(fakeWatcher.unwatched);
-  assert.ok(lastUnwatched);
-  assert.deepEqual(lastUnwatched, [additionalIgnore]);
-  assert.deepEqual(state.ignoreFilePaths, [ignoreFile]);
+  assert.deepEqual(last(watcher.unwatched), [harness.additionalIgnore]);
+  assert.deepEqual(harness.state.ignoreFilePaths, [harness.ignoreFile]);
 
-  const outputCallCount = lintCalls.length;
-  getWatcher().emit('change', outputPath);
-  getWatcher().emit('change', reportPath);
+  const lintCount = harness.lintCalls.length;
+  watcher.emit('change', harness.outputPath);
+  watcher.emit('change', harness.reportPath);
   await flush();
-  assert.equal(lintCalls.length, outputCallCount);
+  assert.equal(harness.lintCalls.length, lintCount);
 
-  nextIgnoreFiles = [ignoreFile];
-  getWatcher().emit('unlink', target);
+  watcher.emit('unlink', harness.target);
   await flush();
-  const lintAfterUnlink = last(lintCalls);
-  assert.ok(lintAfterUnlink);
-  assert.deepEqual(lintAfterUnlink, [target]);
-  assert.ok(cacheRemovals.includes(path.resolve(target)));
+  assert.ok(harness.cacheRemovals.some((key) => key.includes('file.ts')));
+  assert.deepEqual(last(harness.lintCalls), [harness.target]);
 
-  getWatcher().emit('error', new Error('watched error'));
+  watcher.emit('error', new Error('watched error'));
   await flush();
-  assert.equal(reportErrors.length, 1);
+  assert.equal(harness.reportErrors.length, 1);
 
-  assert.ok(
-    onceCalls.some((call) => call.event === 'SIGINT') &&
-      onceCalls.some((call) => call.event === 'SIGTERM'),
-    'should register signal handlers',
-  );
+  const sigint = harness.onceCalls.find((call) => call.event === 'SIGINT');
+  const sigterm = harness.onceCalls.find((call) => call.event === 'SIGTERM');
+  assert.ok(sigint && sigterm);
+  sigint.handler();
+  await flush();
+  assert.equal(harness.exitMock.mock.calls.at(-1)?.arguments?.[0], 0);
+  assert.equal(harness.getWatcher().closed, true);
+});
+
+void test('startWatch reloads configuration and plugin registries on change', async (t) => {
+  const harness = createWatchHarness(t);
+  const loadCalls: string[] = [];
+  const pluginQueues: string[][] = [
+    harness.state.pluginPaths,
+    [...harness.state.pluginPaths, harness.pluginMjsPath],
+    [harness.pluginMjsPath],
+  ];
+  await harness.start({
+    loadConfig: async () => {
+      loadCalls.push('config');
+      return harness.config;
+    },
+    createLinter: () => ({
+      getPluginPaths: () =>
+        Promise.resolve(pluginQueues.shift() ?? harness.state.pluginPaths),
+    }) as unknown as Linter,
+  });
+
+  const watcher = harness.getWatcher();
+  harness.setNextIgnoreFiles([harness.ignoreFile, harness.additionalIgnore]);
+  watcher.emit('change', harness.configPath);
+  await flush();
+  assert.ok(loadCalls.length >= 1);
+  assert.deepEqual(last(harness.lintCalls), harness.targets);
+
+  watcher.emit('change', harness.pluginPath);
+  await flush();
+  assert.ok(loadCalls.length >= 2);
+  assert.ok(harness.state.pluginPaths.includes(harness.pluginMjsPath));
+  assert.deepEqual(last(watcher.added), [harness.pluginMjsPath]);
+
+  watcher.emit('unlink', harness.pluginPath);
+  await flush();
+  assert.ok(loadCalls.length >= 3);
+  assert.ok(harness.cacheRemovals.some((key) => key.includes('plugin-a.js')));
+  assert.deepEqual(last(watcher.unwatched), [harness.pluginPath]);
+});
+
+void test('startWatch reloads when ignore files change', async (t) => {
+  const harness = createWatchHarness(t);
+  const reloads: string[] = [];
+  await harness.start({
+    loadConfig: async () => {
+      reloads.push('reload');
+      return harness.config;
+    },
+  });
+  const watcher = harness.getWatcher();
+
+  harness.setNextIgnoreFiles([harness.ignoreFile, harness.additionalIgnore]);
+  watcher.emit('change', harness.target);
+  await flush();
+  watcher.emit('change', harness.additionalIgnore);
+  await flush();
+  watcher.emit('change', harness.designIgnore);
+  await flush();
+  watcher.emit('change', harness.gitIgnore);
+  await flush();
+  watcher.emit('unlink', harness.ignoreFile);
+  await flush();
+  assert.equal(reloads.length, 4);
+});
+
+void test('startWatch surfaces lint and reload errors without exiting', async (t) => {
+  const harness = createWatchHarness(t);
+  let shouldFailReload = true;
+  harness.setRunLintImpl(async () => {
+    throw new Error('lint boom');
+  });
+  await harness.start({
+    loadConfig: async () => {
+      if (shouldFailReload) {
+        shouldFailReload = false;
+        throw new Error('reload boom');
+      }
+      return harness.config;
+    },
+  });
+  const watcher = harness.getWatcher();
+
+  watcher.emit('change', harness.target);
+  await flush();
+  assert.equal(harness.reportErrors.length, 1);
+
+  watcher.emit('change', harness.pluginPath);
+  await flush();
+  assert.ok(harness.errorMessages.some((msg) => msg.includes('reload boom')));
+
+  harness.setRunLintImpl(async () => {
+    harness.setNextIgnoreFiles([harness.ignoreFile]);
+    return [harness.ignoreFile];
+  });
+  watcher.emit('change', harness.target);
+  await flush();
+  assert.ok(harness.lintCalls.length >= 2);
 });
