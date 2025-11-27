@@ -85,7 +85,7 @@
     "zod": "4.1.13"
   },
   "devDependencies": {
-    "@changesets/cli": "2.29.7",
+    "@changesets/cli": "2.29.8",
     "@types/color-name": "2.0.0",
     "@types/culori": "4.0.1",
     "@types/node": "24.10.1",
