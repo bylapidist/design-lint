@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 1
       - uses: actions/setup-node@v6
         with:
-          node-version: 24.11.1
+          node-version: 24.12.0
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci --prefer-offline
