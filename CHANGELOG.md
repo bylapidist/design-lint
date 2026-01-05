@@ -1,5 +1,13 @@
 # @lapidist/design-lint
 
+## 6.0.7
+
+### Patch Changes
+
+- b839217: ensure cache hits only use entries matching current file stats
+- b839217: simplify cache validation with optional chaining
+- 2246ea7: align execute lint destructuring with return types and favor optional chaining in cache management
+
 ## 6.0.6
 
 ### Patch Changes
