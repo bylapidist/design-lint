@@ -26,7 +26,7 @@ export class CacheManager {
       } catch {
         statResult = undefined;
       }
-      const cached = this.cache ? await this.cache.get(doc.id) : undefined;
+      const cached = await this.cache?.get(doc.id);
       if (
         cached &&
         statResult &&
@@ -72,8 +72,6 @@ export class CacheManager {
   }
 
   async save(): Promise<void> {
-    if (this.cache) {
-      await this.cache.save();
-    }
+    await this.cache?.save();
   }
 }
