@@ -15,8 +15,9 @@ export async function lintSvelte(
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
 ): Promise<void> {
-  const { parse }: { parse: typeof svelteParse } =
-    await import('svelte/compiler');
+  const { parse }: { parse: typeof svelteParse } = await import(
+    'svelte/compiler'
+  );
   const ast = parse(text, { modern: true });
   const getRange = (node: unknown): { start: number; end: number } | null => {
     return isRecord(node) &&

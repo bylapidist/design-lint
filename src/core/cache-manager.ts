@@ -27,13 +27,14 @@ export class CacheManager {
         statResult = undefined;
       }
       const cached = await this.cache?.get(doc.id);
-      if (
-        cached &&
-        statResult &&
+      const isCacheValid =
+        !this.fix &&
+        statResult != null &&
+        cached != null &&
         cached.mtime === statResult.mtimeMs &&
-        cached.size === statResult.size &&
-        !this.fix
-      ) {
+        cached.size === statResult.size;
+
+      if (isCacheValid) {
         return cached.result;
       }
       const text = await doc.getText();
