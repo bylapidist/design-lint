@@ -32,15 +32,12 @@ export async function executeLint(
   services: ExecuteServices,
 ): Promise<{ results: LintResult[]; exitCode: number; ignoreFiles: string[] }> {
   const start = performance.now();
-  const {
-    results,
-    ignoreFiles = [],
-    warning,
-  } = await services.linterRef.current.lintTargets(
-    targets,
-    opts.fix,
-    services.ignorePath ? [services.ignorePath] : [],
-  );
+  const { results, ignoreFiles, warning } =
+    await services.linterRef.current.lintTargets(
+      targets,
+      opts.fix,
+      services.ignorePath ? [services.ignorePath] : [],
+    );
   const duration = performance.now() - start;
   if (warning && !opts.quiet) console.warn(warning);
   const output = services.formatter(results, services.useColor);
