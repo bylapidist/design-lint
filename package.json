@@ -88,7 +88,7 @@
     "@changesets/cli": "2.29.8",
     "@types/color-name": "2.0.0",
     "@types/culori": "4.0.1",
-    "@types/node": "24.10.4",
+    "@types/node": "24.10.6",
     "@types/picomatch": "4.0.2",
     "@types/postcss-less": "4.0.7",
     "@types/write-file-atomic": "4.0.3",
