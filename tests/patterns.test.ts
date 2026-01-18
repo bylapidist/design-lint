@@ -41,3 +41,30 @@ void test('lintTargets uses patterns option to include custom extensions', async
     process.chdir(cwd);
   }
 });
+
+void test('lintTargets expands directory targets with brace patterns', async () => {
+  const tmp = makeTmpDir();
+  const dir = path.join(tmp, 'src', 'app');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, 'page.tsx');
+  fs.writeFileSync(file, "const color = '#ffffff';");
+  const baseConfig = {
+    tokens: {
+      $version: '1.0.0',
+      color: {
+        primary: { $type: 'color', $value: srgb([0, 0, 0]) },
+      },
+    },
+    rules: { 'design-token/colors': 'error' },
+  };
+  const cwd = process.cwd();
+  process.chdir(tmp);
+  try {
+    const linter = initLinter(baseConfig, new FileSource());
+    const { results } = await linter.lintTargets(['src/app']);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].sourceId, file);
+  } finally {
+    process.chdir(cwd);
+  }
+});

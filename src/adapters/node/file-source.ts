@@ -1,12 +1,41 @@
 import path from 'node:path';
+import fs from 'node:fs';
 import { globby } from 'globby';
+import picomatch from 'picomatch';
 import { performance } from 'node:perf_hooks';
-import { realpathIfExists } from './utils/paths.js';
+import { realpathIfExists, toPosix } from './utils/paths.js';
 import { loadIgnore } from '../../core/ignore.js';
 import type { Config } from '../../core/linter.js';
 import type { DocumentSource } from '../../core/environment.js';
 import { createFileDocument } from './file-document.js';
 import { defaultPatterns } from '../../core/file-types.js';
+
+const hasGlob = (pattern: string) => picomatch.scan(pattern).isGlob;
+
+const expandDirectoryTargets = (
+  targets: string[],
+  patterns: string[],
+  cwd: string,
+) => {
+  if (!targets.length) return targets;
+  const expanded = new Set<string>(targets);
+  for (const target of targets) {
+    if (hasGlob(target)) continue;
+    const resolved = path.resolve(cwd, target);
+    let stats: fs.Stats | undefined;
+    try {
+      stats = fs.statSync(resolved);
+    } catch {
+      continue;
+    }
+    if (!stats?.isDirectory()) continue;
+    const base = target === '.' ? '' : toPosix(target);
+    for (const pattern of patterns) {
+      expanded.add(base ? path.posix.join(base, pattern) : pattern);
+    }
+  }
+  return Array.from(expanded);
+};
 
 export class FileSource implements DocumentSource {
   async scan(
@@ -16,6 +45,7 @@ export class FileSource implements DocumentSource {
   ) {
     const patterns = config.patterns ?? defaultPatterns;
     const cwd = process.cwd();
+    const expandedTargets = expandDirectoryTargets(targets, patterns, cwd);
     const ignoreFiles = [
       ...(
         await globby(['**/.gitignore', '**/.designlintignore'], {
@@ -37,7 +67,7 @@ export class FileSource implements DocumentSource {
     const { ig } = await loadIgnore(config, extraIgnoreFiles);
     const start = performance.now();
     const files = (
-      await globby(targets, {
+      await globby(expandedTargets, {
         expandDirectories: patterns,
         gitignore: false,
         ignore: [],
