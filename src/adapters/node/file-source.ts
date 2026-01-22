@@ -28,7 +28,7 @@ const expandDirectoryTargets = (
     } catch {
       continue;
     }
-    if (!stats?.isDirectory()) continue;
+    if (!stats.isDirectory()) continue;
     const base = target === '.' ? '' : toPosix(target);
     for (const pattern of patterns) {
       expanded.add(base ? path.posix.join(base, pattern) : pattern);
