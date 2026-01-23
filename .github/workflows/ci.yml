@@ -51,7 +51,7 @@ jobs:
       - run: node scripts/generate-coverage-comment.mjs
         if: steps.changes.outputs['non-docs'] == 'true'
       - name: Comment coverage
-        if: github.event_name == 'pull_request' && steps.changes.outputs['non-docs'] == 'true'
+        if: github.event_name == 'pull_request' && steps.changes.outputs['non-docs'] == 'true' && github.event.pull_request.head.repo.full_name == github.repository
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: coverage/coverage-comment.md
