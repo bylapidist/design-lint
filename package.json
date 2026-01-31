@@ -64,7 +64,7 @@
     "chokidar": "5.0.0",
     "color-name": "2.1.0",
     "color-string": "2.1.4",
-    "commander": "14.0.2",
+    "commander": "14.0.3",
     "cosmiconfig": "9.0.0",
     "cosmiconfig-typescript-loader": "6.2.0",
     "culori": "4.0.2",
