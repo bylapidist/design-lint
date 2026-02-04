@@ -1,6 +1,8 @@
+import { performance } from 'node:perf_hooks';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { globby } from 'globby';
-import { performance } from 'node:perf_hooks';
+import picomatch from 'picomatch';
 import { realpathIfExists } from './utils/paths.js';
 import { loadIgnore } from '../../core/ignore.js';
 import type { Config } from '../../core/linter.js';
@@ -9,6 +11,71 @@ import { createFileDocument } from './file-document.js';
 import { defaultPatterns } from '../../core/file-types.js';
 
 export class FileSource implements DocumentSource {
+  private static normalizeForGlob(value: string) {
+    return value.replace(/\\/g, '/');
+  }
+
+  private static isDynamicPattern(value: string) {
+    return picomatch.scan(value).isGlob;
+  }
+
+  private static expandDirectoryPatterns(
+    base: string,
+    patterns: string[],
+  ): string[] {
+    const normalizedBase = FileSource.normalizeForGlob(base);
+    return patterns.map((pattern) => {
+      if (pattern.startsWith('!')) {
+        return `!${path.posix.join(
+          normalizedBase,
+          FileSource.normalizeForGlob(pattern.slice(1)),
+        )}`;
+      }
+      return path.posix.join(
+        normalizedBase,
+        FileSource.normalizeForGlob(pattern),
+      );
+    });
+  }
+
+  private static async expandTargets(
+    targets: string[],
+    patterns: string[],
+    cwd: string,
+  ): Promise<string[]> {
+    const expanded: string[] = [];
+    for (const target of targets) {
+      const isNegated = target.startsWith('!');
+      const rawTarget = isNegated ? target.slice(1) : target;
+      if (FileSource.isDynamicPattern(rawTarget)) {
+        expanded.push(target);
+        continue;
+      }
+      const resolved = path.resolve(cwd, rawTarget);
+      try {
+        const stats = await fs.stat(resolved);
+        if (stats.isDirectory()) {
+          const expandedPatterns = FileSource.expandDirectoryPatterns(
+            rawTarget,
+            patterns,
+          );
+          if (isNegated) {
+            expanded.push(
+              ...expandedPatterns.map((pattern) =>
+                pattern.startsWith('!') ? pattern : `!${pattern}`,
+              ),
+            );
+          } else {
+            expanded.push(...expandedPatterns);
+          }
+          continue;
+        }
+      } catch {}
+      expanded.push(target);
+    }
+    return expanded;
+  }
+
   async scan(
     targets: string[],
     config: Config,
@@ -36,9 +103,13 @@ export class FileSource implements DocumentSource {
     );
     const { ig } = await loadIgnore(config, extraIgnoreFiles);
     const start = performance.now();
+    const expandedTargets = await FileSource.expandTargets(
+      targets,
+      patterns,
+      cwd,
+    );
     const files = (
-      await globby(targets, {
-        expandDirectories: patterns,
+      await globby(expandedTargets, {
         gitignore: false,
         ignore: [],
         dot: true,
