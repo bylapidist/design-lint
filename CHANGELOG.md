@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 6.0.8
+
+### Patch Changes
+
+- 3a6bd83: fix directory target expansion for brace-based patterns
+
 ## 6.0.7
 
 ### Patch Changes
