@@ -1,80 +1,323 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
-  --vp-c-brand-1: #2157f2;
-  --vp-c-brand-2: #143fd4;
-  --vp-c-brand-3: #0b2ea8;
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, #2157f2 0%, #5d8bff 45%, #00c2ff 100%);
-  --vp-home-hero-text-color: #0f172a;
-  --vp-home-hero-tagline-color: #1f2937;
+  --vp-font-family-base: 'Inter', 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --vp-c-brand-1: #6bb6ff;
+  --vp-c-brand-2: #4a9bff;
+  --vp-c-brand-3: #2f7fe6;
+  --vp-c-text-1: #f0f3f8;
+  --vp-c-text-2: #c4ccd8;
+  --vp-c-text-3: #95a1b4;
+  --vp-c-bg: #0a0c10;
+  --vp-c-bg-soft: #10151d;
+  --vp-c-bg-mute: #141b25;
+  --vp-c-divider: rgba(255, 255, 255, 0.12);
+  --vp-home-hero-name-color: var(--vp-c-text-2);
+  --vp-home-hero-name-background: none;
+  --vp-home-hero-text-color: var(--vp-c-text-1);
+  --vp-home-hero-tagline-color: var(--vp-c-text-2);
 }
 
 .dark:root {
-  --vp-home-hero-text-color: #e2e8f0;
-  --vp-home-hero-tagline-color: #cbd5f5;
-  --vp-c-brand-1: #82aaff;
-  --vp-c-brand-2: #5c7cfa;
-  --vp-c-brand-3: #4263eb;
-  --vp-home-hero-name-background: linear-gradient(120deg, #82aaff 0%, #5c7cfa 50%, #22d3ee 100%);
+  --vp-c-brand-1: #6bb6ff;
+  --vp-c-brand-2: #4a9bff;
+  --vp-c-brand-3: #2f7fe6;
+  --vp-c-text-1: #f0f3f8;
+  --vp-c-text-2: #c4ccd8;
+  --vp-c-text-3: #95a1b4;
+  --vp-c-bg: #0a0c10;
+  --vp-c-bg-soft: #10151d;
+  --vp-c-bg-mute: #141b25;
+  --vp-c-divider: rgba(255, 255, 255, 0.12);
+  --vp-home-hero-name-color: var(--vp-c-text-2);
+  --vp-home-hero-name-background: none;
+  --vp-home-hero-text-color: var(--vp-c-text-1);
+  --vp-home-hero-tagline-color: var(--vp-c-text-2);
 }
 
-.VPHomeHero .container .main {
-  padding: 2rem 0 3rem;
-}
-
-.VPHomeHero .actions .action:nth-child(3) .VPButton {
-  border-color: transparent;
-  background: transparent;
-  color: var(--vp-home-hero-tagline-color);
-}
-
-.home .home-section {
-  margin: 0 auto;
-  max-width: 960px;
-  padding: 0 1.5rem;
-}
-
-.home .home-section + .home-section {
-  margin-top: 3.5rem;
-}
-
-.home .home-section h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.home .home-section h3 {
-  font-size: 1.25rem;
-  margin-top: 1.5rem;
-  color: var(--vp-c-text-2);
-}
-
-.home .home-section ul {
-  margin: 0;
-  padding-left: 1.25rem;
-}
-
-.home .home-section blockquote {
-  border-left: 3px solid var(--vp-c-brand-1);
-  color: var(--vp-c-text-2);
-  font-style: italic;
-  background: rgba(33, 87, 242, 0.05);
-  padding: 1.25rem 1.5rem;
-  margin-top: 2rem;
-  border-radius: 0 0.75rem 0.75rem 0;
-}
-
-.dark .home .home-section blockquote {
-  background: rgba(130, 170, 255, 0.12);
-  color: #e2e8f0;
-}
-
-.home .home-section p {
-  font-size: 1.05rem;
-  line-height: 1.8;
+.home {
+  background: var(--vp-c-bg);
   color: var(--vp-c-text-1);
 }
 
-.home .home-section p + p {
-  margin-top: 1rem;
+.home .VPNav,
+.home .VPSidebar,
+.home .VPFooter {
+  background: transparent;
+}
+
+.home .VPNavBarSearch,
+.home .DocSearch-Button {
+  background: #0f141c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--vp-c-text-2);
+}
+
+.home .DocSearch-Button-Container,
+.home .DocSearch-Button-Placeholder {
+  color: var(--vp-c-text-2);
+}
+
+.home .DocSearch-Search-Icon {
+  color: var(--vp-c-text-3);
+}
+
+.home .DocSearch-Button-Keys,
+.home .DocSearch-Button-Key {
+  color: var(--vp-c-text-3);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.VPHomeHero .container .main {
+  padding: 5.5rem 0 4.5rem;
+}
+
+.VPHomeHero .name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--vp-c-text-3);
+}
+
+.VPHomeHero .text {
+  font-size: clamp(2.6rem, 4.2vw, 3.7rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.VPHomeHero .tagline {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  max-width: 640px;
+}
+
+.VPHomeHero .actions {
+  gap: 0.9rem;
+}
+
+.VPHomeHero .actions .VPButton {
+  border-radius: 999px;
+  padding: 0.8rem 1.6rem;
+  font-weight: 600;
+}
+
+.VPHomeHero .actions .action:nth-child(2) .VPButton {
+  border-color: var(--vp-c-divider);
+  color: var(--vp-c-text-1);
+  background: transparent;
+}
+
+.home .landing-section {
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 4.5rem 1.5rem;
+}
+
+.home .landing-section + .landing-section {
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.section-header h2 {
+  font-size: clamp(1.8rem, 2.6vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.section-lede {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--vp-c-text-2);
+  max-width: 720px;
+}
+
+.landing-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.9rem;
+  color: var(--vp-c-text-2);
+}
+
+.landing-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  line-height: 1.7;
+  list-style: none;
+}
+
+.landing-list li::marker {
+  content: '';
+}
+
+.landing-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--vp-c-brand-1);
+}
+
+.pillar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2.75rem;
+}
+
+.pillar h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.pillar p {
+  color: var(--vp-c-text-2);
+  line-height: 1.75;
+}
+
+.deep-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 3rem;
+  align-items: start;
+}
+
+.deep-copy h2 {
+  font-size: 1.65rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.deep-copy p {
+  color: var(--vp-c-text-2);
+  line-height: 1.85;
+}
+
+.deep-copy ul {
+  margin-top: 1.5rem;
+  padding-left: 1.25rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.7;
+}
+
+.home .deep-visual [class*='language-'],
+.home .deep-visual .vp-code,
+.home .deep-visual pre {
+  background: #0f141c;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1rem;
+  color: #eef2f7;
+}
+
+.home .deep-visual [class*='language-'] pre,
+.home .deep-visual .vp-code pre,
+.home .deep-visual pre {
+  background: transparent;
+  padding: 1.6rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.home .deep-visual [class*='language-'] code,
+.home .deep-visual .vp-code code,
+.home .deep-visual pre code,
+.home .deep-visual code {
+  color: #eef2f7;
+}
+
+.trust-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+  color: var(--vp-c-text-2);
+}
+
+.trust-list li {
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.85rem;
+  background: #0f141c;
+  list-style: none;
+}
+
+.trust-list li::marker {
+  content: '';
+}
+
+.landing-cta .cta-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: center;
+  justify-content: space-between;
+  background: #0f141c;
+  border-radius: 1.35rem;
+  padding: 2.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 60px rgba(4, 6, 10, 0.35);
+}
+
+.landing-cta h2 {
+  font-size: 1.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  line-height: 1.25;
+}
+
+.landing-cta p {
+  color: var(--vp-c-text-2);
+}
+
+.landing-cta .cta-panel .cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.8rem;
+  border-radius: 999px;
+  background: var(--vp-c-brand-1);
+  color: #0a1018;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.landing-cta .cta-panel .cta-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(45, 95, 170, 0.3);
+}
+
+.landing-cta .cta-panel .cta-button:visited {
+  color: #0a1018;
+}
+
+@media (max-width: 720px) {
+  .VPHomeHero .container .main {
+    padding: 3.75rem 0 3.25rem;
+  }
+
+  .landing-cta .cta-panel {
+    padding: 2.25rem;
+  }
 }
