@@ -169,6 +169,25 @@ void test('reports raw colors', async () => {
 ## Distributing within a team
 You can share plugins privately via Git repositories or internal registries. Document rule options in the plugin README so users can configure them correctly.
 
+## Formatters as plugins
+Custom formatters can be published as npm packages and referenced through
+`--format`. Keep formatter packages focused on output rendering and document
+their expected structure for CI consumers.
+
+```json
+{
+  "name": "design-lint-formatter-acme",
+  "type": "module",
+  "peerDependencies": { "@lapidist/design-lint": "^6.0.0" }
+}
+```
+
+After publishing, consumers can use the package name directly:
+
+```bash
+npx design-lint src --format design-lint-formatter-acme
+```
+
 ## See also
 - [API reference](./api.md)
 - [Configuration](./configuration.md)
