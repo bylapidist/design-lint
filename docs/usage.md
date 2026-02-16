@@ -155,4 +155,4 @@ If the CLI fails or reports unexpected results:
 - [Configuration](./configuration.md)
 - [Rule reference](./rules/index.md)
 - [CI integration](./ci.md)
-- [Examples](./examples/index.md)
+- [Examples](./examples/)

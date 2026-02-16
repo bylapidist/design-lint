@@ -60,7 +60,7 @@ const examplesSidebar = [
   {
     text: 'Examples',
     items: [
-      { text: 'Overview', link: '/examples/index' },
+      { text: 'Overview', link: '/examples/' },
       { text: 'Basic project', link: '/examples/basic/' },
       { text: 'React', link: '/examples/react/' },
       { text: 'Vue', link: '/examples/vue/' },

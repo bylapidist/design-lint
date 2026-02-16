@@ -19,7 +19,7 @@ hero:
       link: /rules/
     - theme: minimal
       text: Explore examples
-      link: /examples/index
+      link: /examples/
 features:
   - icon: 🧭
     title: Guided adoption
@@ -95,7 +95,7 @@ The project welcomes feedback from teams putting design-lint into practice.
 - Share migration stories, workflows, and fixes in the [guides](/usage) to help others.
 - Contribute new [rules](/rules/) or [formatters](/formatters) that capture your
   organisation's needs.
-- Explore the [examples](/examples/index) to start quickly or open a PR when you improve
+- Explore the [examples](/examples/) to start quickly or open a PR when you improve
   them.
 
 Join us in building automation that keeps design systems and implementation in sync.
