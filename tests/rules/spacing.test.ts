@@ -20,6 +20,26 @@ function createLinter(rule: unknown = ['error', { base: 4 }]) {
   );
 }
 
+void test('design-token/spacing allows token-equivalent literals in legacy mode', async () => {
+  const linter = createLinter(['error', { base: 4 }]);
+  const res = await linter.lintText('.a{margin:8px;}', 'file.css');
+  assert.equal(res.messages.length, 0);
+});
+
+void test('design-token/spacing reports token-equivalent literals in strict mode', async () => {
+  const linter = createLinter(['error', { base: 4, strictReference: true }]);
+  const res = await linter.lintText('.a{margin:8px;}', 'file.css');
+  assert.equal(res.messages.length, 1);
+});
+
+void test('design-token/spacing allows CSS variable references in strict mode', async () => {
+  const linter = createLinter(['error', { base: 4, strictReference: true }]);
+  const res = await linter.lintText(
+    '.a{margin:var(--spacing-md);}',
+    'file.css',
+  );
+  assert.equal(res.messages.length, 0);
+});
 void test('design-token/spacing enforces multiples', async () => {
   const linter = createLinter(['error', { base: 4 }]);
   const res = await linter.lintText(

@@ -34,6 +34,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 
 ## Options
 - `allow` (`"hex" | "rgb" | "rgba" | "hsl" | "hsla" | "hwb" | "lab" | "lch" | "color" | "named"`[]): formats that may appear as raw values. Defaults to `[]`.
+- `strictReference` (`boolean`): when `true`, only token references are accepted (for example `var(--...)`, `token("colors.primary")`, or equivalent framework token APIs). Raw color literals are always reported, even when they match token values. Defaults to `false`.
 
 This rule is not auto-fixable.
 
@@ -45,6 +46,12 @@ The rule detects and blocks the following color formats unless they are defined 
 - Named colors (e.g., `red`, `rebeccapurple`)
 
 Token values and matched color strings are normalized to lowercase before comparison, making hex colors case-insensitive.
+
+### Enforcement modes
+- **Value-equivalence mode** (default): raw literals are allowed when their value exactly matches a configured token value.
+- **Strict reference mode** (`strictReference: true`): enforces semantic token usage by allowing only references, not equivalent literals.
+
+Strict mode provides stronger design-system guarantees, but it can require broader migrations for existing styles that currently rely on token-equivalent literals.
 
 ## Examples
 
