@@ -43,7 +43,7 @@ void test('lintDocument reports unreadable file', async () => {
   const res = await linter.lintDocument(doc);
   assert.equal(res.messages.length, 1);
   const msg = res.messages[0];
-  assert.equal(msg.ruleId, 'parse-error');
+  assert.equal(msg.ruleId, 'rule-execution-error');
   assert.match(msg.message, /permission denied/i);
 });
 
@@ -70,6 +70,6 @@ void test('lintTargets reports unreadable file', async () => {
   const res = results[0];
   assert.equal(res.messages.length, 1);
   const msg = res.messages[0];
-  assert.equal(msg.ruleId, 'parse-error');
+  assert.equal(msg.ruleId, 'rule-execution-error');
   assert.match(msg.message, /permission denied/i);
 });
