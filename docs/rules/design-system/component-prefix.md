@@ -25,7 +25,9 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 ## Options
 - `prefix` (`string`, default: `"DS"`): required prefix for component names.
 
-*This rule is auto-fixable.*
+*This rule is auto-fixable for simple JSX identifiers and custom elements only.*
+
+Autofix is intentionally skipped for complex JSX tag names (for example `<UI.Button />`, `<Foo.Bar></Foo.Bar>`, or namespaced tags) because rewriting those forms can change semantics.
 
 ## Examples
 
