@@ -4,17 +4,25 @@
  * High-level loader for resolving and validating configuration files.
  */
 import path from 'node:path';
+import { collections, guards } from '../utils/index.js';
 import type { Config } from '../core/linter.js';
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
-import { resolveConfigFile } from './file-resolution.js';
+import { resolveConfigFiles } from './file-resolution.js';
 import { loadTokens } from './token-loader.js';
-import { guards } from '../utils/index.js';
 import { ConfigError } from '../core/errors.js';
+import { isConfigArrayMergeKey } from './constants.js';
 
 const {
   data: { isRecord },
 } = guards;
+
+const { asArray } = collections;
+
+const mergeArrayValues = (current: unknown, incoming: unknown[]): unknown[] => [
+  ...asArray(current),
+  ...incoming,
+];
 
 /**
  * Resolve and load configuration for the linter.
@@ -38,27 +46,47 @@ export async function loadConfig(
   cwd: string,
   configPath?: string,
 ): Promise<Config> {
-  const result = await resolveConfigFile(cwd, configPath);
+  const results = await resolveConfigFiles(cwd, configPath);
+  const nearestConfig =
+    results.length > 0 ? results[results.length - 1] : undefined;
 
-  const base: Config = {
+  const baseConfig: Record<string, unknown> = {
     tokens: {},
     rules: {},
     ignoreFiles: [],
     plugins: [],
-    configPath: result?.filepath
-      ? realpathIfExists(result.filepath)
+    configPath: nearestConfig?.filepath
+      ? realpathIfExists(nearestConfig.filepath)
       : undefined,
+    configSources: results.map((entry) => realpathIfExists(entry.filepath)),
   };
-  const merged = {
-    ...base,
-    ...(isRecord(result?.config) ? result.config : {}),
-  };
+
+  const merged = results.reduce<Record<string, unknown>>((acc, result) => {
+    if (!isRecord(result.config)) {
+      return acc;
+    }
+
+    const next = { ...acc };
+    for (const [key, value] of Object.entries(result.config)) {
+      if (isConfigArrayMergeKey(key) && Array.isArray(value)) {
+        next[key] = mergeArrayValues(acc[key], value);
+        continue;
+      }
+      next[key] = value;
+    }
+    return next;
+  }, baseConfig);
+
   const parsed = configSchema.safeParse(merged);
   if (!parsed.success) {
-    const location = result?.filepath ? ` at ${result.filepath}` : '';
+    const location = nearestConfig?.filepath
+      ? ` at ${nearestConfig.filepath}`
+      : '';
     throw new ConfigError({
       message: `Invalid config${location}: ${parsed.error.message}`,
-      context: result?.filepath ? `Config file "${result.filepath}"` : 'Config',
+      context: nearestConfig?.filepath
+        ? `Config file "${nearestConfig.filepath}"`
+        : 'Config',
       remediation: 'Review and fix the configuration file.',
     });
   }

@@ -40,6 +40,7 @@ void test('returns default config when none found', async () => {
     ignoreFiles: [],
     plugins: [],
     configPath: undefined,
+    configSources: [],
   });
 });
 
