@@ -173,3 +173,59 @@ void test('design-system/no-unused-tokens matches hex case-insensitively', async
   );
   assert.equal(has, false);
 });
+
+void test('design-system/no-unused-tokens resets tracked usage for sequential runs', async () => {
+  const tokens = {
+    $version: '1.0.0',
+    color: {
+      primary: { $type: 'string', $value: '#111111' },
+      secondary: { $type: 'string', $value: '#222222' },
+    },
+  };
+  const linter = initLinter(
+    {
+      tokens,
+      rules: { 'design-system/no-unused-tokens': 'warn' },
+    },
+    new FileSource(),
+  );
+
+  const firstDoc: LintDocument = {
+    id: 'first.ts',
+    type: 'ts',
+    getText: () => Promise.resolve('const c = "#111111";'),
+  };
+  const secondDoc: LintDocument = {
+    id: 'second.ts',
+    type: 'ts',
+    getText: () => Promise.resolve('const c = "#222222";'),
+  };
+
+  const firstRun = await linter.lintDocuments([firstDoc]);
+  const firstUnused = firstRun.results
+    .flatMap((result) => result.messages)
+    .filter((message) => message.ruleId === 'design-system/no-unused-tokens')
+    .map((message) => message.message);
+  assert.equal(
+    firstUnused.some((message) => message.includes('#222222')),
+    true,
+  );
+  assert.equal(
+    firstUnused.some((message) => message.includes('#111111')),
+    false,
+  );
+
+  const secondRun = await linter.lintDocuments([secondDoc]);
+  const secondUnused = secondRun.results
+    .flatMap((result) => result.messages)
+    .filter((message) => message.ruleId === 'design-system/no-unused-tokens')
+    .map((message) => message.message);
+  assert.equal(
+    secondUnused.some((message) => message.includes('#111111')),
+    true,
+  );
+  assert.equal(
+    secondUnused.some((message) => message.includes('#222222')),
+    false,
+  );
+});
