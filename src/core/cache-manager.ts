@@ -3,6 +3,7 @@ import type { CacheProvider } from './cache-provider.js';
 import type { LintResult } from './types.js';
 import type { LintDocument } from './environment.js';
 import { applyFixes } from './apply-fixes.js';
+import { guards } from '../utils/index.js';
 
 export const RUNTIME_ERROR_RULE_ID = 'rule-execution-error';
 
@@ -95,6 +96,10 @@ export class CacheManager {
   }
 }
 
+const {
+  data: { isObject },
+} = guards;
+
 function buildErrorDetails(
   error: unknown,
   phase: 'read' | 'lint',
@@ -154,8 +159,4 @@ function getStringProperty(
     return value;
   }
   return undefined;
-}
-
-function isObject(value: unknown): value is object {
-  return typeof value === 'object' && value !== null;
 }
