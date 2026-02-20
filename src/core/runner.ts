@@ -51,6 +51,7 @@ export class Runner {
         warning: 'No files matched the provided patterns.',
       };
     }
+    this.tokenTracker.beginRun();
     await CacheService.prune(
       cache,
       documents.map((d) => d.id),

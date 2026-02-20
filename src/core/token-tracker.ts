@@ -59,6 +59,10 @@ export class TokenTracker {
     this.provider = provider;
   }
 
+  beginRun(): void {
+    this.usedTokenValues.clear();
+  }
+
   private async loadTokens(): Promise<void> {
     if (this.loaded) return;
     const tokens = await this.provider?.load();
