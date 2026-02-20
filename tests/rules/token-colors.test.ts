@@ -18,6 +18,32 @@ function createLinter(rule: unknown = 'error') {
   );
 }
 
+void test('design-token/colors allows token-equivalent literal in legacy mode', async () => {
+  const linter = createLinter();
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "#ffffff" }} />;',
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 0);
+});
+
+void test('design-token/colors reports token-equivalent literal in strict mode', async () => {
+  const linter = createLinter(['error', { strictReference: true }]);
+  const res = await linter.lintText(
+    'const c = <div style={{ color: "#ffffff" }} />;',
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 1);
+});
+
+void test('design-token/colors allows CSS variable references in strict mode', async () => {
+  const linter = createLinter(['error', { strictReference: true }]);
+  const res = await linter.lintText(
+    '.button { color: var(--colors-primary); }',
+    'file.css',
+  );
+  assert.equal(res.messages.length, 0);
+});
 void test('design-token/colors reports disallowed hwb', async () => {
   const linter = createLinter();
   const res = await linter.lintText(

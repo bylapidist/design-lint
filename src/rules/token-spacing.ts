@@ -13,6 +13,7 @@ const {
 interface SpacingOptions {
   base?: number;
   units?: string[];
+  strictReference?: boolean;
 }
 
 export const spacingRule = tokenRule<SpacingOptions>({
@@ -24,6 +25,7 @@ export const spacingRule = tokenRule<SpacingOptions>({
       .object({
         base: z.number().optional(),
         units: z.array(z.string()).optional(),
+        strictReference: z.boolean().optional(),
       })
       .optional(),
   },
@@ -43,8 +45,10 @@ export const spacingRule = tokenRule<SpacingOptions>({
   },
   create(context, allowed) {
     const opts = context.options ?? {};
+    const strictReference = opts.strictReference ?? false;
     const base = opts.base ?? 4;
-    const isAllowed = (n: number) => allowed.has(n) || n % base === 0;
+    const isAllowed = (n: number) =>
+      strictReference ? false : allowed.has(n) || n % base === 0;
     const allowedUnits = new Set(
       (opts.units ?? ['px', 'rem', 'em']).map((u) => u.toLowerCase()),
     );

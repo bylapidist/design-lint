@@ -15,6 +15,7 @@ const { detectColorFormat } = color;
 
 interface ColorRuleOptions {
   allow?: ColorFormat[];
+  strictReference?: boolean;
 }
 
 export const colorsRule = tokenRule<ColorRuleOptions>({
@@ -40,6 +41,7 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
             ]),
           )
           .optional(),
+        strictReference: z.boolean().optional(),
       })
       .optional(),
   },
@@ -58,6 +60,7 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
   },
   create(context, allowed) {
     const opts = context.options ?? {};
+    const strictReference = opts.strictReference ?? false;
     const allowFormats = new Set(opts.allow ?? []);
     const parserFormats = new Set<ColorFormat>([
       'hex',
@@ -76,7 +79,7 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
         const format = detectColorFormat(value);
         if (!format || allowFormats.has(format)) return;
         if (parserFormats.has(format) && !colorString.get(value)) return;
-        if (!allowed.has(value.toLowerCase())) {
+        if (!allowed.has(value.toLowerCase()) || strictReference) {
           context.report({
             message: `Unexpected color ${value}`,
             line,
