@@ -92,6 +92,7 @@ export const configSchema: z.ZodType<Config> = z
     ignoreFiles: z.array(z.string()).optional(),
     plugins: z.array(z.string()).optional(),
     configPath: z.string().optional(),
+    configSources: z.array(z.string()).optional(),
     concurrency: z.number().int().positive().optional(),
     patterns: z.array(z.string()).optional(),
     wrapTokensWithVar: z.boolean().optional(),

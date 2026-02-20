@@ -33,6 +33,7 @@ export interface Config {
   ignoreFiles?: string[];
   plugins?: string[];
   configPath?: string;
+  configSources?: string[];
   concurrency?: number;
   patterns?: string[];
   wrapTokensWithVar?: boolean;

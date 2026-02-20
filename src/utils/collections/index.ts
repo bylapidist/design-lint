@@ -8,3 +8,4 @@
  */
 export * from './is-array.js';
 export * from './to-array.js';
+export * from './as-array.js';

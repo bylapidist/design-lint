@@ -30,7 +30,53 @@ Create a configuration file at the project root:
 }
 ```
 
-The config file name may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`. design-lint searches upward from the current working directory until it finds one of these files. Nested config files override settings from parent directories, allowing per-package customization in monorepos.
+The config file name may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`. design-lint searches from the current working directory to the filesystem root and merges every discovered config from root to leaf. `configPath` always points to the nearest (leaf) config for diagnostics. Merge behavior is deterministic:
+
+- `plugins`, `ignoreFiles`, and `patterns` are concatenated in root → leaf order.
+- Scalar values (for example `concurrency`) are overwritten by the nearest config that defines them.
+- Object values (for example `tokens` and `rules`) are replaced by the nearest config that defines them.
+
+This lets monorepos define shared defaults at the root and override selected fields per package.
+
+
+### Monorepo layering example
+
+```text
+repo/
+  designlint.config.json
+  packages/
+    app/
+      designlint.config.json
+```
+
+`repo/designlint.config.json`:
+
+```json
+{
+  "plugins": ["@company/design-lint-plugin"],
+  "ignoreFiles": ["**/*.stories.tsx"],
+  "rules": { "design-token/colors": "error" },
+  "concurrency": 4
+}
+```
+
+`repo/packages/app/designlint.config.json`:
+
+```json
+{
+  "plugins": ["@company/app-plugin"],
+  "ignoreFiles": ["src/generated/**"],
+  "rules": { "design-token/colors": "warn" },
+  "concurrency": 2
+}
+```
+
+Effective config in `packages/app`:
+
+- `plugins`: `["@company/design-lint-plugin", "@company/app-plugin"]`
+- `ignoreFiles`: `["**/*.stories.tsx", "src/generated/**"]`
+- `rules`: `{ "design-token/colors": "warn" }`
+- `concurrency`: `2`
 
 ### Top-level options
 
