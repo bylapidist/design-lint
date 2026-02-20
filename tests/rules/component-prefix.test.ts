@@ -109,3 +109,74 @@ void test('design-system/component-prefix enforces prefix on custom elements', a
   const fixed = applyFixes(code, res.messages);
   assert.equal(fixed, 'const a = <ds-my-button></ds-my-button>');
 });
+
+void test('design-system/component-prefix preserves kebab-case custom element prefixes', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': ['error', { prefix: 'ds' }],
+      },
+    },
+    new FileSource(),
+  );
+  const code = 'const a = <my-button></my-button>';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 2);
+  assert.ok(res.messages.every((m) => m.fix));
+  const fixed = applyFixes(code, res.messages);
+  assert.equal(fixed, 'const a = <ds-my-button></ds-my-button>');
+});
+
+void test('design-system/component-prefix does not double-prefix prefixed tags', async () => {
+  const pascalLinter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+      },
+    },
+    new FileSource(),
+  );
+  const pascalRes = await pascalLinter.lintText(
+    'const a = <DSButton/>;',
+    'file.tsx',
+  );
+  assert.equal(pascalRes.messages.length, 0);
+
+  const customLinter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': ['error', { prefix: 'ds-' }],
+      },
+    },
+    new FileSource(),
+  );
+  const customRes = await customLinter.lintText(
+    'const b = <ds-my-button/>;',
+    'file.tsx',
+  );
+  assert.equal(customRes.messages.length, 0);
+});
+
+void test('design-system/component-prefix reports JSX member expressions without autofix', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+      },
+    },
+    new FileSource(),
+  );
+  const uiMemberRes = await linter.lintText(
+    'const a = <UI.Button />;',
+    'file.tsx',
+  );
+  assert.equal(uiMemberRes.messages.length, 1);
+  assert.equal(uiMemberRes.messages[0].fix, undefined);
+
+  const fooMemberRes = await linter.lintText(
+    'const a = <Foo.Bar></Foo.Bar>;',
+    'file.tsx',
+  );
+  assert.equal(fooMemberRes.messages.length, 2);
+  assert.ok(fooMemberRes.messages.every((m) => m.fix === undefined));
+});
