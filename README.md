@@ -38,7 +38,7 @@ General purpose linters understand code style, not design systems. `@lapidist/de
 
 ### Token awareness
 
-`@lapidist/design-lint` flags raw values that bypass design tokens, keeping colour, spacing and typography consistent. Learn more in the [rule reference](docs/rules/index.md).
+`@lapidist/design-lint` flags raw values against your configured token constraints to keep colour, spacing, and typography consistent. For strict token-reference-only enforcement, enable strict modes where supported (for example `strictReference` on token rules). Learn more in the [rule reference](docs/rules/index.md).
 
 ### Auto-fixes
 
