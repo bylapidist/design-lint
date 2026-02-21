@@ -81,6 +81,23 @@ void test('lint command exits with failure when --fail-on-empty is enabled', () 
   assert.match(res.stderr, /No files matched the provided patterns\./);
 });
 
+void test('lint command reports unsupported explicit file types', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
+  fs.writeFileSync(path.join(dir, 'input.html'), '<div />');
+
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    ['--import', tsxLoader, cli, 'input.html'],
+    { cwd: dir, encoding: 'utf8' },
+  );
+
+  assert.equal(res.status, 1);
+  assert.match(res.stdout, /parse-error/);
+  assert.match(res.stdout, /Unsupported file type/);
+});
+
 void test('lint command uses formatter from config when --format is omitted', () => {
   const dir = makeTmpDir();
   const tokensPath = path.join(dir, 'base.tokens.json');

@@ -401,6 +401,13 @@ export class Linter {
         templateTags: this.config.templateTags,
       });
     }
+    messages.push({
+      ruleId: 'parse-error',
+      message: `Unsupported file type "${formatFileType(type)}"`,
+      severity: 'error',
+      line: 1,
+      column: 1,
+    });
     return undefined;
   }
 
@@ -662,4 +669,8 @@ function parseDisabledRules(raw: string): DisabledRules {
 export function inferFileType(sourceId: string): string {
   const ext = sourceId.split('.').pop()?.toLowerCase() ?? '';
   return FILE_TYPE_MAP[ext] ?? ext;
+}
+
+function formatFileType(type: string): string {
+  return type ? `.${type}` : '<unknown>';
 }
