@@ -51,10 +51,12 @@ interface UnusedRuleConfig {
 interface TrackedTokenInfo {
   token: DtifFlattenedToken;
   path: string;
+  identities: Set<string>;
 }
 
 export class TokenTracker {
   private allTokenValues = new Map<string, TrackedTokenInfo>();
+  private tokenValueByIdentity = new Map<string, Set<string>>();
   private usedTokenValues = new Set<string>();
   private unusedTokenRules: UnusedRuleConfig[] = [];
   private provider?: TokenProvider;
@@ -84,6 +86,7 @@ export class TokenTracker {
       );
     }
     this.allTokenValues = collectTokenValues(tokens);
+    this.tokenValueByIdentity = indexTokenValuesByIdentity(this.allTokenValues);
     this.loaded = true;
   }
 
@@ -112,17 +115,21 @@ export class TokenTracker {
     references?: readonly TokenReferenceCandidate[];
   }): Promise<void> {
     await this.loadTokens();
-    const candidates = normalizeUsageCandidates(input.references);
-    for (const token of this.allTokenValues.keys()) {
-      if (this.usedTokenValues.has(token)) continue;
-      const tokenType = getTokenType(token);
-      const matched = candidates
-        ? candidates.some((candidate) =>
-            classifiers[tokenType](token, candidate),
-          )
-        : classifiers[tokenType](token, input.text);
-      if (matched) {
-        this.usedTokenValues.add(token);
+    const identities = normalizeUsageCandidateIdentities(input.references);
+    if (identities) {
+      for (const identity of identities) {
+        const tokenValues = this.tokenValueByIdentity.get(identity);
+        if (!tokenValues) continue;
+        for (const value of tokenValues) {
+          this.usedTokenValues.add(value);
+        }
+      }
+      return;
+    }
+    for (const tokenValue of this.allTokenValues.keys()) {
+      const tokenType = getTokenType(tokenValue);
+      if (classifiers[tokenType](tokenValue, input.text)) {
+        this.usedTokenValues.add(tokenValue);
       }
     }
   }
@@ -156,14 +163,31 @@ export class TokenTracker {
   }
 }
 
-function normalizeUsageCandidates(
+function normalizeUsageCandidateIdentities(
   references?: readonly TokenReferenceCandidate[],
 ): string[] | undefined {
   if (!references) return undefined;
-  const candidates = references
-    .map((reference) => reference.candidate.trim())
-    .filter((candidate) => candidate.length > 0);
-  return candidates;
+  const identities = references
+    .map((reference) => reference.identity.trim())
+    .filter((identity) => identity.length > 0);
+  return identities.length > 0 ? identities : undefined;
+}
+
+function indexTokenValuesByIdentity(
+  values: Map<string, TrackedTokenInfo>,
+): Map<string, Set<string>> {
+  const indexed = new Map<string, Set<string>>();
+  for (const [tokenValue, info] of values.entries()) {
+    for (const identity of info.identities) {
+      const mapped = indexed.get(identity);
+      if (mapped) {
+        mapped.add(tokenValue);
+      } else {
+        indexed.set(identity, new Set([tokenValue]));
+      }
+    }
+  }
+  return indexed;
 }
 
 function collectTokenValues(
@@ -178,12 +202,36 @@ function collectTokenValues(
     for (const token of dtifTokens) {
       const key = toTrackedValue(token.value);
       if (!key) continue;
+      const identities = collectTokenIdentities(token);
       if (!values.has(key)) {
-        values.set(key, { token, path: getTokenPath(token) });
+        values.set(key, { token, path: getTokenPath(token), identities });
+        continue;
+      }
+      const existing = values.get(key);
+      if (!existing) continue;
+      for (const identity of identities) {
+        existing.identities.add(identity);
       }
     }
   }
   return values;
+}
+
+function collectTokenIdentities(token: DtifFlattenedToken): Set<string> {
+  const identities = new Set<string>();
+  identities.add(token.pointer);
+  identities.add(getTokenPath(token));
+  if (typeof token.value === 'string') {
+    const cssVar = extractVarName(token.value);
+    if (cssVar) identities.add(cssVar);
+  }
+  for (const reference of token.resolution?.references ?? []) {
+    identities.add(reference.pointer);
+  }
+  for (const pointer of token.resolution?.appliedAliases ?? []) {
+    identities.add(pointer.pointer);
+  }
+  return identities;
 }
 
 function isUnusedTokenRule(e: {

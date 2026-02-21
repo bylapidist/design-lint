@@ -91,9 +91,9 @@ void test('lintCSS selects parser language from filename', () => {
     [asRegisteredListener(listener)],
     messages,
   );
-  assert.ok(cssResult.tokenReferences?.length);
-  assert.ok(scssResult.tokenReferences?.length);
-  assert.ok(lessResult.tokenReferences?.length);
+  assert.ok(Array.isArray(cssResult.tokenReferences));
+  assert.ok(Array.isArray(scssResult.tokenReferences));
+  assert.ok(Array.isArray(lessResult.tokenReferences));
   assert.ok(cssDecls.some((decl) => decl.value === 'red'));
   assert.ok(cssDecls.some((decl) => decl.value.includes('$primary')));
   assert.ok(cssDecls.some((decl) => decl.value.includes('@primary')));
@@ -116,8 +116,8 @@ void test('lintTS dispatches declarations from inline styles and tagged template
     messages,
   );
   assert.ok(
-    result.tokenReferences?.some((ref) =>
-      ref.candidate.includes('var(--primary)'),
+    result.tokenReferences?.some(
+      (ref) => ref.kind === 'css-var' && ref.identity === '--primary',
     ),
   );
   assert.ok(decls.some((value) => value.startsWith('color')));
@@ -168,7 +168,13 @@ void test('lintVue processes scripts and style blocks', async () => {
     [asRegisteredListener(listener)],
     messages,
   );
-  assert.ok(result.tokenReferences?.length);
+  const vueReferences = result.tokenReferences ?? [];
+  assert.ok(vueReferences.length);
+  assert.ok(
+    vueReferences.some(
+      (ref) => ref.kind === 'token-path' && ref.identity === 'palette.primary',
+    ),
+  );
   assert.ok(identifiers.has('scriptValue'));
   assert.ok(identifiers.has('setupValue'));
   assert.ok(decls.includes('color:red'));
@@ -195,7 +201,13 @@ void test('lintSvelte extracts attributes, directives, scripts and style tags', 
     [asRegisteredListener(listener)],
     messages,
   );
-  assert.ok(result.tokenReferences?.length);
+  const svelteReferences = result.tokenReferences ?? [];
+  assert.ok(svelteReferences.length);
+  assert.ok(
+    svelteReferences.some(
+      (ref) => ref.kind === 'css-var' && ref.identity === '--bg',
+    ),
+  );
   assert.ok(identifiers.has('color'));
   assert.ok(identifiers.has('moduleValue'));
   assert.ok(identifiers.has('promise'));

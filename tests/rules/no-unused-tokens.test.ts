@@ -229,3 +229,108 @@ void test('design-system/no-unused-tokens resets tracked usage for sequential ru
     false,
   );
 });
+
+void test('design-system/no-unused-tokens does not match token path substrings', async () => {
+  const tokens = {
+    $version: '1.0.0',
+    color: {
+      primary: { $type: 'string', $value: 'primary' },
+      primaryDark: { $type: 'string', $value: 'primary-dark' },
+    },
+  };
+  const linter = initLinter(
+    {
+      tokens,
+      rules: { 'design-system/no-unused-tokens': 'warn' },
+    },
+    new FileSource(),
+  );
+  const doc: LintDocument = {
+    id: 'file.ts',
+    type: 'ts',
+    getText: () => Promise.resolve('const name = "color.primaryDark";'),
+  };
+  const { results } = await linter.lintDocuments([doc]);
+  const unused = results
+    .flatMap((result) => result.messages)
+    .filter((message) => message.ruleId === 'design-system/no-unused-tokens')
+    .map((message) => message.message);
+  assert.equal(
+    unused.some((message) => message.includes('primary-dark')),
+    false,
+  );
+  assert.equal(
+    unused.some((message) => message.includes('primary')),
+    true,
+  );
+});
+
+void test('design-system/no-unused-tokens does not match numeric overlaps', async () => {
+  const tokens = {
+    $version: '1.0.0',
+    spacing: {
+      one: { $type: 'number', $value: 1 },
+      ten: { $type: 'number', $value: 10 },
+    },
+  };
+  const linter = initLinter(
+    {
+      tokens,
+      rules: { 'design-system/no-unused-tokens': 'warn' },
+    },
+    new FileSource(),
+  );
+  const doc: LintDocument = {
+    id: 'file.ts',
+    type: 'ts',
+    getText: () => Promise.resolve('const token = "spacing.ten";'),
+  };
+  const { results } = await linter.lintDocuments([doc]);
+  const unused = results
+    .flatMap((result) => result.messages)
+    .filter((message) => message.ruleId === 'design-system/no-unused-tokens')
+    .map((message) => message.message);
+  assert.equal(
+    unused.some((message) => message.includes('10')),
+    false,
+  );
+  assert.equal(
+    unused.some((message) => message.includes('1')),
+    true,
+  );
+});
+
+void test('design-system/no-unused-tokens matches transformed css vars by identity', async () => {
+  const tokens = {
+    $version: '1.0.0',
+    color: {
+      primary: { $type: 'string', $value: 'var(--color-primary)' },
+      secondary: { $type: 'string', $value: 'var(--color-secondary)' },
+    },
+  };
+  const linter = initLinter(
+    {
+      tokens,
+      rules: { 'design-system/no-unused-tokens': 'warn' },
+    },
+    new FileSource(),
+  );
+  const doc: LintDocument = {
+    id: 'file.css',
+    type: 'css',
+    getText: () => Promise.resolve('.btn { color: var(--color-primary); }'),
+  };
+  const { results } = await linter.lintDocuments([doc]);
+  const unused = results
+    .flatMap((result) => result.messages)
+    .filter((message) => message.ruleId === 'design-system/no-unused-tokens')
+    .map((message) => message.message);
+  assert.equal(
+    unused.some((message) => message.includes('--color-primary')),
+    false,
+  );
+  assert.equal(
+    unused.some((message) => message.includes('--color-secondary')),
+    true,
+  );
+});
