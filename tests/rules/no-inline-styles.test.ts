@@ -7,7 +7,7 @@ import ts from 'typescript';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 
-void test('design-system/no-inline-styles does not flag components by default', async () => {
+void test('design-system/no-inline-styles reports missing targeting options', async () => {
   const linter = initLinter(
     {
       rules: { 'design-system/no-inline-styles': 'error' },
@@ -18,7 +18,11 @@ void test('design-system/no-inline-styles does not flag components by default', 
     'const a = <Button style={{ color: "red" }} />;',
     'file.tsx',
   );
-  assert.equal(res.messages.length, 0);
+  assert.equal(res.messages.length, 1);
+  assert.match(
+    res.messages[0].message,
+    /requires "components" or "importOrigins" options/,
+  );
 });
 
 void test('design-system/no-inline-styles flags style attribute on configured components', async () => {
@@ -57,7 +61,10 @@ void test('design-system/no-inline-styles ignores className when configured', as
   const linter = initLinter(
     {
       rules: {
-        'design-system/no-inline-styles': ['error', { ignoreClassName: true }],
+        'design-system/no-inline-styles': [
+          'error',
+          { ignoreClassName: true, components: ['Button'] },
+        ],
       },
     },
     new FileSource(),

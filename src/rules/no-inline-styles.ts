@@ -29,6 +29,17 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     const ignoreClassName = context.options?.ignoreClassName ?? false;
     const configuredComponents = new Set(context.options?.components ?? []);
     const configuredOrigins = new Set(context.options?.importOrigins ?? []);
+    const hasTargets =
+      configuredComponents.size > 0 || configuredOrigins.size > 0;
+    if (!hasTargets) {
+      context.report({
+        message:
+          'design-system/no-inline-styles requires "components" or "importOrigins" options to lint component usage',
+        line: 1,
+        column: 1,
+      });
+      return {};
+    }
     const importOriginsByFile = new Map<string, Map<string, string>>();
 
     const getFileImportMap = (
@@ -151,7 +162,7 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
         if (importOrigin.length === 0) return false;
         return configuredOrigins.has(importOrigin);
       }
-      return configuredComponents.size > 0;
+      return false;
     };
 
     return {

@@ -43,7 +43,7 @@ AST fallback limits:
 - Matches only identifiers/member expressions directly associated with local import bindings in the current file.
 - Does not resolve re-exports, transitive imports, or complex expression-based JSX tag names.
 
-When neither `components` nor `importOrigins` is configured, the rule does not report JSX component usage by default.
+When neither `components` nor `importOrigins` is configured, the rule reports a configuration diagnostic and skips component checks until one of those options is provided.
 
 This rule is not auto-fixable.
 
