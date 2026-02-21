@@ -33,6 +33,9 @@ npx design-lint "src/**/*.{ts,tsx,css}"
 }
 ```
 
+Component-oriented design-system rules are policy-driven. Configure substitutions,
+component lists, package scopes, or import origins to match your design system.
+
 Inline `style` support in TSX/JSX covers string attributes and object-literal expressions with literal string/number values. Dynamic style expressions are not normalized into CSS declarations.
 
 Tagged template analysis is strict: only configured template roots are parsed as CSS declarations. Extend `templateTags` in config when your project uses custom helpers.

@@ -12,7 +12,7 @@
 [![build](https://img.shields.io/github/actions/workflow/status/bylapidist/design-lint/ci.yml?label=CI&logo=github)](https://github.com/bylapidist/design-lint/actions)
 [![license](https://img.shields.io/npm/l/%40lapidist/design-lint.svg)](LICENSE)
 
-**@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, flags unsupported components and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif), using the canonical parser and schema as its reference implementation.
+**@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, enforces configured component/import policies, and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif), using the canonical parser and schema as its reference implementation.
 
 > Experimental: expect occasional breaking changes and bugs as the project evolves.
 
