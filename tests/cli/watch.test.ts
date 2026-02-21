@@ -308,6 +308,7 @@ function createWatchHarness(t: TestContext) {
     refreshCalls,
     state,
     config,
+    options,
     linterRef,
     setNextIgnoreFiles,
     setRunLintImpl,
@@ -409,6 +410,18 @@ void test('startWatch wires chokidar watchers and handles lint cycles', async (t
   const lastExitCode = harness.exitCodes[harness.exitCodes.length - 1];
   assert.equal(lastExitCode, 0);
   assert.equal(harness.getWatcher().closed, true);
+});
+
+void test('startWatch suppresses watch banner when quiet mode is enabled', async (t) => {
+  const harness = createWatchHarness(t);
+  harness.options.options.quiet = true;
+
+  await harness.start();
+
+  assert.equal(
+    harness.logMessages.some((msg) => msg.includes('Watching for changes')),
+    false,
+  );
 });
 
 void test('startWatch runs full targets when run-level rules are enabled', async (t) => {

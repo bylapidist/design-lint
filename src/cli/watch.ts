@@ -168,7 +168,9 @@ export async function startWatch(
   let { pluginPaths, ignoreFilePaths } = state;
   let configSourcePaths = resolveConfigSourcePaths(config);
 
-  console.log('Watching for changes...');
+  if (!options.quiet) {
+    console.log('Watching for changes...');
+  }
   await refreshIgnore();
   const watchPaths = [...targets, TOKEN_FILE_GLOB];
   watchPaths.push(...configSourcePaths);
