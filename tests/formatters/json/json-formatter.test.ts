@@ -71,12 +71,34 @@ void test('json formatter serializes token metadata', async () => {
   });
   await tracker.configure([
     {
-      rule: { name: 'design-system/no-unused-tokens' },
+      rule: {
+        name: 'design-system/no-unused-tokens',
+        meta: { description: '', capabilities: { tokenUsage: true } },
+        create: () => ({}),
+      },
       severity: 'warn',
       options: {},
     },
   ]);
-  const results = tracker.generateReports('config');
+  const unusedTokens = await tracker.getUnusedTokens();
+  const results: LintResult[] = [
+    {
+      sourceId: 'config',
+      messages: unusedTokens.map((token) => ({
+        ruleId: 'design-system/no-unused-tokens',
+        severity: 'warn',
+        message: `Token ${token.value} is defined but never used`,
+        line: 1,
+        column: 1,
+        metadata: {
+          path: token.path,
+          pointer: token.pointer,
+          deprecated: token.deprecated,
+          extensions: token.extensions,
+        },
+      })),
+    },
+  ];
   const out = jsonFormatter(results);
   const parsed = JSON.parse(out) as LintResult[];
   const allMetadata = parsed

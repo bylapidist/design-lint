@@ -3,9 +3,11 @@ import type {
   LintResult,
   LintMessage,
   RuleContext,
+  RuleRunContext,
   DesignTokens,
   RegisteredRuleListener,
   RuleSymbolResolutionHelpers,
+  RuleRunListener,
 } from './types.js';
 import type { NameTransform } from '../utils/tokens/index.js';
 import { TokenRegistry } from './token-registry.js';
@@ -27,6 +29,8 @@ import { FILE_TYPE_MAP } from './file-types.js';
 import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
 import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
 import { isRecord } from '../utils/guards/data/is-record.js';
+
+type EnabledRule = ReturnType<RuleRegistry['getEnabledRules']>[number];
 
 export interface Config {
   format?: string;
@@ -151,12 +155,24 @@ export class Linter {
   }> {
     await this.ruleRegistry.load();
     await this.tokensReady;
+    const enabled = this.ruleRegistry.getEnabledRules();
+    await this.tokenTracker.configure(enabled);
+    const runHook = this.buildRunRuleContexts(enabled, this.config.configPath);
+    this.tokenTracker.beginRun();
     const runner = new Runner({
       config: this.config,
-      tokenTracker: this.tokenTracker,
-      lintDocument: this.lintText.bind(this),
+      lintDocument: (text, sourceId, docType, metadata) =>
+        this.lintText(text, sourceId, docType, metadata, enabled),
     });
-    return runner.run(documents, fix, cache);
+    const runResult = await runner.run(documents, fix, cache);
+    const postRunMessages = await runHook.collect();
+    if (postRunMessages.length > 0) {
+      runResult.results.push({
+        sourceId: runHook.sourceId,
+        messages: postRunMessages,
+      });
+    }
+    return runResult;
   }
 
   async lintTargets(
@@ -223,11 +239,15 @@ export class Linter {
     sourceId = 'unknown',
     docType?: string,
     metadata?: Record<string, unknown>,
+    enabledRules?: EnabledRule[],
   ): Promise<LintResult> {
     await this.ruleRegistry.load();
     await this.tokensReady;
-    const enabled = this.ruleRegistry.getEnabledRules();
-    await this.tokenTracker.configure(enabled);
+    const enabled = enabledRules ?? this.ruleRegistry.getEnabledRules();
+    if (!enabledRules) {
+      await this.tokenTracker.configure(enabled);
+      this.tokenTracker.beginRun();
+    }
     const { listeners, ruleDescriptions, ruleCategories, messages } =
       this.buildRuleContexts(enabled, sourceId, metadata);
     const parserResult = await this.runParser(
@@ -237,7 +257,7 @@ export class Linter {
       listeners,
       messages,
     );
-    if (this.tokenTracker.hasUnusedTokenRules()) {
+    if (this.tokenTracker.hasTrackingConsumers()) {
       await this.tokenTracker.trackUsage({
         references: parserResult?.tokenReferences,
         text,
@@ -249,6 +269,38 @@ export class Linter {
       messages: filtered,
       ruleDescriptions,
       ruleCategories,
+    };
+  }
+
+  private buildRunRuleContexts(
+    enabled: EnabledRule[],
+    sourceId = 'designlint.config',
+  ): {
+    sourceId: string;
+    collect: () => Promise<LintMessage[]>;
+  } {
+    const messages: LintMessage[] = [];
+    const listeners: RuleRunListener[] = [];
+    for (const { rule, options, severity } of enabled) {
+      if (!rule.createRun) continue;
+      const ctx: RuleRunContext = {
+        sourceId,
+        options,
+        tokenUsage: this.tokenTracker,
+        report: (message) =>
+          messages.push({ ...message, ruleId: rule.name, severity }),
+      };
+      listeners.push(rule.createRun(ctx));
+    }
+
+    return {
+      sourceId,
+      collect: async () => {
+        for (const listener of listeners) {
+          await listener.onRunComplete?.();
+        }
+        return messages;
+      },
     };
   }
 
