@@ -99,6 +99,8 @@ function createWatchHarness(t: TestContext) {
 
   const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(configPath, '{"rules":{}}\n');
+  const parentConfigPath = path.join(dir, 'designlint.shared.config.json');
+  fs.writeFileSync(parentConfigPath, '{"rules":{}}\n');
 
   const outputPath = path.join(dir, 'lint.txt');
   fs.writeFileSync(outputPath, '');
@@ -222,6 +224,7 @@ function createWatchHarness(t: TestContext) {
   const state = { pluginPaths: [pluginPath], ignoreFilePaths: [ignoreFile] };
   const config = {
     configPath,
+    configSources: [parentConfigPath, configPath],
     plugins: [pluginPath],
     patterns: ['src/**/*.ts'],
   };
@@ -289,6 +292,7 @@ function createWatchHarness(t: TestContext) {
     designIgnore,
     gitIgnore,
     configPath,
+    parentConfigPath,
     outputPath,
     reportPath,
     cacheLocation,
@@ -336,6 +340,7 @@ void test('startWatch wires chokidar watchers and handles lint cycles', async (t
   assert.ok(watchedPaths.includes(harness.target));
   assert.ok(watchedPaths.includes(TOKEN_FILE_GLOB));
   assert.ok(watchedPaths.includes(harness.configPath));
+  assert.ok(watchedPaths.includes(harness.parentConfigPath));
   assert.ok(watchedPaths.includes(harness.designIgnore));
   assert.ok(watchedPaths.includes(harness.gitIgnore));
   assert.ok(watchedPaths.includes(harness.pluginPath));
@@ -343,6 +348,7 @@ void test('startWatch wires chokidar watchers and handles lint cycles', async (t
 
   const ignoredFn = (p: string) => ignoredPredicate(p);
   assert.equal(ignoredFn(harness.configPath), false);
+  assert.equal(ignoredFn(harness.parentConfigPath), false);
   assert.equal(ignoredFn(harness.designIgnore), false);
   assert.equal(ignoredFn(harness.pluginPath), false);
   assert.equal(ignoredFn(harness.ignoreFile), false);
@@ -449,9 +455,14 @@ void test('startWatch reloads configuration and plugin registries on change', as
   assert.ok(loadCalls.length >= 1);
   assert.deepEqual(last(harness.lintCalls), harness.targets);
 
-  watcher.emit('change', harness.pluginPath);
+  watcher.emit('change', harness.parentConfigPath);
   await flush();
   assert.ok(loadCalls.length >= 2);
+  assert.deepEqual(last(harness.lintCalls), harness.targets);
+
+  watcher.emit('change', harness.pluginPath);
+  await flush();
+  assert.ok(loadCalls.length >= 3);
   assert.ok(harness.state.pluginPaths.includes(harness.pluginMjsPath));
   assert.deepEqual(last(watcher.added), [harness.pluginMjsPath]);
 
