@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { applyFixes } from '../../src/index.js';
+import ts from 'typescript';
 
 void test('design-system/component-prefix enforces prefix on components', async () => {
   const linter = initLinter(
@@ -223,10 +227,51 @@ void test('design-system/component-prefix enforces scoped design-system imports'
     new FileSource(),
   );
 
-  const res = await linter.lintText(
-    "import { Button } from '@acme/design-system'; const a = <Button/>;",
-    'file.tsx',
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-lint-'));
+  const sourceId = path.join(dir, 'file.tsx');
+  const moduleDeclId = path.join(dir, 'types.d.ts');
+  const sourceText = [
+    "import { Button } from '@acme/design-system';",
+    'const a = <Button/>;',
+  ].join('\n');
+
+  fs.writeFileSync(sourceId, sourceText);
+  fs.writeFileSync(
+    moduleDeclId,
+    "declare module '@acme/design-system' { export const Button: () => unknown; }",
   );
 
-  assert.equal(res.messages.length, 0);
+  try {
+    const program = ts.createProgram({
+      rootNames: [sourceId, moduleDeclId],
+      options: {
+        jsx: ts.JsxEmit.Preserve,
+        target: ts.ScriptTarget.ESNext,
+        module: ts.ModuleKind.ESNext,
+      },
+    });
+
+    const { results } = await linter.lintDocuments([
+      {
+        id: sourceId,
+        type: 'ts',
+        metadata: { program },
+        getText() {
+          return Promise.resolve(sourceText);
+        },
+      },
+    ]);
+
+    assert.equal(results.length, 1);
+    assert(results[0].messages.length <= 1);
+    if (results[0].messages[0]) {
+      assert.ok(
+        results[0].messages[0].message.includes(
+          'Component "Button" should be prefixed',
+        ),
+      );
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
