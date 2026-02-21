@@ -128,7 +128,7 @@ import type { Config, LintResult, RuleModule } from '@lapidist/design-lint';
 ```
 
 ## Versioning and stability
-The public API follows semantic versioning. Functions documented here are stable. Experimental exports are marked with `@experimental` in the source and may change without notice.
+The project targets semantic versioning for public API changes. Functions documented here are intended as the stable integration surface. Experimental exports are marked with `@experimental` in the source and may change without notice.
 
 ## See also
 - [Plugins](./plugins.md)

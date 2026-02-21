@@ -31,7 +31,9 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     const configuredOrigins = new Set(context.options?.importOrigins ?? []);
     const importOriginsByFile = new Map<string, Map<string, string>>();
 
-    const getFileImportMap = (sourceFile: ts.SourceFile): Map<string, string> => {
+    const getFileImportMap = (
+      sourceFile: ts.SourceFile,
+    ): Map<string, string> => {
       const fileId = sourceFile.fileName;
       let fileImportMap = importOriginsByFile.get(fileId);
       if (!fileImportMap) {
@@ -41,7 +43,9 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
       return fileImportMap;
     };
 
-    const collectImportDeclaration = (declaration: ts.ImportDeclaration): void => {
+    const collectImportDeclaration = (
+      declaration: ts.ImportDeclaration,
+    ): void => {
       if (!ts.isStringLiteral(declaration.moduleSpecifier)) return;
       const importClause = declaration.importClause;
       if (!importClause) return;
@@ -69,7 +73,9 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     const resolveImportOriginFromMap = (
       tagName: ts.JsxTagNameExpression,
     ): string => {
-      const fileImportMap = importOriginsByFile.get(tagName.getSourceFile().fileName);
+      const fileImportMap = importOriginsByFile.get(
+        tagName.getSourceFile().fileName,
+      );
       if (!fileImportMap) return '';
 
       if (ts.isIdentifier(tagName)) {
@@ -78,7 +84,11 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
 
       if (ts.isPropertyAccessExpression(tagName)) {
         const namespace = tagName.expression.getText();
-        return fileImportMap.get(namespace) ?? fileImportMap.get(tagName.getText()) ?? '';
+        return (
+          fileImportMap.get(namespace) ??
+          fileImportMap.get(tagName.getText()) ??
+          ''
+        );
       }
 
       return fileImportMap.get(tagName.getText()) ?? '';

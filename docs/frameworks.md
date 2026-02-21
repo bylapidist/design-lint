@@ -81,6 +81,7 @@ design-lint currently supports these file extensions:
 - `cjs`
 - `css`
 - `scss`
+- `sass` (recognized, reported as unsupported indented syntax via `parse-error`)
 - `less`
 - `vue`
 - `svelte`

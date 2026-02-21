@@ -42,7 +42,7 @@ General purpose linters understand code style, not design systems. `@lapidist/de
 
 ### Auto-fixes
 
-Run with `--fix` to automatically replace deprecated tokens and tidy up your code. See the [usage guide](docs/usage.md) for fix options.
+Run with `--fix` to apply available rule fixes and tidy up your code. Fix support is rule-specific; not every diagnostic is auto-fixable. See the [usage guide](docs/usage.md) for fix options.
 
 ### Broad language support
 

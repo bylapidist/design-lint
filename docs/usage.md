@@ -162,6 +162,14 @@ npx design-lint src/button.tsx styles/*.css
 - `0` – no lint errors (including when no files match by default)
 - `1` – lint errors, runtime/configuration error, or no matched files when `--fail-on-empty` is enabled
 
+## Analysis boundaries
+design-lint relies on static analysis and framework parsers. Some dynamic patterns are intentionally not normalized into lintable declarations. In particular:
+
+- Dynamic inline style expressions are not fully analyzed.
+- Rule coverage is strongest for explicit token references, literal style values, and statically resolvable imports/component usage.
+
+Treat lint results as deterministic policy checks over supported static patterns, not as a full semantic proof of UI conformance.
+
 ## Troubleshooting
 If the CLI fails or reports unexpected results:
 - Verify the [configuration](./configuration.md)

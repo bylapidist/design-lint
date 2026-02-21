@@ -18,8 +18,9 @@ Plugins let you package and share custom rules and related runtime hooks. This g
 ## Overview
 A plugin is an npm package that exports an object with at least a `rules` array.
 Plugins may also optionally specify `name`, `version`, and an `init(env)` function
-for running setup logic. The package name forms the rule namespace:
-`<plugin>/<rule>`.
+for running setup logic. Rule names are defined by each rule's `name` field and
+must be unique across built-in and plugin rules. Using a namespace such as
+`<plugin>/<rule>` is recommended, but not enforced by the runtime.
 
 > **Note:** Declare `@lapidist/design-lint` as a `peerDependency` to ensure users install a compatible version.
 
