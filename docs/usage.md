@@ -141,13 +141,15 @@ import {
 ```
 
 ## Watch mode and caching
-Use `--watch` to rerun the linter when files change. design-lint caches results to speed up subsequent runs. Cache data lives in `.designlintcache` and is safe to commit to CI caches.
+Use `--watch` to rerun the linter when files change. Persistent caching is opt-in and only enabled when you pass `--cache`.
 
 ```bash
-npx design-lint "src/**/*" --watch
+npx design-lint "src/**/*" --watch --cache
 ```
 
-> **Tip:** Use watch mode during development and caching in CI to shorten feedback loops.
+When `--cache` is enabled, design-lint writes cache data to `.designlintcache` (or the path provided by `--cache-location`).
+
+> **Tip:** Use watch mode during development, and add `--cache` in longer-running local sessions or CI jobs to shorten feedback loops.
 
 ## Target files and directories
 You can pass specific files or directories:

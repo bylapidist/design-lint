@@ -81,7 +81,7 @@ npx design-lint "src/**/*" --format json --output lint.json
 ```
 
 ## Handling failures
-Use `--max-warnings` to fail the build when warnings exceed a threshold. Cache `node_modules` or the `.designlintcache` directory to speed up runs. See [formatters](./formatters.md) for report formats and [usage](./usage.md) for CLI flags.
+Use `--max-warnings` to fail the build when warnings exceed a threshold. Cache `node_modules` to speed up runs, and only cache `.designlintcache` when your command includes `--cache`. See [formatters](./formatters.md) for report formats and [usage](./usage.md) for CLI flags.
 
 ## See also
 - [Formatters](./formatters.md)
