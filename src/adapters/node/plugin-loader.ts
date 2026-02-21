@@ -12,6 +12,23 @@ const {
   data: { isRecord },
 } = guards;
 const { isArray } = collections;
+const WARNED_UNTRUSTED_PLUGIN_KEY = Symbol.for(
+  'design-lint.warned.untrusted-plugin-loader',
+);
+
+function warnUntrustedPluginLoad(): void {
+  if (Reflect.get(globalThis, WARNED_UNTRUSTED_PLUGIN_KEY) === true) {
+    return;
+  }
+  Reflect.set(globalThis, WARNED_UNTRUSTED_PLUGIN_KEY, true);
+  process.emitWarning(
+    'Loading design-lint plugins executes arbitrary code. Only load trusted plugins.',
+    {
+      code: 'DESIGN_LINT_UNTRUSTED_PLUGIN',
+      type: 'SecurityWarning',
+    },
+  );
+}
 
 export class NodePluginLoader implements PluginLoader {
   async load(p: string, configPath?: string): Promise<LoadedPlugin> {
@@ -31,6 +48,7 @@ export class NodePluginLoader implements PluginLoader {
         remediation: 'Ensure the plugin is installed and resolvable.',
       });
     }
+    warnUntrustedPluginLoad();
     let mod: unknown;
     try {
       if (resolved.endsWith('.mjs')) {

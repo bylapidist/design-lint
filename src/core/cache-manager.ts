@@ -1,4 +1,5 @@
 import { stat, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { CacheProvider } from './cache-provider.js';
 import type { LintResult } from './types.js';
 import type { LintDocument } from './environment.js';
@@ -11,6 +12,7 @@ export class CacheManager {
   constructor(
     private cache: CacheProvider | undefined,
     private fix: boolean,
+    private projectRoot: string = process.cwd(),
   ) {}
 
   async processDocument(
@@ -54,7 +56,7 @@ export class CacheManager {
       let size = statResult?.size ?? text.length;
       if (this.fix && statResult) {
         const output = applyFixes(text, result.messages);
-        if (output !== text) {
+        if (output !== text && this.canWriteFix(doc.id)) {
           await writeFile(doc.id, output, 'utf8');
           result = await lintFn(output, doc.id, doc.type, doc.metadata);
           const newStat = await stat(doc.id);
@@ -71,6 +73,18 @@ export class CacheManager {
 
   async save(): Promise<void> {
     await this.cache?.save();
+  }
+
+  private canWriteFix(filePath: string): boolean {
+    const root = path.resolve(this.projectRoot);
+    const target = path.resolve(filePath);
+    const relative = path.relative(root, target);
+    return (
+      relative === '' ||
+      (!relative.startsWith(`..${path.sep}`) &&
+        relative !== '..' &&
+        !path.isAbsolute(relative))
+    );
   }
 
   private async handleRuntimeError(

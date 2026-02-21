@@ -14,7 +14,7 @@
 
 **@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, flags unsupported components and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif), using the canonical parser and schema as its reference implementation.
 
-> This project is not ready for production use.
+> Experimental: expect occasional breaking changes and bugs as the project evolves.
 
 ## Quick start
 

@@ -121,3 +121,29 @@ void test('NodePluginLoader reports missing plugin files', async () => {
     },
   );
 });
+
+void test('NodePluginLoader emits a security warning when loading plugins', async (t) => {
+  const dir = makeTempDir(t);
+  const pluginPath = path.join(dir, 'warn-plugin.cjs');
+  fs.writeFileSync(pluginPath, 'module.exports = { rules: [] };\n', 'utf8');
+
+  const warnedKey = Symbol.for('design-lint.warned.untrusted-plugin-loader');
+  Reflect.set(globalThis, warnedKey, false);
+
+  const warnings: unknown[] = [];
+  const emitWarningMock = t.mock.method(
+    process,
+    'emitWarning',
+    (...args: unknown[]) => {
+      warnings.push(args);
+    },
+  );
+
+  const loader = new NodePluginLoader();
+  await loader.load(pluginPath);
+  assert.equal(warnings.length, 1);
+  assert.match(String(warnings[0]?.[0] ?? ''), /Only load trusted plugins/);
+
+  emitWarningMock.mock.restore();
+  Reflect.set(globalThis, warnedKey, false);
+});

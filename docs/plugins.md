@@ -23,6 +23,9 @@ must be unique across built-in and plugin rules. Using a namespace such as
 `<plugin>/<rule>` is recommended, but not enforced by the runtime.
 
 > **Note:** Declare `@lapidist/design-lint` as a `peerDependency` to ensure users install a compatible version.
+>
+> **Security:** Plugin modules run with full Node.js permissions during linting.
+> Treat plugin packages as executable code and only load plugins you trust.
 
 ## Creating a plugin
 ### 1. Scaffold the project
