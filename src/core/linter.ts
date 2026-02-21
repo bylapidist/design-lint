@@ -46,7 +46,6 @@ export interface Config {
   configSources?: string[];
   concurrency?: number;
   patterns?: string[];
-  wrapTokensWithVar?: boolean;
   nameTransform?: NameTransform;
   templateTags?: string[];
 }
