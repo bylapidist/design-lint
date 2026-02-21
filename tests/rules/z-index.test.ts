@@ -47,6 +47,13 @@ void test('design-token/z-index ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
+void test('design-token/z-index ignores inline style values for other properties', async () => {
+  const linter = createLinter();
+  const code = 'export const C = () => <div style={{ padding: 4 }} />;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
 void test('design-token/z-index warns when tokens missing', async () => {
   const linter = initLinter(
     { rules: { 'design-token/z-index': 'warn' } },

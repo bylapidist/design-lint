@@ -8,6 +8,35 @@ const {
   domain: { isTokenInGroup },
 } = guards;
 
+function normalizeStylePropertyName(name: string): string {
+  return name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+}
+
+function getPropertyName(name: ts.PropertyName): string | undefined {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name)) {
+    return name.text;
+  }
+  if (ts.isNumericLiteral(name)) {
+    return name.text;
+  }
+  return undefined;
+}
+
+function isMatchingInlineStyleProperty(
+  node: ts.Node,
+  expectedProperty: string,
+): boolean {
+  for (let current: ts.Node = node; !ts.isSourceFile(current); ) {
+    if (ts.isPropertyAssignment(current)) {
+      const propertyName = getPropertyName(current.name);
+      if (!propertyName) return false;
+      return normalizeStylePropertyName(propertyName) === expectedProperty;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
 export const zIndexRule = tokenRule({
   name: 'design-token/z-index',
   meta: { description: 'enforce z-index tokens', category: 'design-token' },
@@ -27,6 +56,7 @@ export const zIndexRule = tokenRule({
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;
+        if (!isMatchingInlineStyleProperty(node, 'z-index')) return;
         if (ts.isNumericLiteral(node)) {
           const value = Number(node.text);
           if (!allowed.has(value)) {

@@ -76,6 +76,13 @@ void test('design-token/line-height ignores numbers in JSX props', async () => {
   assert.equal(res.messages.length, 0);
 });
 
+void test('design-token/line-height ignores inline style values for other properties', async () => {
+  const linter = createLinter();
+  const code = 'export const C = () => <div style={{ margin: 8 }} />;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
 void test('design-token/line-height warns when tokens missing', async () => {
   const linter = initLinter(
     { rules: { 'design-token/line-height': 'warn' } },

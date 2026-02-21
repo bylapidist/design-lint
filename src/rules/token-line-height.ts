@@ -8,6 +8,35 @@ const {
   domain: { isTokenInGroup },
 } = guards;
 
+function normalizeStylePropertyName(name: string): string {
+  return name.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+}
+
+function getPropertyName(name: ts.PropertyName): string | undefined {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name)) {
+    return name.text;
+  }
+  if (ts.isNumericLiteral(name)) {
+    return name.text;
+  }
+  return undefined;
+}
+
+function isMatchingInlineStyleProperty(
+  node: ts.Node,
+  expectedProperty: string,
+): boolean {
+  for (let current: ts.Node = node; !ts.isSourceFile(current); ) {
+    if (ts.isPropertyAssignment(current)) {
+      const propertyName = getPropertyName(current.name);
+      if (!propertyName) return false;
+      return normalizeStylePropertyName(propertyName) === expectedProperty;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
 const parse = (val: string): number | null => {
   const v = val.trim();
   const unitMatch = /^(\d*\.?\d+)(px|rem|em)%?$/.exec(v);
@@ -42,6 +71,7 @@ export const lineHeightRule = tokenRule({
     return {
       onNode(node) {
         if (!isStyleValue(node)) return;
+        if (!isMatchingInlineStyleProperty(node, 'line-height')) return;
         const report = (raw: string, value: number, n: ts.Node) => {
           if (!allowed.has(value)) {
             const pos = n
