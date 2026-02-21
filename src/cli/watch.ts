@@ -24,6 +24,11 @@ import {
   type ExecuteOptions,
 } from './execute.js';
 import { TOKEN_FILE_GLOB } from '../utils/tokens/index.js';
+import { guards } from '../utils/index.js';
+
+const {
+  data: { isFunction, isObject, isPromiseLike },
+} = guards;
 
 export interface WatchState {
   pluginPaths: string[];
@@ -63,11 +68,18 @@ export interface WatchServices extends ExecuteServices {
 }
 
 async function hasRunLevelRules(linter: Linter): Promise<boolean> {
-  const candidate = linter as unknown as {
-    hasRunLevelRules?: () => Promise<boolean>;
-  };
-  if (typeof candidate.hasRunLevelRules === 'function') {
-    return candidate.hasRunLevelRules();
+  if (isObject(linter) && 'hasRunLevelRules' in linter) {
+    const method = Reflect.get(linter, 'hasRunLevelRules');
+    if (isFunction(method)) {
+      const result = method.call(linter);
+      if (typeof result === 'boolean') {
+        return result;
+      }
+      if (isPromiseLike(result)) {
+        const awaited = await result;
+        return typeof awaited === 'boolean' ? awaited : false;
+      }
+    }
   }
   return false;
 }

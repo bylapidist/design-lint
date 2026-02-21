@@ -5,3 +5,5 @@
  */
 export * from './is-object.js';
 export * from './is-record.js';
+export * from './is-function.js';
+export * from './is-promise-like.js';

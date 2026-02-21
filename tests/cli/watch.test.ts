@@ -412,7 +412,7 @@ void test('startWatch runs full targets when run-level rules are enabled', async
   harness.targets.push(sibling);
   harness.linterRef.current = {
     ...(harness.linterRef.current as unknown as object),
-    hasRunLevelRules: async () => true,
+    hasRunLevelRules: () => Promise.resolve(true),
   } as Linter;
   await harness.start();
 
