@@ -168,6 +168,26 @@ void test('design-system/component-prefix preserves kebab-case custom element pr
   assert.equal(fixed, 'const a = <ds-my-button></ds-my-button>');
 });
 
+void test('design-system/component-prefix normalizes custom element prefixes to lowercase', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['my-button'] },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+  const code = 'const a = <my-button></my-button>';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 2);
+  assert.ok(res.messages.every((m) => m.fix));
+  const fixed = applyFixes(code, res.messages);
+  assert.equal(fixed, 'const a = <ds-my-button></ds-my-button>');
+});
+
 void test('design-system/component-prefix does not double-prefix prefixed tags', async () => {
   const pascalLinter = initLinter(
     {

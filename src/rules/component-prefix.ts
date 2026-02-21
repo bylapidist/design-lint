@@ -53,7 +53,8 @@ function getRequiredPrefix(tag: string, prefix: string): string {
     return prefix;
   }
 
-  return prefix.endsWith('-') ? prefix : `${prefix}-`;
+  const normalized = prefix.endsWith('-') ? prefix : `${prefix}-`;
+  return normalized.toLowerCase();
 }
 
 function getImportedComponentName(

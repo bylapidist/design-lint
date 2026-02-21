@@ -27,6 +27,8 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 - `packages` (`string[]`): limit enforcement to imports from specific package specifiers.
 - `components` (`string[]`): limit enforcement to specific imported component names.
 
+For custom elements (kebab-case tags), enforced prefixes are normalized to lowercase and suffixed with `-` when needed.
+
 > [!NOTE]
 > This rule only runs when you scope it with `packages` and/or `components`.
 > Unscoped configurations produce no diagnostics.
