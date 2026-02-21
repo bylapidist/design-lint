@@ -415,8 +415,13 @@ export class Linter {
     text: string,
     messages: LintMessage[],
   ): LintMessage[] {
-    const disabledLines = getDisabledLines(text);
-    return messages.filter((m) => !disabledLines.has(m.line));
+    const disabledByLine = getDisabledRulesByLine(text);
+    return messages.filter((message) => {
+      const disabled = disabledByLine.get(message.line);
+      if (!disabled) return true;
+      if (disabled.all) return false;
+      return !disabled.rules.has(message.ruleId);
+    });
   }
 }
 
@@ -555,31 +560,103 @@ function isDesignTokens(val: unknown): val is DesignTokens {
   return typeof val === 'object' && val !== null;
 }
 
-function getDisabledLines(text: string): Set<number> {
-  const disabled = new Set<number>();
+interface DisabledRules {
+  all: boolean;
+  rules: Set<string>;
+}
+
+const BLOCK_DISABLE_PATTERN =
+  /\/\*\s*design-lint-disable(?!-(?:next-line|line))\b([^*]*)\*\//;
+const BLOCK_ENABLE_PATTERN =
+  /\/\*\s*design-lint-enable(?!-(?:next-line|line))\b(?:[^*]*)\*\//;
+const NEXT_LINE_DISABLE_PATTERN =
+  /(?:\/\/|\/\*)\s*design-lint-disable-next-line\b(.*)/;
+const SAME_LINE_DISABLE_PATTERN = /design-lint-disable-line\b(.*)/;
+
+function getDisabledRulesByLine(text: string): Map<number, DisabledRules> {
+  const disabledByLine = new Map<number, DisabledRules>();
   const lines = text.split(/\r?\n/);
-  let block = false;
+  let blockRules: DisabledRules | null = null;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (/\/\*\s*design-lint-disable\s*\*\//.test(line)) {
-      block = true;
+    const lineNo = i + 1;
+    const nextLineNo = i + 2;
+
+    const blockDisable = BLOCK_DISABLE_PATTERN.exec(line);
+    if (blockDisable) {
+      const spec = blockDisable[1] || '';
+      blockRules = parseDisabledRules(spec);
       continue;
     }
-    if (/\/\*\s*design-lint-enable\s*\*\//.test(line)) {
-      block = false;
+
+    if (BLOCK_ENABLE_PATTERN.test(line)) {
+      blockRules = null;
       continue;
     }
-    if (/(?:\/\/|\/\*)\s*design-lint-disable-next-line/.test(line)) {
-      disabled.add(i + 2);
+
+    const nextLineDisable = NEXT_LINE_DISABLE_PATTERN.exec(line);
+    if (nextLineDisable) {
+      const spec = nextLineDisable[1] || '';
+      addDisabledRulesForLine(
+        disabledByLine,
+        nextLineNo,
+        parseDisabledRules(spec),
+      );
       continue;
     }
-    if (line.includes('design-lint-disable-line')) {
-      disabled.add(i + 1);
+
+    const sameLineDisable = SAME_LINE_DISABLE_PATTERN.exec(line);
+    if (sameLineDisable) {
+      const spec = sameLineDisable[1] || '';
+      addDisabledRulesForLine(disabledByLine, lineNo, parseDisabledRules(spec));
       continue;
     }
-    if (block) disabled.add(i + 1);
+
+    if (blockRules) {
+      addDisabledRulesForLine(disabledByLine, lineNo, blockRules);
+    }
   }
-  return disabled;
+
+  return disabledByLine;
+}
+
+function addDisabledRulesForLine(
+  disabledByLine: Map<number, DisabledRules>,
+  line: number,
+  disabled: DisabledRules,
+): void {
+  const current = disabledByLine.get(line);
+  if (!current) {
+    disabledByLine.set(line, {
+      all: disabled.all,
+      rules: new Set(disabled.rules),
+    });
+    return;
+  }
+  if (current.all || disabled.all) {
+    current.all = true;
+    current.rules.clear();
+    return;
+  }
+  for (const rule of disabled.rules) {
+    current.rules.add(rule);
+  }
+}
+
+function parseDisabledRules(raw: string): DisabledRules {
+  const cleaned = raw.trim().replace(/\*\/$/, '').trim();
+  if (cleaned.length === 0) {
+    return { all: true, rules: new Set<string>() };
+  }
+  const rules = cleaned
+    .split(/[,\s]+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  if (rules.length === 0) {
+    return { all: true, rules: new Set<string>() };
+  }
+  return { all: false, rules: new Set(rules) };
 }
 
 export function inferFileType(sourceId: string): string {
