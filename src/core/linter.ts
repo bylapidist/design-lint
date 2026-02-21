@@ -1,9 +1,11 @@
+import ts from 'typescript';
 import type {
   LintResult,
   LintMessage,
   RuleContext,
   DesignTokens,
   RuleModule,
+  RuleSymbolResolutionHelpers,
 } from './types.js';
 import type { NameTransform } from '../utils/tokens/index.js';
 import { TokenRegistry } from './token-registry.js';
@@ -23,6 +25,7 @@ import { parserRegistry } from './parser-registry.js';
 import { FILE_TYPE_MAP } from './file-types.js';
 import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
 import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
+import { isRecord } from '../utils/guards/data/is-record.js';
 
 export interface Config {
   tokens?:
@@ -268,6 +271,7 @@ export class Linter {
         sourceId,
         options,
         metadata,
+        symbolResolution: createSymbolResolutionHelpers(sourceId, metadata),
         report: (m) => messages.push({ ...m, severity, ruleId: rule.name }),
         getDtifTokens: (type?: string, theme?: string) => {
           const tokens = this.tokenRegistry?.getDtifTokens(theme) ?? [];
@@ -318,6 +322,135 @@ export class Linter {
     const disabledLines = getDisabledLines(text);
     return messages.filter((m) => !disabledLines.has(m.line));
   }
+}
+
+function createSymbolResolutionHelpers(
+  sourceId: string,
+  metadata?: Record<string, unknown>,
+): RuleSymbolResolutionHelpers | undefined {
+  const program = resolveMetadataProgram(metadata);
+  const checker = resolveTypeChecker(program, metadata);
+  if (!checker) return undefined;
+  const sourceFile = resolveSourceFile(sourceId, program, metadata);
+  const nodeLookup = sourceFile ? createNodeLookup(sourceFile) : undefined;
+
+  const getNodeKey = (node: ts.Node): string =>
+    `${String(node.pos)}:${String(node.end)}:${String(node.kind)}`;
+
+  const getSymbolAtLocation = (node: ts.Node): ts.Symbol | undefined => {
+    const target =
+      sourceFile && nodeLookup
+        ? (nodeLookup.get(getNodeKey(node)) ?? node)
+        : node;
+    return checker.getSymbolAtLocation(target);
+  };
+
+  const getAliasedSymbol = (symbol: ts.Symbol): ts.Symbol => {
+    if ((symbol.flags & ts.SymbolFlags.Alias) === 0) return symbol;
+    return checker.getAliasedSymbol(symbol);
+  };
+
+  const resolveSymbol = (node: ts.Node): ts.Symbol | undefined => {
+    const symbol = getSymbolAtLocation(node);
+    return symbol ? getAliasedSymbol(symbol) : undefined;
+  };
+
+  const getSymbolName = (node: ts.Node): string | undefined =>
+    resolveSymbol(node)?.name;
+
+  return {
+    getSymbolAtLocation,
+    getAliasedSymbol,
+    resolveSymbol,
+    getSymbolName,
+  };
+}
+
+function resolveSourceFile(
+  sourceId: string,
+  program: ts.Program | undefined,
+  metadata?: Record<string, unknown>,
+): ts.SourceFile | undefined {
+  const metadataSourceFile = resolveMetadataSourceFile(metadata);
+  if (metadataSourceFile) return metadataSourceFile;
+  return program?.getSourceFile(sourceId);
+}
+
+function resolveTypeChecker(
+  program: ts.Program | undefined,
+  metadata?: Record<string, unknown>,
+): ts.TypeChecker | undefined {
+  const metadataChecker = resolveMetadataTypeChecker(metadata);
+  if (metadataChecker) return metadataChecker;
+  return program?.getTypeChecker();
+}
+
+function resolveMetadataProgram(
+  metadata?: Record<string, unknown>,
+): ts.Program | undefined {
+  if (!metadata) return undefined;
+  const direct = metadata.program;
+  if (isProgram(direct)) return direct;
+  const tsMetadata = getTypeScriptMetadata(metadata);
+  return tsMetadata && isProgram(tsMetadata.program)
+    ? tsMetadata.program
+    : undefined;
+}
+
+function resolveMetadataTypeChecker(
+  metadata?: Record<string, unknown>,
+): ts.TypeChecker | undefined {
+  if (!metadata) return undefined;
+  const direct = metadata.typeChecker;
+  if (isTypeChecker(direct)) return direct;
+  const tsMetadata = getTypeScriptMetadata(metadata);
+  return tsMetadata && isTypeChecker(tsMetadata.typeChecker)
+    ? tsMetadata.typeChecker
+    : undefined;
+}
+
+function resolveMetadataSourceFile(
+  metadata?: Record<string, unknown>,
+): ts.SourceFile | undefined {
+  if (!metadata) return undefined;
+  const direct = metadata.sourceFile;
+  if (isSourceFile(direct)) return direct;
+  const tsMetadata = getTypeScriptMetadata(metadata);
+  return tsMetadata && isSourceFile(tsMetadata.sourceFile)
+    ? tsMetadata.sourceFile
+    : undefined;
+}
+
+function getTypeScriptMetadata(
+  metadata: Record<string, unknown>,
+): Record<string, unknown> | undefined {
+  const value = metadata.typescript;
+  return isRecord(value) ? value : undefined;
+}
+
+function isProgram(value: unknown): value is ts.Program {
+  return isRecord(value) && 'getTypeChecker' in value;
+}
+
+function isTypeChecker(value: unknown): value is ts.TypeChecker {
+  return isRecord(value) && 'getSymbolAtLocation' in value;
+}
+
+function isSourceFile(value: unknown): value is ts.SourceFile {
+  return isRecord(value) && 'statements' in value;
+}
+
+function createNodeLookup(sourceFile: ts.SourceFile): Map<string, ts.Node> {
+  const lookup = new Map<string, ts.Node>();
+  const visit = (node: ts.Node): void => {
+    lookup.set(
+      `${String(node.pos)}:${String(node.end)}:${String(node.kind)}`,
+      node,
+    );
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return lookup;
 }
 
 export { applyFixes } from './apply-fixes.js';

@@ -94,3 +94,22 @@ void test('design-system/import-path enforces package in Svelte components', asy
   );
   assert.equal(res.messages.length, 1);
 });
+
+void test('design-system/import-path flags aliased named imports by imported symbol', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/import-path': [
+          'error',
+          { packages: ['@acme/design-system'], components: ['Button'] },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+  const res = await linter.lintText(
+    "import { Button as LegacyButton } from 'other';",
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 1);
+});

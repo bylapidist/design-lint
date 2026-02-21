@@ -123,9 +123,17 @@ export interface RuleContext<TOptions = unknown> {
    * runtime name transform configured for the linter.
    */
   getTokenPath: (token: DtifFlattenedToken) => string;
+  symbolResolution?: RuleSymbolResolutionHelpers;
   options?: TOptions;
   metadata?: Record<string, unknown>;
   sourceId: string;
+}
+
+export interface RuleSymbolResolutionHelpers {
+  getSymbolAtLocation: (node: ts.Node) => ts.Symbol | undefined;
+  getAliasedSymbol: (symbol: ts.Symbol) => ts.Symbol;
+  resolveSymbol: (node: ts.Node) => ts.Symbol | undefined;
+  getSymbolName: (node: ts.Node) => string | undefined;
 }
 
 export interface RuleModule<
