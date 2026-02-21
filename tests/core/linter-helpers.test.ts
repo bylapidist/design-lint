@@ -10,6 +10,7 @@ import type {
 import type { Linter } from '../../src/core/linter.js';
 import { parserRegistry } from '../../src/core/parser-registry.js';
 import { TokenRegistry } from '../../src/core/token-registry.js';
+import { RUNTIME_ERROR_RULE_ID } from '../../src/core/cache-manager.js';
 
 const env: Environment = {
   documentSource: {
@@ -178,6 +179,58 @@ void test('buildRunRuleContexts executes post-run hooks with token usage API', a
   assert.equal(messages[0].ruleId, 'custom/aggregate');
   assert.equal(messages[0].message, 'unused');
   assert.equal(run.sourceId, 'config.json');
+});
+
+void test('buildRunRuleContexts captures onRunComplete errors and continues', async () => {
+  const linter = initLinter({ tokens: {}, rules: {} }, env);
+  const helper = linter as unknown as {
+    buildRunRuleContexts: Linter['buildRunRuleContexts'];
+  };
+
+  const crashingRule: RuleModule = {
+    name: 'custom/crash',
+    meta: { description: 'crashes' },
+    create: () => ({}),
+    createRun() {
+      return {
+        onRunComplete: () => {
+          throw new Error('run exploded');
+        },
+      };
+    },
+  };
+
+  const healthyRule: RuleModule = {
+    name: 'custom/healthy',
+    meta: { description: 'healthy' },
+    create: () => ({}),
+    createRun(context) {
+      return {
+        onRunComplete: () => {
+          context.report({
+            message: 'run ok',
+            line: 1,
+            column: 1,
+          });
+        },
+      };
+    },
+  };
+
+  const run = helper.buildRunRuleContexts(
+    [
+      { rule: crashingRule, options: undefined, severity: 'error' },
+      { rule: healthyRule, options: undefined, severity: 'warn' },
+    ],
+    'config.json',
+  );
+
+  const messages = await run.collect();
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].ruleId, RUNTIME_ERROR_RULE_ID);
+  assert.match(messages[0].message, /custom\/crash/);
+  assert.equal(messages[1].ruleId, 'custom/healthy');
+  assert.equal(messages[1].message, 'run ok');
 });
 
 void test('runParser executes parser for provided type', async () => {

@@ -26,6 +26,7 @@ import { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
 import type { ParserPassResult } from './parser-registry.js';
 import { FILE_TYPE_MAP } from './file-types.js';
+import { RUNTIME_ERROR_RULE_ID } from './cache-manager.js';
 import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
 import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
 import { isRecord } from '../utils/guards/data/is-record.js';
@@ -297,8 +298,30 @@ export class Linter {
     return {
       sourceId,
       collect: async () => {
-        for (const listener of listeners) {
-          await listener.onRunComplete?.();
+        for (const [index, listener] of listeners.entries()) {
+          try {
+            await listener.onRunComplete?.();
+          } catch (error: unknown) {
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : `Unknown run listener error: ${String(error)}`;
+            const sourceRule = enabled[index]?.rule.name ?? 'unknown';
+            messages.push({
+              ruleId: RUNTIME_ERROR_RULE_ID,
+              message: `Rule "${sourceRule}" failed in onRunComplete: ${errorMessage}`,
+              severity: 'error',
+              line: 1,
+              column: 1,
+              metadata: {
+                phase: 'run',
+                sourceRule,
+                sourceHook: 'onRunComplete',
+                sourceId,
+                errorMessage,
+              },
+            });
+          }
         }
         return messages;
       },
