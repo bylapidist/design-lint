@@ -130,7 +130,15 @@ The output resembles:
 
 Use `--theme` to export tokens for a specific theme.
 
-Import the helpers from `@lapidist/design-lint/output` in a custom build step when you need CSS variables, JavaScript constants or TypeScript declarations.
+Import output helpers from the root package in a custom build step when you need CSS variables, JavaScript constants, or TypeScript declarations:
+
+```ts
+import {
+  generateCssVariables,
+  generateJsConstants,
+  generateTsDeclarations,
+} from '@lapidist/design-lint';
+```
 
 ## Watch mode and caching
 Use `--watch` to rerun the linter when files change. design-lint caches results to speed up subsequent runs. Cache data lives in `.designlintcache` and is safe to commit to CI caches.
