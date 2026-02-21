@@ -154,6 +154,11 @@ export interface RuleListener {
   onCSSDeclaration?: (decl: CSSDeclaration) => void;
 }
 
+export interface RegisteredRuleListener {
+  ruleId: string;
+  listener: RuleListener;
+}
+
 export interface PluginModule {
   name?: string;
   version?: string;

@@ -4,7 +4,7 @@ import type {
   LintMessage,
   RuleContext,
   DesignTokens,
-  RuleModule,
+  RegisteredRuleListener,
   RuleSymbolResolutionHelpers,
 } from './types.js';
 import type { NameTransform } from '../utils/tokens/index.js';
@@ -264,7 +264,7 @@ export class Linter {
     sourceId: string,
     metadata?: Record<string, unknown>,
   ): {
-    listeners: ReturnType<RuleModule['create']>[];
+    listeners: RegisteredRuleListener[];
     ruleDescriptions: Record<string, string>;
     ruleCategories: Record<string, string>;
     messages: LintMessage[];
@@ -290,7 +290,7 @@ export class Linter {
         getTokenPath: (token) =>
           deriveTokenPath(token, this.config.nameTransform),
       };
-      return rule.create(ctx);
+      return { ruleId: rule.name, listener: rule.create(ctx) };
     });
     return { listeners, ruleDescriptions, ruleCategories, messages };
   }
@@ -308,7 +308,7 @@ export class Linter {
     text: string,
     sourceId: string,
     docType: string | undefined,
-    listeners: ReturnType<RuleModule['create']>[],
+    listeners: RegisteredRuleListener[],
     messages: LintMessage[],
   ): Promise<ParserPassResult | undefined> {
     const type = docType ?? inferFileType(sourceId);
