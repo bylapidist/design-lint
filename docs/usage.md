@@ -32,7 +32,7 @@ Install Node using your preferred version manager and ensure `node --version` re
 Run the linter once without installing it locally:
 
 ```bash
-npx design-lint .
+npx @lapidist/design-lint@latest .
 ```
 
 For long-term use, install design-lint as a development dependency. This keeps your team on the same version and allows custom configuration:
