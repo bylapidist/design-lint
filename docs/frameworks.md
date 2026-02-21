@@ -41,6 +41,13 @@ npx design-lint pages components
 ## Vue
 `.vue` single‑file components are parsed so template, script, and style blocks are checked automatically.
 
+Supported template style forms:
+- `style="color: #fff; padding: 4px;"`
+- `:style="{ color: '#fff', padding: 4 }"`
+- `:style="[{ color: '#fff' }, { padding: 4 }]"`
+- Multiline object/array style bindings using `:style`
+- `v-bind:style="..."` expressions, including conditional object/array results
+
 ```bash
 npx design-lint "src/**/*.vue"
 ```

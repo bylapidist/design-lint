@@ -42,7 +42,12 @@ const fixtures: Fixture[] = [
   },
   {
     name: 'vue',
-    files: ['src/App.module.css', 'src/App.vue', 'src/Multi.vue'],
+    files: [
+      'src/App.module.css',
+      'src/App.vue',
+      'src/Multi.vue',
+      'src/StyleBindings.vue',
+    ],
     rules: baselineRules.filter(
       (rule) => rule !== 'design-system/component-usage',
     ),
