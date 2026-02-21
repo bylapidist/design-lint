@@ -99,6 +99,33 @@ void test('TokenTracker tracks usage from css var identity references', async ()
   assert.equal(unused[0].value.includes('--color-unused'), true);
 });
 
+void test('TokenTracker does not fall back to raw text matching when explicit references are empty', async () => {
+  const tokens: DesignTokens = {
+    $version: '1.0.0',
+    color: {
+      primary: { $type: 'string', $value: 'color.primary' },
+    },
+  };
+  const tracker = new TokenTracker(makeProvider(tokens));
+  await tracker.configure([
+    { rule: trackingRule, options: {}, severity: 'warn' },
+  ]);
+
+  await tracker.trackUsage({
+    text: [
+      'https://cdn.example.com/color.primary/icon.svg',
+      'object.color.primary',
+      'v1.2.3',
+      '@scope/color.primary',
+    ].join('\n'),
+    references: [],
+  });
+
+  const unused = await tracker.getUnusedTokens();
+  assert.equal(unused.length, 1);
+  assert.equal(unused[0]?.path, 'color.primary');
+});
+
 void test('TokenTracker includes token metadata in reports', async () => {
   const tokens: DesignTokens = {
     $version: '1.0.0',

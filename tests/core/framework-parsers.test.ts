@@ -5,6 +5,7 @@ import * as cssParsers from '../../src/core/framework-parsers/css-parser.js';
 import { lintTS } from '../../src/core/framework-parsers/ts-parser.js';
 import { lintVue } from '../../src/core/framework-parsers/vue-parser.js';
 import { lintSvelte } from '../../src/core/framework-parsers/svelte-parser.js';
+import { collectTextTokenReferences } from '../../src/core/framework-parsers/token-references.js';
 import postcss from 'postcss';
 import type {
   CSSDeclaration,
@@ -100,6 +101,39 @@ void test('lintCSS selects parser language from filename', () => {
   assert.equal(messages.length, 0);
 });
 
+void test('collectTextTokenReferences extracts only explicit token syntaxes by default', () => {
+  const references =
+    [] as import('../../src/core/types.js').TokenReferenceCandidate[];
+  collectTextTokenReferences(
+    references,
+    [
+      'https://cdn.example.com/color.primary/icon.svg',
+      'app.theme.palette.primary',
+      '1.2.3',
+      '@scope/ui.color.primary',
+      'import tokens from "@acme/design.tokens";',
+      '{color.primary}',
+      '#/color/secondary',
+      'var(--color-accent)',
+    ].join('\n'),
+    1,
+    1,
+    'test:string',
+  );
+
+  assert.deepEqual(
+    references.map((reference) => ({
+      kind: reference.kind,
+      identity: reference.identity,
+    })),
+    [
+      { kind: 'css-var', identity: '--color-accent' },
+      { kind: 'token-path', identity: 'color.primary' },
+      { kind: 'alias-pointer', identity: '#/color/secondary' },
+    ],
+  );
+});
+
 void test('lintTS dispatches declarations from inline styles and tagged templates', () => {
   const text = `const Styled = styled.div\`\n  color: var(--primary);\n\`;\nconst Box = styled('div')\`border-width: 2px;\`;\nconst Global = css\`background-color: blue;\`;\nconst TwStyles = tw\`border-color: green;\`;\nconst Component = () => (\n  <div style="color: red; width: 2px;">content</div>\n);`;
   const decls: string[] = [];
@@ -150,7 +184,7 @@ void test('lintTS offsets parse errors relative to attribute locations', () => {
 });
 
 void test('lintVue processes scripts and style blocks', async () => {
-  const text = `\n<template>\n  <div class="btn" :style="{ color: palette.primary }">text</div>\n</template>\n<script>const scriptValue = 'one';</script>\n<script setup>const setupValue = scriptValue;</script>\n<style>.btn { color: red; }</style>\n<style lang="scss">$border: 2px; .btn { border-width: $border; }</style>`;
+  const text = `\n<template>\n  <div class="btn">{{ palette.primary }}</div>\n</template>\n<script>const scriptValue = 'one';</script>\n<script setup>const setupValue = scriptValue;</script>\n<style>.btn { color: red; }</style>\n<style lang="scss">$border: 2px; .btn { border-width: $border; }</style>`;
   const identifiers = new Set<string>();
   const decls: string[] = [];
   const listener = {

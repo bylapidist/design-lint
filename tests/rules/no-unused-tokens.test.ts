@@ -248,7 +248,7 @@ void test('design-system/no-unused-tokens does not match token path substrings',
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
-    getText: () => Promise.resolve('const name = "color.primaryDark";'),
+    getText: () => Promise.resolve('const name = "{color.primaryDark}";'),
   };
   const { results } = await linter.lintDocuments([doc]);
   const unused = results
@@ -283,7 +283,7 @@ void test('design-system/no-unused-tokens does not match numeric overlaps', asyn
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
-    getText: () => Promise.resolve('const token = "spacing.ten";'),
+    getText: () => Promise.resolve('const token = "{spacing.ten}";'),
   };
   const { results } = await linter.lintDocuments([doc]);
   const unused = results
@@ -298,6 +298,61 @@ void test('design-system/no-unused-tokens does not match numeric overlaps', asyn
     unused.some((message) => message.includes('1')),
     true,
   );
+});
+
+void test('design-system/no-unused-tokens recognizes explicit references across ts css vue and svelte', async () => {
+  const tokens = {
+    $version: '1.0.0',
+    color: {
+      primary: { $type: 'string', $value: '#000000' },
+      secondary: { $type: 'string', $value: '#111111' },
+      accent: { $type: 'string', $value: 'var(--color-accent)' },
+    },
+    spacing: {
+      medium: { $type: 'string', $value: '8px' },
+    },
+  };
+  const linter = initLinter(
+    {
+      tokens,
+      rules: { 'design-system/no-unused-tokens': 'warn' },
+    },
+    new FileSource(),
+  );
+
+  const docs: LintDocument[] = [
+    {
+      id: 'app.ts',
+      type: 'ts',
+      getText: () => Promise.resolve('const token = "{color.primary}";'),
+    },
+    {
+      id: 'styles.css',
+      type: 'css',
+      getText: () => Promise.resolve('.btn { color: var(--color-accent); }'),
+    },
+    {
+      id: 'component.vue',
+      type: 'vue',
+      getText: () =>
+        Promise.resolve(
+          '<template><div>{{ color.secondary }}</div></template>',
+        ),
+    },
+    {
+      id: 'component.svelte',
+      type: 'svelte',
+      getText: () =>
+        Promise.resolve('<script>const token = "{spacing.medium}";</script>'),
+    },
+  ];
+
+  const { results } = await linter.lintDocuments(docs);
+  const unused = results
+    .flatMap((result) => result.messages)
+    .filter((message) => message.ruleId === 'design-system/no-unused-tokens');
+
+  assert.equal(unused.length, 0);
 });
 
 void test('design-system/no-unused-tokens matches transformed css vars by identity', async () => {

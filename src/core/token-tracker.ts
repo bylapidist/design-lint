@@ -19,7 +19,7 @@ const {
   domain: { isDesignTokens },
 } = guards;
 
-type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';
+type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'tokenPath' | 'string';
 
 const classifiers: Record<TokenType, (token: string, text: string) => boolean> =
   {
@@ -28,6 +28,8 @@ const classifiers: Record<TokenType, (token: string, text: string) => boolean> =
     hexColor: (token, text) => text.toLowerCase().includes(token.toLowerCase()),
     numeric: (token, text) =>
       new RegExp(`\\b${escapeRegExp(token)}\\b`).test(text),
+    tokenPath: (token, text) =>
+      new RegExp(`\\{\\s*${escapeRegExp(token)}\\s*\\}`).test(text),
     string: (token, text) => text.includes(token),
   };
 
@@ -35,6 +37,7 @@ function getTokenType(token: string): TokenType {
   if (token.includes('--') || token.startsWith('-')) return 'cssVar';
   if (token.startsWith('#')) return 'hexColor';
   if (/^\d/.test(token)) return 'numeric';
+  if (/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/.test(token)) return 'tokenPath';
   return 'string';
 }
 
