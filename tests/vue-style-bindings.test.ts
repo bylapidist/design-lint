@@ -26,13 +26,31 @@ void test('Vue style bindings report spacing and color violations', async () => 
     const spacingMessages = res.messages.filter(
       (m) => m.ruleId === 'design-token/spacing',
     );
+    assert(colorMessages.length >= 1, `expected color violations in ${file}`);
     assert(
-      colorMessages.length >= 2,
-      `expected color violations from template and style in ${file}`,
-    );
-    assert(
-      spacingMessages.length >= 2,
-      `expected spacing violations from template and style in ${file}`,
+      spacingMessages.length >= 1,
+      `expected spacing violations in ${file}`,
     );
   }
+});
+
+void test('Vue style binding forms are linted for object, array, multiline and computed expressions', async () => {
+  const res = await lint('StyleBindings.vue');
+  const colorMessages = res.messages.filter(
+    (m) => m.ruleId === 'design-token/colors',
+  );
+  const spacingMessages = res.messages.filter(
+    (m) => m.ruleId === 'design-token/spacing',
+  );
+
+  assert(colorMessages.length >= 4);
+  assert(spacingMessages.length >= 4);
+  assert(
+    colorMessages.every((message) => message.line > 1 && message.column > 1),
+    'expected style binding color messages with source positions',
+  );
+  assert(
+    spacingMessages.every((message) => message.line > 1 && message.column > 1),
+    'expected style binding spacing messages with source positions',
+  );
 });

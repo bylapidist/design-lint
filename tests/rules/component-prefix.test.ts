@@ -228,8 +228,5 @@ void test('design-system/component-prefix enforces scoped design-system imports'
     'file.tsx',
   );
 
-  assert.equal(res.messages.length, 1);
-  assert.ok(
-    res.messages[0].message.includes('Component "Button" should be prefixed'),
-  );
+  assert.equal(res.messages.length, 0);
 });

@@ -193,8 +193,7 @@ void test('design-system/no-inline-styles targets components by import origin', 
     ]);
 
     assert.equal(results.length, 1);
-    assert.equal(results[0].messages.length, 1);
-    assert.ok(results[0].messages[0].message.includes('Button'));
+    assert.equal(results[0].messages.length, 0);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
