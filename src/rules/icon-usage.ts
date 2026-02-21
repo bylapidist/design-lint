@@ -27,6 +27,48 @@ export const iconUsageRule: RuleModule<IconUsageOptions> = {
       lowerSubs[key.toLowerCase()] = val;
     }
     const disallowed = new Set(Object.keys(lowerSubs));
+    const hasReplacementInScope = (
+      sourceFile: ts.SourceFile,
+      replacement: string,
+    ): boolean => {
+      for (const statement of sourceFile.statements) {
+        if (ts.isImportDeclaration(statement)) {
+          const importClause = statement.importClause;
+          if (!importClause) continue;
+          if (importClause.name?.text === replacement) return true;
+          const namedBindings = importClause.namedBindings;
+          if (!namedBindings) continue;
+          if (ts.isNamespaceImport(namedBindings)) {
+            if (namedBindings.name.text === replacement) return true;
+            continue;
+          }
+          for (const element of namedBindings.elements) {
+            if (element.name.text === replacement) return true;
+          }
+          continue;
+        }
+        if (ts.isVariableStatement(statement)) {
+          for (const declaration of statement.declarationList.declarations) {
+            if (ts.isIdentifier(declaration.name)) {
+              if (declaration.name.text === replacement) return true;
+            }
+          }
+          continue;
+        }
+        if (
+          (ts.isFunctionDeclaration(statement) ||
+            ts.isClassDeclaration(statement) ||
+            ts.isInterfaceDeclaration(statement) ||
+            ts.isTypeAliasDeclaration(statement) ||
+            ts.isEnumDeclaration(statement)) &&
+          statement.name?.text === replacement
+        ) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     return {
       onNode(node) {
         if (
@@ -48,14 +90,20 @@ export const iconUsageRule: RuleModule<IconUsageOptions> = {
             const tagText = ts.isJsxClosingElement(node)
               ? `</${tag}>`
               : `<${tag}>`;
+            const safeFix = hasReplacementInScope(
+              node.getSourceFile(),
+              replacement,
+            );
             context.report({
               message: `Use ${replacement} instead of ${tagText}`,
               line: pos.line + 1,
               column: pos.character + 1,
-              fix: {
-                range: [node.tagName.getStart(), node.tagName.getEnd()],
-                text: replacement,
-              },
+              fix: safeFix
+                ? {
+                    range: [node.tagName.getStart(), node.tagName.getEnd()],
+                    text: replacement,
+                  }
+                : undefined,
             });
           }
         }
