@@ -9,7 +9,7 @@ description: "Report tokens defined but never used."
 Reports design tokens defined in your configuration that never appear in any linted file. This keeps the token set focused and helps uncover stale values left behind after refactors.
 
 The rule is semantic-only: usage is resolved from explicit token references and
-normalized identities (for example token paths, JSON pointers, and CSS variable
+normalised identities (for example token paths, JSON pointers, and CSS variable
 names). Raw literals are not treated as token usage.
 
 > [!NOTE]
