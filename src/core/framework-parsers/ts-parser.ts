@@ -2,6 +2,8 @@ import ts from 'typescript';
 import { parseCSS } from './css-parser.js';
 import type { LintMessage, RegisteredRuleListener } from '../types.js';
 import type { ParserPassResult } from '../parser-registry.js';
+import type { ParserPassOptions } from '../parser-registry.js';
+import { normalizeStylePropertyName } from './reference-normalizer.js';
 import {
   collectDeclarationTokenReferences,
   collectTsTokenReferences,
@@ -35,7 +37,16 @@ export function lintTS(
   sourceId: string,
   listeners: RegisteredRuleListener[],
   messages: LintMessage[],
+  options?: ParserPassOptions,
 ): ParserPassResult {
+  const allowedTemplateTags = new Set(
+    (options?.templateTags && options.templateTags.length > 0
+      ? options.templateTags
+      : ['styled', 'css', 'tw']
+    )
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0),
+  );
   const source = ts.createSourceFile(
     sourceId,
     text,
@@ -79,13 +90,6 @@ export function lintTS(
       placeholder += ' ';
     }
     return placeholder;
-  };
-  const toCssPropertyName = (name: string): string => {
-    if (name.startsWith('--')) return name;
-    if (name.includes('-')) return name.toLowerCase();
-    const kebab = name.replace(/[A-Z]/g, (segment) => `-${segment}`);
-    const lower = kebab.toLowerCase();
-    return lower.startsWith('ms-') ? `-${lower}` : lower;
   };
   const unwrapStyleExpression = (expression: ts.Expression): ts.Expression => {
     let current = expression;
@@ -161,7 +165,7 @@ export function lintTS(
         if (ts.isPropertyAssignment(property)) {
           const propertyName = getStylePropertyName(property.name);
           if (!propertyName) continue;
-          const cssProperty = toCssPropertyName(propertyName);
+          const cssProperty = normalizeStylePropertyName(propertyName);
           const initializer = property.initializer;
           if (ts.isObjectLiteralExpression(initializer)) {
             // Nested style objects are traversed so nested literal entries can
@@ -307,7 +311,7 @@ export function lintTS(
       const root = getRootTag(node.tag);
       if (
         root &&
-        ['styled', 'css', 'tw'].includes(root) &&
+        allowedTemplateTags.has(root) &&
         (ts.isNoSubstitutionTemplateLiteral(node.template) ||
           ts.isTemplateExpression(node.template))
       ) {

@@ -8,6 +8,7 @@ import type {
 } from '../types.js';
 import { guards } from '../../utils/index.js';
 import type { ParserPassResult } from '../parser-registry.js';
+import type { ParserPassOptions } from '../parser-registry.js';
 import { collectDeclarationTokenReferences } from './token-references.js';
 import { dispatchCSSDeclarationListener } from './listener-dispatch.js';
 
@@ -80,7 +81,9 @@ export function lintCSS(
   sourceId: string,
   listeners: RegisteredRuleListener[],
   messages: LintMessage[],
+  _options?: ParserPassOptions,
 ): ParserPassResult {
+  void _options;
   const lower = sourceId.toLowerCase();
   let lang: string | undefined;
   if (lower.endsWith('.scss')) lang = 'scss';

@@ -72,10 +72,21 @@ void test('TokenTracker reports unused tokens when unresolved references are pro
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage({ text: 'const c = "#ff0000";' });
+  await tracker.trackUsage({
+    text: "const c = '{color.red}';",
+    references: [
+      {
+        kind: 'token-path',
+        identity: 'color.red',
+        line: 1,
+        column: 1,
+        context: 'ts:string',
+      },
+    ],
+  });
   const unused = await tracker.getUnusedTokens();
   assert.equal(unused.length, 1);
-  assert.equal(unused[0].value.includes('4px'), true);
+  assert.equal(unused[0].path, 'spacing.four');
 });
 
 void test('TokenTracker tracks usage from css var identity references', async () => {
@@ -178,7 +189,18 @@ void test('TokenTracker beginRun clears previously tracked usage', async () => {
     }),
   );
   await tracker.configure([{ rule: trackingRule, severity: 'warn' }]);
-  await tracker.trackUsage({ text: '#ff0000' });
+  await tracker.trackUsage({
+    text: '{color.used}',
+    references: [
+      {
+        kind: 'token-path',
+        identity: 'color.used',
+        line: 1,
+        column: 1,
+        context: 'ts:string',
+      },
+    ],
+  });
   assert.deepEqual(await tracker.getUnusedTokens(), []);
 
   tracker.beginRun();
@@ -199,7 +221,7 @@ void test('TokenTracker supports ignored values when collecting unused tokens', 
   assert.deepEqual(unused, []);
 });
 
-void test('TokenTracker uses tokenPath and numeric classifiers for raw text tracking', async () => {
+void test('TokenTracker resolves identity usage from explicit references only', async () => {
   const tracker = new TokenTracker(
     makeProvider({
       $version: '1.0.0',
@@ -210,11 +232,27 @@ void test('TokenTracker uses tokenPath and numeric classifiers for raw text trac
   await tracker.configure([{ rule: trackingRule, severity: 'warn' }]);
   await tracker.trackUsage({
     text: 'const a = "{ copy.label }"; const zIndex = 10;',
+    references: [
+      {
+        kind: 'token-path',
+        identity: 'copy.label',
+        line: 1,
+        column: 1,
+        context: 'ts:string',
+      },
+      {
+        kind: 'token-path',
+        identity: 'z.modal',
+        line: 1,
+        column: 1,
+        context: 'ts:string',
+      },
+    ],
   });
   assert.deepEqual(await tracker.getUnusedTokens(), []);
 });
 
-void test('TokenTracker ignores wildcard token values and non-token themes', async () => {
+void test('TokenTracker includes wildcard token values and ignores non-token themes', async () => {
   const tracker = new TokenTracker({
     load: () =>
       Promise.resolve({
@@ -226,5 +264,7 @@ void test('TokenTracker ignores wildcard token values and non-token themes', asy
       }),
   });
   await tracker.configure([{ rule: trackingRule, severity: 'warn' }]);
-  assert.deepEqual(await tracker.getUnusedTokens(), []);
+  const unused = await tracker.getUnusedTokens();
+  assert.equal(unused.length, 1);
+  assert.equal(unused[0]?.path, 'color.dynamic');
 });

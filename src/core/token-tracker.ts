@@ -19,46 +19,22 @@ const {
   domain: { isDesignTokens },
 } = guards;
 
-type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'tokenPath' | 'string';
-
-const classifiers: Record<TokenType, (token: string, text: string) => boolean> =
-  {
-    cssVar: (token, text) =>
-      text.includes(`var(${token})`) || text.includes(token),
-    hexColor: (token, text) => text.toLowerCase().includes(token.toLowerCase()),
-    numeric: (token, text) =>
-      new RegExp(`\\b${escapeRegExp(token)}\\b`).test(text),
-    tokenPath: (token, text) =>
-      new RegExp(`\\{\\s*${escapeRegExp(token)}\\s*\\}`).test(text),
-    string: (token, text) => text.includes(token),
-  };
-
-function getTokenType(token: string): TokenType {
-  if (token.includes('--') || token.startsWith('-')) return 'cssVar';
-  if (token.startsWith('#')) return 'hexColor';
-  if (/^\d/.test(token)) return 'numeric';
-  if (/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/.test(token)) return 'tokenPath';
-  return 'string';
-}
-
-function escapeRegExp(str: string): string {
-  return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-}
-
 interface UnusedRuleConfig {
   enabled: boolean;
 }
 
 interface TrackedTokenInfo {
   token: DtifFlattenedToken;
+  theme: string;
   path: string;
+  value: string;
   identities: Set<string>;
 }
 
 export class TokenTracker {
-  private allTokenValues = new Map<string, TrackedTokenInfo>();
-  private tokenValueByIdentity = new Map<string, Set<string>>();
-  private usedTokenValues = new Set<string>();
+  private allTokens = new Map<string, TrackedTokenInfo>();
+  private tokenKeysByIdentity = new Map<string, Set<string>>();
+  private usedTokenKeys = new Set<string>();
   private tracking: UnusedRuleConfig = { enabled: false };
   private provider?: TokenProvider;
   private loaded = false;
@@ -68,7 +44,7 @@ export class TokenTracker {
   }
 
   beginRun(): void {
-    this.usedTokenValues.clear();
+    this.usedTokenKeys.clear();
   }
 
   private async loadTokens(): Promise<void> {
@@ -86,8 +62,8 @@ export class TokenTracker {
         }),
       );
     }
-    this.allTokenValues = collectTokenValues(tokens);
-    this.tokenValueByIdentity = indexTokenValuesByIdentity(this.allTokenValues);
+    this.allTokens = collectTokens(tokens);
+    this.tokenKeysByIdentity = indexTokenKeysByIdentity(this.allTokens);
     this.loaded = true;
   }
 
@@ -112,22 +88,17 @@ export class TokenTracker {
     text: string;
     references?: readonly TokenReferenceCandidate[];
   }): Promise<void> {
+    void input.text;
     await this.loadTokens();
     const identities = normalizeUsageCandidateIdentities(input.references);
-    if (identities) {
-      for (const identity of identities) {
-        const tokenValues = this.tokenValueByIdentity.get(identity);
-        if (!tokenValues) continue;
-        for (const value of tokenValues) {
-          this.usedTokenValues.add(value);
-        }
-      }
+    if (!identities) {
       return;
     }
-    for (const tokenValue of this.allTokenValues.keys()) {
-      const tokenType = getTokenType(tokenValue);
-      if (classifiers[tokenType](tokenValue, input.text)) {
-        this.usedTokenValues.add(tokenValue);
+    for (const identity of identities) {
+      const tokenKeys = this.tokenKeysByIdentity.get(identity);
+      if (!tokenKeys) continue;
+      for (const key of tokenKeys) {
+        this.usedTokenKeys.add(key);
       }
     }
   }
@@ -137,13 +108,13 @@ export class TokenTracker {
   ): Promise<UnusedToken[]> {
     await this.loadTokens();
     const ignoredValues = new Set(ignored);
-    return Array.from(this.allTokenValues.entries())
+    return Array.from(this.allTokens.entries())
       .filter(
-        ([value]) =>
-          !this.usedTokenValues.has(value) && !ignoredValues.has(value),
+        ([key, info]) =>
+          !this.usedTokenKeys.has(key) && !ignoredValues.has(info.value),
       )
-      .map(([value, info]) => ({
-        value,
+      .map(([, info]) => ({
+        value: info.value,
         path: info.path,
         pointer: info.token.pointer,
         deprecated: info.token.metadata.deprecated,
@@ -162,24 +133,24 @@ function normalizeUsageCandidateIdentities(
   return identities.length > 0 ? identities : undefined;
 }
 
-function indexTokenValuesByIdentity(
+function indexTokenKeysByIdentity(
   values: Map<string, TrackedTokenInfo>,
 ): Map<string, Set<string>> {
   const indexed = new Map<string, Set<string>>();
-  for (const [tokenValue, info] of values.entries()) {
+  for (const [tokenKey, info] of values.entries()) {
     for (const identity of info.identities) {
       const mapped = indexed.get(identity);
       if (mapped) {
-        mapped.add(tokenValue);
+        mapped.add(tokenKey);
       } else {
-        indexed.set(identity, new Set([tokenValue]));
+        indexed.set(identity, new Set([tokenKey]));
       }
     }
   }
   return indexed;
 }
 
-function collectTokenValues(
+function collectTokens(
   tokensByTheme?: Record<string, DesignTokens | readonly DtifFlattenedToken[]>,
 ): Map<string, TrackedTokenInfo> {
   const values = new Map<string, TrackedTokenInfo>();
@@ -189,18 +160,15 @@ function collectTokenValues(
     const dtifTokens = resolveDtifTokens(tokens);
     if (!dtifTokens) continue;
     for (const token of dtifTokens) {
-      const key = toTrackedValue(token.value);
-      if (!key) continue;
+      const key = toTokenKey(theme, token.pointer);
       const identities = collectTokenIdentities(token);
-      if (!values.has(key)) {
-        values.set(key, { token, path: getTokenPath(token), identities });
-        continue;
-      }
-      const existing = values.get(key);
-      if (!existing) continue;
-      for (const identity of identities) {
-        existing.identities.add(identity);
-      }
+      values.set(key, {
+        token,
+        theme,
+        path: getTokenPath(token),
+        value: toDisplayValue(token),
+        identities,
+      });
     }
   }
   return values;
@@ -210,6 +178,10 @@ function collectTokenIdentities(token: DtifFlattenedToken): Set<string> {
   const identities = new Set<string>();
   identities.add(token.pointer);
   identities.add(getTokenPath(token));
+  const scalarValue = toTrackedScalarValue(token.value);
+  if (scalarValue) {
+    identities.add(scalarValue);
+  }
   if (typeof token.value === 'string') {
     const cssVar = extractVarName(token.value);
     if (cssVar) identities.add(cssVar);
@@ -246,10 +218,11 @@ function resolveDtifTokens(
 }
 
 function toTrackedValue(value: unknown): string | undefined {
+  return toTrackedScalarValue(value);
+}
+
+function toTrackedScalarValue(value: unknown): string | undefined {
   if (typeof value === 'string') {
-    if (value.includes('*')) {
-      return undefined;
-    }
     const name = extractVarName(value);
     return name ?? value;
   }
@@ -260,6 +233,16 @@ function toTrackedValue(value: unknown): string | undefined {
     return `${String(value.value)}${value.unit}`;
   }
   return undefined;
+}
+
+function toDisplayValue(token: DtifFlattenedToken): string {
+  const trackedValue = toTrackedValue(token.value);
+  if (trackedValue) return trackedValue;
+  return getTokenPath(token);
+}
+
+function toTokenKey(theme: string, pointer: string): string {
+  return `${theme}:${pointer}`;
 }
 
 function isDtifFlattenedTokenLike(value: unknown): value is DtifFlattenedToken {

@@ -47,6 +47,7 @@ export interface Config {
   patterns?: string[];
   wrapTokensWithVar?: boolean;
   nameTransform?: NameTransform;
+  templateTags?: string[];
 }
 
 interface ResolvedConfig extends Omit<Config, 'tokens'> {
@@ -367,7 +368,9 @@ export class Linter {
     const type = docType ?? inferFileType(sourceId);
     const parser = parserRegistry[type];
     if (parser) {
-      return parser(text, sourceId, listeners, messages);
+      return parser(text, sourceId, listeners, messages, {
+        templateTags: this.config.templateTags,
+      });
     }
     return undefined;
   }

@@ -45,3 +45,33 @@ void test('reports static declarations inside interpolated tagged templates', as
     [3, 5],
   );
 });
+
+void test('does not lint unknown tagged templates unless explicitly configured', async () => {
+  const config = await loadConfig(fixtureDir);
+  const linter = initLinter(config, { documentSource: new FileSource() });
+  const res = await linter.lintText(
+    'const cssx = (input) => input; const Button = cssx`color: red;`;',
+    'styled.ts',
+  );
+  const colorMessages = res.messages.filter(
+    (m) => m.ruleId === 'design-token/colors',
+  );
+  assert.equal(colorMessages.length, 0);
+});
+
+void test('lints explicitly configured template tags', async () => {
+  const config = await loadConfig(fixtureDir);
+  const strictConfig = {
+    ...config,
+    templateTags: ['cssx'],
+  };
+  const linter = initLinter(strictConfig, { documentSource: new FileSource() });
+  const res = await linter.lintText(
+    'const cssx = (input) => input; const Button = cssx`color: red;`;',
+    'styled.ts',
+  );
+  const colorMessages = res.messages.filter(
+    (m) => m.ruleId === 'design-token/colors',
+  );
+  assert.equal(colorMessages.length, 1);
+});
