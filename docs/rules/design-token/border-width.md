@@ -33,7 +33,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 Border width tokens use the `dimension` type with `dimensionType` set to `length`.
 
 ## Options
-No additional options.
+- `units` (`string[]`): CSS length units to validate for `border-width` values. Defaults to `['px', 'rem', 'em']`.
 
 This rule is not auto-fixable.
 
