@@ -5,6 +5,10 @@ import type { RuleModule } from '../core/types.js';
 interface NoInlineStylesOptions {
   /** When true, the rule will ignore class/className attributes. */
   ignoreClassName?: boolean;
+  /** Explicit design system component names to target. */
+  components?: string[];
+  /** Package specifiers considered design-system import origins. */
+  importOrigins?: string[];
 }
 
 export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
@@ -13,10 +17,63 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     description:
       'disallow inline style or className attributes on design system components',
     category: 'component',
-    schema: z.object({ ignoreClassName: z.boolean().optional() }).optional(),
+    schema: z
+      .object({
+        ignoreClassName: z.boolean().optional(),
+        components: z.array(z.string()).optional(),
+        importOrigins: z.array(z.string()).optional(),
+      })
+      .optional(),
   },
   create(context) {
     const ignoreClassName = context.options?.ignoreClassName ?? false;
+    const configuredComponents = new Set(context.options?.components ?? []);
+    const configuredOrigins = new Set(context.options?.importOrigins ?? []);
+
+    const resolveImportOrigin = (tagName: ts.JsxTagNameExpression): string => {
+      const symbol = context.symbolResolution?.resolveSymbol(tagName);
+      if (!symbol) return '';
+      for (const declaration of symbol.declarations ?? []) {
+        if (ts.isImportSpecifier(declaration)) {
+          const parent = declaration.parent.parent.parent;
+          if (ts.isImportDeclaration(parent)) {
+            const moduleSpecifier = parent.moduleSpecifier;
+            if (ts.isStringLiteral(moduleSpecifier))
+              return moduleSpecifier.text;
+          }
+        }
+        if (ts.isImportClause(declaration)) {
+          const parent = declaration.parent;
+          if (ts.isImportDeclaration(parent)) {
+            const moduleSpecifier = parent.moduleSpecifier;
+            if (ts.isStringLiteral(moduleSpecifier))
+              return moduleSpecifier.text;
+          }
+        }
+      }
+      return '';
+    };
+
+    const shouldCheckTag = (
+      tag: string,
+      tagName: ts.JsxTagNameExpression,
+    ): boolean => {
+      const symbolName =
+        context.symbolResolution?.getSymbolName(tagName) ?? tag;
+      if (
+        configuredComponents.has(symbolName) ||
+        configuredComponents.has(tag)
+      ) {
+        return true;
+      }
+      if (configuredOrigins.size > 0) {
+        const importOrigin = resolveImportOrigin(tagName);
+        if (importOrigin.length === 0) return false;
+        return configuredOrigins.has(importOrigin);
+      }
+      return configuredComponents.size > 0;
+    };
+
     return {
       onNode(node) {
         if (!ts.isJsxOpeningLikeElement(node)) return;
@@ -25,6 +82,7 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
         const isComponent =
           tag.startsWith(tag[0].toUpperCase()) || isCustomElement;
         if (!isComponent) return;
+        if (!shouldCheckTag(tag, node.tagName)) return;
         for (const attr of node.attributes.properties) {
           if (!ts.isJsxAttribute(attr)) continue;
           const name = attr.name.getText();
