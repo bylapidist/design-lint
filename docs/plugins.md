@@ -62,9 +62,13 @@ const noRawColors: RuleModule<unknown> = {
         .filter((value): value is string => typeof value === 'string'),
     );
     return {
-      Declaration(node) {
-        if (node.property === 'color' && /^#/.test(node.value) && !allowed.has(node.value)) {
-          // report violations
+      onCSSDeclaration(decl) {
+        if (decl.prop === 'color' && /^#/.test(decl.value) && !allowed.has(decl.value)) {
+          ctx.report({
+            message: `Unexpected raw color "${decl.value}". Use a DTIF token.`,
+            line: decl.line,
+            column: decl.column,
+          });
         }
       },
     };
@@ -82,6 +86,34 @@ const plugin: PluginModule = {
 
 export default plugin;
 ```
+
+Minimal valid rule skeleton (matches `RuleModule`):
+
+```ts
+import type { RuleModule } from '@lapidist/design-lint';
+
+export const rule: RuleModule = {
+  name: 'acme/example',
+  meta: { description: 'describe what this rule checks' },
+  create(ctx) {
+    return {
+      onCSSDeclaration(decl) {
+        ctx.report({
+          message: `Saw declaration ${decl.prop}: ${decl.value}`,
+          line: decl.line,
+          column: decl.column,
+        });
+      },
+      onNode(node) {
+        void node;
+      },
+    };
+  },
+};
+```
+
+At runtime, plugins are validated to ensure they export `{ rules: RuleModule[] }`
+and each rule has a non-empty `name`, `meta.description`, and `create` function.
 
 Rules can expose a [Zod](https://zod.dev/) schema for their options via
 `meta.schema`. The engine validates user-supplied options against the schema
