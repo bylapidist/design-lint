@@ -4,8 +4,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  createLinter,
   createLintService,
   builtInRules,
+  TokenRegistry,
   type Config,
   type DocumentSource,
   type Environment,
@@ -64,4 +66,33 @@ void test('createLintService returns lint service configured with environment', 
       ignore: ['custom-ignore'],
     },
   ]);
+});
+
+void test('createLintService accepts DocumentSource inputs directly', async () => {
+  const source = new StubDocumentSource();
+  const config: Config = {};
+  const service = createLintService(config, source);
+
+  await service.lintTargets(['src/**/*.ts'], false);
+
+  assert.deepEqual(source.calls, [
+    {
+      targets: ['src/**/*.ts'],
+      config: { tokens: {} },
+      ignore: [],
+    },
+  ]);
+});
+
+void test('createLinter accepts DocumentSource inputs directly', async () => {
+  const source = new StubDocumentSource();
+  const config: Config = {};
+  const linter = createLinter(config, source);
+  const result = await linter.lintTargets(['src/**/*.ts']);
+
+  assert.deepEqual(result.results, []);
+});
+
+void test('TokenRegistry is re-exported from top-level index', () => {
+  assert.equal(typeof TokenRegistry, 'function');
 });

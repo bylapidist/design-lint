@@ -148,7 +148,7 @@ Token files should use the `.tokens` or `.tokens.json` extension and are typical
 
 Design token files are validated strictly:
 
-- Token and group names may not include `{`, `}`, or `.` and names differing only by case are rejected.
+- DTIF structure, token value shapes, and alias resolution are validated using the canonical parser.
 - `$extensions` keys must contain at least one dot to avoid collisions.
 - Alias references must resolve to tokens of the same `$type` and cyclic or unknown aliases raise errors.
 - Composite token objects such as `shadow`, `strokeStyle`, `gradient`, and `typography` may only include the fields defined by the specification.

@@ -201,3 +201,107 @@ void test('design-system/no-inline-styles targets components by import origin', 
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+void test('design-system/no-inline-styles resolves import origin from AST fallback for default imports', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/no-inline-styles': [
+          'error',
+          { importOrigins: ['@acme/design-system'] },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+
+  const res = await linter.lintText(
+    [
+      "import Button from '@acme/design-system';",
+      "import Panel from '@third-party/ui';",
+      'const a = <><Button style={{ color: "red" }} /><Panel style={{ color: "red" }} /></>;',
+    ].join('\n'),
+    'file.tsx',
+  );
+
+  assert.equal(res.messages.length, 1);
+  assert.ok(res.messages[0].message.includes('Button'));
+});
+
+void test('design-system/no-inline-styles resolves import origin from AST fallback for named imports', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/no-inline-styles': [
+          'error',
+          { importOrigins: ['@acme/design-system'] },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+
+  const res = await linter.lintText(
+    [
+      "import { Button } from '@acme/design-system';",
+      "import { Panel } from '@third-party/ui';",
+      'const a = <><Button style={{ color: "red" }} /><Panel style={{ color: "red" }} /></>;',
+    ].join('\n'),
+    'file.tsx',
+  );
+
+  assert.equal(res.messages.length, 1);
+  assert.ok(res.messages[0].message.includes('Button'));
+});
+
+void test('design-system/no-inline-styles resolves import origin from AST fallback for aliased named imports', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/no-inline-styles': [
+          'error',
+          { importOrigins: ['@acme/design-system'] },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+
+  const res = await linter.lintText(
+    [
+      "import { Button as DSButton } from '@acme/design-system';",
+      "import { Panel as ThirdPanel } from '@third-party/ui';",
+      'const a = <><DSButton style={{ color: "red" }} /><ThirdPanel style={{ color: "red" }} /></>;',
+    ].join('\n'),
+    'file.tsx',
+  );
+
+  assert.equal(res.messages.length, 1);
+  assert.ok(res.messages[0].message.includes('DSButton'));
+});
+
+void test('design-system/no-inline-styles resolves import origin from AST fallback for namespace member usage', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/no-inline-styles': [
+          'error',
+          { importOrigins: ['@acme/design-system'] },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+
+  const res = await linter.lintText(
+    [
+      "import * as DS from '@acme/design-system';",
+      "import * as Third from '@third-party/ui';",
+      'const a = <><DS.Button style={{ color: "red" }} /><Third.Panel style={{ color: "red" }} /></>;',
+    ].join('\n'),
+    'file.tsx',
+  );
+
+  assert.equal(res.messages.length, 1);
+  assert.ok(res.messages[0].message.includes('DS.Button'));
+});

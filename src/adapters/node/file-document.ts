@@ -16,7 +16,7 @@ export function createFileDocument(sourceId: string): LintDocument {
     cjs: 'ts',
     css: 'css',
     scss: 'css',
-    sass: 'css',
+    sass: 'sass',
     less: 'css',
     vue: 'vue',
     svelte: 'svelte',

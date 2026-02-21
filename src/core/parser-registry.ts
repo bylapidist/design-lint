@@ -24,4 +24,5 @@ export const parserRegistry: Partial<Record<string, ParserStrategy>> = {
   svelte: lintSvelte,
   ts: lintTS,
   css: lintCSS,
+  sass: lintCSS,
 };

@@ -9,7 +9,7 @@ export const FILE_TYPE_MAP: Record<string, string> = {
   cjs: 'ts',
   css: 'css',
   scss: 'css',
-  sass: 'css',
+  sass: 'sass',
   less: 'css',
   vue: 'vue',
   svelte: 'svelte',

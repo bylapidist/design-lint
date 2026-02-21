@@ -25,6 +25,14 @@ const trackingRule: RuleModule = {
   create: () => ({}),
 };
 
+const nonTrackingRule: RuleModule = {
+  name: 'test/non-tracking',
+  meta: {
+    description: 'non tracking',
+  },
+  create: () => ({}),
+};
+
 interface TokenReportMetadata {
   path: string;
   pointer: string;
@@ -149,4 +157,74 @@ void test('TokenTracker includes token metadata in reports', async () => {
   assert.equal(unused.pointer, '#/color/unused');
   assert.equal(unused.deprecated?.supersededBy?.pointer, '#/color/replacement');
   assert.deepEqual(unused.extensions, { 'vendor.foo': true });
+});
+
+void test('TokenTracker exposes tracking consumer status from rule capabilities', async () => {
+  const tracker = new TokenTracker(
+    makeProvider({
+      $version: '1.0.0',
+      color: { blue: { $type: 'string', $value: '#0000ff' } },
+    }),
+  );
+  await tracker.configure([{ rule: nonTrackingRule, severity: 'warn' }]);
+  assert.equal(tracker.hasTrackingConsumers(), false);
+});
+
+void test('TokenTracker beginRun clears previously tracked usage', async () => {
+  const tracker = new TokenTracker(
+    makeProvider({
+      $version: '1.0.0',
+      color: { used: { $type: 'string', $value: '#ff0000' } },
+    }),
+  );
+  await tracker.configure([{ rule: trackingRule, severity: 'warn' }]);
+  await tracker.trackUsage({ text: '#ff0000' });
+  assert.deepEqual(await tracker.getUnusedTokens(), []);
+
+  tracker.beginRun();
+  const unused = await tracker.getUnusedTokens();
+  assert.equal(unused.length, 1);
+  assert.equal(unused[0]?.value, '#ff0000');
+});
+
+void test('TokenTracker supports ignored values when collecting unused tokens', async () => {
+  const tracker = new TokenTracker(
+    makeProvider({
+      $version: '1.0.0',
+      color: { unused: { $type: 'string', $value: '#abcdef' } },
+    }),
+  );
+  await tracker.configure([{ rule: trackingRule, severity: 'warn' }]);
+  const unused = await tracker.getUnusedTokens(['#abcdef']);
+  assert.deepEqual(unused, []);
+});
+
+void test('TokenTracker uses tokenPath and numeric classifiers for raw text tracking', async () => {
+  const tracker = new TokenTracker(
+    makeProvider({
+      $version: '1.0.0',
+      copy: { label: { $type: 'string', $value: 'copy.label' } },
+      z: { modal: { $type: 'number', $value: 10 } },
+    }),
+  );
+  await tracker.configure([{ rule: trackingRule, severity: 'warn' }]);
+  await tracker.trackUsage({
+    text: 'const a = "{ copy.label }"; const zIndex = 10;',
+  });
+  assert.deepEqual(await tracker.getUnusedTokens(), []);
+});
+
+void test('TokenTracker ignores wildcard token values and non-token themes', async () => {
+  const tracker = new TokenTracker({
+    load: () =>
+      Promise.resolve({
+        $meta: { $version: '1.0.0' },
+        default: {
+          $version: '1.0.0',
+          color: { dynamic: { $type: 'string', $value: 'palette.*' } },
+        },
+      }),
+  });
+  await tracker.configure([{ rule: trackingRule, severity: 'warn' }]);
+  assert.deepEqual(await tracker.getUnusedTokens(), []);
 });

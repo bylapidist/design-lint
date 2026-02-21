@@ -30,23 +30,26 @@ jobs:
               - '!docs/**'
               - '!**/*.md'
               - '!*.md'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.1
       - uses: actions/setup-node@v6
         with:
           node-version: 24.13.1
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - run: npm ci --prefer-offline
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - name: Audit dependencies
-        run: npm audit --production --audit-level=high
-      - run: npm run build
+        run: pnpm audit --prod --audit-level high
+      - run: pnpm run build
         if: steps.changes.outputs['non-docs'] == 'true'
-      - run: npm run lint
-      - run: npm run format:check
-      - run: npm run lint:md
+      - run: pnpm run lint
+      - run: pnpm run format:check
+      - run: pnpm run lint:md
         if: steps.changes.outputs['docs'] == 'true'
-      - run: npm run test:coverage
+      - run: pnpm run test:coverage
         if: steps.changes.outputs['non-docs'] == 'true'
-      - run: npm run docs:build
+      - run: pnpm run docs:build
         if: steps.changes.outputs['docs'] == 'true'
       - run: node scripts/generate-coverage-comment.mjs
         if: steps.changes.outputs['non-docs'] == 'true'

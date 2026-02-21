@@ -105,3 +105,37 @@ void test('stylish formatter does not insert blank line before summary', () => {
     'a.ts\n  1:1  error  msg  rule\n1 problems (1 errors, 0 warnings)',
   );
 });
+
+void test('stylish formatter emits ANSI colors for ok, warn, error, and headers', () => {
+  const results: LintResult[] = [
+    {
+      sourceId: 'ok.ts',
+      messages: [],
+    },
+    {
+      sourceId: 'problems.ts',
+      messages: [
+        {
+          ruleId: 'warn-rule',
+          message: 'warn msg',
+          severity: 'warning',
+          line: 1,
+          column: 2,
+        },
+        {
+          ruleId: 'error-rule',
+          message: 'error msg',
+          severity: 'error',
+          line: 3,
+          column: 4,
+        },
+      ],
+    },
+  ];
+
+  const out = stylishFormatter(results, true);
+  assert.ok(out.includes('\x1b[32m[OK]\x1b[0m'));
+  assert.ok(out.includes('\x1b[4mproblems.ts\x1b[0m'));
+  assert.ok(out.includes('\x1b[33mwarn\x1b[0m'));
+  assert.ok(out.includes('\x1b[31merror\x1b[0m'));
+});

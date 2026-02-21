@@ -31,6 +31,18 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 - `components` (`string[]`): explicit design-system component names to lint.
 - `importOrigins` (`string[]`): package names treated as design-system import origins.
 
+For `importOrigins`, the rule first uses symbol/type metadata when available. If TypeChecker symbol data is unavailable, it falls back to an AST-only import map built from `ImportDeclaration` nodes in the same file.
+
+AST fallback supports:
+- Default imports: `import Button from '@acme/design-system'`
+- Named imports: `import { Button } from '@acme/design-system'`
+- Aliased named imports: `import { Button as DSButton } from '@acme/design-system'`
+- Simple namespace member usage: `import * as DS from '@acme/design-system'` with `<DS.Button />`
+
+AST fallback limits:
+- Matches only identifiers/member expressions directly associated with local import bindings in the current file.
+- Does not resolve re-exports, transitive imports, or complex expression-based JSX tag names.
+
 When neither `components` nor `importOrigins` is configured, the rule does not report JSX component usage by default.
 
 This rule is not auto-fixable.

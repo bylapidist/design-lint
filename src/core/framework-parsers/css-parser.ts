@@ -15,15 +15,46 @@ const {
   data: { isObject },
 } = guards;
 
+const UNSUPPORTED_SASS_MESSAGE =
+  'Indented .sass syntax is not supported; use .scss instead.';
+
+function normalizeParseLocation(value: unknown): number {
+  return typeof value === 'number' &&
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    value >= 1
+    ? value
+    : 1;
+}
+
+function pushParseError(
+  messages: LintMessage[],
+  message: unknown,
+  line?: unknown,
+  column?: unknown,
+): void {
+  messages.push({
+    ruleId: 'parse-error',
+    message: typeof message === 'string' ? message : 'Failed to parse CSS',
+    severity: 'error',
+    line: normalizeParseLocation(line),
+    column: normalizeParseLocation(column),
+  });
+}
+
 export function parseCSS(
   text: string,
   messages: LintMessage[] = [],
   lang?: string,
 ): CSSDeclaration[] {
   const decls: CSSDeclaration[] = [];
+  if (lang === 'sass') {
+    pushParseError(messages, UNSUPPORTED_SASS_MESSAGE, 1, 1);
+    return decls;
+  }
   try {
     const root =
-      lang === 'scss' || lang === 'sass'
+      lang === 'scss'
         ? scssParser(text)
         : lang === 'less'
           ? lessSyntax.parse(text)
@@ -39,14 +70,7 @@ export function parseCSS(
   } catch (e: unknown) {
     const err: { message?: unknown; line?: unknown; column?: unknown } =
       isObject(e) ? e : {};
-    messages.push({
-      ruleId: 'parse-error',
-      message:
-        typeof err.message === 'string' ? err.message : 'Failed to parse CSS',
-      severity: 'error',
-      line: typeof err.line === 'number' ? err.line : 1,
-      column: typeof err.column === 'number' ? err.column : 1,
-    });
+    pushParseError(messages, err.message, err.line, err.column);
   }
   return decls;
 }
@@ -59,7 +83,8 @@ export function lintCSS(
 ): ParserPassResult {
   const lower = sourceId.toLowerCase();
   let lang: string | undefined;
-  if (lower.endsWith('.scss') || lower.endsWith('.sass')) lang = 'scss';
+  if (lower.endsWith('.scss')) lang = 'scss';
+  else if (lower.endsWith('.sass')) lang = 'sass';
   else if (lower.endsWith('.less')) lang = 'less';
   const decls = parseCSS(text, messages, lang);
   const tokenReferences: ParserPassResult['tokenReferences'] = [];

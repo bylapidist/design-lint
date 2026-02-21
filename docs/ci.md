@@ -8,6 +8,9 @@ sidebar_position: 10
 
 This guide targets CI engineers integrating design-lint into automated workflows.
 
+> [!IMPORTANT]
+> `@lapidist/design-lint` is not yet production-ready.
+
 ## Table of contents
 - [GitHub Actions](#github-actions)
 - [GitLab CI](#gitlab-ci)
@@ -30,7 +33,7 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
-      - run: npx design-lint "src/**/*" --format sarif --output lint.sarif
+      - run: npx design-lint "src/**/*" --fail-on-empty --format sarif --output lint.sarif
       - uses: actions/upload-artifact@v4
         with:
           name: design-lint-report
@@ -48,7 +51,7 @@ lint:
       - node_modules/
   script:
     - npm ci
-    - npx design-lint "src/**/*" --format json --output lint.json
+    - npx design-lint "src/**/*" --fail-on-empty --format json --output lint.json
   artifacts:
     paths:
       - lint.json
@@ -65,7 +68,7 @@ jobs:
     steps:
       - checkout
       - run: npm ci
-      - run: npx design-lint "src/**/*" --max-warnings 0
+      - run: npx design-lint "src/**/*" --fail-on-empty --max-warnings 0
 workflows:
   lint:
     jobs:
@@ -77,11 +80,15 @@ Any CI system that can run shell commands can execute design-lint:
 
 ```bash
 npm ci
-npx design-lint "src/**/*" --format json --output lint.json
+npx design-lint "src/**/*" --fail-on-empty --format json --output lint.json
 ```
 
 ## Handling failures
-Use `--max-warnings` to fail the build when warnings exceed a threshold. Cache `node_modules` to speed up runs, and only cache `.designlintcache` when your command includes `--cache`. See [formatters](./formatters.md) for report formats and [usage](./usage.md) for CLI flags.
+Use `--max-warnings` to fail the build when warnings exceed a threshold and
+`--fail-on-empty` to prevent silent success on empty target sets. Cache
+`node_modules` to speed up runs, and only cache `.designlintcache` when your
+command includes `--cache`. See [formatters](./formatters.md) for report
+formats and [usage](./usage.md) for CLI flags.
 
 ## See also
 - [Formatters](./formatters.md)
