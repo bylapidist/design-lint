@@ -3,6 +3,8 @@ import { parse as scssParser } from 'postcss-scss';
 import lessSyntax from 'postcss-less';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
 import { guards } from '../../utils/index.js';
+import type { ParserPassResult } from '../parser-registry.js';
+import { collectDeclarationTokenReferences } from './token-references.js';
 
 const {
   data: { isObject },
@@ -49,13 +51,16 @@ export function lintCSS(
   sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
-): void {
+): ParserPassResult {
   const lower = sourceId.toLowerCase();
   let lang: string | undefined;
   if (lower.endsWith('.scss') || lower.endsWith('.sass')) lang = 'scss';
   else if (lower.endsWith('.less')) lang = 'less';
   const decls = parseCSS(text, messages, lang);
+  const tokenReferences: ParserPassResult['tokenReferences'] = [];
   for (const decl of decls) {
+    collectDeclarationTokenReferences(decl, tokenReferences, 'css');
     for (const l of listeners) l.onCSSDeclaration?.(decl);
   }
+  return { tokenReferences };
 }

@@ -60,19 +60,27 @@ const createCollector = () => {
 void test('lintCSS selects parser language from filename', () => {
   const messages: LintMessage[] = [];
   const { listener, cssDecls } = createCollector();
-  cssParsers.lintCSS('.btn { color: red; }', 'file.css', [listener], messages);
-  cssParsers.lintCSS(
+  const cssResult = cssParsers.lintCSS(
+    '.btn { color: red; }',
+    'file.css',
+    [listener],
+    messages,
+  );
+  const scssResult = cssParsers.lintCSS(
     '$primary: #fff;\n.btn { color: $primary; }',
     'file.scss',
     [listener],
     messages,
   );
-  cssParsers.lintCSS(
+  const lessResult = cssParsers.lintCSS(
     '@primary: #fff;\n.btn { color: @primary; }',
     'file.less',
     [listener],
     messages,
   );
+  assert.ok(cssResult.tokenReferences?.length);
+  assert.ok(scssResult.tokenReferences?.length);
+  assert.ok(lessResult.tokenReferences?.length);
   assert.ok(cssDecls.some((decl) => decl.value === 'red'));
   assert.ok(cssDecls.some((decl) => decl.value.includes('$primary')));
   assert.ok(cssDecls.some((decl) => decl.value.includes('@primary')));
@@ -88,7 +96,12 @@ void test('lintTS dispatches declarations from inline styles and tagged template
     },
   };
   const messages: LintMessage[] = [];
-  lintTS(text, 'component.tsx', [listener], messages);
+  const result = lintTS(text, 'component.tsx', [listener], messages);
+  assert.ok(
+    result.tokenReferences?.some((ref) =>
+      ref.candidate.includes('var(--primary)'),
+    ),
+  );
   assert.ok(decls.some((value) => value.startsWith('color')));
   assert.ok(decls.some((value) => value.startsWith('width')));
   assert.ok(decls.some((value) => value.includes('border-width')));
@@ -131,7 +144,8 @@ void test('lintVue processes scripts and style blocks', async () => {
     },
   };
   const messages: LintMessage[] = [];
-  await lintVue(text, 'component.vue', [listener], messages);
+  const result = await lintVue(text, 'component.vue', [listener], messages);
+  assert.ok(result.tokenReferences?.length);
   assert.ok(identifiers.has('scriptValue'));
   assert.ok(identifiers.has('setupValue'));
   assert.ok(decls.includes('color:red'));
@@ -152,7 +166,13 @@ void test('lintSvelte extracts attributes, directives, scripts and style tags', 
     },
   };
   const messages: LintMessage[] = [];
-  await lintSvelte(text, 'component.svelte', [listener], messages);
+  const result = await lintSvelte(
+    text,
+    'component.svelte',
+    [listener],
+    messages,
+  );
+  assert.ok(result.tokenReferences?.length);
   assert.ok(identifiers.has('color'));
   assert.ok(identifiers.has('moduleValue'));
   assert.ok(identifiers.has('promise'));

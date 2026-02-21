@@ -3,6 +3,11 @@ import { parseCSS } from './css-parser.js';
 import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
 import type { parse as svelteParse } from 'svelte/compiler';
 import { guards, collections } from '../../utils/index.js';
+import type { ParserPassResult } from '../parser-registry.js';
+import {
+  collectDeclarationTokenReferences,
+  collectTsTokenReferences,
+} from './token-references.js';
 
 const {
   data: { isRecord },
@@ -14,7 +19,8 @@ export async function lintSvelte(
   sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
-): Promise<void> {
+): Promise<ParserPassResult> {
+  const tokenReferences: NonNullable<ParserPassResult['tokenReferences']> = [];
   const { parse }: { parse: typeof svelteParse } =
     await import('svelte/compiler');
   const ast = parse(text, { modern: true });
@@ -66,7 +72,7 @@ export async function lintSvelte(
     let m: RegExpExecArray | null;
     while ((m = regex.exec(content))) {
       const prop = m[1].trim();
-      let value = m[2]
+      const value = m[2]
         .trim()
         .replace(/__EXPR_(\d+)__/g, (_, i) => exprs[Number(i)]);
       const { line, column } = getLineAndColumn(valueStart + m.index);
@@ -147,12 +153,14 @@ export async function lintSvelte(
       ts.ScriptKind.TSX,
     );
     const visit = (node: ts.Node) => {
+      collectTsTokenReferences(node, source, tokenReferences, 'svelte:ts');
       for (const l of listeners) l.onNode?.(node);
       ts.forEachChild(node, visit);
     };
     visit(source);
   }
   for (const decl of styleDecls) {
+    collectDeclarationTokenReferences(decl, tokenReferences, 'svelte:style');
     for (const l of listeners) l.onCSSDeclaration?.(decl);
   }
   if (ast.css) {
@@ -172,9 +180,11 @@ export async function lintSvelte(
         : undefined;
     const decls = parseCSS(styleText, messages, lang);
     for (const decl of decls) {
+      collectDeclarationTokenReferences(decl, tokenReferences, 'svelte:css');
       for (const l of listeners) l.onCSSDeclaration?.(decl);
     }
   }
+  return { tokenReferences };
 }
 
 function isSvelteAttr(value: unknown): value is {

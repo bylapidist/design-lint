@@ -160,6 +160,13 @@ export interface CSSDeclaration {
   column: number;
 }
 
+export interface TokenReferenceCandidate {
+  candidate: string;
+  line: number;
+  column: number;
+  context: string;
+}
+
 export interface Fix {
   range: [number, number];
   text: string;

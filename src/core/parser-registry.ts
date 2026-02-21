@@ -1,15 +1,23 @@
-import type { LintMessage, RuleModule } from './types.js';
+import type {
+  LintMessage,
+  RuleModule,
+  TokenReferenceCandidate,
+} from './types.js';
 import { lintVue } from './framework-parsers/vue-parser.js';
 import { lintSvelte } from './framework-parsers/svelte-parser.js';
 import { lintTS } from './framework-parsers/ts-parser.js';
 import { lintCSS } from './framework-parsers/css-parser.js';
+
+export interface ParserPassResult {
+  tokenReferences?: TokenReferenceCandidate[];
+}
 
 export type ParserStrategy = (
   text: string,
   sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
-) => Promise<void> | void;
+) => Promise<ParserPassResult> | ParserPassResult;
 
 export const parserRegistry: Partial<Record<string, ParserStrategy>> = {
   vue: lintVue,
