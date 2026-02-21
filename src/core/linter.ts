@@ -288,7 +288,7 @@ export class Linter {
     collect: () => Promise<LintMessage[]>;
   } {
     const messages: LintMessage[] = [];
-    const listeners: RuleRunListener[] = [];
+    const listeners: { listener: RuleRunListener; sourceRule: string }[] = [];
     for (const { rule, options, severity } of enabled) {
       if (!rule.createRun) continue;
       const ctx: RuleRunContext = {
@@ -298,21 +298,45 @@ export class Linter {
         report: (message) =>
           messages.push({ ...message, ruleId: rule.name, severity }),
       };
-      listeners.push(rule.createRun(ctx));
+      try {
+        listeners.push({
+          listener: rule.createRun(ctx),
+          sourceRule: rule.name,
+        });
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : `Unknown run listener error: ${String(error)}`;
+        messages.push({
+          ruleId: RUNTIME_ERROR_RULE_ID,
+          message: `Rule "${rule.name}" failed in createRun: ${errorMessage}`,
+          severity: 'error',
+          line: 1,
+          column: 1,
+          metadata: {
+            phase: 'run',
+            sourceRule: rule.name,
+            sourceHook: 'createRun',
+            sourceId,
+            errorMessage,
+          },
+        });
+      }
     }
 
     return {
       sourceId,
       collect: async () => {
-        for (const [index, listener] of listeners.entries()) {
+        for (const entry of listeners) {
           try {
-            await listener.onRunComplete?.();
+            await entry.listener.onRunComplete?.();
           } catch (error: unknown) {
             const errorMessage =
               error instanceof Error
                 ? error.message
                 : `Unknown run listener error: ${String(error)}`;
-            const sourceRule = enabled[index]?.rule.name ?? 'unknown';
+            const sourceRule = entry.sourceRule;
             messages.push({
               ruleId: RUNTIME_ERROR_RULE_ID,
               message: `Rule "${sourceRule}" failed in onRunComplete: ${errorMessage}`,
@@ -355,7 +379,8 @@ export class Linter {
     const messages: LintMessage[] = [];
     const ruleDescriptions: Record<string, string> = {};
     const ruleCategories: Record<string, string> = {};
-    const listeners = enabled.map(({ rule, options, severity }) => {
+    const listeners: RegisteredRuleListener[] = [];
+    for (const { rule, options, severity } of enabled) {
       ruleDescriptions[rule.name] = rule.meta.description;
       if (rule.meta.category) {
         ruleCategories[rule.name] = rule.meta.category;
@@ -373,8 +398,29 @@ export class Linter {
         getTokenPath: (token) =>
           deriveTokenPath(token, this.config.nameTransform),
       };
-      return { ruleId: rule.name, listener: rule.create(ctx) };
-    });
+      try {
+        listeners.push({ ruleId: rule.name, listener: rule.create(ctx) });
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : `Unknown listener error: ${String(error)}`;
+        messages.push({
+          ruleId: RUNTIME_ERROR_RULE_ID,
+          message: `Rule "${rule.name}" failed in create: ${errorMessage}`,
+          severity: 'error',
+          line: 1,
+          column: 1,
+          metadata: {
+            phase: 'lint',
+            sourceRule: rule.name,
+            sourceHook: 'create',
+            sourceId,
+            errorMessage,
+          },
+        });
+      }
+    }
     return { listeners, ruleDescriptions, ruleCategories, messages };
   }
 

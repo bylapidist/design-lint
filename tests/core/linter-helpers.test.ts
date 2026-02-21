@@ -52,6 +52,49 @@ void test('buildRuleContexts records rule metadata and reports messages', () => 
   ]);
 });
 
+void test('buildRuleContexts captures create errors and continues', () => {
+  const linter = initLinter({ tokens: {}, rules: {} }, env);
+  const helper = linter as unknown as {
+    buildRuleContexts: Linter['buildRuleContexts'];
+  };
+
+  const crashingRule: RuleModule = {
+    name: 'custom/crash-create',
+    meta: { description: 'crashes in create' },
+    create() {
+      throw new Error('create exploded');
+    },
+  };
+
+  const healthyRule: RuleModule = {
+    name: 'custom/healthy-create',
+    meta: { description: 'healthy create' },
+    create(context) {
+      context.report({
+        message: 'create ok',
+        line: 1,
+        column: 1,
+      });
+      return {};
+    },
+  };
+
+  const { listeners, messages } = helper.buildRuleContexts(
+    [
+      { rule: crashingRule, options: undefined, severity: 'error' },
+      { rule: healthyRule, options: undefined, severity: 'warn' },
+    ],
+    'file.ts',
+  );
+
+  assert.equal(listeners.length, 1);
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].ruleId, RUNTIME_ERROR_RULE_ID);
+  assert.match(messages[0].message, /custom\/crash-create/);
+  assert.equal(messages[1].ruleId, 'custom/healthy-create');
+  assert.equal(messages[1].message, 'create ok');
+});
+
 void test('buildRuleContexts exposes DTIF tokens on the rule context', () => {
   const linter = initLinter({ tokens: {}, rules: {} }, env);
   const helper = linter as unknown as {
@@ -231,6 +274,54 @@ void test('buildRunRuleContexts captures onRunComplete errors and continues', as
   assert.match(messages[0].message, /custom\/crash/);
   assert.equal(messages[1].ruleId, 'custom/healthy');
   assert.equal(messages[1].message, 'run ok');
+});
+
+void test('buildRunRuleContexts captures createRun errors and continues', async () => {
+  const linter = initLinter({ tokens: {}, rules: {} }, env);
+  const helper = linter as unknown as {
+    buildRunRuleContexts: Linter['buildRunRuleContexts'];
+  };
+
+  const crashingRule: RuleModule = {
+    name: 'custom/crash-create-run',
+    meta: { description: 'crashes in createRun' },
+    create: () => ({}),
+    createRun() {
+      throw new Error('createRun exploded');
+    },
+  };
+
+  const healthyRule: RuleModule = {
+    name: 'custom/healthy-create-run',
+    meta: { description: 'healthy createRun' },
+    create: () => ({}),
+    createRun(context) {
+      return {
+        onRunComplete: () => {
+          context.report({
+            message: 'createRun ok',
+            line: 1,
+            column: 1,
+          });
+        },
+      };
+    },
+  };
+
+  const run = helper.buildRunRuleContexts(
+    [
+      { rule: crashingRule, options: undefined, severity: 'error' },
+      { rule: healthyRule, options: undefined, severity: 'warn' },
+    ],
+    'config.json',
+  );
+
+  const messages = await run.collect();
+  assert.equal(messages.length, 2);
+  assert.equal(messages[0].ruleId, RUNTIME_ERROR_RULE_ID);
+  assert.match(messages[0].message, /custom\/crash-create-run/);
+  assert.equal(messages[1].ruleId, 'custom/healthy-create-run');
+  assert.equal(messages[1].message, 'createRun ok');
 });
 
 void test('runParser executes parser for provided type', async () => {
