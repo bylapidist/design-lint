@@ -174,7 +174,8 @@ export interface CSSDeclaration {
 }
 
 export interface TokenReferenceCandidate {
-  candidate: string;
+  kind: 'css-var' | 'token-path' | 'alias-pointer';
+  identity: string;
   line: number;
   column: number;
   context: string;

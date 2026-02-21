@@ -4,8 +4,8 @@ import type { LintMessage, RegisteredRuleListener } from '../types.js';
 import type { ParserPassResult } from '../parser-registry.js';
 import {
   collectDeclarationTokenReferences,
+  collectTextTokenReferences,
   collectTsTokenReferences,
-  pushTokenReference,
 } from './token-references.js';
 import {
   dispatchCSSDeclarationListener,
@@ -28,7 +28,7 @@ export async function lintVue(
   const { parse } = await import('@vue/compiler-sfc');
   const { descriptor } = parse(text, { filename: sourceId });
   const template = descriptor.template?.content ?? '';
-  pushTokenReference(tokenReferences, template, 1, 1, 'vue:template');
+  collectTextTokenReferences(tokenReferences, template, 1, 1, 'vue:template');
   const templateTsx = template
     .replace(/class=/g, 'className=')
     .replace(
