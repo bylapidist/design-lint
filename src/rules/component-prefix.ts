@@ -4,6 +4,13 @@ import type { RuleModule } from '../core/types.js';
 
 interface ComponentPrefixOptions {
   prefix?: string;
+  packages?: string[];
+  components?: string[];
+}
+
+interface ScopedImportSource {
+  moduleName: string;
+  importedName: string;
 }
 
 function getJsxTagName(node: ts.JsxTagNameExpression): string {
@@ -35,15 +42,168 @@ function getRequiredPrefix(tag: string, prefix: string): string {
   return prefix.endsWith('-') ? prefix : `${prefix}-`;
 }
 
+function getImportedComponentName(
+  node: ts.JsxTagNameExpression,
+  importSource: ScopedImportSource,
+): string {
+  if (ts.isPropertyAccessExpression(node) || ts.isJsxNamespacedName(node)) {
+    return node.name.text;
+  }
+
+  return importSource.importedName;
+}
+
+function getImportDeclarationFromImportSpecifier(
+  declaration: ts.ImportSpecifier,
+): ts.ImportDeclaration | null {
+  const namedImports = declaration.parent;
+  if (!ts.isNamedImports(namedImports)) {
+    return null;
+  }
+
+  const importClause = namedImports.parent;
+  if (!ts.isImportClause(importClause)) {
+    return null;
+  }
+
+  const importDeclaration = importClause.parent;
+  return ts.isImportDeclaration(importDeclaration) ? importDeclaration : null;
+}
+
+function getImportDeclarationFromNamespaceImport(
+  declaration: ts.NamespaceImport,
+): ts.ImportDeclaration | null {
+  const importClause = declaration.parent;
+  if (!ts.isImportClause(importClause)) {
+    return null;
+  }
+
+  const importDeclaration = importClause.parent;
+  return ts.isImportDeclaration(importDeclaration) ? importDeclaration : null;
+}
+
+function parseImportSourceFromDeclaration(
+  declaration: ts.Declaration,
+): ScopedImportSource | null {
+  if (ts.isImportSpecifier(declaration)) {
+    const importDeclaration =
+      getImportDeclarationFromImportSpecifier(declaration);
+    if (!importDeclaration) {
+      return null;
+    }
+
+    if (!ts.isStringLiteral(importDeclaration.moduleSpecifier)) {
+      return null;
+    }
+
+    return {
+      moduleName: importDeclaration.moduleSpecifier.text,
+      importedName: declaration.propertyName?.text ?? declaration.name.text,
+    };
+  }
+
+  if (ts.isImportClause(declaration)) {
+    const importDeclaration = declaration.parent;
+    if (!ts.isImportDeclaration(importDeclaration)) {
+      return null;
+    }
+
+    if (!declaration.name) {
+      return null;
+    }
+
+    if (!ts.isStringLiteral(importDeclaration.moduleSpecifier)) {
+      return null;
+    }
+
+    return {
+      moduleName: importDeclaration.moduleSpecifier.text,
+      importedName: declaration.name.text,
+    };
+  }
+
+  if (ts.isNamespaceImport(declaration)) {
+    const importDeclaration =
+      getImportDeclarationFromNamespaceImport(declaration);
+    if (!importDeclaration) {
+      return null;
+    }
+
+    if (!ts.isStringLiteral(importDeclaration.moduleSpecifier)) {
+      return null;
+    }
+
+    return {
+      moduleName: importDeclaration.moduleSpecifier.text,
+      importedName: declaration.name.text,
+    };
+  }
+
+  return null;
+}
+
 export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
   name: 'design-system/component-prefix',
   meta: {
     description: 'enforce a prefix for design system components',
     category: 'component',
-    schema: z.object({ prefix: z.string().optional() }).optional(),
+    schema: z
+      .object({
+        prefix: z.string().optional(),
+        packages: z.array(z.string()).optional(),
+        components: z.array(z.string()).optional(),
+      })
+      .optional(),
   },
   create(context) {
     const prefix = context.options?.prefix ?? 'DS';
+    const scopedPackages = new Set(context.options?.packages ?? []);
+    const scopedComponents = new Set(context.options?.components ?? []);
+    const hasScopedSources =
+      scopedPackages.size > 0 || scopedComponents.size > 0;
+
+    const isDesignSystemComponent = (
+      tagNode: ts.JsxTagNameExpression,
+    ): boolean => {
+      if (!hasScopedSources) {
+        return true;
+      }
+
+      const symbol = context.symbolResolution?.resolveSymbol(tagNode);
+      if (!symbol) {
+        return false;
+      }
+
+      const sourceDeclaration = symbol.declarations?.find(
+        (declaration): declaration is ts.Declaration =>
+          ts.isImportSpecifier(declaration) ||
+          ts.isImportClause(declaration) ||
+          ts.isNamespaceImport(declaration),
+      );
+      if (!sourceDeclaration) {
+        return false;
+      }
+
+      const importSource = parseImportSourceFromDeclaration(sourceDeclaration);
+      if (!importSource) {
+        return false;
+      }
+
+      if (
+        scopedPackages.size > 0 &&
+        !scopedPackages.has(importSource.moduleName)
+      ) {
+        return false;
+      }
+
+      const componentName = getImportedComponentName(tagNode, importSource);
+      if (scopedComponents.size > 0 && !scopedComponents.has(componentName)) {
+        return false;
+      }
+
+      return true;
+    };
+
     return {
       onNode(node) {
         if (
@@ -62,7 +222,8 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
             node.tagName.kind === ts.SyntaxKind.ThisKeyword;
           const isComponent =
             isPascalCaseComponent || isCustomElement || isComplexTagName;
-          if (!isComponent) return; // ignore standard HTML tags
+          if (!isComponent) return;
+          if (!isDesignSystemComponent(node.tagName)) return;
 
           const requiredPrefix = getRequiredPrefix(tag, prefix);
 

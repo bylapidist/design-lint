@@ -180,3 +180,56 @@ void test('design-system/component-prefix reports JSX member expressions without
   assert.equal(fooMemberRes.messages.length, 2);
   assert.ok(fooMemberRes.messages.every((m) => m.fix === undefined));
 });
+
+void test('design-system/component-prefix ignores non-scoped imports', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': [
+          'error',
+          {
+            prefix: 'DS',
+            packages: ['@acme/design-system'],
+            components: ['Button'],
+          },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+
+  const res = await linter.lintText(
+    "import { Button } from '@acme/legacy-ui'; const a = <Button/>;",
+    'file.tsx',
+  );
+
+  assert.equal(res.messages.length, 0);
+});
+
+void test('design-system/component-prefix enforces scoped design-system imports', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': [
+          'error',
+          {
+            prefix: 'DS',
+            packages: ['@acme/design-system'],
+            components: ['Button'],
+          },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+
+  const res = await linter.lintText(
+    "import { Button } from '@acme/design-system'; const a = <Button/>;",
+    'file.tsx',
+  );
+
+  assert.equal(res.messages.length, 1);
+  assert.ok(
+    res.messages[0].message.includes('Component "Button" should be prefixed'),
+  );
+});
