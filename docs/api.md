@@ -40,18 +40,39 @@ async function main() {
 main().catch(console.error);
 ```
 
+## API contract
+Stable exports for programmatic integration:
+
+- `createLinter(config, env)`
+- `createLintService(config, env)`
+- `setupLinter(config, env)`
+- `loadConfig(cwd, path?)`
+- `defineConfig(config)`
+- `getFormatter(name)`
+- `applyFixes(text, messages)`
+
+Stable `Linter` methods:
+
+- `lintTargets(targets, fix?, ignore?)`
+- `lintDocument(document, fix?)`
+- `lintDocuments(documents, fix?, cache?)`
+- `getTokenCompletions()`
+
 ## Linter class
 `Linter` runs rules against provided documents.
 
 ```ts
-import { Linter, FileSource } from '@lapidist/design-lint';
-const linter = initLinter(config, new FileSource());
+import { createLinter, createNodeEnvironment } from '@lapidist/design-lint';
+
+const env = createNodeEnvironment(config);
+const linter = createLinter(config, env);
 const { results } = await linter.lintTargets(['src/**/*.ts']);
 ```
 
 Key methods:
 - `lintTargets(targets, fix?)` – lint files or globs.
-- `lintText(text, id, metadata?)` – lint a string.
+- `lintDocument(document, fix?)` – lint one preloaded document object.
+- `lintDocuments(documents, fix?, cache?)` – lint multiple preloaded document objects.
 - `getTokenCompletions()` – list available token paths grouped by theme.
 
 ## Helper functions
