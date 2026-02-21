@@ -142,6 +142,128 @@ function parseImportSourceFromDeclaration(
   return null;
 }
 
+function resolveImportSourceFromTag(
+  tagNode: ts.JsxTagNameExpression,
+  symbolResolution?: {
+    getSymbolAtLocation: (node: ts.Node) => ts.Symbol | undefined;
+    resolveSymbol: (node: ts.Node) => ts.Symbol | undefined;
+  },
+): ScopedImportSource | null {
+  if (!symbolResolution) {
+    return null;
+  }
+
+  const candidates = [
+    symbolResolution.getSymbolAtLocation(tagNode),
+    symbolResolution.resolveSymbol(tagNode),
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue;
+    }
+
+    const sourceDeclaration = candidate.declarations?.find(
+      (declaration): declaration is ts.Declaration =>
+        ts.isImportSpecifier(declaration) ||
+        ts.isImportClause(declaration) ||
+        ts.isNamespaceImport(declaration),
+    );
+    if (!sourceDeclaration) {
+      continue;
+    }
+
+    const importSource = parseImportSourceFromDeclaration(sourceDeclaration);
+    if (importSource) {
+      return importSource;
+    }
+  }
+
+  return null;
+}
+
+function createFallbackImportLookup(
+  sourceFile: ts.SourceFile,
+): Map<string, string> {
+  const imports = new Map<string, string>();
+
+  for (const statement of sourceFile.statements) {
+    if (!ts.isImportDeclaration(statement)) {
+      continue;
+    }
+
+    if (!ts.isStringLiteral(statement.moduleSpecifier)) {
+      continue;
+    }
+
+    const moduleName = statement.moduleSpecifier.text;
+    const importClause = statement.importClause;
+    if (!importClause) {
+      continue;
+    }
+
+    if (importClause.name) {
+      imports.set(importClause.name.text, moduleName);
+    }
+
+    const namedBindings = importClause.namedBindings;
+    if (!namedBindings) {
+      continue;
+    }
+
+    if (ts.isNamedImports(namedBindings)) {
+      for (const element of namedBindings.elements) {
+        imports.set(element.name.text, moduleName);
+      }
+      continue;
+    }
+
+    if (ts.isNamespaceImport(namedBindings)) {
+      imports.set(namedBindings.name.text, moduleName);
+    }
+  }
+
+  return imports;
+}
+
+function resolveFallbackImportSource(
+  tagNode: ts.JsxTagNameExpression,
+  sourceFile: ts.SourceFile,
+): ScopedImportSource | null {
+  const imports = createFallbackImportLookup(sourceFile);
+
+  if (ts.isIdentifier(tagNode)) {
+    const moduleName = imports.get(tagNode.text);
+    if (!moduleName) {
+      return null;
+    }
+
+    return {
+      moduleName,
+      importedName: tagNode.text,
+    };
+  }
+
+  if (ts.isPropertyAccessExpression(tagNode)) {
+    const root = tagNode.expression;
+    if (!ts.isIdentifier(root)) {
+      return null;
+    }
+
+    const moduleName = imports.get(root.text);
+    if (!moduleName) {
+      return null;
+    }
+
+    return {
+      moduleName,
+      importedName: tagNode.name.text,
+    };
+  }
+
+  return null;
+}
+
 export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
   name: 'design-system/component-prefix',
   meta: {
@@ -169,22 +291,9 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
         return true;
       }
 
-      const symbol = context.symbolResolution?.resolveSymbol(tagNode);
-      if (!symbol) {
-        return false;
-      }
-
-      const sourceDeclaration = symbol.declarations?.find(
-        (declaration): declaration is ts.Declaration =>
-          ts.isImportSpecifier(declaration) ||
-          ts.isImportClause(declaration) ||
-          ts.isNamespaceImport(declaration),
-      );
-      if (!sourceDeclaration) {
-        return false;
-      }
-
-      const importSource = parseImportSourceFromDeclaration(sourceDeclaration);
+      const importSource =
+        resolveImportSourceFromTag(tagNode, context.symbolResolution) ??
+        resolveFallbackImportSource(tagNode, tagNode.getSourceFile());
       if (!importSource) {
         return false;
       }

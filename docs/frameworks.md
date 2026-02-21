@@ -55,6 +55,9 @@ npx design-lint src/routes
 ## Currently supported file types
 design-lint currently supports these file extensions:
 
+
+Parse failures in stylesheet languages are reported deterministically as a single `parse-error` diagnostic, using parser-provided line and column data when available (falling back to line 1, column 1).
+
 - `ts`
 - `tsx`
 - `mts`
@@ -65,7 +68,7 @@ design-lint currently supports these file extensions:
 - `cjs`
 - `css`
 - `scss`
-- `sass`
+- `sass` (indented syntax)
 - `less`
 - `vue`
 - `svelte`

@@ -31,26 +31,43 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     const configuredOrigins = new Set(context.options?.importOrigins ?? []);
 
     const resolveImportOrigin = (tagName: ts.JsxTagNameExpression): string => {
-      const symbol = context.symbolResolution?.resolveSymbol(tagName);
-      if (!symbol) return '';
-      for (const declaration of symbol.declarations ?? []) {
-        if (ts.isImportSpecifier(declaration)) {
-          const parent = declaration.parent.parent.parent;
-          if (ts.isImportDeclaration(parent)) {
-            const moduleSpecifier = parent.moduleSpecifier;
-            if (ts.isStringLiteral(moduleSpecifier))
-              return moduleSpecifier.text;
-          }
+      const symbolResolution = context.symbolResolution;
+      if (!symbolResolution) {
+        return '';
+      }
+
+      const candidates = [
+        symbolResolution.getSymbolAtLocation(tagName),
+        symbolResolution.resolveSymbol(tagName),
+      ];
+
+      for (const candidate of candidates) {
+        if (!candidate) {
+          continue;
         }
-        if (ts.isImportClause(declaration)) {
-          const parent = declaration.parent;
-          if (ts.isImportDeclaration(parent)) {
-            const moduleSpecifier = parent.moduleSpecifier;
-            if (ts.isStringLiteral(moduleSpecifier))
-              return moduleSpecifier.text;
+
+        for (const declaration of candidate.declarations ?? []) {
+          if (ts.isImportSpecifier(declaration)) {
+            const parent = declaration.parent.parent.parent;
+            if (ts.isImportDeclaration(parent)) {
+              const moduleSpecifier = parent.moduleSpecifier;
+              if (ts.isStringLiteral(moduleSpecifier)) {
+                return moduleSpecifier.text;
+              }
+            }
+          }
+          if (ts.isImportClause(declaration)) {
+            const parent = declaration.parent;
+            if (ts.isImportDeclaration(parent)) {
+              const moduleSpecifier = parent.moduleSpecifier;
+              if (ts.isStringLiteral(moduleSpecifier)) {
+                return moduleSpecifier.text;
+              }
+            }
           }
         }
       }
+
       return '';
     };
 

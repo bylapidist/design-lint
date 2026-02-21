@@ -43,7 +43,7 @@ General purpose linters understand code style, not design systems. `@lapidist/de
 Run with `--fix` to automatically replace deprecated tokens and tidy up your code. See the [usage guide](docs/usage.md) for fix options.
 
 ### Broad language support
-Lint JavaScript, TypeScript, CSS, SCSS, Sass and Less, including inline styles and tagged template literals.
+Lint JavaScript, TypeScript, CSS, SCSS, indented-syntax Sass (`.sass`) and Less, including inline styles and tagged template literals.
 
 ### Extensible
 Extend behaviour with custom rules, formatters, and token transforms for your design system.

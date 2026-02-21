@@ -18,6 +18,13 @@ const config = {
 };
 
 const cssSample = '.a { .b { color: #fff; margin: 5px; opacity: 0.5; } }';
+const sassSample = [
+  '.a',
+  '  .b',
+  '    color: #fff',
+  '    margin: 5px',
+  '    opacity: 0.5',
+].join('\n');
 
 function assertIds(messages: { ruleId: string }[]) {
   const ids = messages.map((m) => m.ruleId).sort();
@@ -33,6 +40,23 @@ void test('reports raw tokens in .scss files', async () => {
   const res = await linter.lintText(cssSample, 'file.scss');
   assert.equal(res.messages.length, 3);
   assertIds(res.messages);
+});
+
+void test('reports raw tokens in indented .sass files', async () => {
+  const linter = initLinter(config, { documentSource: new FileSource() });
+  const res = await linter.lintText(sassSample, 'file.sass');
+  assert.equal(res.messages.length, 3);
+  assertIds(res.messages);
+});
+
+void test('reports deterministic parse errors in invalid indented .sass files', async () => {
+  const linter = initLinter(config, { documentSource: new FileSource() });
+  const res = await linter.lintText('.a\n  color #fff\n', 'file.sass');
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0]?.ruleId, 'parse-error');
+  assert.equal(res.messages[0]?.severity, 'error');
+  assert.equal(res.messages[0]?.line, 2);
+  assert.equal(res.messages[0]?.column, 1);
 });
 
 void test('reports raw tokens in Vue <style lang="scss">', async () => {

@@ -1,5 +1,6 @@
 import postcss from 'postcss';
 import { parse as scssParser } from 'postcss-scss';
+import { parse as sassParser } from 'postcss-sass';
 import lessSyntax from 'postcss-less';
 import type {
   CSSDeclaration,
@@ -23,11 +24,13 @@ export function parseCSS(
   const decls: CSSDeclaration[] = [];
   try {
     const root =
-      lang === 'scss' || lang === 'sass'
+      lang === 'scss'
         ? scssParser(text)
-        : lang === 'less'
-          ? lessSyntax.parse(text)
-          : postcss.parse(text);
+        : lang === 'sass'
+          ? sassParser(text)
+          : lang === 'less'
+            ? lessSyntax.parse(text)
+            : postcss.parse(text);
     root.walkDecls((d) => {
       decls.push({
         prop: d.prop,
@@ -59,7 +62,8 @@ export function lintCSS(
 ): ParserPassResult {
   const lower = sourceId.toLowerCase();
   let lang: string | undefined;
-  if (lower.endsWith('.scss') || lower.endsWith('.sass')) lang = 'scss';
+  if (lower.endsWith('.scss')) lang = 'scss';
+  else if (lower.endsWith('.sass')) lang = 'sass';
   else if (lower.endsWith('.less')) lang = 'less';
   const decls = parseCSS(text, messages, lang);
   const tokenReferences: ParserPassResult['tokenReferences'] = [];
