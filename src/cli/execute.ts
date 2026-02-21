@@ -11,6 +11,7 @@ export interface ExecuteOptions {
   format?: string;
   report?: string;
   maxWarnings?: number;
+  failOnEmpty?: boolean;
 }
 
 export interface ExecuteServices {
@@ -69,6 +70,12 @@ export async function executeLint(
   );
   const maxWarnings = opts.maxWarnings;
   let exitCode = hasErrors ? 1 : 0;
+  if (
+    opts.failOnEmpty &&
+    warning === 'No files matched the provided patterns.'
+  ) {
+    exitCode = 1;
+  }
   if (maxWarnings !== undefined && warningCount > maxWarnings) exitCode = 1;
   services.state.ignoreFilePaths = ignoreFiles;
   return { results, exitCode, ignoreFiles };

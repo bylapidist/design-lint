@@ -50,3 +50,33 @@ void test('lint command reports token color violations', () => {
   assert.equal(res.status, 1);
   assert.match(res.stdout, /input.css/);
 });
+
+void test('lint command exits successfully when no files match by default', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
+
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    ['--import', tsxLoader, cli, 'missing/**/*.css'],
+    { cwd: dir, encoding: 'utf8' },
+  );
+
+  assert.equal(res.status, 0);
+  assert.match(res.stderr, /No files matched the provided patterns\./);
+});
+
+void test('lint command exits with failure when --fail-on-empty is enabled', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
+
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    ['--import', tsxLoader, cli, 'missing/**/*.css', '--fail-on-empty'],
+    { cwd: dir, encoding: 'utf8' },
+  );
+
+  assert.equal(res.status, 1);
+  assert.match(res.stderr, /No files matched the provided patterns\./);
+});

@@ -69,7 +69,13 @@ Lint all files under `src`:
 npx design-lint "src/**/*"
 ```
 
-Use quotes around globs to prevent shell expansion. By default the CLI exits with code `1` when errors are found.
+Use quotes around globs to prevent shell expansion. By default the CLI exits with code `1` when errors are found and exits with code `0` if no files match.
+
+In strict CI workflows, add `--fail-on-empty` to fail fast when a glob resolves to no files:
+
+```bash
+npx design-lint "src/**/*" --fail-on-empty
+```
 
 ## Autofix workflow
 Many rules support auto-fix. Use the `--fix` flag to update files in place:
@@ -143,8 +149,8 @@ npx design-lint src/button.tsx styles/*.css
 ```
 
 ## Exit codes
-- `0` – no lint errors
-- `1` – lint errors or runtime/configuration error
+- `0` – no lint errors (including when no files match by default)
+- `1` – lint errors, runtime/configuration error, or no matched files when `--fail-on-empty` is enabled
 
 ## Troubleshooting
 If the CLI fails or reports unexpected results:

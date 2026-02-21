@@ -84,6 +84,10 @@ function createProgram(version: string, logger: Logger) {
     .option('--no-color', 'Disable colored output')
     .option('--cache', 'Enable persistent caching')
     .option('--cache-location <path>', 'Path to cache file')
+    .option(
+      '--fail-on-empty',
+      'Exit with code 1 when no files match the provided targets',
+    )
     .option('--watch', 'Watch files and re-lint on changes')
     .option('--fix', 'Automatically fix problems');
 
