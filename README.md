@@ -50,7 +50,7 @@ Lint JavaScript, TypeScript, CSS, SCSS and Less, including inline styles (string
 
 ### Extensible
 
-Extend behaviour with custom rules, formatters, and token transforms for your design system.
+Extend behaviour with custom rules, formatters, and token path name transforms for your design system.
 
 | Advantage                           | @lapidist/design-lint | Generic linters |
 | ----------------------------------- | --------------------- | --------------- |
