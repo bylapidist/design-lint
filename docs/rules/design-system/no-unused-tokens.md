@@ -8,10 +8,15 @@ description: "Report tokens defined but never used."
 ## Summary
 Reports design tokens defined in your configuration that never appear in any linted file. This keeps the token set focused and helps uncover stale values left behind after refactors.
 
-The rule scans each file for raw values like hex colors, numeric spacing values and `var(--token)` references. Hex codes are matched case‑insensitively and both CSS variables and literal values are detected.
+The rule combines explicit token-reference extraction with value-based matching
+heuristics for patterns such as hex colors, numeric spacing values, and
+`var(--token)` references. Hex codes are matched case-insensitively.
 
 > [!NOTE]
 > Run the linter on the full project to avoid false positives. Tokens referenced in files that are excluded from the run will be reported as unused.
+>
+> This rule is strongest on statically analyzable patterns. Dynamic token
+> construction may produce false positives or false negatives.
 
 ## Configuration
 Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
@@ -43,7 +48,7 @@ and the source:
 const color = '#000000';
 ```
 
-`#ff0000` is reported as unused.
+the `color.unused` token is reported as unused.
 
 A CSS variable can also be ignored:
 

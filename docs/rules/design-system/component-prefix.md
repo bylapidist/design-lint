@@ -24,6 +24,13 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 
 ## Options
 - `prefix` (`string`, default: `"DS"`): required prefix for component names.
+- `packages` (`string[]`): limit enforcement to imports from specific package specifiers.
+- `components` (`string[]`): limit enforcement to specific imported component names.
+
+> [!NOTE]
+> Without `packages` or `components`, the rule applies the prefix check broadly to
+> component-like tags. For production usage, scope the rule to your design-system
+> imports to reduce false positives.
 
 *This rule is auto-fixable for simple JSX identifiers and custom elements only.*
 

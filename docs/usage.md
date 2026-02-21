@@ -162,6 +162,8 @@ npx design-lint src/button.tsx styles/*.css
 - `0` – no lint errors (including when no files match by default)
 - `1` – lint errors, runtime/configuration error, or no matched files when `--fail-on-empty` is enabled
 
+For CI, prefer `--fail-on-empty` so misconfigured globs do not pass silently.
+
 ## Analysis boundaries
 design-lint relies on static analysis and framework parsers. Some dynamic patterns are intentionally not normalized into lintable declarations. In particular:
 

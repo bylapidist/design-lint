@@ -25,6 +25,10 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 ## Options
 - `substitutions` (`Record<string, string>`): map of disallowed icon element or component names to their design system replacements. Keys are matched case-insensitively. Defaults to `{ "svg": "Icon" }`.
 
+> [!NOTE]
+> The default mapping enforces `svg -> Icon`. If your codebase permits raw SVGs,
+> override `substitutions` or disable this rule.
+
 *This rule is auto-fixable.*
 
 ## Examples

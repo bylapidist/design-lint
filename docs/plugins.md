@@ -37,7 +37,7 @@ my-plugin/
 {
   "name": "design-lint-plugin-acme",
   "type": "module",
-  "peerDependencies": { "@lapidist/design-lint": "^1.0.0" }
+  "peerDependencies": { "@lapidist/design-lint": "^6.0.0" }
 }
 ```
 

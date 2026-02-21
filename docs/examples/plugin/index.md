@@ -21,9 +21,10 @@ Start a new plugin that exposes one rule.
    ```
 3. Test it:
    ```ts
-   import { Linter, FileSource } from '@lapidist/design-lint';
+   import { createLinter, createNodeEnvironment } from '@lapidist/design-lint';
    import plugin from './index.js';
-   const linter = initLinter({ plugins: [plugin], rules: { 'demo/no-raw-colors': 'error' } }, new FileSource());
+   const config = { plugins: [plugin], rules: { 'demo/no-raw-colors': 'error' } };
+   const linter = createLinter(config, createNodeEnvironment(config));
    ```
 
 ## Next steps
