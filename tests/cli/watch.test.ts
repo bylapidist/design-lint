@@ -405,6 +405,23 @@ void test('startWatch wires chokidar watchers and handles lint cycles', async (t
   assert.equal(harness.getWatcher().closed, true);
 });
 
+void test('startWatch runs full targets when run-level rules are enabled', async (t) => {
+  const harness = createWatchHarness(t);
+  const sibling = path.join(path.dirname(harness.target), 'sibling.ts');
+  fs.writeFileSync(sibling, 'export const sibling = true;\n');
+  harness.targets.push(sibling);
+  harness.linterRef.current = {
+    ...(harness.linterRef.current as unknown as object),
+    hasRunLevelRules: async () => true,
+  } as Linter;
+  await harness.start();
+
+  const watcher = harness.getWatcher();
+  watcher.emit('change', harness.target);
+  await flush();
+  assert.deepEqual(last(harness.lintCalls), harness.targets);
+});
+
 void test('startWatch reloads configuration and plugin registries on change', async (t) => {
   const harness = createWatchHarness(t);
   const loadCalls: string[] = [];

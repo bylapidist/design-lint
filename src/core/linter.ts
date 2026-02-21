@@ -226,6 +226,13 @@ export class Linter {
     return this.ruleRegistry.getPluginMetadata();
   }
 
+  async hasRunLevelRules(): Promise<boolean> {
+    await this.ruleRegistry.load();
+    return this.ruleRegistry
+      .getEnabledRules()
+      .some(({ rule }) => typeof rule.createRun === 'function');
+  }
+
   /**
    * Lints a single text document and returns linting results.
    *

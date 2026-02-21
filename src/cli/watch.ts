@@ -62,6 +62,16 @@ export interface WatchServices extends ExecuteServices {
   cacheLocation?: string;
 }
 
+async function hasRunLevelRules(linter: Linter): Promise<boolean> {
+  const candidate = linter as unknown as {
+    hasRunLevelRules?: () => Promise<boolean>;
+  };
+  if (typeof candidate.hasRunLevelRules === 'function') {
+    return candidate.hasRunLevelRules();
+  }
+  return false;
+}
+
 /**
  * Run the CLI in watch mode, re-linting files when watched sources change.
  *
@@ -197,7 +207,10 @@ export async function startWatch(
 
   const runAndUpdate = async (paths: string[]) => {
     const prev = ignoreFilePaths;
-    const newIgnore = await runLint(paths);
+    const lintPaths = (await hasRunLevelRules(linterRef.current))
+      ? targets
+      : paths;
+    const newIgnore = await runLint(lintPaths);
     const toAdd = newIgnore.filter((p) => !prev.includes(p));
     if (toAdd.length) watcher.add(toAdd);
     const toRemove = prev.filter((p) => !newIgnore.includes(p));
