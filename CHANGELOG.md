@@ -1,5 +1,42 @@
 # @lapidist/design-lint
 
+## 7.0.0
+
+### Major Changes
+
+- e4e462c: remove legacy heuristic token usage paths and require semantic identity-based analysis
+
+### Patch Changes
+
+- c749a36: add dist CLI smoke tests to verify packaged runtime behavior
+- 36cddbb: harden cache pruning and fix writes, and add explicit warnings for untrusted plugin and formatter modules
+- c749a36: fix border-radius rule to accept documented borderRadius token group while keeping legacy radius compatibility
+- c749a36: report invalid CLI option values without leaking stack traces
+- c749a36: fix coverage instrumentation for top-level index exports and add index wrapper tests
+- c749a36: fix init --init-format js to emit module-compatible config for type module projects
+- c749a36: fix line-height and z-index rules to only lint matching inline style properties
+- c749a36: fix no-inline-styles to report when targeting options are missing
+- c749a36: clarify README wording for strict token reference enforcement modes
+- c749a36: clarify README to describe supported token path name transforms
+- c749a36: fix inline disable directives to support rule-scoped suppression
+- c749a36: fix unsupported explicit file targets to report parse-error diagnostics
+- c749a36: fix validate command to catch unknown rules and invalid rule options
+- c749a36: normalize enforced custom-element prefixes to lowercase for valid web component tags
+- c749a36: fix border-radius rule and docs to use radius token group only
+- c749a36: remove undocumented wrapTokensWithVar config contract from schema and docs
+- c749a36: convert rule create and createRun crashes into rule-execution diagnostics
+- c749a36: Capture createRun onRunComplete failures as runtime diagnostics instead of aborting lint runs.
+- c749a36: Restrict component and icon autofixes to cases where replacements are already in scope, and avoid partial paired-tag fixes.
+- c749a36: Make design-system/component-prefix opt-in by requiring package or component scoping before it reports diagnostics.
+- c749a36: Make Vue and Svelte style-binding extraction conservative by skipping dynamic expression values and linting only static declarations.
+- c749a36: fix strict spacing reference checks in CSS function contexts and align strictReference docs
+- c749a36: fail tokens CLI export when --theme does not match a configured theme
+- c749a36: fix the quick-start no-install command to use the scoped package name
+- c749a36: fix validate command to verify configured formatter resolution
+- c749a36: fix watch mode to reload when any resolved config source changes
+- c749a36: run full target sets in watch mode when run-level rules are enabled
+- c749a36: fix watch mode token file glob to include .tokens files
+
 ## 6.1.0
 
 ### Minor Changes
