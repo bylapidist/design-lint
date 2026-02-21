@@ -173,3 +173,30 @@ void test('validate command fails on invalid rule options', () => {
     /Invalid options for rule design-system\/no-unused-tokens/,
   );
 });
+
+void test('validate command fails on unknown formatter in config', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(
+    path.join(dir, 'designlint.config.json'),
+    JSON.stringify({
+      tokens: {},
+      rules: {},
+      format: 'not-a-real-formatter',
+    }),
+  );
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      'validate',
+      '--config',
+      'designlint.config.json',
+    ],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /Unknown formatter: not-a-real-formatter/);
+});
