@@ -199,3 +199,57 @@ void test('design-system/no-inline-styles targets components by import origin', 
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+void test('design-system/no-inline-styles resolves import origins without TypeChecker metadata', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/no-inline-styles': [
+          'error',
+          { importOrigins: ['@acme/design-system'] },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+
+  const cases = [
+    {
+      sourceText: [
+        "import Button from '@acme/design-system';",
+        'const a = <Button style={{ color: "red" }} />;',
+      ].join('\n'),
+      expectedMessageIncludes: 'Button',
+    },
+    {
+      sourceText: [
+        "import { Button } from '@acme/design-system';",
+        'const a = <Button style={{ color: "red" }} />;',
+      ].join('\n'),
+      expectedMessageIncludes: 'Button',
+    },
+    {
+      sourceText: [
+        "import { Button as PrimaryButton } from '@acme/design-system';",
+        'const a = <PrimaryButton style={{ color: "red" }} />;',
+      ].join('\n'),
+      expectedMessageIncludes: 'PrimaryButton',
+    },
+    {
+      sourceText: [
+        "import * as DS from '@acme/design-system';",
+        "import * as ThirdParty from '@third-party/ui';",
+        'const a = <><DS.Button style={{ color: "red" }} /><ThirdParty.Panel style={{ color: "red" }} /></>;',
+      ].join('\n'),
+      expectedMessageIncludes: 'DS.Button',
+    },
+  ];
+
+  for (const testCase of cases) {
+    const res = await linter.lintText(testCase.sourceText, 'file.tsx');
+    assert.equal(res.messages.length, 1);
+    assert.ok(
+      res.messages[0].message.includes(testCase.expectedMessageIncludes),
+    );
+  }
+});

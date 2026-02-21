@@ -13,6 +13,12 @@ interface ScopedImportSource {
   importedName: string;
 }
 
+interface ImportMapEntry {
+  moduleName: string;
+  importedName: string;
+  isNamespace: boolean;
+}
+
 function getJsxTagName(node: ts.JsxTagNameExpression): string {
   if (ts.isIdentifier(node)) {
     return node.text;
@@ -161,6 +167,131 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
     const scopedComponents = new Set(context.options?.components ?? []);
     const hasScopedSources =
       scopedPackages.size > 0 || scopedComponents.size > 0;
+    const importMapBySourceFile = new Map<
+      ts.SourceFile,
+      Map<string, ImportMapEntry>
+    >();
+
+    const getImportMap = (
+      sourceFile: ts.SourceFile,
+    ): Map<string, ImportMapEntry> => {
+      let importMap = importMapBySourceFile.get(sourceFile);
+      if (!importMap) {
+        importMap = new Map<string, ImportMapEntry>();
+        importMapBySourceFile.set(sourceFile, importMap);
+      }
+
+      return importMap;
+    };
+
+    const collectImportMapEntry = (node: ts.ImportDeclaration): void => {
+      if (!ts.isStringLiteral(node.moduleSpecifier)) {
+        return;
+      }
+
+      const importClause = node.importClause;
+      if (!importClause) {
+        return;
+      }
+
+      const importMap = getImportMap(node.getSourceFile());
+      const moduleName = node.moduleSpecifier.text;
+
+      if (importClause.name) {
+        importMap.set(importClause.name.text, {
+          moduleName,
+          importedName: importClause.name.text,
+          isNamespace: false,
+        });
+      }
+
+      if (!importClause.namedBindings) {
+        return;
+      }
+
+      if (ts.isNamedImports(importClause.namedBindings)) {
+        for (const specifier of importClause.namedBindings.elements) {
+          importMap.set(specifier.name.text, {
+            moduleName,
+            importedName: specifier.propertyName?.text ?? specifier.name.text,
+            isNamespace: false,
+          });
+        }
+      }
+
+      if (ts.isNamespaceImport(importClause.namedBindings)) {
+        importMap.set(importClause.namedBindings.name.text, {
+          moduleName,
+          importedName: importClause.namedBindings.name.text,
+          isNamespace: true,
+        });
+      }
+    };
+
+    const resolveImportSourceFromMap = (
+      tagNode: ts.JsxTagNameExpression,
+    ): ScopedImportSource | null => {
+      const importMap = getImportMap(tagNode.getSourceFile());
+
+      if (ts.isIdentifier(tagNode)) {
+        const entry = importMap.get(tagNode.text);
+        if (!entry) {
+          return null;
+        }
+
+        return {
+          moduleName: entry.moduleName,
+          importedName: entry.importedName,
+        };
+      }
+
+      if (ts.isPropertyAccessExpression(tagNode)) {
+        const namespaceEntry = importMap.get(tagNode.expression.getText());
+        if (namespaceEntry?.isNamespace !== true) {
+          return null;
+        }
+
+        return {
+          moduleName: namespaceEntry.moduleName,
+          importedName: tagNode.name.text,
+        };
+      }
+
+      if (ts.isJsxNamespacedName(tagNode)) {
+        const namespaceEntry = importMap.get(tagNode.namespace.text);
+        if (namespaceEntry?.isNamespace !== true) {
+          return null;
+        }
+
+        return {
+          moduleName: namespaceEntry.moduleName,
+          importedName: tagNode.name.text,
+        };
+      }
+
+      return null;
+    };
+
+    const resolveImportSource = (
+      tagNode: ts.JsxTagNameExpression,
+    ): ScopedImportSource | null => {
+      const symbol = context.symbolResolution?.resolveSymbol(tagNode);
+      const sourceDeclaration = symbol?.declarations?.find(
+        (declaration): declaration is ts.Declaration =>
+          ts.isImportSpecifier(declaration) ||
+          ts.isImportClause(declaration) ||
+          ts.isNamespaceImport(declaration),
+      );
+      if (sourceDeclaration) {
+        const fromDeclaration =
+          parseImportSourceFromDeclaration(sourceDeclaration);
+        if (fromDeclaration) {
+          return fromDeclaration;
+        }
+      }
+
+      return resolveImportSourceFromMap(tagNode);
+    };
 
     const isDesignSystemComponent = (
       tagNode: ts.JsxTagNameExpression,
@@ -169,22 +300,7 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
         return true;
       }
 
-      const symbol = context.symbolResolution?.resolveSymbol(tagNode);
-      if (!symbol) {
-        return false;
-      }
-
-      const sourceDeclaration = symbol.declarations?.find(
-        (declaration): declaration is ts.Declaration =>
-          ts.isImportSpecifier(declaration) ||
-          ts.isImportClause(declaration) ||
-          ts.isNamespaceImport(declaration),
-      );
-      if (!sourceDeclaration) {
-        return false;
-      }
-
-      const importSource = parseImportSourceFromDeclaration(sourceDeclaration);
+      const importSource = resolveImportSource(tagNode);
       if (!importSource) {
         return false;
       }
@@ -206,6 +322,11 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
 
     return {
       onNode(node) {
+        if (ts.isImportDeclaration(node)) {
+          collectImportMapEntry(node);
+          return;
+        }
+
         if (
           ts.isJsxOpeningElement(node) ||
           ts.isJsxSelfClosingElement(node) ||

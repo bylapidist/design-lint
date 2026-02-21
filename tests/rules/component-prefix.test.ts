@@ -200,7 +200,7 @@ void test('design-system/component-prefix ignores non-scoped imports', async () 
 
   const res = await linter.lintText(
     "import { Button } from '@acme/legacy-ui'; const a = <Button/>;",
-    'file.tsx',
+    'component-prefix-unscoped.tsx',
   );
 
   assert.equal(res.messages.length, 0);
@@ -225,7 +225,7 @@ void test('design-system/component-prefix enforces scoped design-system imports'
 
   const res = await linter.lintText(
     "import { Button } from '@acme/design-system'; const a = <Button/>;",
-    'file.tsx',
+    'component-prefix-scoped.tsx',
   );
 
   assert.equal(res.messages.length, 1);
