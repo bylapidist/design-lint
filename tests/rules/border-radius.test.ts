@@ -9,6 +9,10 @@ const tokens = createDtifTheme({
   'radius.sm': { type: 'dimension', value: { value: 2, unit: 'px' } },
   'radius.md': { type: 'dimension', value: { value: 4, unit: 'px' } },
 });
+const borderRadiusTokens = createDtifTheme({
+  'borderRadius.sm': { type: 'dimension', value: { value: 2, unit: 'px' } },
+  'borderRadius.md': { type: 'dimension', value: { value: 4, unit: 'px' } },
+});
 
 function createLinter(rule: unknown = 'error') {
   return initLinter(
@@ -60,4 +64,20 @@ void test('design-token/border-radius warns when tokens missing', async () => {
   const res = await linter.lintText('', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.ok(res.messages[0].message.includes('$type "dimension"'));
+});
+
+void test('design-token/border-radius accepts documented borderRadius token group', async () => {
+  const linter = initLinter(
+    {
+      tokens: borderRadiusTokens,
+      rules: { 'design-token/border-radius': 'error' },
+    },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: new NodeTokenProvider(borderRadiusTokens),
+    },
+  );
+  const css = '.a{border-radius:4px;} .b{border-radius:2px;}';
+  const res = await linter.lintText(css, 'file.css');
+  assert.equal(res.messages.length, 0);
 });
