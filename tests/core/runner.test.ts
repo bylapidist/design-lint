@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Runner } from '../../src/index.js';
-import { TokenTracker } from '../../src/core/token-tracker.js';
 import type { LintDocument } from '../../src/core/environment.js';
 
 interface CacheEntry {
@@ -40,7 +39,6 @@ void test('Runner handles non-positive concurrency values', async () => {
   };
   const runner = new Runner({
     config: { concurrency: 0, tokens: {} },
-    tokenTracker: new TokenTracker(),
     lintDocument: (text, sourceId) =>
       Promise.resolve({ sourceId, messages: [] }),
   });
@@ -58,40 +56,10 @@ void test('Runner prunes cache and saves results', async () => {
   await cache.set('ghost.css', { mtime: 0, size: 0, result: {} });
   const runner = new Runner({
     config: { tokens: {} },
-    tokenTracker: new TokenTracker(),
     lintDocument: (text, sourceId) =>
       Promise.resolve({ sourceId, messages: [] }),
   });
   await runner.run([doc], false, cache, 'cache');
   assert.deepEqual(await cache.keys(), ['test.css']);
   assert.ok(cache.saved);
-});
-
-void test('Runner resets token tracking state on each run', async () => {
-  class TokenTrackerSpy extends TokenTracker {
-    runStarts = 0;
-
-    override beginRun(): void {
-      this.runStarts += 1;
-      super.beginRun();
-    }
-  }
-
-  const tracker = new TokenTrackerSpy();
-  const doc: LintDocument = {
-    id: 'test.css',
-    type: 'css',
-    getText: () => Promise.resolve('a{color:red}'),
-  };
-  const runner = new Runner({
-    config: { tokens: {} },
-    tokenTracker: tracker,
-    lintDocument: (docText, sourceId) =>
-      Promise.resolve({ sourceId, messages: [] }),
-  });
-
-  await runner.run([doc]);
-  await runner.run([doc]);
-
-  assert.equal(tracker.runStarts, 2);
 });

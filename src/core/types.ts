@@ -145,13 +145,47 @@ export interface RuleModule<
     description: string;
     category?: string;
     schema?: z.ZodType;
+    capabilities?: RuleCapabilities;
   };
   create(context: TContext): RuleListener;
+  createRun?(context: RuleRunContext<TOptions>): RuleRunListener;
+}
+
+export interface RuleCapabilities {
+  tokenUsage?: boolean;
 }
 
 export interface RuleListener {
   onNode?: (node: ts.Node) => void;
   onCSSDeclaration?: (decl: CSSDeclaration) => void;
+}
+
+export interface RuleRunContext<TOptions = unknown> {
+  report: (msg: Omit<LintMessage, 'ruleId' | 'severity'>) => void;
+  options?: TOptions;
+  metadata?: Record<string, unknown>;
+  sourceId: string;
+  tokenUsage: TokenUsageTracker;
+}
+
+export interface RuleRunListener {
+  onRunComplete?: () => void | Promise<void>;
+}
+
+export interface TokenUsageTracker {
+  trackUsage: (input: {
+    text: string;
+    references?: readonly TokenReferenceCandidate[];
+  }) => Promise<void>;
+  getUnusedTokens: (ignored?: readonly string[]) => Promise<UnusedToken[]>;
+}
+
+export interface UnusedToken {
+  value: string;
+  path: string;
+  pointer: JsonPointer;
+  deprecated?: TokenDeprecation;
+  extensions: Record<string, unknown>;
 }
 
 export interface RegisteredRuleListener {

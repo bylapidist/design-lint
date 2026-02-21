@@ -111,6 +111,75 @@ void test('buildRuleContexts exposes DTIF tokens on the rule context', () => {
   assert.deepEqual(capturedPaths[0], ['palette.primary']);
 });
 
+void test('buildRunRuleContexts executes post-run hooks with token usage API', async () => {
+  const linter = initLinter({ tokens: {}, rules: {} }, env);
+  const helper = linter as unknown as {
+    buildRunRuleContexts: Linter['buildRunRuleContexts'];
+    tokenTracker: {
+      getUnusedTokens: (ignored?: readonly string[]) => Promise<
+        {
+          value: string;
+          path: string;
+          pointer: string;
+          extensions: Record<string, unknown>;
+        }[]
+      >;
+    };
+  };
+
+  helper.tokenTracker = {
+    getUnusedTokens: (ignored = []) =>
+      Promise.resolve(
+        ignored.includes('used')
+          ? []
+          : [
+              {
+                value: 'unused',
+                path: 'color.unused',
+                pointer: '#/color/unused',
+                extensions: {},
+              },
+            ],
+      ),
+  };
+
+  const rule: RuleModule<{ ignore?: string[] }> = {
+    name: 'custom/aggregate',
+    meta: {
+      description: 'aggregate',
+      capabilities: { tokenUsage: true },
+    },
+    create: () => ({}),
+    createRun(context) {
+      return {
+        onRunComplete: async () => {
+          const unused = await context.tokenUsage.getUnusedTokens(
+            context.options?.ignore,
+          );
+          for (const token of unused) {
+            context.report({
+              message: token.value,
+              line: 1,
+              column: 1,
+            });
+          }
+        },
+      };
+    },
+  };
+
+  const run = helper.buildRunRuleContexts(
+    [{ rule, options: {}, severity: 'warn' }],
+    'config.json',
+  );
+
+  const messages = await run.collect();
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].ruleId, 'custom/aggregate');
+  assert.equal(messages[0].message, 'unused');
+  assert.equal(run.sourceId, 'config.json');
+});
+
 void test('runParser executes parser for provided type', async () => {
   const linter = initLinter({ tokens: {}, rules: {} }, env);
   const parserHelper = linter as unknown as {

@@ -164,7 +164,7 @@ void cliTest('CLI forwards provided file targets to lint execution', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
       tokens: { default: './tokens.tokens.json' },
-      rules: { 'token-colors': 'error' },
+      rules: { 'design-token/colors': 'error' },
     }),
   );
   fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
@@ -597,14 +597,14 @@ void cliTest('CLI loads external plugin rules', () => {
   const plugin = path.join(__dirname, 'fixtures', 'test-plugin-esm.mjs');
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
-    JSON.stringify({ plugins: [plugin], rules: { 'plugin/test': 'error' } }),
+    JSON.stringify({ plugins: [plugin], rules: { 'plugin/esm': 'error' } }),
   );
   const res = runCli(
     ['file.ts', '--config', 'designlint.config.json', '--format', 'json'],
     { cwd: dir },
   );
   assert.notEqual(res.status, 0);
-  assert.ok(res.stdout.includes('plugin/test'));
+  assert.ok(res.stdout.includes('plugin/esm'));
 });
 
 void cliTest('CLI reports plugin load errors', () => {

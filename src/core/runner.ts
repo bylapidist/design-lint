@@ -4,12 +4,10 @@ import type { Config } from './linter.js';
 import type { CacheProvider } from './cache-provider.js';
 import type { LintResult } from './types.js';
 import { CacheService } from './cache-service.js';
-import { TokenTracker } from './token-tracker.js';
 import type { LintDocument } from './environment.js';
 
 export interface RunnerOptions {
   config: Config;
-  tokenTracker: TokenTracker;
   lintDocument: (
     text: string,
     sourceId: string,
@@ -20,7 +18,6 @@ export interface RunnerOptions {
 
 export class Runner {
   private config: Config;
-  private tokenTracker: TokenTracker;
   private lintDocumentFn: (
     text: string,
     sourceId: string,
@@ -30,7 +27,6 @@ export class Runner {
 
   constructor(options: RunnerOptions) {
     this.config = options.config;
-    this.tokenTracker = options.tokenTracker;
     this.lintDocumentFn = options.lintDocument;
   }
 
@@ -51,7 +47,6 @@ export class Runner {
         warning: 'No files matched the provided patterns.',
       };
     }
-    this.tokenTracker.beginRun();
     await CacheService.prune(
       cache,
       documents.map((d) => d.id),
@@ -66,11 +61,6 @@ export class Runner {
       limit(() => cacheManager.processDocument(doc, this.lintDocumentFn)),
     );
     const results = await Promise.all(tasks);
-    results.push(
-      ...this.tokenTracker.generateReports(
-        this.config.configPath ?? 'designlint.config',
-      ),
-    );
     await CacheService.save(cacheManager);
     return { results, ignoreFiles };
   }

@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
+import { createNodeEnvironment } from '../../src/adapters/node/environment.js';
 import { createFileDocument } from '../../src/adapters/node/file-document.js';
 import { RUNTIME_ERROR_RULE_ID } from '../../src/core/cache-manager.js';
 
@@ -43,15 +44,13 @@ void test('does not map rule execution failures to parse-error', async () => {
   );
   await fs.writeFile(cssFile, '.a { color: red; }\n');
 
-  const linter = initLinter(
-    {
-      plugins: [pluginFile],
-      rules: {
-        'throwing-rule': 'error',
-      },
+  const config = {
+    plugins: [pluginFile],
+    rules: {
+      'throwing-rule': 'error',
     },
-    new FileSource(),
-  );
+  };
+  const linter = initLinter(config, createNodeEnvironment(config));
   const result = await linter.lintDocument(createFileDocument(cssFile));
 
   assert.equal(result.messages.length, 1);

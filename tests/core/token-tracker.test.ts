@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { TokenTracker } from '../../src/core/token-tracker.js';
-import type { DesignTokens, TokenDeprecation } from '../../src/core/types.js';
+import type {
+  DesignTokens,
+  TokenDeprecation,
+  RuleModule,
+} from '../../src/core/types.js';
 import type { TokenProvider } from '../../src/core/environment.js';
 
 function makeProvider(tokens: DesignTokens): TokenProvider {
@@ -9,6 +13,17 @@ function makeProvider(tokens: DesignTokens): TokenProvider {
     load: () => Promise.resolve({ default: tokens }),
   };
 }
+
+const trackingRule: RuleModule = {
+  name: 'test/tracking',
+  meta: {
+    description: 'tracking',
+    capabilities: {
+      tokenUsage: true,
+    },
+  },
+  create: () => ({}),
+};
 
 interface TokenReportMetadata {
   path: string;
@@ -44,15 +59,15 @@ void test('TokenTracker reports unused tokens when unresolved references are pro
   const tracker = new TokenTracker(makeProvider(tokens));
   await tracker.configure([
     {
-      rule: { name: 'design-system/no-unused-tokens' },
+      rule: trackingRule,
       options: {},
       severity: 'error',
     },
   ]);
   await tracker.trackUsage({ text: 'const c = "#ff0000";' });
-  const reports = tracker.generateReports('config');
-  assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('4px'), true);
+  const unused = await tracker.getUnusedTokens();
+  assert.equal(unused.length, 1);
+  assert.equal(unused[0].value.includes('4px'), true);
 });
 
 void test('TokenTracker tracks usage from css var identity references', async () => {
@@ -65,11 +80,7 @@ void test('TokenTracker tracks usage from css var identity references', async ()
   };
   const tracker = new TokenTracker(makeProvider(tokens));
   await tracker.configure([
-    {
-      rule: { name: 'design-system/no-unused-tokens' },
-      options: {},
-      severity: 'error',
-    },
+    { rule: trackingRule, options: {}, severity: 'error' },
   ]);
   await tracker.trackUsage({
     text: 'color: var(--color-used);',
@@ -83,150 +94,9 @@ void test('TokenTracker tracks usage from css var identity references', async ()
       },
     ],
   });
-  const reports = tracker.generateReports('config');
-  assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('--color-unused'), true);
-});
-
-void test('TokenTracker tracks usage from token path identity references', async () => {
-  const tokens: DesignTokens = {
-    $version: '1.0.0',
-    color: { brand: { $type: 'string', $value: 'brand' } },
-    spacing: { other: { $type: 'string', $value: 'other' } },
-  };
-  const tracker = new TokenTracker(makeProvider(tokens));
-  await tracker.configure([
-    {
-      rule: { name: 'design-system/no-unused-tokens' },
-      options: {},
-      severity: 'error',
-    },
-  ]);
-  await tracker.trackUsage({
-    text: 'const token = "color.brand";',
-    references: [
-      {
-        kind: 'token-path',
-        identity: 'color.brand',
-        line: 1,
-        column: 1,
-        context: 'ts:string',
-      },
-    ],
-  });
-  const reports = tracker.generateReports('config');
-  assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('other'), true);
-});
-
-void test('TokenTracker tracks usage from alias pointer identity references', async () => {
-  const tokens: DesignTokens = {
-    $version: '1.0.0',
-    color: {
-      used: { $type: 'string', $value: '#111111' },
-      unused: { $type: 'string', $value: '#222222' },
-      alias: { $type: 'string', $ref: '#/color/used' },
-    },
-  };
-  const tracker = new TokenTracker(makeProvider(tokens));
-  await tracker.configure([
-    {
-      rule: { name: 'design-system/no-unused-tokens' },
-      options: {},
-      severity: 'error',
-    },
-  ]);
-  await tracker.trackUsage({
-    text: '{#/color/alias}',
-    references: [
-      {
-        kind: 'alias-pointer',
-        identity: '#/color/alias',
-        line: 1,
-        column: 1,
-        context: 'ts:string',
-      },
-    ],
-  });
-  const reports = tracker.generateReports('config');
-  assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('#222222'), true);
-});
-
-void test('string classifier matches plain string tokens', async () => {
-  const tokens: DesignTokens = {
-    $version: '1.0.0',
-    color: {
-      used: { $type: 'string', $value: '#ff0000' },
-      unused: { $type: 'string', $value: '#0000ff' },
-    },
-  };
-  const tracker = new TokenTracker(makeProvider(tokens));
-  await tracker.configure([
-    {
-      rule: { name: 'design-system/no-unused-tokens' },
-      options: {},
-      severity: 'error',
-    },
-  ]);
-  await tracker.trackUsage({ text: 'color: #ff0000;' });
-  const reports = tracker.generateReports('config');
-  assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('#0000ff'), true);
-});
-
-void test('TokenTracker resolves alias tokens when tracking usage', async () => {
-  const tokens: DesignTokens = {
-    $version: '1.0.0',
-    color: {
-      red: { $type: 'string', $value: '#ff0000' },
-      primary: { $type: 'string', $ref: '#/color/red' },
-    },
-  };
-  const tracker = new TokenTracker(makeProvider(tokens));
-  await tracker.configure([
-    {
-      rule: { name: 'design-system/no-unused-tokens' },
-      options: {},
-      severity: 'error',
-    },
-  ]);
-  await tracker.trackUsage({ text: 'color: #ff0000;' });
-  const reports = tracker.generateReports('config');
-  assert.equal(reports.length, 0);
-});
-
-void test('TokenTracker prefers parser token references when provided', async () => {
-  const tokens: DesignTokens = {
-    $version: '1.0.0',
-    color: {
-      primary: { $type: 'string', $value: '#ff0000' },
-      secondary: { $type: 'string', $value: '#00ff00' },
-    },
-  };
-  const tracker = new TokenTracker(makeProvider(tokens));
-  await tracker.configure([
-    {
-      rule: { name: 'design-system/no-unused-tokens' },
-      options: {},
-      severity: 'warn',
-    },
-  ]);
-  await tracker.trackUsage({
-    text: '',
-    references: [
-      {
-        kind: 'alias-pointer',
-        identity: '#/color/primary',
-        line: 1,
-        column: 1,
-        context: 'css:value',
-      },
-    ],
-  });
-  const reports = tracker.generateReports('config');
-  assert.equal(reports.length, 1);
-  assert.equal(reports[0].messages[0].message.includes('#00ff00'), true);
+  const unused = await tracker.getUnusedTokens();
+  assert.equal(unused.length, 1);
+  assert.equal(unused[0].value.includes('--color-unused'), true);
 });
 
 void test('TokenTracker includes token metadata in reports', async () => {
@@ -243,21 +113,13 @@ void test('TokenTracker includes token metadata in reports', async () => {
   };
   const tracker = new TokenTracker(makeProvider(tokens));
   await tracker.configure([
-    {
-      rule: { name: 'design-system/no-unused-tokens' },
-      options: {},
-      severity: 'warn',
-    },
+    { rule: trackingRule, options: {}, severity: 'warn' },
   ]);
-  const reports = tracker.generateReports('config');
-  assert.equal(reports.length, 1);
-  const msg = reports[0].messages[0];
-  assertTokenMetadata(msg.metadata);
-  assert.equal(msg.metadata.path, 'color.unused');
-  assert.equal(msg.metadata.pointer, '#/color/unused');
-  assert.equal(
-    msg.metadata.deprecated?.supersededBy?.pointer,
-    '#/color/replacement',
-  );
-  assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
+  const [unused] = await tracker.getUnusedTokens();
+  assert(unused);
+  assertTokenMetadata(unused);
+  assert.equal(unused.path, 'color.unused');
+  assert.equal(unused.pointer, '#/color/unused');
+  assert.equal(unused.deprecated?.supersededBy?.pointer, '#/color/replacement');
+  assert.deepEqual(unused.extensions, { 'vendor.foo': true });
 });

@@ -29,7 +29,7 @@ void test('lint command reports token color violations', () => {
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({
       tokens: { default: './base.tokens.json' },
-      rules: { 'token-colors': 'error' },
+      rules: { 'design-token/colors': 'error' },
     }),
   );
   fs.writeFileSync(path.join(dir, 'input.css'), 'a { color: #fff; }');
@@ -101,7 +101,7 @@ void test('lint command uses formatter from config when --format is omitted', ()
     JSON.stringify({
       format: 'json',
       tokens: { default: './base.tokens.json' },
-      rules: { 'token-colors': 'error' },
+      rules: { 'design-token/colors': 'error' },
     }),
   );
   fs.writeFileSync(path.join(dir, 'input.css'), 'a { color: #fff; }');
@@ -145,7 +145,7 @@ void test('lint command CLI --format overrides formatter from config', () => {
     JSON.stringify({
       format: 'json',
       tokens: { default: './base.tokens.json' },
-      rules: { 'token-colors': 'error' },
+      rules: { 'design-token/colors': 'error' },
     }),
   );
   fs.writeFileSync(path.join(dir, 'input.css'), 'a { color: #fff; }');

@@ -1,11 +1,12 @@
 import type {
-  LintResult,
   DesignTokens,
   DtifFlattenedToken,
+  RuleModule,
   TokenReferenceCandidate,
+  UnusedToken,
 } from './types.js';
 import type { TokenProvider } from './environment.js';
-import { guards, collections } from '../utils/index.js';
+import { guards } from '../utils/index.js';
 import { extractVarName } from '../utils/tokens/index.js';
 import { getTokenPath } from '../utils/tokens/token-view.js';
 import {
@@ -17,7 +18,6 @@ const {
   data: { isRecord },
   domain: { isDesignTokens },
 } = guards;
-const { isArray } = collections;
 
 type TokenType = 'cssVar' | 'hexColor' | 'numeric' | 'string';
 
@@ -43,9 +43,7 @@ function escapeRegExp(str: string): string {
 }
 
 interface UnusedRuleConfig {
-  ruleId: string;
-  severity: 'error' | 'warn';
-  ignored: Set<string>;
+  enabled: boolean;
 }
 
 interface TrackedTokenInfo {
@@ -58,7 +56,7 @@ export class TokenTracker {
   private allTokenValues = new Map<string, TrackedTokenInfo>();
   private tokenValueByIdentity = new Map<string, Set<string>>();
   private usedTokenValues = new Set<string>();
-  private unusedTokenRules: UnusedRuleConfig[] = [];
+  private tracking: UnusedRuleConfig = { enabled: false };
   private provider?: TokenProvider;
   private loaded = false;
 
@@ -92,22 +90,19 @@ export class TokenTracker {
 
   async configure(
     rules: {
-      rule: { name: string };
+      rule: RuleModule;
       options?: unknown;
       severity: 'error' | 'warn';
     }[],
   ): Promise<void> {
     await this.loadTokens();
-    const unusedRules = rules.filter(isUnusedTokenRule);
-    this.unusedTokenRules = unusedRules.map((u) => ({
-      ruleId: u.rule.name,
-      severity: u.severity,
-      ignored: new Set(u.options?.ignore ?? []),
-    }));
+    this.tracking = {
+      enabled: rules.some((entry) => entry.rule.meta.capabilities?.tokenUsage),
+    };
   }
 
-  hasUnusedTokenRules(): boolean {
-    return this.unusedTokenRules.length > 0;
+  hasTrackingConsumers(): boolean {
+    return this.tracking.enabled;
   }
 
   async trackUsage(input: {
@@ -134,32 +129,23 @@ export class TokenTracker {
     }
   }
 
-  generateReports(configPath: string): LintResult[] {
-    const results: LintResult[] = [];
-    for (const { ruleId, severity, ignored } of this.unusedTokenRules) {
-      const unused = Array.from(this.allTokenValues.entries()).filter(
-        ([value]) => !this.usedTokenValues.has(value) && !ignored.has(value),
-      );
-      if (unused.length) {
-        results.push({
-          sourceId: configPath,
-          messages: unused.map(([value, info]) => ({
-            ruleId,
-            message: `Token ${value} is defined but never used`,
-            severity,
-            line: 1,
-            column: 1,
-            metadata: {
-              path: info.path,
-              pointer: info.token.pointer,
-              deprecated: info.token.metadata.deprecated,
-              extensions: info.token.metadata.extensions,
-            },
-          })),
-        });
-      }
-    }
-    return results;
+  async getUnusedTokens(
+    ignored: readonly string[] = [],
+  ): Promise<UnusedToken[]> {
+    await this.loadTokens();
+    const ignoredValues = new Set(ignored);
+    return Array.from(this.allTokenValues.entries())
+      .filter(
+        ([value]) =>
+          !this.usedTokenValues.has(value) && !ignoredValues.has(value),
+      )
+      .map(([value, info]) => ({
+        value,
+        path: info.path,
+        pointer: info.token.pointer,
+        deprecated: info.token.metadata.deprecated,
+        extensions: info.token.metadata.extensions,
+      }));
   }
 }
 
@@ -232,24 +218,6 @@ function collectTokenIdentities(token: DtifFlattenedToken): Set<string> {
     identities.add(pointer.pointer);
   }
   return identities;
-}
-
-function isUnusedTokenRule(e: {
-  rule: { name: string };
-  options?: unknown;
-  severity: 'error' | 'warn';
-}): e is {
-  rule: { name: 'design-system/no-unused-tokens' };
-  options?: { ignore?: string[] };
-  severity: 'error' | 'warn';
-} {
-  if (e.rule.name !== 'design-system/no-unused-tokens') return false;
-  if (!isRecord(e.options)) return true;
-  return (
-    e.options.ignore === undefined ||
-    (isArray(e.options.ignore) &&
-      e.options.ignore.every((t): t is string => typeof t === 'string'))
-  );
 }
 
 function isValueWithUnit(
