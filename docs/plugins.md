@@ -148,15 +148,20 @@ async function loadFromFigma(): Promise<DesignTokens> {
 ```ts
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter, FileSource } from '@lapidist/design-lint';
+import { createLinter, createNodeEnvironment } from '@lapidist/design-lint';
 import plugin from '../index.js';
 
 void test('reports raw colors', async () => {
-  const linter = initLinter(
-    { plugins: [plugin], rules: { 'acme/no-raw-colors': 'error' } },
-    { documentSource: new FileSource() },
-  );
-  const res = await linter.lintText('h1 { color: #fff; }', 'file.css');
+  const config = {
+    plugins: [plugin],
+    rules: { 'acme/no-raw-colors': 'error' },
+  };
+  const linter = createLinter(config, createNodeEnvironment(config));
+  const res = await linter.lintDocument({
+    id: 'file.css',
+    type: 'css',
+    getText: async () => 'h1 { color: #fff; }',
+  });
   assert.equal(res.messages.length, 1);
 });
 ```
