@@ -10,6 +10,21 @@ import type { Formatter } from './types.js';
 import { resolveFormatter } from './resolve-formatter.js';
 import { builtInFormatters, isBuiltInFormatterName } from './builtins.js';
 
+function getResolutionTarget(name: string): string {
+  if (
+    path.isAbsolute(name) ||
+    name.startsWith('./') ||
+    name.startsWith('../')
+  ) {
+    return pathToFileURL(path.resolve(process.cwd(), name)).href;
+  }
+
+  return import.meta.resolve(
+    name,
+    pathToFileURL(path.join(process.cwd(), 'index.js')).href,
+  );
+}
+
 /**
  * Retrieve a formatter by name.
  *
@@ -35,21 +50,38 @@ export async function getFormatter(name: string): Promise<Formatter> {
       return formatter;
     }
   }
+
+  let resolved: string;
   try {
-    const resolved =
-      path.isAbsolute(name) || name.startsWith('./') || name.startsWith('../')
-        ? pathToFileURL(path.resolve(process.cwd(), name)).href
-        : import.meta.resolve(
-            name,
-            pathToFileURL(path.join(process.cwd(), 'index.js')).href,
-          );
-    const mod: unknown = await import(resolved);
-    const formatter = resolveFormatter(mod);
-    if (!formatter) {
-      throw new Error();
-    }
-    return formatter;
+    resolved = getResolutionTarget(name);
   } catch {
     throw new Error(`Unknown formatter: ${name}`);
   }
+
+  let mod: unknown;
+  try {
+    mod = await import(resolved);
+  } catch (error) {
+    if (error instanceof Error) {
+      const formatterError = new Error(
+        `Failed to load formatter "${name}": ${error.message}`,
+      );
+      if (error.stack) {
+        formatterError.stack = `${formatterError.stack ?? formatterError.message}
+Caused by: ${error.stack}`;
+      }
+      throw formatterError;
+    }
+
+    throw new Error(`Failed to load formatter "${name}": ${String(error)}`);
+  }
+
+  const formatter = resolveFormatter(mod);
+  if (!formatter) {
+    throw new Error(
+      `Formatter module "${name}" does not export a valid formatter function`,
+    );
+  }
+
+  return formatter;
 }
