@@ -82,3 +82,21 @@ void test('reports raw tokens once for single style property', async () => {
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0]?.ruleId, 'design-token/colors');
 });
+
+void test('reports static raw tokens in interpolated tagged templates', async () => {
+  const linter = initLinter(config, { documentSource: new FileSource() });
+  const res = await linter.lintText(
+    [
+      "import styled from 'styled-components';",
+      'const spacing = 5;',
+      'export const Comp = styled.div`',
+      '  color: #fff;',
+      '  --spacing: ${spacing}px;',
+      '`;',
+    ].join('\n'),
+    'file.ts',
+  );
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0]?.ruleId, 'design-token/colors');
+  assert.equal(res.messages[0]?.line, 3);
+});
