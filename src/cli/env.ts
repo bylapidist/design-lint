@@ -58,7 +58,7 @@ export interface Environment {
  */
 export interface PrepareEnvironmentOptions {
   /** Formatter name or module path. */
-  format: string;
+  format?: string;
   /** Optional configuration file path. */
   config?: string;
   /** Maximum concurrent linted files. */
@@ -89,8 +89,10 @@ export async function prepareEnvironment(
     import('../core/ignore.js'),
   ]);
 
-  const formatter = await getFormatter(options.format);
   let config = await loadConfig(process.cwd(), options.config);
+  const formatter = await getFormatter(
+    options.format ?? config.format ?? 'stylish',
+  );
   if (options.concurrency !== undefined) {
     config.concurrency = options.concurrency;
   }

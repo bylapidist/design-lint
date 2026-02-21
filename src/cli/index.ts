@@ -51,7 +51,6 @@ function createProgram(version: string, logger: Logger) {
     .option(
       '--format <name|path>',
       'Output format (stylish, json, sarif, or path to module)',
-      'stylish',
     )
     .option('--output <file>', 'Write report to file')
     .option('--report <file>', 'Write JSON results to file')

@@ -21,6 +21,11 @@ void test('accepts valid configuration', () => {
   assert.deepEqual(parsed, { tokens: {}, rules: {} });
 });
 
+void test('accepts formatter selection in configuration', () => {
+  const parsed = configSchema.parse({ format: 'json' });
+  assert.deepEqual(parsed, { format: 'json' });
+});
+
 void test('rejects unknown properties', () => {
   assert.throws(() => configSchema.parse({ foo: 1 } as unknown as Config));
 });
