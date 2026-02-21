@@ -13,6 +13,7 @@ This guide targets front-end developers integrating design-lint into specific ec
 - [Next.js](#nextjs)
 - [Vue](#vue)
 - [Svelte](#svelte)
+- [Currently supported file types](#currently-supported-file-types)
 - [Other environments](#other-environments)
 - [See also](#see-also)
 
@@ -51,8 +52,44 @@ Svelte components include `<script>` and `<style>` sections. design-lint underst
 npx design-lint src/routes
 ```
 
+## Currently supported file types
+design-lint currently supports these file extensions:
+
+- `ts`
+- `tsx`
+- `mts`
+- `cts`
+- `js`
+- `jsx`
+- `mjs`
+- `cjs`
+- `css`
+- `scss`
+- `sass`
+- `less`
+- `vue`
+- `svelte`
+
 ## Other environments
-Angular, Astro, and static HTML files work out of the box as long as file extensions are provided. Adjust glob patterns accordingly.
+Angular, Astro, and static HTML files are not linted directly.
+
+If you use Angular or Astro, lint the supported TypeScript/JavaScript and stylesheet files in those projects.
+
+Examples:
+
+- Angular app code and styles:
+
+  ```bash
+  npx design-lint "src/**/*.{ts,js,css,scss,sass,less}"
+  ```
+
+- Astro scripts and styles:
+
+  ```bash
+  npx design-lint "src/**/*.{ts,tsx,js,jsx,css,scss,sass,less}"
+  ```
+
+For static HTML projects, target the referenced CSS files or any supported script/style sources instead of `.html` files.
 
 ## See also
 - [Rules](./rules/index.md)
