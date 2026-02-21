@@ -49,7 +49,7 @@ void test('TokenTracker reports unused tokens', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('const c = "#ff0000";');
+  await tracker.trackUsage({ text: 'const c = "#ff0000";' });
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   assert.equal(reports[0].messages[0].message.includes('4px'), true);
@@ -71,7 +71,7 @@ void test('hexColor classifier tracks custom property usage', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: #111111;');
+  await tracker.trackUsage({ text: 'color: #111111;' });
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   assert.equal(reports[0].messages[0].message.includes('#222222'), true);
@@ -93,7 +93,7 @@ void test('hexColor classifier is case-insensitive', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: #abcdef;');
+  await tracker.trackUsage({ text: 'color: #abcdef;' });
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   assert.equal(reports[0].messages[0].message.includes('#123456'), true);
@@ -121,7 +121,7 @@ void test('numeric classifier matches number tokens', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('margin: 4px');
+  await tracker.trackUsage({ text: 'margin: 4px' });
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   assert.equal(reports[0].messages[0].message.includes('8px'), true);
@@ -143,7 +143,7 @@ void test('string classifier matches plain string tokens', async () => {
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: #ff0000;');
+  await tracker.trackUsage({ text: 'color: #ff0000;' });
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 1);
   assert.equal(reports[0].messages[0].message.includes('#0000ff'), true);
@@ -165,9 +165,36 @@ void test('TokenTracker resolves alias tokens when tracking usage', async () => 
       severity: 'error',
     },
   ]);
-  await tracker.trackUsage('color: #ff0000;');
+  await tracker.trackUsage({ text: 'color: #ff0000;' });
   const reports = tracker.generateReports('config');
   assert.equal(reports.length, 0);
+});
+
+void test('TokenTracker prefers parser token references when provided', async () => {
+  const tokens: DesignTokens = {
+    $version: '1.0.0',
+    color: {
+      primary: { $type: 'string', $value: '#ff0000' },
+      secondary: { $type: 'string', $value: '#00ff00' },
+    },
+  };
+  const tracker = new TokenTracker(makeProvider(tokens));
+  await tracker.configure([
+    {
+      rule: { name: 'design-system/no-unused-tokens' },
+      options: {},
+      severity: 'warn',
+    },
+  ]);
+  await tracker.trackUsage({
+    text: '',
+    references: [
+      { candidate: 'color: #ff0000', line: 1, column: 1, context: 'css:value' },
+    ],
+  });
+  const reports = tracker.generateReports('config');
+  assert.equal(reports.length, 1);
+  assert.equal(reports[0].messages[0].message.includes('#00ff00'), true);
 });
 
 void test('TokenTracker includes token metadata in reports', async () => {

@@ -1,16 +1,24 @@
 import ts from 'typescript';
 import { parseCSS } from './css-parser.js';
 import type { RuleModule, LintMessage } from '../types.js';
+import type { ParserPassResult } from '../parser-registry.js';
+import {
+  collectDeclarationTokenReferences,
+  collectTsTokenReferences,
+  pushTokenReference,
+} from './token-references.js';
 
 export async function lintVue(
   text: string,
   sourceId: string,
   listeners: ReturnType<RuleModule['create']>[],
   messages: LintMessage[],
-): Promise<void> {
+): Promise<ParserPassResult> {
+  const tokenReferences: NonNullable<ParserPassResult['tokenReferences']> = [];
   const { parse } = await import('@vue/compiler-sfc');
   const { descriptor } = parse(text, { filename: sourceId });
   const template = descriptor.template?.content ?? '';
+  pushTokenReference(tokenReferences, template, 1, 1, 'vue:template');
   const templateTsx = template
     .replace(/class=/g, 'className=')
     .replace(
@@ -32,6 +40,7 @@ export async function lintVue(
       ts.ScriptKind.TSX,
     );
     const visit = (node: ts.Node) => {
+      collectTsTokenReferences(node, source, tokenReferences, 'vue:ts');
       for (const l of listeners) l.onNode?.(node);
       ts.forEachChild(node, visit);
     };
@@ -41,7 +50,9 @@ export async function lintVue(
     const lang = typeof style.lang === 'string' ? style.lang : undefined;
     const decls = parseCSS(style.content, messages, lang);
     for (const decl of decls) {
+      collectDeclarationTokenReferences(decl, tokenReferences, 'vue:style');
       for (const l of listeners) l.onCSSDeclaration?.(decl);
     }
   }
+  return { tokenReferences };
 }

@@ -1,4 +1,9 @@
-import type { LintResult, DesignTokens, DtifFlattenedToken } from './types.js';
+import type {
+  LintResult,
+  DesignTokens,
+  DtifFlattenedToken,
+  TokenReferenceCandidate,
+} from './types.js';
 import type { TokenProvider } from './environment.js';
 import { guards, collections } from '../utils/index.js';
 import { extractVarName } from '../utils/tokens/index.js';
@@ -102,12 +107,21 @@ export class TokenTracker {
     return this.unusedTokenRules.length > 0;
   }
 
-  async trackUsage(text: string): Promise<void> {
+  async trackUsage(input: {
+    text: string;
+    references?: readonly TokenReferenceCandidate[];
+  }): Promise<void> {
     await this.loadTokens();
+    const candidates = normalizeUsageCandidates(input.references);
     for (const token of this.allTokenValues.keys()) {
       if (this.usedTokenValues.has(token)) continue;
       const tokenType = getTokenType(token);
-      if (classifiers[tokenType](token, text)) {
+      const matched = candidates
+        ? candidates.some((candidate) =>
+            classifiers[tokenType](token, candidate),
+          )
+        : classifiers[tokenType](token, input.text);
+      if (matched) {
         this.usedTokenValues.add(token);
       }
     }
@@ -140,6 +154,16 @@ export class TokenTracker {
     }
     return results;
   }
+}
+
+function normalizeUsageCandidates(
+  references?: readonly TokenReferenceCandidate[],
+): string[] | undefined {
+  if (!references) return undefined;
+  const candidates = references
+    .map((reference) => reference.candidate.trim())
+    .filter((candidate) => candidate.length > 0);
+  return candidates;
 }
 
 function collectTokenValues(

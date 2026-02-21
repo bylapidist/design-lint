@@ -20,6 +20,7 @@ import type {
 import type { CacheProvider } from './cache-provider.js';
 import { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
+import type { ParserPassResult } from './parser-registry.js';
 import { FILE_TYPE_MAP } from './file-types.js';
 import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
 import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
@@ -223,12 +224,21 @@ export class Linter {
     await this.tokensReady;
     const enabled = this.ruleRegistry.getEnabledRules();
     await this.tokenTracker.configure(enabled);
-    if (this.tokenTracker.hasUnusedTokenRules()) {
-      await this.tokenTracker.trackUsage(text);
-    }
     const { listeners, ruleDescriptions, ruleCategories, messages } =
       this.buildRuleContexts(enabled, sourceId, metadata);
-    await this.runParser(text, sourceId, docType, listeners, messages);
+    const parserResult = await this.runParser(
+      text,
+      sourceId,
+      docType,
+      listeners,
+      messages,
+    );
+    if (this.tokenTracker.hasUnusedTokenRules()) {
+      await this.tokenTracker.trackUsage({
+        references: parserResult?.tokenReferences,
+        text,
+      });
+    }
     const filtered = this.filterDisabledMessages(text, messages);
     return {
       sourceId,
@@ -296,12 +306,13 @@ export class Linter {
     docType: string | undefined,
     listeners: ReturnType<RuleModule['create']>[],
     messages: LintMessage[],
-  ): Promise<void> {
+  ): Promise<ParserPassResult | undefined> {
     const type = docType ?? inferFileType(sourceId);
     const parser = parserRegistry[type];
     if (parser) {
-      await parser(text, sourceId, listeners, messages);
+      return parser(text, sourceId, listeners, messages);
     }
+    return undefined;
   }
 
   /**
