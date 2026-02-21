@@ -55,14 +55,22 @@ void test('design-system/deprecation ignores tokens in non-style jsx attributes'
   assert.equal(res.messages.length, 0);
 });
 
-void test('design-system/deprecation warns when tokens missing', async () => {
+void test('design-system/deprecation returns no diagnostics without deprecated metadata', async () => {
   const linter = initLinter(
     {
+      tokens: {
+        $version: '1.0.0',
+        colors: {
+          old: {
+            $type: 'string',
+            $value: 'colors.old',
+          },
+        },
+      },
       rules: { 'design-system/deprecation': 'warn' },
     },
     new FileSource(),
   );
-  const res = await linter.lintText('', 'file.ts');
-  assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].message.includes('$deprecated'));
+  const res = await linter.lintText('const a = "colors.old";', 'file.ts');
+  assert.equal(res.messages.length, 0);
 });
