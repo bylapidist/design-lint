@@ -32,15 +32,7 @@ export const deprecationRule: RuleModule = {
       if (!info) continue;
       deprecated.set(path, info);
     }
-    if (deprecated.size === 0) {
-      context.report({
-        message:
-          'design-system/deprecation requires tokens with $deprecated to enable this rule.',
-        line: 1,
-        column: 1,
-      });
-      return {};
-    }
+    if (deprecated.size === 0) return {};
     const names = new Set(deprecated.keys());
     return {
       onNode(node) {
