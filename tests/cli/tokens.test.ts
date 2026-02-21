@@ -173,3 +173,42 @@ void test('tokens command exports themes with root tokens', () => {
   assert.equal(darkValue.colorSpace, 'srgb');
   assert.deepEqual(darkValue.components, [0, 0, 0]);
 });
+
+void test('tokens command fails on unknown theme', () => {
+  const dir = makeTmpDir();
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: {
+        default: {
+          $version: '1.0.0',
+          color: {
+            red: {
+              $type: 'color',
+              $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+            },
+          },
+        },
+      },
+      rules: {},
+    }),
+  );
+  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
+  const res = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      tsxLoader,
+      cli,
+      'tokens',
+      '--config',
+      'designlint.config.json',
+      '--theme',
+      'missing',
+    ],
+    { cwd: dir, encoding: 'utf8' },
+  );
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /Unknown theme "missing"/);
+});

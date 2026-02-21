@@ -33,6 +33,14 @@ export async function exportTokens(
 ): Promise<void> {
   const config = await loadConfig(process.cwd(), options.config);
   const tokensByTheme = toThemeRecord(config.tokens);
+  if (options.theme && !(options.theme in tokensByTheme)) {
+    const available = Object.keys(tokensByTheme).sort();
+    const details =
+      available.length > 0
+        ? ` Available themes: ${available.join(', ')}.`
+        : ' No themes are configured.';
+    throw new Error(`Unknown theme "${options.theme}".${details}`);
+  }
   const themes = options.theme ? [options.theme] : Object.keys(tokensByTheme);
   const output: Record<string, Record<string, DtifFlattenedToken>> = {};
 

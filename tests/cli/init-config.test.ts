@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   detectInitFormat,
+  detectJsModuleSystem,
   renderConfigTemplate,
   initConfig,
 } from '../../src/cli/init-config.js';
@@ -61,10 +62,15 @@ void test('renderConfigTemplate emits defineConfig for ts', () => {
 });
 
 void test('renderConfigTemplate supports commonjs formats', () => {
-  const js = renderConfigTemplate('js');
+  const js = renderConfigTemplate('js', { jsModuleSystem: 'cjs' });
   const cjs = renderConfigTemplate('cjs');
   assert.ok(js.includes('module.exports'));
   assert.equal(js, cjs);
+});
+
+void test('renderConfigTemplate supports js esm output', () => {
+  const js = renderConfigTemplate('js', { jsModuleSystem: 'esm' });
+  assert.ok(js.startsWith('export default'));
 });
 
 void test('renderConfigTemplate supports esm formats', () => {
@@ -72,6 +78,13 @@ void test('renderConfigTemplate supports esm formats', () => {
   const mts = renderConfigTemplate('mts');
   assert.ok(mjs.startsWith('export default'));
   assert.ok(mts.includes('defineConfig'));
+});
+
+void test('detectJsModuleSystem respects package type', () => {
+  const dir = makeTmpDir();
+  const pkgPath = path.join(dir, 'package.json');
+  fs.writeFileSync(pkgPath, JSON.stringify({ type: 'module' }));
+  assert.equal(detectJsModuleSystem(dir), 'esm');
 });
 
 void test('initConfig writes config file and reports success', () => {
@@ -140,6 +153,25 @@ void test('initConfig reports errors from invalid formats', () => {
   } finally {
     console.error = originalError;
     process.exitCode = originalExitCode;
+    process.chdir(cwd);
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+void test('initConfig emits esm js config in module projects', () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(
+    path.join(dir, 'package.json'),
+    JSON.stringify({ type: 'module' }),
+  );
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    initConfig('js');
+    const configPath = path.join(dir, 'designlint.config.js');
+    const contents = fs.readFileSync(configPath, 'utf8');
+    assert.ok(contents.startsWith('export default'));
+  } finally {
     process.chdir(cwd);
     fs.rmSync(dir, { recursive: true, force: true });
   }

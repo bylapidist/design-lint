@@ -8,11 +8,27 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { applyFixes } from '../../src/index.js';
 import ts from 'typescript';
 
-void test('design-system/component-prefix enforces prefix on components', async () => {
+void test('design-system/component-prefix does not enforce without scoped sources', async () => {
   const linter = initLinter(
     {
       rules: {
         'design-system/component-prefix': ['error', { prefix: 'DS' }],
+      },
+    },
+    new FileSource(),
+  );
+  const res = await linter.lintText('const a = <Button/>;', 'file.tsx');
+  assert.equal(res.messages.length, 0);
+});
+
+void test('design-system/component-prefix enforces prefix on components', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['Button'] },
+        ],
       },
     },
     new FileSource(),
@@ -26,7 +42,10 @@ void test('design-system/component-prefix ignores lowercase tags', async () => {
   const linter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['Button'] },
+        ],
       },
     },
     new FileSource(),
@@ -39,7 +58,10 @@ void test('design-system/component-prefix fixes self-closing tags', async () => 
   const linter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['Button'] },
+        ],
       },
     },
     new FileSource(),
@@ -56,7 +78,10 @@ void test('design-system/component-prefix fixes opening and closing tags', async
   const linter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['Button'] },
+        ],
       },
     },
     new FileSource(),
@@ -73,7 +98,10 @@ void test('design-system/component-prefix enforces prefix in Vue components', as
   const linter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['Button'] },
+        ],
       },
     },
     new FileSource(),
@@ -89,7 +117,10 @@ void test('design-system/component-prefix enforces prefix in Svelte components',
   const linter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['Button'] },
+        ],
       },
     },
     new FileSource(),
@@ -102,7 +133,10 @@ void test('design-system/component-prefix enforces prefix on custom elements', a
   const linter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'ds-' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'ds-', components: ['my-button'] },
+        ],
       },
     },
     new FileSource(),
@@ -118,7 +152,30 @@ void test('design-system/component-prefix preserves kebab-case custom element pr
   const linter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'ds' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'ds', components: ['my-button'] },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+  const code = 'const a = <my-button></my-button>';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 2);
+  assert.ok(res.messages.every((m) => m.fix));
+  const fixed = applyFixes(code, res.messages);
+  assert.equal(fixed, 'const a = <ds-my-button></ds-my-button>');
+});
+
+void test('design-system/component-prefix normalizes custom element prefixes to lowercase', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['my-button'] },
+        ],
       },
     },
     new FileSource(),
@@ -135,7 +192,10 @@ void test('design-system/component-prefix does not double-prefix prefixed tags',
   const pascalLinter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['DSButton'] },
+        ],
       },
     },
     new FileSource(),
@@ -149,7 +209,10 @@ void test('design-system/component-prefix does not double-prefix prefixed tags',
   const customLinter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'ds-' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'ds-', components: ['ds-my-button'] },
+        ],
       },
     },
     new FileSource(),
@@ -165,7 +228,10 @@ void test('design-system/component-prefix reports JSX member expressions without
   const linter = initLinter(
     {
       rules: {
-        'design-system/component-prefix': ['error', { prefix: 'DS' }],
+        'design-system/component-prefix': [
+          'error',
+          { prefix: 'DS', components: ['Button', 'Bar'] },
+        ],
       },
     },
     new FileSource(),

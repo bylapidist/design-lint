@@ -23,7 +23,7 @@ export const borderRadiusRule = tokenRule<BorderRadiusOptions>({
   },
   tokens: 'dimension',
   message:
-    'design-token/border-radius requires radius tokens; configure tokens with $type "dimension" under a "radius" group to enable this rule.',
+    'design-token/border-radius requires border radius tokens; configure tokens with $type "dimension" under a "radius" group to enable this rule.',
   getAllowed(_context, dtifTokens: readonly DtifFlattenedToken[] = []) {
     const allowed = new Set<number>();
     for (const token of dtifTokens) {

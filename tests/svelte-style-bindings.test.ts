@@ -4,6 +4,7 @@ import path from 'node:path';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 import { loadConfig } from '../src/config/loader.js';
+import { createDtifTheme } from './helpers/dtif.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
@@ -39,8 +40,34 @@ void test('style bindings report spacing violations', async () => {
 void test('style bindings inside control-flow blocks parse without crashing', async () => {
   const res = await lint('ControlFlow.svelte');
   assert.equal(
-    res.messages.length,
-    0,
-    `expected no violations from control-flow bindings, got ${String(res.messages.length)}`,
+    res.messages.some((message) => message.ruleId === 'parse-error'),
+    false,
+    'expected no parse-error diagnostics from control-flow bindings',
   );
+  assert(
+    res.messages.some((message) => message.ruleId === 'design-token/colors'),
+    'expected static color bindings to be linted inside control-flow blocks',
+  );
+});
+
+void test('style directives skip dynamic expression values', async () => {
+  const linter = initLinter(
+    {
+      tokens: createDtifTheme({
+        'spacing.sm': { type: 'dimension', value: { value: 4, unit: 'px' } },
+      }),
+      rules: { 'design-token/spacing': 'error' },
+    },
+    { documentSource: new FileSource() },
+  );
+  const res = await linter.lintText(
+    [
+      '<script>',
+      '  const value = 5;',
+      '</script>',
+      '<div style:margin-left={value}px />',
+    ].join('\n'),
+    'Comp.svelte',
+  );
+  assert.equal(res.messages.length, 0);
 });

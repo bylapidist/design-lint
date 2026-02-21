@@ -63,24 +63,165 @@ export async function lintSvelte(
     const column = sliced[sliced.length - 1].length + 1;
     return { line, column };
   };
+
+  const unwrapStaticExpression = (expression: ts.Expression): ts.Expression => {
+    let current = expression;
+    for (;;) {
+      if (ts.isParenthesizedExpression(current)) {
+        current = current.expression;
+        continue;
+      }
+      if (ts.isAsExpression(current)) {
+        current = current.expression;
+        continue;
+      }
+      if (ts.isSatisfiesExpression(current)) {
+        current = current.expression;
+        continue;
+      }
+      if (ts.isNonNullExpression(current)) {
+        current = current.expression;
+        continue;
+      }
+      break;
+    }
+    return current;
+  };
+
+  const parseStaticExpressionValue = (
+    expressionText: string,
+  ): string | null => {
+    const wrapped = `(${expressionText});`;
+    const source = ts.createSourceFile(
+      'svelte-style-expression.ts',
+      wrapped,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    );
+    const statement = source.statements[0];
+    if (!ts.isExpressionStatement(statement)) {
+      return null;
+    }
+    const expression = unwrapStaticExpression(statement.expression);
+    if (
+      ts.isStringLiteral(expression) ||
+      ts.isNoSubstitutionTemplateLiteral(expression)
+    ) {
+      return expression.text;
+    }
+    if (ts.isNumericLiteral(expression)) {
+      return expression.text;
+    }
+    if (
+      ts.isPrefixUnaryExpression(expression) &&
+      ts.isNumericLiteral(expression.operand) &&
+      (expression.operator === ts.SyntaxKind.PlusToken ||
+        expression.operator === ts.SyntaxKind.MinusToken)
+    ) {
+      const sign = expression.operator === ts.SyntaxKind.MinusToken ? '-' : '';
+      return `${sign}${expression.operand.text}`;
+    }
+    return null;
+  };
+
+  const toStaticStyleValue = (
+    parts: {
+      type: string;
+      data?: string;
+      expression?: { start?: number; end?: number } | undefined;
+      start?: number;
+      end?: number;
+    }[],
+  ): string | null => {
+    let value = '';
+    for (const part of parts) {
+      if (part.type === 'Text') {
+        value += part.data ?? '';
+        continue;
+      }
+      if (
+        (part.type !== 'MustacheTag' && part.type !== 'ExpressionTag') ||
+        !part.expression
+      ) {
+        return null;
+      }
+      const expressionStart =
+        typeof part.expression.start === 'number'
+          ? part.expression.start
+          : typeof part.start === 'number'
+            ? part.start
+            : undefined;
+      const expressionEnd =
+        typeof part.expression.end === 'number'
+          ? part.expression.end
+          : typeof part.end === 'number'
+            ? part.end
+            : undefined;
+      if (expressionStart === undefined || expressionEnd === undefined) {
+        return null;
+      }
+      const expressionText = text.slice(expressionStart, expressionEnd);
+      const staticValue = parseStaticExpressionValue(expressionText);
+      if (staticValue === null) {
+        return null;
+      }
+      value += staticValue;
+    }
+    return value;
+  };
+
   const extractStyleAttribute = (attr: {
     start: number;
     end: number;
     value: {
       type: string;
       data?: string;
-      expression?: { start: number; end: number };
+      expression?: { start?: number; end?: number } | undefined;
+      start?: number;
+      end?: number;
     }[];
   }): CSSDeclaration[] => {
-    const exprs: string[] = [];
+    const resolvedExpressions: string[] = [];
+    const dynamicExpressionPlaceholders = new Set<string>();
     let content = '';
     for (const part of attr.value) {
-      if (part.type === 'Text') content += part.data ?? '';
-      else if (part.type === 'MustacheTag' && part.expression) {
-        const i = exprs.length;
-        exprs.push(text.slice(part.expression.start, part.expression.end));
-        content += `__EXPR_${String(i)}__`;
+      if (part.type === 'Text') {
+        content += part.data ?? '';
+        continue;
       }
+      if (
+        (part.type !== 'MustacheTag' && part.type !== 'ExpressionTag') ||
+        !part.expression
+      ) {
+        return [];
+      }
+      const expressionStart =
+        typeof part.expression.start === 'number'
+          ? part.expression.start
+          : typeof part.start === 'number'
+            ? part.start
+            : undefined;
+      const expressionEnd =
+        typeof part.expression.end === 'number'
+          ? part.expression.end
+          : typeof part.end === 'number'
+            ? part.end
+            : undefined;
+      if (expressionStart === undefined || expressionEnd === undefined) {
+        return [];
+      }
+      const expressionText = text.slice(expressionStart, expressionEnd);
+      const staticValue = parseStaticExpressionValue(expressionText);
+      const index = resolvedExpressions.length;
+      if (staticValue === null) {
+        const marker = `__DYNAMIC_${String(index)}__`;
+        dynamicExpressionPlaceholders.add(marker);
+        resolvedExpressions.push(marker);
+      } else {
+        resolvedExpressions.push(staticValue);
+      }
+      content += `__EXPR_${String(index)}__`;
     }
     const attrText = text.slice(attr.start, attr.end);
     const eqIdx = attrText.indexOf('=');
@@ -92,7 +233,14 @@ export async function lintSvelte(
       const prop = m[1].trim();
       const value = m[2]
         .trim()
-        .replace(/__EXPR_(\d+)__/g, (_, i) => exprs[Number(i)]);
+        .replace(/__EXPR_(\d+)__/g, (_, i) => resolvedExpressions[Number(i)]);
+      if (
+        Array.from(dynamicExpressionPlaceholders).some((marker) =>
+          value.includes(marker),
+        )
+      ) {
+        continue;
+      }
       const { line, column } = getLineAndColumn(valueStart + m.index);
       decls.push({
         prop: normalizeStylePropertyName(prop),
@@ -138,15 +286,10 @@ export async function lintSvelte(
           text: 'style={{}}',
         });
       } else if (attrRaw.type === 'StyleDirective') {
-        const value = attrRaw.value
-          .map((v) => {
-            if (v.type === 'Text') return v.data;
-            return v.expression
-              ? text.slice(v.expression.start, v.expression.end)
-              : '';
-          })
-          .join('')
-          .trim();
+        const value = toStaticStyleValue(attrRaw.value)?.trim();
+        if (value === undefined || value.length === 0) {
+          continue;
+        }
         const { line, column } = getLineAndColumn(attrRaw.start);
         styleDecls.push({
           prop: normalizeStylePropertyName(attrRaw.name),
@@ -223,7 +366,9 @@ function isSvelteAttr(value: unknown): value is {
   value: {
     type: string;
     data?: string;
-    expression?: { start: number; end: number };
+    expression?: { start?: number; end?: number } | undefined;
+    start?: number;
+    end?: number;
   }[];
 } {
   return (

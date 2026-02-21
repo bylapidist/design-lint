@@ -26,6 +26,7 @@ import { LintService } from './lint-service.js';
 import { parserRegistry } from './parser-registry.js';
 import type { ParserPassResult } from './parser-registry.js';
 import { FILE_TYPE_MAP } from './file-types.js';
+import { RUNTIME_ERROR_RULE_ID } from './cache-manager.js';
 import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
 import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
 import { isRecord } from '../utils/guards/data/is-record.js';
@@ -45,7 +46,6 @@ export interface Config {
   configSources?: string[];
   concurrency?: number;
   patterns?: string[];
-  wrapTokensWithVar?: boolean;
   nameTransform?: NameTransform;
   templateTags?: string[];
 }
@@ -226,6 +226,13 @@ export class Linter {
     return this.ruleRegistry.getPluginMetadata();
   }
 
+  async hasRunLevelRules(): Promise<boolean> {
+    await this.ruleRegistry.load();
+    return this.ruleRegistry
+      .getEnabledRules()
+      .some(({ rule }) => typeof rule.createRun === 'function');
+  }
+
   /**
    * Lints a single text document and returns linting results.
    *
@@ -281,7 +288,7 @@ export class Linter {
     collect: () => Promise<LintMessage[]>;
   } {
     const messages: LintMessage[] = [];
-    const listeners: RuleRunListener[] = [];
+    const listeners: { listener: RuleRunListener; sourceRule: string }[] = [];
     for (const { rule, options, severity } of enabled) {
       if (!rule.createRun) continue;
       const ctx: RuleRunContext = {
@@ -291,14 +298,60 @@ export class Linter {
         report: (message) =>
           messages.push({ ...message, ruleId: rule.name, severity }),
       };
-      listeners.push(rule.createRun(ctx));
+      try {
+        listeners.push({
+          listener: rule.createRun(ctx),
+          sourceRule: rule.name,
+        });
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : `Unknown run listener error: ${String(error)}`;
+        messages.push({
+          ruleId: RUNTIME_ERROR_RULE_ID,
+          message: `Rule "${rule.name}" failed in createRun: ${errorMessage}`,
+          severity: 'error',
+          line: 1,
+          column: 1,
+          metadata: {
+            phase: 'run',
+            sourceRule: rule.name,
+            sourceHook: 'createRun',
+            sourceId,
+            errorMessage,
+          },
+        });
+      }
     }
 
     return {
       sourceId,
       collect: async () => {
-        for (const listener of listeners) {
-          await listener.onRunComplete?.();
+        for (const entry of listeners) {
+          try {
+            await entry.listener.onRunComplete?.();
+          } catch (error: unknown) {
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : `Unknown run listener error: ${String(error)}`;
+            const sourceRule = entry.sourceRule;
+            messages.push({
+              ruleId: RUNTIME_ERROR_RULE_ID,
+              message: `Rule "${sourceRule}" failed in onRunComplete: ${errorMessage}`,
+              severity: 'error',
+              line: 1,
+              column: 1,
+              metadata: {
+                phase: 'run',
+                sourceRule,
+                sourceHook: 'onRunComplete',
+                sourceId,
+                errorMessage,
+              },
+            });
+          }
         }
         return messages;
       },
@@ -326,7 +379,8 @@ export class Linter {
     const messages: LintMessage[] = [];
     const ruleDescriptions: Record<string, string> = {};
     const ruleCategories: Record<string, string> = {};
-    const listeners = enabled.map(({ rule, options, severity }) => {
+    const listeners: RegisteredRuleListener[] = [];
+    for (const { rule, options, severity } of enabled) {
       ruleDescriptions[rule.name] = rule.meta.description;
       if (rule.meta.category) {
         ruleCategories[rule.name] = rule.meta.category;
@@ -344,8 +398,29 @@ export class Linter {
         getTokenPath: (token) =>
           deriveTokenPath(token, this.config.nameTransform),
       };
-      return { ruleId: rule.name, listener: rule.create(ctx) };
-    });
+      try {
+        listeners.push({ ruleId: rule.name, listener: rule.create(ctx) });
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : `Unknown listener error: ${String(error)}`;
+        messages.push({
+          ruleId: RUNTIME_ERROR_RULE_ID,
+          message: `Rule "${rule.name}" failed in create: ${errorMessage}`,
+          severity: 'error',
+          line: 1,
+          column: 1,
+          metadata: {
+            phase: 'lint',
+            sourceRule: rule.name,
+            sourceHook: 'create',
+            sourceId,
+            errorMessage,
+          },
+        });
+      }
+    }
     return { listeners, ruleDescriptions, ruleCategories, messages };
   }
 
@@ -372,6 +447,13 @@ export class Linter {
         templateTags: this.config.templateTags,
       });
     }
+    messages.push({
+      ruleId: 'parse-error',
+      message: `Unsupported file type "${formatFileType(type)}"`,
+      severity: 'error',
+      line: 1,
+      column: 1,
+    });
     return undefined;
   }
 
@@ -386,8 +468,13 @@ export class Linter {
     text: string,
     messages: LintMessage[],
   ): LintMessage[] {
-    const disabledLines = getDisabledLines(text);
-    return messages.filter((m) => !disabledLines.has(m.line));
+    const disabledByLine = getDisabledRulesByLine(text);
+    return messages.filter((message) => {
+      const disabled = disabledByLine.get(message.line);
+      if (!disabled) return true;
+      if (disabled.all) return false;
+      return !disabled.rules.has(message.ruleId);
+    });
   }
 }
 
@@ -526,34 +613,110 @@ function isDesignTokens(val: unknown): val is DesignTokens {
   return typeof val === 'object' && val !== null;
 }
 
-function getDisabledLines(text: string): Set<number> {
-  const disabled = new Set<number>();
+interface DisabledRules {
+  all: boolean;
+  rules: Set<string>;
+}
+
+const BLOCK_DISABLE_PATTERN =
+  /\/\*\s*design-lint-disable(?!-(?:next-line|line))\b([^*]*)\*\//;
+const BLOCK_ENABLE_PATTERN =
+  /\/\*\s*design-lint-enable(?!-(?:next-line|line))\b(?:[^*]*)\*\//;
+const NEXT_LINE_DISABLE_PATTERN =
+  /(?:\/\/|\/\*)\s*design-lint-disable-next-line\b(.*)/;
+const SAME_LINE_DISABLE_PATTERN = /design-lint-disable-line\b(.*)/;
+
+function getDisabledRulesByLine(text: string): Map<number, DisabledRules> {
+  const disabledByLine = new Map<number, DisabledRules>();
   const lines = text.split(/\r?\n/);
-  let block = false;
+  let blockRules: DisabledRules | null = null;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (/\/\*\s*design-lint-disable\s*\*\//.test(line)) {
-      block = true;
+    const lineNo = i + 1;
+    const nextLineNo = i + 2;
+
+    const blockDisable = BLOCK_DISABLE_PATTERN.exec(line);
+    if (blockDisable) {
+      const spec = blockDisable[1] || '';
+      blockRules = parseDisabledRules(spec);
       continue;
     }
-    if (/\/\*\s*design-lint-enable\s*\*\//.test(line)) {
-      block = false;
+
+    if (BLOCK_ENABLE_PATTERN.test(line)) {
+      blockRules = null;
       continue;
     }
-    if (/(?:\/\/|\/\*)\s*design-lint-disable-next-line/.test(line)) {
-      disabled.add(i + 2);
+
+    const nextLineDisable = NEXT_LINE_DISABLE_PATTERN.exec(line);
+    if (nextLineDisable) {
+      const spec = nextLineDisable[1] || '';
+      addDisabledRulesForLine(
+        disabledByLine,
+        nextLineNo,
+        parseDisabledRules(spec),
+      );
       continue;
     }
-    if (line.includes('design-lint-disable-line')) {
-      disabled.add(i + 1);
+
+    const sameLineDisable = SAME_LINE_DISABLE_PATTERN.exec(line);
+    if (sameLineDisable) {
+      const spec = sameLineDisable[1] || '';
+      addDisabledRulesForLine(disabledByLine, lineNo, parseDisabledRules(spec));
       continue;
     }
-    if (block) disabled.add(i + 1);
+
+    if (blockRules) {
+      addDisabledRulesForLine(disabledByLine, lineNo, blockRules);
+    }
   }
-  return disabled;
+
+  return disabledByLine;
+}
+
+function addDisabledRulesForLine(
+  disabledByLine: Map<number, DisabledRules>,
+  line: number,
+  disabled: DisabledRules,
+): void {
+  const current = disabledByLine.get(line);
+  if (!current) {
+    disabledByLine.set(line, {
+      all: disabled.all,
+      rules: new Set(disabled.rules),
+    });
+    return;
+  }
+  if (current.all || disabled.all) {
+    current.all = true;
+    current.rules.clear();
+    return;
+  }
+  for (const rule of disabled.rules) {
+    current.rules.add(rule);
+  }
+}
+
+function parseDisabledRules(raw: string): DisabledRules {
+  const cleaned = raw.trim().replace(/\*\/$/, '').trim();
+  if (cleaned.length === 0) {
+    return { all: true, rules: new Set<string>() };
+  }
+  const rules = cleaned
+    .split(/[,\s]+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  if (rules.length === 0) {
+    return { all: true, rules: new Set<string>() };
+  }
+  return { all: false, rules: new Set(rules) };
 }
 
 export function inferFileType(sourceId: string): string {
   const ext = sourceId.split('.').pop()?.toLowerCase() ?? '';
   return FILE_TYPE_MAP[ext] ?? ext;
+}
+
+function formatFileType(type: string): string {
+  return type ? `.${type}` : '<unknown>';
 }

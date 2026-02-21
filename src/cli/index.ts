@@ -188,7 +188,11 @@ export async function run(argv = process.argv.slice(2)): Promise<void> {
     }
   });
 
-  await program.parseAsync(argv, { from: 'user' });
+  try {
+    await program.parseAsync(argv, { from: 'user' });
+  } catch (err) {
+    logger.error(err);
+  }
 }
 
 try {

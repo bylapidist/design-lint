@@ -12,7 +12,7 @@
 [![build](https://img.shields.io/github/actions/workflow/status/bylapidist/design-lint/ci.yml?label=CI&logo=github)](https://github.com/bylapidist/design-lint/actions)
 [![license](https://img.shields.io/npm/l/%40lapidist/design-lint.svg)](LICENSE)
 
-**@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, flags unsupported components and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif), using the canonical parser and schema as its reference implementation.
+**@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, enforces configured component/import policies, and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif), using the canonical parser and schema as its reference implementation.
 
 > Experimental: expect occasional breaking changes and bugs as the project evolves.
 
@@ -38,7 +38,7 @@ General purpose linters understand code style, not design systems. `@lapidist/de
 
 ### Token awareness
 
-`@lapidist/design-lint` flags raw values that bypass design tokens, keeping colour, spacing and typography consistent. Learn more in the [rule reference](docs/rules/index.md).
+`@lapidist/design-lint` flags raw values against your configured token constraints to keep colour, spacing, and typography consistent. For strict token-reference-only enforcement, enable strict modes where supported (for example `strictReference` on token rules). Learn more in the [rule reference](docs/rules/index.md).
 
 ### Auto-fixes
 
@@ -50,7 +50,7 @@ Lint JavaScript, TypeScript, CSS, SCSS and Less, including inline styles (string
 
 ### Extensible
 
-Extend behaviour with custom rules, formatters, and token transforms for your design system.
+Extend behaviour with custom rules, formatters, and token path name transforms for your design system.
 
 | Advantage                           | @lapidist/design-lint | Generic linters |
 | ----------------------------------- | --------------------- | --------------- |

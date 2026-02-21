@@ -67,6 +67,13 @@ export class RuleRegistry {
       } else {
         severity = this.normalizeSeverity(setting);
       }
+      if (severity === undefined && !this.isExplicitlyOff(setting)) {
+        throw new ConfigError({
+          message: `Invalid severity for rule ${name}: ${String(isArray(setting) ? setting[0] : setting)}`,
+          context: 'Config.rules',
+          remediation: 'Use one of: "off", "warn", "error", 0, 1, or 2.',
+        });
+      }
       if (severity) {
         if (rule.meta.schema) {
           try {
@@ -98,6 +105,13 @@ export class RuleRegistry {
     if (value === 2 || value === 'error') return 'error';
     if (value === 1 || value === 'warn') return 'warn';
     return undefined;
+  }
+
+  private isExplicitlyOff(setting: unknown): boolean {
+    if (isArray(setting)) {
+      return setting[0] === 0 || setting[0] === 'off';
+    }
+    return setting === 0 || setting === 'off';
   }
 
   async getPluginPaths(): Promise<string[]> {

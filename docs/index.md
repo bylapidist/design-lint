@@ -64,7 +64,7 @@ files natively, the linter speaks the same language as your design platform and 
 design-lint recognises frameworks and file types common to design system work so teams can
 adopt linting without changing their tools.
 
-- Enforce component usage and props across React, Vue, Svelte, and vanilla projects.
+- Enforce configured component usage and props across React, Vue, Svelte, and vanilla projects.
 - Lint styles authored in CSS, CSS-in-JS, and preprocessors while respecting token
   semantics.
 - Generate consistent output through built-in formatters or your own custom pipeline.

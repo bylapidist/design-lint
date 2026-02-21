@@ -1,4 +1,7 @@
 import { loadConfig } from '../config/loader.js';
+import { createNodeEnvironment } from '../adapters/node/environment.js';
+import { createLinter } from '../index.js';
+import { getFormatter } from '../formatters/index.js';
 import type { Logger } from './logger.js';
 
 interface ValidateOptions {
@@ -22,7 +25,10 @@ export async function validateConfig(
 
   console.warn = proxyWarn;
   try {
-    await loadConfig(process.cwd(), options.config);
+    const config = await loadConfig(process.cwd(), options.config);
+    await getFormatter(config.format ?? 'stylish');
+    const linter = createLinter(config, createNodeEnvironment(config));
+    await linter.hasRunLevelRules();
     console.log('Configuration is valid');
   } finally {
     console.warn = originalWarn;

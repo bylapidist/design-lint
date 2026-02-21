@@ -9,6 +9,8 @@ const {
 
 const supported = new Set(['json', 'js', 'cjs', 'mjs', 'ts', 'mts']);
 
+type JsModuleSystem = 'cjs' | 'esm';
+
 export function detectInitFormat(initFormat?: string): string {
   if (initFormat && !supported.has(initFormat)) {
     throw new Error(
@@ -44,11 +46,33 @@ export function detectInitFormat(initFormat?: string): string {
   return format;
 }
 
-export function renderConfigTemplate(format: string): string {
+export function detectJsModuleSystem(cwd = process.cwd()): JsModuleSystem {
+  const pkgPath = path.resolve(cwd, 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    return 'cjs';
+  }
+  try {
+    const pkgText = fs.readFileSync(pkgPath, 'utf8');
+    const pkgData: unknown = JSON.parse(pkgText);
+    if (isRecord(pkgData) && pkgData.type === 'module') {
+      return 'esm';
+    }
+  } catch {}
+  return 'cjs';
+}
+
+export function renderConfigTemplate(
+  format: string,
+  options: { jsModuleSystem?: JsModuleSystem } = {},
+): string {
+  const jsModuleSystem = options.jsModuleSystem ?? 'cjs';
   switch (format) {
     case 'json':
       return `${JSON.stringify({ tokens: {}, rules: {} }, null, 2)}\n`;
     case 'js':
+      return jsModuleSystem === 'esm'
+        ? `export default {\n  tokens: {},\n  rules: {},\n};\n`
+        : `module.exports = {\n  tokens: {},\n  rules: {},\n};\n`;
     case 'cjs':
       return `module.exports = {\n  tokens: {},\n  rules: {},\n};\n`;
     case 'mjs':
@@ -76,7 +100,9 @@ export function initConfig(initFormat?: string) {
     console.log(`designlint.config.${format} already exists`);
     return;
   }
-  const contents = renderConfigTemplate(format);
+  const contents = renderConfigTemplate(format, {
+    jsModuleSystem: detectJsModuleSystem(),
+  });
   writeFileAtomic.sync(configPath, contents);
   console.log(`Created designlint.config.${format}`);
 }

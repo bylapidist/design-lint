@@ -85,11 +85,23 @@ function extractInlineStyleDeclarations(
   return declarations;
 }
 
-function extractStyleValueText(node: ts.Expression): string {
+function extractStyleValueText(node: ts.Expression): string | null {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
     return node.text;
   }
-  return node.getText();
+  if (ts.isNumericLiteral(node)) {
+    return node.text;
+  }
+  if (
+    ts.isPrefixUnaryExpression(node) &&
+    ts.isNumericLiteral(node.operand) &&
+    (node.operator === ts.SyntaxKind.PlusToken ||
+      node.operator === ts.SyntaxKind.MinusToken)
+  ) {
+    const sign = node.operator === ts.SyntaxKind.MinusToken ? '-' : '';
+    return `${sign}${node.operand.text}`;
+  }
+  return null;
 }
 
 function extractStyleDeclarationsFromExpression(
@@ -134,13 +146,15 @@ function extractStyleDeclarationsFromExpression(
           : undefined;
       if (!name) continue;
       const valueNode = property.initializer;
+      const staticValue = extractStyleValueText(valueNode);
+      if (staticValue === null) continue;
       const location = getLineAndColumnAtOffset(
         lineMap,
         expressionOffset + valueNode.getStart(source) - 1,
       );
       declarations.push({
         prop: normalizeStylePropertyName(name),
-        value: extractStyleValueText(valueNode),
+        value: staticValue,
         line: location.line,
         column: location.column,
       });

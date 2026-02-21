@@ -30,7 +30,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 Blur tokens use the `dimension` type with `dimensionType` set to `length`.
 
 ## Options
-No additional options.
+- `units` (`string[]`): CSS length units to validate for `blur(...)` arguments. Defaults to `['px', 'rem', 'em']`.
 
 This rule is not auto-fixable.
 

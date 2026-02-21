@@ -71,15 +71,18 @@ void test('design-system/component-usage fixes self-closing tags', async () => {
     },
     new FileSource(),
   );
-  const code = 'const a = <button/>;';
+  const code = 'import { DSButton } from "./ds";\nconst a = <button/>;';
   const res = await linter.lintText(code, 'file.tsx');
   assert.equal(res.messages.length, 1);
   assert.ok(res.messages[0].fix);
   const fixed = applyFixes(code, res.messages);
-  assert.equal(fixed, 'const a = <DSButton/>;');
+  assert.equal(
+    fixed,
+    'import { DSButton } from "./ds";\nconst a = <DSButton/>;',
+  );
 });
 
-void test('design-system/component-usage fixes opening and closing tags', async () => {
+void test('design-system/component-usage does not fix paired tags', async () => {
   const linter = initLinter(
     {
       rules: {
@@ -94,9 +97,27 @@ void test('design-system/component-usage fixes opening and closing tags', async 
   const code = 'const a = <button></button>;';
   const res = await linter.lintText(code, 'file.tsx');
   assert.equal(res.messages.length, 1);
-  assert.ok(res.messages[0].fix);
+  assert.equal(res.messages[0].fix, undefined);
   const fixed = applyFixes(code, res.messages);
-  assert.equal(fixed, 'const a = <DSButton></button>;');
+  assert.equal(fixed, code);
+});
+
+void test('design-system/component-usage does not fix when replacement is not in scope', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-usage': [
+          'error',
+          { substitutions: { button: 'DSButton' } },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+  const code = 'const a = <button/>;';
+  const res = await linter.lintText(code, 'file.tsx');
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0].fix, undefined);
 });
 
 void test('design-system/component-usage reports paired tags once', async () => {

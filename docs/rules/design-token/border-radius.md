@@ -15,12 +15,12 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 {
   "tokens": {
     "$version": "1.0.0",
-    "borderRadius": {
+    "radius": {
       "sm": {
         "$type": "dimension",
         "$value": { "dimensionType": "length", "value": 2, "unit": "px" }
       },
-      "lg": { "$type": "dimension", "$ref": "#/borderRadius/sm" }
+      "lg": { "$type": "dimension", "$ref": "#/radius/sm" }
     }
   },
   "rules": { "design-token/border-radius": "error" }
@@ -30,7 +30,7 @@ Enable the rule in `designlint.config.*`. See [configuration](../../configuratio
 Border radius tokens use the `dimension` type with `dimensionType` set to `length`.
 
 ## Options
-No additional options.
+- `units` (`string[]`): CSS length units to validate for `border-radius` values. Defaults to `['px', 'rem', 'em']`.
 
 This rule is not auto-fixable.
 
@@ -46,7 +46,7 @@ This rule is not auto-fixable.
 
 ```css
 .box { border-radius: 4px; }
-.box { border-radius: var(--border-radius-lg); }
+.box { border-radius: var(--radius-lg); }
 ```
 
 ## When Not To Use

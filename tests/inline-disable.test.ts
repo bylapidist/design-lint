@@ -72,3 +72,48 @@ void test('strings resembling directives do not disable next line', async () => 
     process.chdir(cwd);
   }
 });
+
+void test('rule-scoped inline directives only disable matching rules', async () => {
+  const dir = makeTmpDir();
+  const file = path.join(dir, 'file.css');
+  fs.writeFileSync(
+    file,
+    '/* design-lint-disable-next-line design-token/colors */\n' +
+      'a { color: #00ff00; margin: 3px; }\n',
+  );
+  const ruleTokens = {
+    $version: '1.0.0',
+    color: {
+      primary: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+      },
+    },
+    spacing: {
+      md: {
+        $type: 'dimension',
+        $value: { dimensionType: 'length', value: 4, unit: 'px' },
+      },
+    },
+  };
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    const linter = initLinter(
+      {
+        tokens: ruleTokens,
+        rules: {
+          'design-token/colors': 'error',
+          'design-token/spacing': 'error',
+        },
+      },
+      new FileSource(),
+    );
+    const { results } = await linter.lintTargets([file]);
+    const messages = results[0]?.messages ?? [];
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0]?.ruleId, 'design-token/spacing');
+  } finally {
+    process.chdir(cwd);
+  }
+});

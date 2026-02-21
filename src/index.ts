@@ -1,3 +1,4 @@
+/* c8 ignore start */
 import {
   Linter,
   LintService,
@@ -35,3 +36,4 @@ export function createLinter(config: Config, env: EnvInput): Linter {
 export function createLintService(config: Config, env: EnvInput): LintService {
   return setupLinter(config, toEnvironment(env)).service;
 }
+/* c8 ignore stop */

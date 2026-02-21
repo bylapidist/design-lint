@@ -41,3 +41,13 @@ void test('inline DTIF tokens attach flattened cache for reuse', async () => {
   assert(first);
   assert.equal(first.pointer, '#/color/primary');
 });
+
+void test('unsupported file types produce parse-error diagnostics', async () => {
+  const config = { tokens: {}, rules: {} };
+  const env = createNodeEnvironment(config);
+  const linter = initLinter(config, env);
+  const res = await linter.lintText('<div/>', 'index.html');
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0]?.ruleId, 'parse-error');
+  assert.match(res.messages[0]?.message ?? '', /Unsupported file type/);
+});

@@ -68,3 +68,45 @@ void test('RuleRegistry rejects malformed no-unused-tokens options', async () =>
     },
   );
 });
+
+void test('RuleRegistry rejects invalid scalar rule severity', async () => {
+  const config: Config = {
+    tokens: {},
+    rules: {
+      'design-token/colors': 'fatal',
+    },
+  };
+  const registry = new RuleRegistry(config);
+  await registry.load();
+
+  assert.throws(
+    () => registry.getEnabledRules(),
+    (err) => {
+      if (err instanceof ConfigError) {
+        return err.message.includes('Invalid severity');
+      }
+      return false;
+    },
+  );
+});
+
+void test('RuleRegistry rejects invalid tuple rule severity', async () => {
+  const config: Config = {
+    tokens: {},
+    rules: {
+      'design-system/component-prefix': ['fatal', { prefix: 'DS' }],
+    },
+  };
+  const registry = new RuleRegistry(config);
+  await registry.load();
+
+  assert.throws(
+    () => registry.getEnabledRules(),
+    (err) => {
+      if (err instanceof ConfigError) {
+        return err.message.includes('Invalid severity');
+      }
+      return false;
+    },
+  );
+});

@@ -39,12 +39,57 @@ export const componentUsageRule: RuleModule<ComponentUsageOptions> = {
       return lowerSubs[tagLower] ?? null;
     };
 
+    const hasReplacementInScope = (
+      sourceFile: ts.SourceFile,
+      replacement: string,
+    ): boolean => {
+      for (const statement of sourceFile.statements) {
+        if (ts.isImportDeclaration(statement)) {
+          const importClause = statement.importClause;
+          if (!importClause) continue;
+          if (importClause.name?.text === replacement) return true;
+          const namedBindings = importClause.namedBindings;
+          if (!namedBindings) continue;
+          if (ts.isNamespaceImport(namedBindings)) {
+            if (namedBindings.name.text === replacement) return true;
+            continue;
+          }
+          for (const element of namedBindings.elements) {
+            if (element.name.text === replacement) return true;
+          }
+          continue;
+        }
+        if (ts.isVariableStatement(statement)) {
+          for (const declaration of statement.declarationList.declarations) {
+            if (ts.isIdentifier(declaration.name)) {
+              if (declaration.name.text === replacement) return true;
+            }
+          }
+          continue;
+        }
+        if (
+          (ts.isFunctionDeclaration(statement) ||
+            ts.isClassDeclaration(statement) ||
+            ts.isInterfaceDeclaration(statement) ||
+            ts.isTypeAliasDeclaration(statement) ||
+            ts.isEnumDeclaration(statement)) &&
+          statement.name?.text === replacement
+        ) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     return {
       onNode(node) {
         if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
           const tag = node.tagName.getText();
           const replacement = resolveReplacement(node.tagName);
           if (!replacement) return;
+          const safeFix =
+            ts.isJsxSelfClosingElement(node) &&
+            hasReplacementInScope(node.getSourceFile(), replacement);
           const pos = node
             .getSourceFile()
             .getLineAndCharacterOfPosition(node.getStart());
@@ -53,10 +98,12 @@ export const componentUsageRule: RuleModule<ComponentUsageOptions> = {
             message: `Use ${replacement} instead of ${tagText}`,
             line: pos.line + 1,
             column: pos.character + 1,
-            fix: {
-              range: [node.tagName.getStart(), node.tagName.getEnd()],
-              text: replacement,
-            },
+            fix: safeFix
+              ? {
+                  range: [node.tagName.getStart(), node.tagName.getEnd()],
+                  text: replacement,
+                }
+              : undefined,
           });
         }
       },

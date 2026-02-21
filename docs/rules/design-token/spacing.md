@@ -34,13 +34,13 @@ Spacing tokens use the `dimension` type with `dimensionType` set to `length`.
 ## Options
 - `base` (`number`): values must be multiples of this number. Defaults to `4`.
 - `units` (`string[]`): CSS units to validate. Defaults to `['px', 'rem', 'em']`.
-- `strictReference` (`boolean`): when `true`, only token references are accepted (for example `var(--...)`, `token("spacing.md")`, or equivalent framework token APIs). Raw spacing literals are always reported, even when they match token values or the configured base scale. Defaults to `false`.
+- `strictReference` (`boolean`): when `true`, token-equivalent raw spacing literals are reported for the supported static numeric unit patterns this rule parses (for example `px`, `rem`, `em`, including literals found inside CSS functions). Token references such as `var(--...)` remain allowed. Defaults to `false`.
 
 Numbers that appear inside CSS functions (e.g., `calc()`, `var()`) are ignored in value-equivalence mode.
 
 ### Enforcement modes
 - **Value-equivalence mode** (default): allows values that match token values or the configured base scale.
-- **Strict reference mode** (`strictReference: true`): enforces semantic token usage by allowing only token references and rejecting raw literals.
+- **Strict reference mode** (`strictReference: true`): reports token-equivalent raw literals in supported static numeric forms instead of allowing them by value match.
 
 Strict mode is stricter by design and may increase migration effort in codebases that currently depend on scale-aligned literals.
 

@@ -96,7 +96,6 @@ export const configSchema: z.ZodType<Config> = z
     configSources: z.array(z.string()).optional(),
     concurrency: z.number().int().positive().optional(),
     patterns: z.array(z.string()).optional(),
-    wrapTokensWithVar: z.boolean().optional(),
     nameTransform: nameTransformSchema,
     templateTags: z.array(z.string()).optional(),
   })

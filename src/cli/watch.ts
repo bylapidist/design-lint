@@ -24,6 +24,11 @@ import {
   type ExecuteOptions,
 } from './execute.js';
 import { TOKEN_FILE_GLOB } from '../utils/tokens/index.js';
+import { guards } from '../utils/index.js';
+
+const {
+  data: { isFunction, isObject, isPromiseLike },
+} = guards;
 
 export interface WatchState {
   pluginPaths: string[];
@@ -60,6 +65,23 @@ export interface WatchServices extends ExecuteServices {
   getIg: () => Ignore;
   cache?: CacheProvider;
   cacheLocation?: string;
+}
+
+async function hasRunLevelRules(linter: Linter): Promise<boolean> {
+  if (isObject(linter) && 'hasRunLevelRules' in linter) {
+    const method = Reflect.get(linter, 'hasRunLevelRules');
+    if (isFunction(method)) {
+      const result = method.call(linter);
+      if (typeof result === 'boolean') {
+        return result;
+      }
+      if (isPromiseLike(result)) {
+        const awaited = await result;
+        return typeof awaited === 'boolean' ? awaited : false;
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -144,11 +166,14 @@ export async function startWatch(
     useColor,
   } = ctx;
   let { pluginPaths, ignoreFilePaths } = state;
+  let configSourcePaths = resolveConfigSourcePaths(config);
 
-  console.log('Watching for changes...');
+  if (!options.quiet) {
+    console.log('Watching for changes...');
+  }
   await refreshIgnore();
   const watchPaths = [...targets, TOKEN_FILE_GLOB];
-  if (config.configPath) watchPaths.push(config.configPath);
+  watchPaths.push(...configSourcePaths);
   if (fs.existsSync(designIgnore)) watchPaths.push(designIgnore);
   if (fs.existsSync(gitIgnore)) watchPaths.push(gitIgnore);
   watchPaths.push(
@@ -165,7 +190,7 @@ export async function startWatch(
     ignored: (p: string) => {
       const rel = relFromCwd(realpathIfExists(p));
       const resolved = realpathIfExists(path.resolve(p));
-      if (config.configPath && resolved === config.configPath) return false;
+      if (configSourcePaths.includes(resolved)) return false;
       if (resolved === designIgnore || resolved === gitIgnore) return false;
       if (pluginPaths.includes(resolved)) return false;
       if (ignoreFilePaths.includes(resolved)) return false;
@@ -197,7 +222,10 @@ export async function startWatch(
 
   const runAndUpdate = async (paths: string[]) => {
     const prev = ignoreFilePaths;
-    const newIgnore = await runLint(paths);
+    const lintPaths = (await hasRunLevelRules(linterRef.current))
+      ? targets
+      : paths;
+    const newIgnore = await runLint(lintPaths);
     const toAdd = newIgnore.filter((p) => !prev.includes(p));
     if (toAdd.length) watcher.add(toAdd);
     const toRemove = prev.filter((p) => !newIgnore.includes(p));
@@ -213,6 +241,7 @@ export async function startWatch(
         : createRequire(import.meta.url);
       for (const p of pluginPaths) Reflect.deleteProperty(req.cache, p);
       config = await deps.loadConfig(process.cwd(), options.config);
+      const nextConfigSourcePaths = resolveConfigSourcePaths(config);
       if (cache) {
         const keys = await cache.keys();
         for (const k of keys) await cache.remove(k);
@@ -237,6 +266,15 @@ export async function startWatch(
       if (toAdd.length) watcher.add(toAdd);
       pluginPaths = newPluginPaths;
       state.pluginPaths = pluginPaths;
+      const configSourcesToRemove = configSourcePaths.filter(
+        (filePath) => !nextConfigSourcePaths.includes(filePath),
+      );
+      if (configSourcesToRemove.length) watcher.unwatch(configSourcesToRemove);
+      const configSourcesToAdd = nextConfigSourcePaths.filter(
+        (filePath) => !configSourcePaths.includes(filePath),
+      );
+      if (configSourcesToAdd.length) watcher.add(configSourcesToAdd);
+      configSourcePaths = nextConfigSourcePaths;
       await runAndUpdate(targets);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -252,7 +290,7 @@ export async function startWatch(
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;
     if (
-      (config.configPath && resolved === config.configPath) ||
+      configSourcePaths.includes(resolved) ||
       resolved === designIgnore ||
       resolved === gitIgnore ||
       pluginPaths.includes(resolved) ||
@@ -270,7 +308,7 @@ export async function startWatch(
     if (outputPath && resolved === outputPath) return;
     if (reportPath && resolved === reportPath) return;
     if (
-      (config.configPath && resolved === config.configPath) ||
+      configSourcePaths.includes(resolved) ||
       resolved === designIgnore ||
       resolved === gitIgnore ||
       pluginPaths.includes(resolved) ||
@@ -291,4 +329,19 @@ export async function startWatch(
   watcher.on('unlink', (p) => {
     void handleUnlink(p).catch(reportError);
   });
+}
+
+function resolveConfigSourcePaths(config: Config): string[] {
+  const resolved = new Set<string>();
+  if (typeof config.configPath === 'string') {
+    resolved.add(realpathIfExists(config.configPath));
+  }
+  if (Array.isArray(config.configSources)) {
+    for (const source of config.configSources) {
+      if (typeof source === 'string') {
+        resolved.add(realpathIfExists(source));
+      }
+    }
+  }
+  return Array.from(resolved);
 }

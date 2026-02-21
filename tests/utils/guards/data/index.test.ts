@@ -6,6 +6,8 @@ import assert from 'node:assert/strict';
 import * as dataGuards from '../../../../src/utils/guards/data/index.js';
 
 void test('data guards export structure guards', () => {
+  assert.equal(typeof dataGuards.isFunction, 'function');
   assert.equal(typeof dataGuards.isObject, 'function');
+  assert.equal(typeof dataGuards.isPromiseLike, 'function');
   assert.equal(typeof dataGuards.isRecord, 'function');
 });
