@@ -11,6 +11,7 @@ import {
   dispatchCSSDeclarationListener,
   dispatchNodeListener,
 } from './listener-dispatch.js';
+import { guards } from '../../utils/index.js';
 
 interface LineStartMap {
   starts: number[];
@@ -23,9 +24,9 @@ interface CssDeclarationCandidate {
   column: number;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
+const {
+  data: { isRecord },
+} = guards;
 
 function createLineStartMap(text: string): LineStartMap {
   const starts = [0];
