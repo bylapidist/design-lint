@@ -3,7 +3,8 @@ import type { CSSDeclaration, TokenReferenceCandidate } from '../types.js';
 
 const CSS_VAR_PATTERN = /var\(\s*(--[A-Za-z0-9_-]+)\s*(?:,[^)]+)?\)/g;
 const BRACED_PATH_PATTERN = /\{\s*([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)\s*\}/g;
-const RAW_PATH_PATTERN = /\b([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)\b/g;
+const RAW_PATH_PATTERN =
+  /\b((?=[A-Za-z0-9_.-]*[A-Za-z])[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)\b/g;
 const POINTER_PATTERN = /#\/[A-Za-z0-9_/-]+/g;
 
 interface TokenReferenceExtractionOptions {
@@ -12,6 +13,20 @@ interface TokenReferenceExtractionOptions {
 
 function normalizePath(path: string): string {
   return path.trim().replace(/\s+/g, '');
+}
+
+function shouldIncludeRawPaths(
+  context: string,
+  options?: TokenReferenceExtractionOptions,
+): boolean {
+  if (!options?.includeRawPaths) {
+    return false;
+  }
+  return (
+    context.includes('template') ||
+    context.includes('style') ||
+    context.includes('css-declaration')
+  );
 }
 
 function pushUniqueTokenReference(
@@ -64,7 +79,7 @@ export function collectTextTokenReferences(
     });
   }
 
-  if (options?.includeRawPaths) {
+  if (shouldIncludeRawPaths(context, options)) {
     for (const match of text.matchAll(RAW_PATH_PATTERN)) {
       const identity = match[1] ? normalizePath(match[1]) : undefined;
       if (!identity) continue;

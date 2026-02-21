@@ -31,9 +31,15 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     const configuredOrigins = new Set(context.options?.importOrigins ?? []);
 
     const resolveImportOrigin = (tagName: ts.JsxTagNameExpression): string => {
+      const symbolAtLocation =
+        context.symbolResolution?.getSymbolAtLocation(tagName);
       const symbol = context.symbolResolution?.resolveSymbol(tagName);
-      if (!symbol) return '';
-      for (const declaration of symbol.declarations ?? []) {
+      if (!symbolAtLocation && !symbol) return '';
+      const declarations = [
+        ...(symbolAtLocation?.declarations ?? []),
+        ...(symbol?.declarations ?? []),
+      ];
+      for (const declaration of declarations) {
         if (ts.isImportSpecifier(declaration)) {
           const parent = declaration.parent.parent.parent;
           if (ts.isImportDeclaration(parent)) {
