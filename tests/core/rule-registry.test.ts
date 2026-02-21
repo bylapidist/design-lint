@@ -34,3 +34,37 @@ void test('RuleRegistry validates rule options', async () => {
     },
   );
 });
+
+void test('RuleRegistry accepts no-unused-tokens ignore options', async () => {
+  const config: Config = {
+    tokens: {},
+    rules: {
+      'design-system/no-unused-tokens': ['warn', { ignore: ['#123456'] }],
+    },
+  };
+  const registry = new RuleRegistry(config);
+  await registry.load();
+
+  assert.doesNotThrow(() => registry.getEnabledRules());
+});
+
+void test('RuleRegistry rejects malformed no-unused-tokens options', async () => {
+  const config: Config = {
+    tokens: {},
+    rules: {
+      'design-system/no-unused-tokens': ['warn', { ignore: [123] }],
+    },
+  };
+  const registry = new RuleRegistry(config);
+  await registry.load();
+
+  assert.throws(
+    () => registry.getEnabledRules(),
+    (err) => {
+      if (err instanceof ConfigError) {
+        return err.message.includes('Invalid options');
+      }
+      return false;
+    },
+  );
+});

@@ -6,7 +6,12 @@ export const noUnusedTokensRule: RuleModule = {
   meta: {
     description: 'report unused design tokens',
     category: 'design-token',
-    schema: z.void(),
+    schema: z
+      .object({
+        ignore: z.array(z.string()).optional(),
+      })
+      .strict()
+      .optional(),
   },
   create() {
     return {};
