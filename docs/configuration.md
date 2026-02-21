@@ -187,6 +187,9 @@ Plugins bundle custom rules or formatters. Install the package and list it in `p
 }
 ```
 
+Only use trusted plugin packages. Plugins are loaded and executed with the same
+permissions as the design-lint process.
+
 See the [plugins guide](./plugins.md) to author and publish your own.
 
 ## Overrides

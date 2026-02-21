@@ -98,3 +98,36 @@ void test('getFormatter preserves import-time module error details', async () =>
     process.chdir(prev);
   }
 });
+
+void test('getFormatter emits a security warning for custom formatter modules', async (t) => {
+  const __dirname = fileURLToPath(new URL('.', import.meta.url));
+  const fixtureDir = join(__dirname, 'fixtures');
+  const warnedKey = Symbol.for('design-lint.warned.untrusted-formatter-loader');
+  Reflect.set(globalThis, warnedKey, false);
+
+  const warnings: unknown[] = [];
+  const emitWarningMock = t.mock.method(
+    process,
+    'emitWarning',
+    (...args: unknown[]) => {
+      warnings.push(args);
+    },
+  );
+
+  const prev = process.cwd();
+  process.chdir(fixtureDir);
+  try {
+    await getFormatter('./custom-formatter.ts');
+  } finally {
+    process.chdir(prev);
+  }
+
+  assert.equal(warnings.length, 1);
+  assert.match(
+    String(warnings[0]?.[0] ?? ''),
+    /Only load trusted formatter modules/,
+  );
+
+  emitWarningMock.mock.restore();
+  Reflect.set(globalThis, warnedKey, false);
+});

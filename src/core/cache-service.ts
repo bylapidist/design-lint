@@ -7,14 +7,19 @@ export const CacheService = {
     files: string[],
   ): Promise<void> {
     if (!cache) return;
+    const fileSet = new Set(files);
     const keys = await cache.keys();
     for (const key of keys) {
-      if (!files.includes(key)) await cache.remove(key);
+      if (!fileSet.has(key)) await cache.remove(key);
     }
   },
 
-  createManager(cache: CacheProvider | undefined, fix: boolean): CacheManager {
-    return new CacheManager(cache, fix);
+  createManager(
+    cache: CacheProvider | undefined,
+    fix: boolean,
+    projectRoot = process.cwd(),
+  ): CacheManager {
+    return new CacheManager(cache, fix, projectRoot);
   },
 
   async save(manager: CacheManager): Promise<void> {

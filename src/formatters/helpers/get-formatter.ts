@@ -10,6 +10,24 @@ import type { Formatter } from './types.js';
 import { resolveFormatter } from './resolve-formatter.js';
 import { builtInFormatters, isBuiltInFormatterName } from './builtins.js';
 
+const WARNED_UNTRUSTED_FORMATTER_KEY = Symbol.for(
+  'design-lint.warned.untrusted-formatter-loader',
+);
+
+function warnUntrustedFormatterLoad(): void {
+  if (Reflect.get(globalThis, WARNED_UNTRUSTED_FORMATTER_KEY) === true) {
+    return;
+  }
+  Reflect.set(globalThis, WARNED_UNTRUSTED_FORMATTER_KEY, true);
+  process.emitWarning(
+    'Loading custom design-lint formatters executes arbitrary code. Only load trusted formatter modules.',
+    {
+      code: 'DESIGN_LINT_UNTRUSTED_FORMATTER',
+      type: 'SecurityWarning',
+    },
+  );
+}
+
 function getResolutionTarget(name: string): string {
   if (
     path.isAbsolute(name) ||
@@ -60,6 +78,7 @@ export async function getFormatter(name: string): Promise<Formatter> {
 
   let mod: unknown;
   try {
+    warnUntrustedFormatterLoad();
     mod = await import(resolved);
   } catch (error) {
     if (error instanceof Error) {

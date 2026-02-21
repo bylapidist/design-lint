@@ -41,6 +41,9 @@ npx design-lint src --format json
 ## Writing a custom formatter
 A formatter exports a default function receiving lint results and returning a string.
 
+> **Security:** Custom formatter modules are executed as code in your Node.js
+> process. Only load formatter modules from trusted sources.
+
 ```js
 // formatter.js
 export default function formatter(results) {

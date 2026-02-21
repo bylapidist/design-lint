@@ -33,11 +33,41 @@ void test('CacheManager applies fixes when enabled', async () => {
     }
     return Promise.resolve({ sourceId, messages: [] });
   };
-  const manager = new CacheManager(undefined, true);
+  const manager = new CacheManager(undefined, true, dir);
   const doc = createFileDocument(file);
   await manager.processDocument(doc, lintFn);
   const updated = await fs.readFile(file, 'utf8');
   assert.equal(updated, 'good');
+});
+
+void test('CacheManager does not apply fixes outside project root', async () => {
+  const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cm-root-'));
+  const externalDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cm-external-'));
+  const file = path.join(externalDir, 'outside.txt');
+  await fs.writeFile(file, 'bad');
+  const lintFn = (text: string, sourceId: string): Promise<LintResult> => {
+    if (text === 'bad') {
+      return Promise.resolve({
+        sourceId,
+        messages: [
+          {
+            ruleId: 'test',
+            message: 'bad',
+            severity: 'error',
+            line: 1,
+            column: 1,
+            fix: { range: [0, 3], text: 'good' },
+          },
+        ],
+      });
+    }
+    return Promise.resolve({ sourceId, messages: [] });
+  };
+  const manager = new CacheManager(undefined, true, rootDir);
+  const doc = createFileDocument(file);
+  await manager.processDocument(doc, lintFn);
+  const updated = await fs.readFile(file, 'utf8');
+  assert.equal(updated, 'bad');
 });
 
 void test('CacheManager classifies read failures as runtime errors with metadata', async () => {

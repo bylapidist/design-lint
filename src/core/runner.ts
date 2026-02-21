@@ -56,7 +56,7 @@ export class Runner {
       Math.floor(this.config.concurrency ?? os.cpus().length),
     );
     const limit = pLimit(concurrency);
-    const cacheManager = CacheService.createManager(cache, fix);
+    const cacheManager = CacheService.createManager(cache, fix, process.cwd());
     const tasks = documents.map((doc) =>
       limit(() => cacheManager.processDocument(doc, this.lintDocumentFn)),
     );
