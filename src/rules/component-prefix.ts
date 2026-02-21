@@ -192,7 +192,7 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
       tagNode: ts.JsxTagNameExpression,
     ): boolean => {
       if (!hasScopedSources) {
-        return true;
+        return false;
       }
 
       const importSource =
@@ -221,7 +221,16 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
         })();
 
       if (!importSource) {
-        return false;
+        if (scopedComponents.size === 0) {
+          return false;
+        }
+        if (
+          ts.isPropertyAccessExpression(tagNode) ||
+          ts.isJsxNamespacedName(tagNode)
+        ) {
+          return scopedComponents.has(tagNode.name.text);
+        }
+        return scopedComponents.has(tagNode.getText());
       }
 
       if (
