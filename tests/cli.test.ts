@@ -383,6 +383,7 @@ void cliTest('CLI errors on invalid --max-warnings', () => {
   );
   assert.notEqual(res.status, 0);
   assert.ok(res.stderr.includes('Invalid value for --max-warnings'));
+  assert.doesNotMatch(res.stderr, /at Option\.parseArg/);
 });
 
 void cliTest('CLI reports missing ignore file', () => {
@@ -806,6 +807,7 @@ void cliTest('CLI errors on invalid --concurrency', () => {
   );
   assert.notEqual(res.status, 0);
   assert.ok(res.stderr.includes('Invalid value for --concurrency'));
+  assert.doesNotMatch(res.stderr, /at Option\.parseArg/);
 });
 
 void cliTest('CLI plugin load errors include context and remediation', () => {
