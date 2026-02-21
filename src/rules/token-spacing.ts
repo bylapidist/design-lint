@@ -117,7 +117,10 @@ export const spacingRule = tokenRule<SpacingOptions>({
         let reported = false;
         valueParser(decl.value).walk((node) => {
           if (reported) return false;
-          if (node.type === 'function') return false;
+          if (node.type === 'function') {
+            if (!strictReference) return false;
+            return;
+          }
           if (node.type !== 'word') return;
           const parsed = valueParser.unit(node.value);
           if (!parsed || !parsed.unit) return;
