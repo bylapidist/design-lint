@@ -1,12 +1,12 @@
 ---
 title: Plugins
-description: "Extend design-lint with custom rules or formatters."
+description: "Extend design-lint with custom rule plugins."
 sidebar_position: 6
 ---
 
 # Plugins
 
-Plugins let you package and share rules, formatters, and other extensions. This guide targets developers who want to extend design-lint.
+Plugins let you package and share custom rules and related runtime hooks. This guide targets developers who want to extend design-lint.
 
 ## Table of contents
 - [Overview](#overview)
@@ -206,10 +206,17 @@ void test('reports raw colors', async () => {
 ## Distributing within a team
 You can share plugins privately via Git repositories or internal registries. Document rule options in the plugin README so users can configure them correctly.
 
-## Formatters as plugins
-Custom formatters can be published as npm packages and referenced through
-`--format`. Keep formatter packages focused on output rendering and document
-their expected structure for CI consumers.
+## Rule plugins vs formatter modules
+Rule plugins and formatters are loaded through different paths:
+
+- `plugins` config entries are rule plugins. They are resolved and validated by
+  the plugin system and must export a `PluginModule`.
+- `--format` (or `format` config) points to a formatter module. Formatter
+  modules are imported directly from the provided module name or file path and
+  are **not** registered through `PluginManager`.
+
+Custom formatter packages can still be published to npm, but they are consumed
+as standalone formatter modules, not as rule plugins.
 
 ```json
 {
@@ -223,6 +230,14 @@ After publishing, consumers can use the package name directly:
 
 ```bash
 npx design-lint src --format design-lint-formatter-acme
+```
+
+For the exact invocation patterns (module name and relative path), see
+[Formatters](./formatters.md#writing-a-custom-formatter):
+
+```bash
+npx design-lint src --format design-lint-formatter-acme
+npx design-lint src --format ./formatter.js
 ```
 
 ## See also
