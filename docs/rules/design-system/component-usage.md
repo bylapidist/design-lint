@@ -25,7 +25,9 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 ## Options
 - `substitutions` (`Record<string, string>`): map of disallowed HTML tags to their design system components. Tag names are matched case-insensitively.
 
-*This rule is auto-fixable.*
+*This rule is partially auto-fixable.*
+
+Autofix is limited to self-closing JSX tags where the replacement component is already in scope. Paired tags and unresolved replacements are reported without automatic edits.
 
 ## Examples
 
