@@ -29,6 +29,7 @@ import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
 import { isRecord } from '../utils/guards/data/is-record.js';
 
 export interface Config {
+  format?: string;
   tokens?:
     | DesignTokens
     | Record<string, DesignTokens | string>

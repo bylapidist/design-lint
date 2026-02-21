@@ -24,7 +24,7 @@ Formatters shape the output produced by design-lint. This page targets developer
 | `sarif` | Emits SARIF 2.1.0 for services like GitHub code scanning. |
 
 ## Selecting a formatter
-Choose a formatter via the CLI or configuration file.
+Choose a formatter via the CLI or configuration file. CLI `--format` takes precedence when both are set.
 
 ```bash
 npx design-lint src --format json

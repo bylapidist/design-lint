@@ -87,6 +87,7 @@ const nameTransformSchema = z
  */
 export const configSchema: z.ZodType<Config> = z
   .object({
+    format: z.string().optional(),
     tokens: tokensSchema.optional(),
     rules: z.record(z.string(), ruleSettingSchema).optional(),
     ignoreFiles: z.array(z.string()).optional(),
