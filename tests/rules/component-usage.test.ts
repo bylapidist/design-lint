@@ -93,10 +93,30 @@ void test('design-system/component-usage fixes opening and closing tags', async 
   );
   const code = 'const a = <button></button>;';
   const res = await linter.lintText(code, 'file.tsx');
-  assert.equal(res.messages.length, 2);
-  assert.ok(res.messages.every((m) => m.fix));
+  assert.equal(res.messages.length, 1);
+  assert.ok(res.messages[0].fix);
   const fixed = applyFixes(code, res.messages);
-  assert.equal(fixed, 'const a = <DSButton></DSButton>;');
+  assert.equal(fixed, 'const a = <DSButton></button>;');
+});
+
+void test('design-system/component-usage reports paired tags once', async () => {
+  const linter = initLinter(
+    {
+      rules: {
+        'design-system/component-usage': [
+          'error',
+          { substitutions: { div: 'Box' } },
+        ],
+      },
+    },
+    new FileSource(),
+  );
+
+  const res = await linter.lintText(
+    'const a = <div>content</div>;',
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 1);
 });
 
 void test('design-system/component-usage resolves aliased JSX components using TypeScript metadata', async () => {
