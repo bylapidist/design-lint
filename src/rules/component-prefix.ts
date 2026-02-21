@@ -13,6 +13,20 @@ interface ScopedImportSource {
   importedName: string;
 }
 
+function getTagRootIdentifier(node: ts.JsxTagNameExpression): string | null {
+  if (ts.isIdentifier(node)) {
+    return node.text;
+  }
+  if (ts.isPropertyAccessExpression(node)) {
+    const expression = node.expression;
+    return ts.isIdentifier(expression) ? expression.text : null;
+  }
+  if (ts.isJsxNamespacedName(node)) {
+    return node.namespace.text;
+  }
+  return null;
+}
+
 function getJsxTagName(node: ts.JsxTagNameExpression): string {
   if (ts.isIdentifier(node)) {
     return node.text;
@@ -162,6 +176,18 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
     const hasScopedSources =
       scopedPackages.size > 0 || scopedComponents.size > 0;
 
+    const collectedImportSources = new Map<string, ScopedImportSource>();
+
+    const getCollectedImportSource = (
+      tagNode: ts.JsxTagNameExpression,
+    ): ScopedImportSource | null => {
+      const root = getTagRootIdentifier(tagNode);
+      if (!root) {
+        return null;
+      }
+      return collectedImportSources.get(root) ?? null;
+    };
+
     const isDesignSystemComponent = (
       tagNode: ts.JsxTagNameExpression,
     ): boolean => {
@@ -169,22 +195,31 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
         return true;
       }
 
-      const symbol = context.symbolResolution?.resolveSymbol(tagNode);
-      if (!symbol) {
-        return false;
-      }
+      const importSource =
+        getCollectedImportSource(tagNode) ??
+        (() => {
+          const symbolAtLocation =
+            context.symbolResolution?.getSymbolAtLocation(tagNode);
+          const symbol = context.symbolResolution?.resolveSymbol(tagNode);
+          if (!symbolAtLocation && !symbol) {
+            return null;
+          }
 
-      const sourceDeclaration = symbol.declarations?.find(
-        (declaration): declaration is ts.Declaration =>
-          ts.isImportSpecifier(declaration) ||
-          ts.isImportClause(declaration) ||
-          ts.isNamespaceImport(declaration),
-      );
-      if (!sourceDeclaration) {
-        return false;
-      }
+          const declarations = [
+            ...(symbolAtLocation?.declarations ?? []),
+            ...(symbol?.declarations ?? []),
+          ];
+          const sourceDeclaration = declarations.find(
+            (declaration): declaration is ts.Declaration =>
+              ts.isImportSpecifier(declaration) ||
+              ts.isImportClause(declaration) ||
+              ts.isNamespaceImport(declaration),
+          );
+          return sourceDeclaration
+            ? parseImportSourceFromDeclaration(sourceDeclaration)
+            : null;
+        })();
 
-      const importSource = parseImportSourceFromDeclaration(sourceDeclaration);
       if (!importSource) {
         return false;
       }
@@ -206,6 +241,34 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
 
     return {
       onNode(node) {
+        if (
+          ts.isImportDeclaration(node) &&
+          ts.isStringLiteral(node.moduleSpecifier)
+        ) {
+          const moduleName = node.moduleSpecifier.text;
+          const importClause = node.importClause;
+          if (importClause?.name) {
+            collectedImportSources.set(importClause.name.text, {
+              moduleName,
+              importedName: importClause.name.text,
+            });
+          }
+          const namedBindings = importClause?.namedBindings;
+          if (namedBindings && ts.isNamedImports(namedBindings)) {
+            for (const element of namedBindings.elements) {
+              collectedImportSources.set(element.name.text, {
+                moduleName,
+                importedName: element.propertyName?.text ?? element.name.text,
+              });
+            }
+          } else if (namedBindings && ts.isNamespaceImport(namedBindings)) {
+            collectedImportSources.set(namedBindings.name.text, {
+              moduleName,
+              importedName: namedBindings.name.text,
+            });
+          }
+        }
+
         if (
           ts.isJsxOpeningElement(node) ||
           ts.isJsxSelfClosingElement(node) ||

@@ -134,6 +134,58 @@ void test('collectTextTokenReferences extracts only explicit token syntaxes by d
   );
 });
 
+void test('collectTextTokenReferences ignores incidental raw paths in free text contexts', () => {
+  const references =
+    [] as import('../../src/core/types.js').TokenReferenceCandidate[];
+  collectTextTokenReferences(
+    references,
+    [
+      'Release 1.2.3 for package @scope/ui.color.primary',
+      'See docs at app.theme.palette.primary for details',
+      'Import from https://cdn.example.com/color.primary/icon.svg',
+    ].join('\n'),
+    1,
+    1,
+    'ts:string',
+    { includeRawPaths: true },
+  );
+
+  assert.equal(references.length, 0);
+});
+
+void test('collectTextTokenReferences keeps raw path extraction for style and template contexts', () => {
+  const references =
+    [] as import('../../src/core/types.js').TokenReferenceCandidate[];
+  collectTextTokenReferences(
+    references,
+    [
+      'color.primary',
+      'font.size.200',
+      '{spacing.200}',
+      'var(--color-accent)',
+      '#/color/primary',
+    ].join('; '),
+    1,
+    1,
+    'ts-template:value',
+    { includeRawPaths: true },
+  );
+
+  assert.deepEqual(
+    references.map((reference) => ({
+      kind: reference.kind,
+      identity: reference.identity,
+    })),
+    [
+      { kind: 'css-var', identity: '--color-accent' },
+      { kind: 'token-path', identity: 'spacing.200' },
+      { kind: 'token-path', identity: 'color.primary' },
+      { kind: 'token-path', identity: 'font.size.200' },
+      { kind: 'alias-pointer', identity: '#/color/primary' },
+    ],
+  );
+});
+
 void test('lintTS dispatches declarations from inline styles and tagged templates', () => {
   const text = `const Styled = styled.div\`\n  color: var(--primary);\n\`;\nconst Box = styled('div')\`border-width: 2px;\`;\nconst Global = css\`background-color: blue;\`;\nconst TwStyles = tw\`border-color: green;\`;\nconst Component = () => (\n  <div style="color: red; width: 2px;">content</div>\n);`;
   const decls: string[] = [];
