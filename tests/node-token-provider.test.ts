@@ -109,3 +109,23 @@ void test('accepts theme records created with createDtifTheme', async () => {
   assert.equal(cached.length, 1);
   assert.equal(cached[0]?.pointer, '#/color/primary');
 });
+
+void test('returns empty tokens when initialized without config tokens', async () => {
+  const provider = new NodeTokenProvider();
+  const loaded = await provider.load();
+  assert.deepEqual(loaded, {});
+  assert.deepEqual(provider.getTokens(), {});
+});
+
+void test('falls back to empty tokens for invalid token inputs', async () => {
+  const provider = new NodeTokenProvider({ light: 123 });
+  const loaded = await provider.load();
+  assert.deepEqual(loaded, {});
+});
+
+void test('subscribe returns a no-op unsubscribe handler', () => {
+  const provider = new NodeTokenProvider(tokens);
+  const unsubscribe = provider.subscribe();
+  assert.equal(typeof unsubscribe, 'function');
+  unsubscribe();
+});
