@@ -54,6 +54,8 @@ This guide helps you resolve common issues when running design-lint.
 
 **Resolution:** Confirm file types and language blocks are correct.
 
+For stylesheet parsing failures, design-lint emits a deterministic `parse-error` diagnostic with normalized locations (line/column default to `1:1` when unavailable). Indented `.sass` syntax is currently not supported and reports a `parse-error` at `1:1`; migrate files to `.scss` for full Sass linting support.
+
 ## CLI crashes
 **Symptom:** The process exits unexpectedly.
 

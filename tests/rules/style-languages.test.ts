@@ -35,6 +35,22 @@ void test('reports raw tokens in .scss files', async () => {
   assertIds(res.messages);
 });
 
+void test('reports deterministic parse-error for indented .sass files', async () => {
+  const linter = initLinter(config, { documentSource: new FileSource() });
+  const res = await linter.lintText(
+    '.a\n  color: #fff\n  margin: 5px\n  opacity: 0.5\n',
+    'file.sass',
+  );
+  assert.equal(res.messages.length, 1);
+  assert.deepEqual(res.messages[0], {
+    ruleId: 'parse-error',
+    message: 'Indented .sass syntax is not supported; use .scss instead.',
+    severity: 'error',
+    line: 1,
+    column: 1,
+  });
+});
+
 void test('reports raw tokens in Vue <style lang="scss">', async () => {
   const linter = initLinter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(
@@ -55,6 +71,22 @@ void test('reports raw tokens in Svelte <style lang="scss">', async () => {
   assertIds(res.messages);
 });
 
+void test('reports deterministic parse-error in Vue <style lang="sass">', async () => {
+  const linter = initLinter(config, { documentSource: new FileSource() });
+  const res = await linter.lintText(
+    '<template><div/></template><style lang="sass">.a\n  color: #fff</style>',
+    'Comp.vue',
+  );
+  assert.equal(res.messages.length, 1);
+  assert.deepEqual(res.messages[0], {
+    ruleId: 'parse-error',
+    message: 'Indented .sass syntax is not supported; use .scss instead.',
+    severity: 'error',
+    line: 1,
+    column: 1,
+  });
+});
+
 void test('reports raw tokens in string style attributes', async () => {
   const linter = initLinter(config, { documentSource: new FileSource() });
   const res = await linter.lintText(
@@ -63,6 +95,37 @@ void test('reports raw tokens in string style attributes', async () => {
   );
   assert.equal(res.messages.length, 3);
   assertIds(res.messages);
+});
+
+void test('reports raw tokens in JSX object style attributes', async () => {
+  const linter = initLinter(config, { documentSource: new FileSource() });
+  const res = await linter.lintText(
+    `const C = () => <div style={{ color: '#fff', marginTop: '8px' }}></div>;`,
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0]?.ruleId, 'design-token/colors');
+});
+
+void test('normalizes JSX style object props to CSS-like names', async () => {
+  const linter = initLinter(
+    {
+      tokens: createDtifTheme({
+        'fontSizes.base': {
+          type: 'dimension',
+          value: { value: 16, unit: 'px' },
+        },
+      }),
+      rules: { 'design-token/font-size': 'error' },
+    },
+    { documentSource: new FileSource() },
+  );
+  const res = await linter.lintText(
+    `const C = () => <div style={{ fontSize: '15px' }}></div>;`,
+    'file.tsx',
+  );
+  assert.equal(res.messages.length, 1);
+  assert.equal(res.messages[0]?.ruleId, 'design-token/font-size');
 });
 
 void test('reports raw tokens once for single style property', async () => {

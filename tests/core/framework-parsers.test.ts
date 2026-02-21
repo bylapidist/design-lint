@@ -187,7 +187,7 @@ void test('collectTextTokenReferences keeps raw path extraction for style and te
 });
 
 void test('lintTS dispatches declarations from inline styles and tagged templates', () => {
-  const text = `const Styled = styled.div\`\n  color: var(--primary);\n\`;\nconst Box = styled('div')\`border-width: 2px;\`;\nconst Global = css\`background-color: blue;\`;\nconst TwStyles = tw\`border-color: green;\`;\nconst Component = () => (\n  <div style="color: red; width: 2px;">content</div>\n);`;
+  const text = `const Styled = styled.div\`\n  color: var(--primary);\n\`;\nconst Box = styled('div')\`border-width: 2px;\`;\nconst Global = css\`background-color: blue;\`;\nconst TwStyles = tw\`border-color: green;\`;\nconst Component = () => (\n  <>\n    <div style="color: red; width: 2px;">content</div>\n    <div style={{ marginTop: '8px', opacity: 0.5 }}>content</div>\n  </>\n);`;
   const decls: string[] = [];
   const listener = {
     onCSSDeclaration(decl: CSSDeclaration) {
@@ -208,6 +208,8 @@ void test('lintTS dispatches declarations from inline styles and tagged template
   );
   assert.ok(decls.some((value) => value.startsWith('color')));
   assert.ok(decls.some((value) => value.startsWith('width')));
+  assert.ok(decls.some((value) => value.startsWith('margin-top')));
+  assert.ok(decls.some((value) => value.startsWith('opacity')));
   assert.ok(decls.some((value) => value.includes('border-width')));
   assert.ok(decls.some((value) => value.includes('background-color')));
   assert.ok(decls.some((value) => value.includes('border-color')));

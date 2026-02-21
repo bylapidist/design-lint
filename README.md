@@ -37,22 +37,26 @@ See the [Usage guide](docs/usage.md) for the full command reference.
 General purpose linters understand code style, not design systems. `@lapidist/design-lint` bridges that gap by enforcing token usage and component conventions across your codebase.
 
 ### Token awareness
+
 `@lapidist/design-lint` flags raw values that bypass design tokens, keeping colour, spacing and typography consistent. Learn more in the [rule reference](docs/rules/index.md).
 
 ### Auto-fixes
+
 Run with `--fix` to automatically replace deprecated tokens and tidy up your code. See the [usage guide](docs/usage.md) for fix options.
 
 ### Broad language support
-Lint JavaScript, TypeScript, CSS, SCSS, Sass and Less, including inline styles and tagged template literals.
+
+Lint JavaScript, TypeScript, CSS, SCSS and Less, including inline styles (string attributes and JSX object literals with literal values) and tagged template literals. Dynamic inline style expressions remain unsupported. Indented `.sass` files currently report `parse-error` diagnostics.
 
 ### Extensible
+
 Extend behaviour with custom rules, formatters, and token transforms for your design system.
 
-| Advantage | @lapidist/design-lint | Generic linters |
-| --- | --- | --- |
-| Design token validation | ✅ | ❌ |
-| Token deprecation warnings | ✅ | ❌ |
-| Multi-language style + code linting | ✅ | ⚠️ (varies) |
+| Advantage                           | @lapidist/design-lint | Generic linters |
+| ----------------------------------- | --------------------- | --------------- |
+| Design token validation             | ✅                    | ❌              |
+| Token deprecation warnings          | ✅                    | ❌              |
+| Multi-language style + code linting | ✅                    | ⚠️ (varies)     |
 
 For more background, read the [introductory blog post](https://lapidist.net/articles/2025/introducing-lapidist-design-lint/).
 
@@ -60,15 +64,15 @@ For more background, read the [introductory blog post](https://lapidist.net/arti
 
 The complete documentation is available under the [`docs/`](docs) directory and on [design-lint.lapidist.net](https://design-lint.lapidist.net/). See [docs/index.md](docs/index.md) for the documentation landing page.
 
-| Document | Purpose |
-| --- | --- |
-| [Usage](docs/usage.md) | Explains CLI flags, watch mode and caching. |
-| [Configuration](docs/configuration.md) | Details tokens, rule levels and plugin activation. |
-| [Rules](docs/rules/index.md) | Provides a rule reference grouped by category. |
-| [Formatters](docs/formatters.md) | Describes built-in and custom output formats. |
-| [CI](docs/ci.md) | Includes examples for GitHub Actions and other providers. |
-| [API](docs/api.md) | Shows programmatic usage with TypeScript types. |
-| [Architecture](docs/architecture.md) | Explains how the linter works internally. |
+| Document                               | Purpose                                                   |
+| -------------------------------------- | --------------------------------------------------------- |
+| [Usage](docs/usage.md)                 | Explains CLI flags, watch mode and caching.               |
+| [Configuration](docs/configuration.md) | Details tokens, rule levels and plugin activation.        |
+| [Rules](docs/rules/index.md)           | Provides a rule reference grouped by category.            |
+| [Formatters](docs/formatters.md)       | Describes built-in and custom output formats.             |
+| [CI](docs/ci.md)                       | Includes examples for GitHub Actions and other providers. |
+| [API](docs/api.md)                     | Shows programmatic usage with TypeScript types.           |
+| [Architecture](docs/architecture.md)   | Explains how the linter works internally.                 |
 
 ## Contributing
 
