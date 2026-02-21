@@ -23,11 +23,24 @@ export const variantPropRule: RuleModule<VariantPropOptions> = {
   create(context) {
     const { components = {}, prop: propName = 'variant' } =
       context.options ?? {};
+
+    const getAllowedVariants = (
+      tagNode: ts.JsxTagNameExpression,
+      fallbackTag: string,
+    ): readonly string[] | undefined => {
+      const symbolName = context.symbolResolution?.getSymbolName(tagNode);
+      if (symbolName) {
+        const symbolAllowed = components[symbolName];
+        if (symbolAllowed) return symbolAllowed;
+      }
+      return components[fallbackTag];
+    };
+
     return {
       onNode(node) {
         if (!ts.isJsxOpeningLikeElement(node)) return;
         const tag = node.tagName.getText();
-        const allowed = components[tag];
+        const allowed = getAllowedVariants(node.tagName, tag);
         if (!allowed) return;
         for (const attr of node.attributes.properties) {
           if (!ts.isJsxAttribute(attr)) continue;
