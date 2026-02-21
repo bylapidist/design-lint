@@ -41,20 +41,14 @@ export const componentUsageRule: RuleModule<ComponentUsageOptions> = {
 
     return {
       onNode(node) {
-        if (
-          ts.isJsxOpeningElement(node) ||
-          ts.isJsxSelfClosingElement(node) ||
-          ts.isJsxClosingElement(node)
-        ) {
+        if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
           const tag = node.tagName.getText();
           const replacement = resolveReplacement(node.tagName);
           if (!replacement) return;
           const pos = node
             .getSourceFile()
             .getLineAndCharacterOfPosition(node.getStart());
-          const tagText = ts.isJsxClosingElement(node)
-            ? `</${tag}>`
-            : `<${tag}>`;
+          const tagText = `<${tag}>`;
           context.report({
             message: `Use ${replacement} instead of ${tagText}`,
             line: pos.line + 1,
