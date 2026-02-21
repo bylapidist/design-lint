@@ -1,5 +1,44 @@
 # @lapidist/design-lint
 
+## 6.1.0
+
+### Minor Changes
+
+- cbfb1b9: add config-level formatter selection with cli override precedence
+- 44037d8: add a fail-on-empty CLI option to enforce nonzero exit codes for unmatched files
+- fc5b9f4: add no-inline-styles targeting options for ds components and import origins
+- 9e7fca4: accept ignore option objects for design-system/no-unused-tokens rule configuration
+- 9b9d8dd: add strictReference mode to token colors and spacing rules for semantic token enforcement
+- caab98c: extend TS/JS rule context with optional TypeScript symbol resolution helpers and apply symbol-aware component matching in import-path, component-usage, and variant-prop rules
+
+### Patch Changes
+
+- aa66bf7: update usage docs to import output helpers from the root package export
+- 89fc079: add @vue/compiler-dom as a direct dependency for pnpm builds
+- c41abfd: fix component-prefix handling for complex JSX tag names and custom element autofixes
+- 1d126b7: scope component-prefix checks to configured design-system import sources
+- c7fe22c: fix component-usage duplicate reports for paired JSX tags
+- 7b3e87f: constrain raw token path matching to style and template contexts
+- fd80058: fix deprecation rule to skip diagnostics when no tokens are deprecated
+- 99e7621: fix plugins documentation examples to use exported linter APIs and validate imports
+- 89fc079: fix documentation claims to match current lint behavior and limitations
+- c718102: fix rule regression assertions for component-prefix and no-inline-styles test coverage
+- 89fc079: target ES2022 to fix Node 24 function coverage mapping for test runs
+- 0022f8b: improve getFormatter errors for resolution, invalid exports, and import failures
+- c587fc4: guard parser listener dispatch to report rule runtime errors and continue linting
+- 3aeeaab: harden token reference extraction to ignore non-token dotted strings
+- d7fc8f4: fix config loading to merge discovered configs from root to leaf
+- c4e3847: handle interpolated tagged template css parsing for static linting
+- 89fc079: extend TSX style parsing to lint JSX style object literals with literal values
+- 89fc079: fix no-inline-styles import origin detection when TypeChecker metadata is unavailable
+- 1898491: refactor token usage tracking to consume parser token reference candidates
+- 6e6ed11: refactor no-unused-tokens to use rule-owned run hook and token usage capabilities
+- f143b22: separate runtime failures from parse errors in cache manager diagnostics
+- 89fc079: treat indented .sass as unsupported with deterministic parse-error diagnostics
+- df60c17: refactor token usage tracking to match parser-normalized token reference identities
+- 0e528f0: reset tracked token usage at the start of each lint run
+- c718102: improve vue template style binding analysis with ast-based extraction and source ranges
+
 ## 6.0.8
 
 ### Patch Changes
