@@ -8,6 +8,7 @@ import type {
 import type { parse as svelteParse } from 'svelte/compiler';
 import { guards, collections } from '../../utils/index.js';
 import type { ParserPassResult } from '../parser-registry.js';
+import type { ParserPassOptions } from '../parser-registry.js';
 import {
   collectDeclarationTokenReferences,
   collectTsTokenReferences,
@@ -16,6 +17,7 @@ import {
   dispatchCSSDeclarationListener,
   dispatchNodeListener,
 } from './listener-dispatch.js';
+import { normalizeStylePropertyName } from './reference-normalizer.js';
 
 const {
   data: { isRecord },
@@ -27,7 +29,9 @@ export async function lintSvelte(
   sourceId: string,
   listeners: RegisteredRuleListener[],
   messages: LintMessage[],
+  _options?: ParserPassOptions,
 ): Promise<ParserPassResult> {
+  void _options;
   const tokenReferences: NonNullable<ParserPassResult['tokenReferences']> = [];
   const dispatchContext = {
     listeners,
@@ -90,7 +94,12 @@ export async function lintSvelte(
         .trim()
         .replace(/__EXPR_(\d+)__/g, (_, i) => exprs[Number(i)]);
       const { line, column } = getLineAndColumn(valueStart + m.index);
-      decls.push({ prop, value, line, column });
+      decls.push({
+        prop: normalizeStylePropertyName(prop),
+        value,
+        line,
+        column,
+      });
     }
     return decls;
   };
@@ -139,7 +148,12 @@ export async function lintSvelte(
           .join('')
           .trim();
         const { line, column } = getLineAndColumn(attrRaw.start);
-        styleDecls.push({ prop: attrRaw.name, value, line, column });
+        styleDecls.push({
+          prop: normalizeStylePropertyName(attrRaw.name),
+          value,
+          line,
+          column,
+        });
         replacements.push({ start: attrRaw.start, end: attrRaw.end, text: '' });
       }
     }

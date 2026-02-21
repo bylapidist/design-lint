@@ -35,6 +35,8 @@ npx design-lint "src/**/*.{ts,tsx,css}"
 
 Inline `style` support in TSX/JSX covers string attributes and object-literal expressions with literal string/number values. Dynamic style expressions are not normalized into CSS declarations.
 
+Tagged template analysis is strict: only configured template roots are parsed as CSS declarations. Extend `templateTags` in config when your project uses custom helpers.
+
 ## Next.js
 
 Run design-lint alongside `next lint` or as a separate script. The example below enforces token usage in pages and components:

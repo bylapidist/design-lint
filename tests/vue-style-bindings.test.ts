@@ -4,6 +4,7 @@ import path from 'node:path';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 import { loadConfig } from '../src/config/loader.js';
+import { createDtifTheme } from './helpers/dtif.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const fixtureDir = path.join(__dirname, 'fixtures', 'vue');
@@ -53,4 +54,27 @@ void test('Vue style binding forms are linted for object, array, multiline and c
     spacingMessages.every((message) => message.line > 1 && message.column > 1),
     'expected style binding spacing messages with source positions',
   );
+});
+
+void test('Vue style bindings normalize camelCase props for property-specific rules', async () => {
+  const linter = initLinter(
+    {
+      tokens: createDtifTheme({
+        'fontSizes.base': {
+          type: 'dimension',
+          value: { value: 16, unit: 'px' },
+        },
+      }),
+      rules: { 'design-token/font-size': 'error' },
+    },
+    { documentSource: new FileSource() },
+  );
+  const res = await linter.lintText(
+    `<template><div :style="{ fontSize: '15px' }" /></template>`,
+    'Comp.vue',
+  );
+  const fontSizeMessages = res.messages.filter(
+    (message) => message.ruleId === 'design-token/font-size',
+  );
+  assert.equal(fontSizeMessages.length, 1);
 });

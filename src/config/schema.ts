@@ -98,6 +98,7 @@ export const configSchema: z.ZodType<Config> = z
     patterns: z.array(z.string()).optional(),
     wrapTokensWithVar: z.boolean().optional(),
     nameTransform: nameTransformSchema,
+    templateTags: z.array(z.string()).optional(),
   })
   .strict();
 

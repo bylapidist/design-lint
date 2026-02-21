@@ -92,6 +92,7 @@ Each option tunes a specific aspect of design-lint. Use the table below as a qui
 | `concurrency` | number | `os.cpus()` | Maximum parallel workers. Lower the value when running multiple linters in CI to avoid resource contention. |
 | `wrapTokensWithVar` | boolean | `false` | Wrap token values with `var()` when autofixing CSS. Useful when migrating legacy codebases to CSS variables. |
 | `nameTransform` | string | `undefined` | Convert token paths to `kebab-case`, `camelCase`, or `PascalCase`. |
+| `templateTags` | string[] | `["styled", "css", "tw"]` | Tagged-template roots treated as CSS template sources. Add custom tags to enable semantic linting for your CSS-in-JS helpers. |
 
 
 ## Tokens

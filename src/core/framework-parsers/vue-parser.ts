@@ -2,6 +2,7 @@ import ts from 'typescript';
 import { parseCSS } from './css-parser.js';
 import type { LintMessage, RegisteredRuleListener } from '../types.js';
 import type { ParserPassResult } from '../parser-registry.js';
+import type { ParserPassOptions } from '../parser-registry.js';
 import {
   collectDeclarationTokenReferences,
   collectTextTokenReferences,
@@ -11,6 +12,7 @@ import {
   dispatchCSSDeclarationListener,
   dispatchNodeListener,
 } from './listener-dispatch.js';
+import { normalizeStylePropertyName } from './reference-normalizer.js';
 import { guards } from '../../utils/index.js';
 
 interface LineStartMap {
@@ -74,7 +76,7 @@ function extractInlineStyleDeclarations(
       startOffset + match.index,
     );
     declarations.push({
-      prop,
+      prop: normalizeStylePropertyName(prop),
       value: declarationValue,
       line: location.line,
       column: location.column,
@@ -137,7 +139,7 @@ function extractStyleDeclarationsFromExpression(
         expressionOffset + valueNode.getStart(source) - 1,
       );
       declarations.push({
-        prop: name,
+        prop: normalizeStylePropertyName(name),
         value: extractStyleValueText(valueNode),
         line: location.line,
         column: location.column,
@@ -315,7 +317,9 @@ export async function lintVue(
   sourceId: string,
   listeners: RegisteredRuleListener[],
   messages: LintMessage[],
+  _options?: ParserPassOptions,
 ): Promise<ParserPassResult> {
+  void _options;
   const tokenReferences: NonNullable<ParserPassResult['tokenReferences']> = [];
   const dispatchContext = {
     listeners,

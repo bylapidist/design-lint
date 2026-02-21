@@ -8,9 +8,9 @@ description: "Report tokens defined but never used."
 ## Summary
 Reports design tokens defined in your configuration that never appear in any linted file. This keeps the token set focused and helps uncover stale values left behind after refactors.
 
-The rule combines explicit token-reference extraction with value-based matching
-heuristics for patterns such as hex colors, numeric spacing values, and
-`var(--token)` references. Hex codes are matched case-insensitively.
+The rule is semantic-only: usage is resolved from explicit token references and
+normalised identities (for example token paths, JSON pointers, and CSS variable
+names). Raw literals are not treated as token usage.
 
 > [!NOTE]
 > Run the linter on the full project to avoid false positives. Tokens referenced in files that are excluded from the run will be reported as unused.
@@ -45,7 +45,7 @@ Given this configuration:
 and the source:
 
 ```ts
-const color = '#000000';
+const color = '{color.primary}';
 ```
 
 the `color.unused` token is reported as unused.
@@ -68,7 +68,7 @@ A CSS variable can also be ignored:
 ### ignore
 Type: `string[]`
 
-Array of token values or CSS variable names to exclude from usage reporting.
+Array of token values, token paths, or CSS variable names to exclude from usage reporting.
 
 ```json
 {

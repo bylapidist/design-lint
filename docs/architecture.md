@@ -52,7 +52,7 @@ Coordinates plugin loading and registers rules. It validates rule shape, prevent
 plugins to the linter. See [`src/core/plugin-manager.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/plugin-manager.ts).
 
 ### Cache provider
-Stores metadata and parsed documents across runs. [`src/adapters/node/node-cache-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk.
+Stores persistent cache entries across runs. [`src/adapters/node/node-cache-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk.
 
 ### Token provider
 Supplies design tokens to rules. [`src/adapters/node/token-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/token-provider.ts) normalises tokens from configuration.
@@ -61,7 +61,7 @@ Supplies design tokens to rules. [`src/adapters/node/token-provider.ts`](https:/
 Keeps track of token usage across linted files and reports unused values for the [`design-system/no-unused-tokens`](./rules/design-system/no-unused-tokens.md) rule. Implementation: [`src/core/token-tracker.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/token-tracker.ts).
 
 ## Performance and caching
-design-lint processes files concurrently across CPU cores. Parsed documents and rule results are cached between runs in `.designlintcache` to reduce work.
+design-lint processes files concurrently across CPU cores. File-level lint results are cached between runs in `.designlintcache` to reduce repeated work.
 
 ## Contributing to core
 To work on design-lint itself, read [CONTRIBUTING.md](https://github.com/bylapidist/design-lint/blob/main/CONTRIBUTING.md). It covers the testing and build process, commit guidelines, and release workflow.

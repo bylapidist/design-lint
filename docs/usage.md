@@ -168,7 +168,7 @@ For CI, prefer `--fail-on-empty` so misconfigured globs do not pass silently.
 design-lint relies on static analysis and framework parsers. Some dynamic patterns are intentionally not normalized into lintable declarations. In particular:
 
 - Dynamic inline style expressions are not fully analyzed.
-- Rule coverage is strongest for explicit token references, literal style values, and statically resolvable imports/component usage.
+- Rule coverage is strongest for explicit semantic references (token paths, pointers, and CSS vars), normalized static style values, and statically resolvable imports/component usage.
 
 Treat lint results as deterministic policy checks over supported static patterns, not as a full semantic proof of UI conformance.
 

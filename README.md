@@ -46,7 +46,7 @@ Run with `--fix` to apply available rule fixes and tidy up your code. Fix suppor
 
 ### Broad language support
 
-Lint JavaScript, TypeScript, CSS, SCSS and Less, including inline styles (string attributes and JSX object literals with literal values) and tagged template literals. Dynamic inline style expressions remain unsupported. Indented `.sass` files currently report `parse-error` diagnostics.
+Lint JavaScript, TypeScript, CSS, SCSS and Less, including inline styles (string attributes and JSX object literals with literal values) and configured tagged template sources. Dynamic inline style expressions remain unsupported. Indented `.sass` files currently report `parse-error` diagnostics.
 
 ### Extensible
 
