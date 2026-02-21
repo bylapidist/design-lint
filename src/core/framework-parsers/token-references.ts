@@ -6,6 +6,10 @@ const BRACED_PATH_PATTERN = /\{\s*([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)\s*\}/g;
 const RAW_PATH_PATTERN = /\b([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)\b/g;
 const POINTER_PATTERN = /#\/[A-Za-z0-9_/-]+/g;
 
+interface TokenReferenceExtractionOptions {
+  includeRawPaths?: boolean;
+}
+
 function normalizePath(path: string): string {
   return path.trim().replace(/\s+/g, '');
 }
@@ -35,6 +39,7 @@ export function collectTextTokenReferences(
   line: number,
   column: number,
   context: string,
+  options?: TokenReferenceExtractionOptions,
 ): void {
   for (const match of text.matchAll(CSS_VAR_PATTERN)) {
     const identity = match[1].trim();
@@ -59,16 +64,18 @@ export function collectTextTokenReferences(
     });
   }
 
-  for (const match of text.matchAll(RAW_PATH_PATTERN)) {
-    const identity = match[1] ? normalizePath(match[1]) : undefined;
-    if (!identity) continue;
-    pushUniqueTokenReference(references, {
-      kind: 'token-path',
-      identity,
-      line,
-      column,
-      context,
-    });
+  if (options?.includeRawPaths) {
+    for (const match of text.matchAll(RAW_PATH_PATTERN)) {
+      const identity = match[1] ? normalizePath(match[1]) : undefined;
+      if (!identity) continue;
+      pushUniqueTokenReference(references, {
+        kind: 'token-path',
+        identity,
+        line,
+        column,
+        context,
+      });
+    }
   }
 
   for (const match of text.matchAll(POINTER_PATTERN)) {
