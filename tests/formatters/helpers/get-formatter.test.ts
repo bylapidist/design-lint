@@ -26,6 +26,7 @@ void test('getFormatter resolves formatter relative to cwd', async () => {
     process.chdir(prev);
   }
 });
+
 void test('getFormatter resolves formatter by absolute path', async () => {
   const __dirname = fileURLToPath(new URL('.', import.meta.url));
   const fixtureDir = join(__dirname, 'fixtures');
@@ -49,6 +50,51 @@ void test('getFormatter resolves named formatter export', async () => {
   }
 });
 
-void test('getFormatter throws for invalid name', async () => {
-  await assert.rejects(() => getFormatter('unknown'), /Unknown formatter/);
+void test('getFormatter throws unknown formatter for missing module', async () => {
+  await assert.rejects(
+    () => getFormatter('unknown'),
+    /Unknown formatter: unknown/,
+  );
+});
+
+void test('getFormatter throws for module with invalid formatter export', async () => {
+  const __dirname = fileURLToPath(new URL('.', import.meta.url));
+  const fixtureDir = join(__dirname, 'fixtures');
+  const prev = process.cwd();
+  process.chdir(fixtureDir);
+  try {
+    await assert.rejects(
+      () => getFormatter('./invalid-formatter.ts'),
+      /does not export a valid formatter function/,
+    );
+  } finally {
+    process.chdir(prev);
+  }
+});
+
+void test('getFormatter preserves import-time module error details', async () => {
+  const __dirname = fileURLToPath(new URL('.', import.meta.url));
+  const fixtureDir = join(__dirname, 'fixtures');
+  const prev = process.cwd();
+  process.chdir(fixtureDir);
+  try {
+    await assert.rejects(
+      () => getFormatter('./throwing-formatter.ts'),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.match(
+          error.message,
+          /Failed to load formatter "\.\/throwing-formatter\.ts": fixture import failure/,
+        );
+        assert.match(
+          error.stack ?? '',
+          /getFormatter|Failed to load formatter/,
+        );
+        assert.match(error.stack ?? '', /fixture import failure/);
+        return true;
+      },
+    );
+  } finally {
+    process.chdir(prev);
+  }
 });
