@@ -24,6 +24,7 @@
   "engines": {
     "node": ">=22"
   },
+  "packageManager": "pnpm@10.17.1",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
@@ -33,7 +34,7 @@
     "test:watch": "tsx --watch 'tests/**/*.test.ts'",
     "test:coverage": "c8 --reporter=lcov --reporter=text --reporter=json-summary tsx --test 'tests/**/*.test.ts'",
     "changeset": "changeset",
-    "release": "npm run build && changeset publish",
+    "release": "pnpm run build && changeset publish",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
