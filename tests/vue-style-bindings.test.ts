@@ -78,3 +78,27 @@ void test('Vue style bindings normalize camelCase props for property-specific ru
   );
   assert.equal(fontSizeMessages.length, 1);
 });
+
+void test('Vue style bindings skip dynamic expression values', async () => {
+  const linter = initLinter(
+    {
+      tokens: createDtifTheme({
+        'spacing.sm': { type: 'dimension', value: { value: 4, unit: 'px' } },
+      }),
+      rules: { 'design-token/spacing': 'error' },
+    },
+    { documentSource: new FileSource() },
+  );
+  const res = await linter.lintText(
+    [
+      '<template>',
+      '  <div :style="{ padding: value }" />',
+      '</template>',
+      '<script setup lang="ts">',
+      'const value = "5px";',
+      '</script>',
+    ].join('\n'),
+    'Comp.vue',
+  );
+  assert.equal(res.messages.length, 0);
+});

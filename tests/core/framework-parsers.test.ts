@@ -299,10 +299,10 @@ void test('lintSvelte extracts attributes, directives, scripts and style tags', 
   assert.ok(identifiers.has('color'));
   assert.ok(identifiers.has('moduleValue'));
   assert.ok(identifiers.has('promise'));
-  assert.ok(decls.some((d) => d.startsWith('color')));
-  assert.ok(decls.some((d) => d.startsWith('width')));
-  assert.ok(decls.some((d) => d.includes('border-color')));
-  assert.ok(decls.some((d) => d.includes('opacity')));
+  assert.ok(!decls.some((d) => d.startsWith('color')));
+  assert.ok(!decls.some((d) => d.startsWith('width')));
+  assert.ok(!decls.some((d) => d.includes('border-color')));
+  assert.ok(!decls.some((d) => d.includes('opacity')));
   assert.ok(decls.some((d) => d.includes('padding:4px')));
   assert.equal(messages.length, 0);
 });
