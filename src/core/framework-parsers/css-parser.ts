@@ -1,10 +1,15 @@
 import postcss from 'postcss';
 import { parse as scssParser } from 'postcss-scss';
 import lessSyntax from 'postcss-less';
-import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
+import type {
+  CSSDeclaration,
+  LintMessage,
+  RegisteredRuleListener,
+} from '../types.js';
 import { guards } from '../../utils/index.js';
 import type { ParserPassResult } from '../parser-registry.js';
 import { collectDeclarationTokenReferences } from './token-references.js';
+import { dispatchCSSDeclarationListener } from './listener-dispatch.js';
 
 const {
   data: { isObject },
@@ -49,7 +54,7 @@ export function parseCSS(
 export function lintCSS(
   text: string,
   sourceId: string,
-  listeners: ReturnType<RuleModule['create']>[],
+  listeners: RegisteredRuleListener[],
   messages: LintMessage[],
 ): ParserPassResult {
   const lower = sourceId.toLowerCase();
@@ -58,9 +63,15 @@ export function lintCSS(
   else if (lower.endsWith('.less')) lang = 'less';
   const decls = parseCSS(text, messages, lang);
   const tokenReferences: ParserPassResult['tokenReferences'] = [];
+  const dispatchContext = {
+    listeners,
+    messages,
+    sourceId,
+    failedHooks: new Set<string>(),
+  };
   for (const decl of decls) {
     collectDeclarationTokenReferences(decl, tokenReferences, 'css');
-    for (const l of listeners) l.onCSSDeclaration?.(decl);
+    dispatchCSSDeclarationListener(dispatchContext, decl);
   }
   return { tokenReferences };
 }

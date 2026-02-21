@@ -1,16 +1,20 @@
 import ts from 'typescript';
 import { parseCSS } from './css-parser.js';
-import type { RuleModule, LintMessage } from '../types.js';
+import type { LintMessage, RegisteredRuleListener } from '../types.js';
 import type { ParserPassResult } from '../parser-registry.js';
 import {
   collectDeclarationTokenReferences,
   collectTsTokenReferences,
 } from './token-references.js';
+import {
+  dispatchCSSDeclarationListener,
+  dispatchNodeListener,
+} from './listener-dispatch.js';
 
 export function lintTS(
   text: string,
   sourceId: string,
-  listeners: ReturnType<RuleModule['create']>[],
+  listeners: RegisteredRuleListener[],
   messages: LintMessage[],
 ): ParserPassResult {
   const source = ts.createSourceFile(
@@ -20,6 +24,12 @@ export function lintTS(
     true,
   );
   const tokenReferences: NonNullable<ParserPassResult['tokenReferences']> = [];
+  const dispatchContext = {
+    listeners,
+    messages,
+    sourceId,
+    failedHooks: new Set<string>(),
+  };
   const getRootTag = (expr: ts.Expression): string | null => {
     if (ts.isIdentifier(expr)) return expr.text;
     if (
@@ -82,7 +92,7 @@ export function lintTS(
         tokenReferences,
         'ts-template',
       );
-      for (const l of listeners) l.onCSSDeclaration?.(normalizedDecl);
+      dispatchCSSDeclarationListener(dispatchContext, normalizedDecl);
     }
     for (const m of tempMessages) {
       const line = start.line + m.line - 1;
@@ -92,7 +102,7 @@ export function lintTS(
   };
   const visit = (node: ts.Node) => {
     collectTsTokenReferences(node, source, tokenReferences);
-    for (const l of listeners) l.onNode?.(node);
+    dispatchNodeListener(dispatchContext, node, source);
     if (
       ts.isJsxAttribute(node) &&
       node.name.getText() === 'style' &&
@@ -115,7 +125,7 @@ export function lintTS(
           tokenReferences,
           'tsx',
         );
-        for (const l of listeners) l.onCSSDeclaration?.(normalizedDecl);
+        dispatchCSSDeclarationListener(dispatchContext, normalizedDecl);
       }
       for (const m of tempMessages) {
         const line = start.line + m.line - 1;

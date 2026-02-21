@@ -6,7 +6,20 @@ import { lintTS } from '../../src/core/framework-parsers/ts-parser.js';
 import { lintVue } from '../../src/core/framework-parsers/vue-parser.js';
 import { lintSvelte } from '../../src/core/framework-parsers/svelte-parser.js';
 import postcss from 'postcss';
-import type { CSSDeclaration, LintMessage } from '../../src/core/types.js';
+import type {
+  CSSDeclaration,
+  LintMessage,
+  RegisteredRuleListener,
+  RuleListener,
+} from '../../src/core/types.js';
+
+const asRegisteredListener = (
+  listener: RuleListener,
+  ruleId = 'test/listener',
+): RegisteredRuleListener => ({
+  ruleId,
+  listener,
+});
 
 void test('parseCSS handles CSS, SCSS, LESS and parser errors', () => {
   const cssMessages: LintMessage[] = [];
@@ -63,19 +76,19 @@ void test('lintCSS selects parser language from filename', () => {
   const cssResult = cssParsers.lintCSS(
     '.btn { color: red; }',
     'file.css',
-    [listener],
+    [asRegisteredListener(listener)],
     messages,
   );
   const scssResult = cssParsers.lintCSS(
     '$primary: #fff;\n.btn { color: $primary; }',
     'file.scss',
-    [listener],
+    [asRegisteredListener(listener)],
     messages,
   );
   const lessResult = cssParsers.lintCSS(
     '@primary: #fff;\n.btn { color: @primary; }',
     'file.less',
-    [listener],
+    [asRegisteredListener(listener)],
     messages,
   );
   assert.ok(cssResult.tokenReferences?.length);
@@ -96,7 +109,12 @@ void test('lintTS dispatches declarations from inline styles and tagged template
     },
   };
   const messages: LintMessage[] = [];
-  const result = lintTS(text, 'component.tsx', [listener], messages);
+  const result = lintTS(
+    text,
+    'component.tsx',
+    [asRegisteredListener(listener)],
+    messages,
+  );
   assert.ok(
     result.tokenReferences?.some((ref) =>
       ref.candidate.includes('var(--primary)'),
@@ -144,7 +162,12 @@ void test('lintVue processes scripts and style blocks', async () => {
     },
   };
   const messages: LintMessage[] = [];
-  const result = await lintVue(text, 'component.vue', [listener], messages);
+  const result = await lintVue(
+    text,
+    'component.vue',
+    [asRegisteredListener(listener)],
+    messages,
+  );
   assert.ok(result.tokenReferences?.length);
   assert.ok(identifiers.has('scriptValue'));
   assert.ok(identifiers.has('setupValue'));
@@ -169,7 +192,7 @@ void test('lintSvelte extracts attributes, directives, scripts and style tags', 
   const result = await lintSvelte(
     text,
     'component.svelte',
-    [listener],
+    [asRegisteredListener(listener)],
     messages,
   );
   assert.ok(result.tokenReferences?.length);

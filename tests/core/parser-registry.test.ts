@@ -6,6 +6,7 @@ import type {
   RuleModule,
   RuleContext,
   LintMessage,
+  RegisteredRuleListener,
 } from '../../src/core/types.js';
 
 const rule: RuleModule = {
@@ -53,7 +54,10 @@ for (const c of cases) {
       getDtifTokens: () => [],
       getTokenPath: (token) => token.pointer,
     };
-    const listener = rule.create(ctx);
+    const listener: RegisteredRuleListener = {
+      ruleId: rule.name,
+      listener: rule.create(ctx),
+    };
     await parser(c.text, c.sourceId, [listener], messages);
     assert.equal(messages.length, 1);
     assert.equal(messages[0].message, 'bad color');

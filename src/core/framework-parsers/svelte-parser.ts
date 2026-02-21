@@ -1,6 +1,10 @@
 import ts from 'typescript';
 import { parseCSS } from './css-parser.js';
-import type { CSSDeclaration, LintMessage, RuleModule } from '../types.js';
+import type {
+  CSSDeclaration,
+  LintMessage,
+  RegisteredRuleListener,
+} from '../types.js';
 import type { parse as svelteParse } from 'svelte/compiler';
 import { guards, collections } from '../../utils/index.js';
 import type { ParserPassResult } from '../parser-registry.js';
@@ -8,6 +12,10 @@ import {
   collectDeclarationTokenReferences,
   collectTsTokenReferences,
 } from './token-references.js';
+import {
+  dispatchCSSDeclarationListener,
+  dispatchNodeListener,
+} from './listener-dispatch.js';
 
 const {
   data: { isRecord },
@@ -17,10 +25,16 @@ const { isArray } = collections;
 export async function lintSvelte(
   text: string,
   sourceId: string,
-  listeners: ReturnType<RuleModule['create']>[],
+  listeners: RegisteredRuleListener[],
   messages: LintMessage[],
 ): Promise<ParserPassResult> {
   const tokenReferences: NonNullable<ParserPassResult['tokenReferences']> = [];
+  const dispatchContext = {
+    listeners,
+    messages,
+    sourceId,
+    failedHooks: new Set<string>(),
+  };
   const { parse }: { parse: typeof svelteParse } =
     await import('svelte/compiler');
   const ast = parse(text, { modern: true });
@@ -154,14 +168,14 @@ export async function lintSvelte(
     );
     const visit = (node: ts.Node) => {
       collectTsTokenReferences(node, source, tokenReferences, 'svelte:ts');
-      for (const l of listeners) l.onNode?.(node);
+      dispatchNodeListener(dispatchContext, node, source);
       ts.forEachChild(node, visit);
     };
     visit(source);
   }
   for (const decl of styleDecls) {
     collectDeclarationTokenReferences(decl, tokenReferences, 'svelte:style');
-    for (const l of listeners) l.onCSSDeclaration?.(decl);
+    dispatchCSSDeclarationListener(dispatchContext, decl);
   }
   if (ast.css) {
     const styleText = text.slice(ast.css.content.start, ast.css.content.end);
@@ -181,7 +195,7 @@ export async function lintSvelte(
     const decls = parseCSS(styleText, messages, lang);
     for (const decl of decls) {
       collectDeclarationTokenReferences(decl, tokenReferences, 'svelte:css');
-      for (const l of listeners) l.onCSSDeclaration?.(decl);
+      dispatchCSSDeclarationListener(dispatchContext, decl);
     }
   }
   return { tokenReferences };

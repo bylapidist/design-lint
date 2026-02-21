@@ -11,6 +11,7 @@ import type { PluginLoader } from '../src/core/plugin-loader.js';
 import type { PluginModule, RuleModule } from '../src/core/types.js';
 import type { Environment } from '../src/core/environment.js';
 import { PluginError } from '../src/core/errors.js';
+import { RUNTIME_ERROR_RULE_ID } from '../src/core/cache-manager.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -167,6 +168,74 @@ void test('throws when two plugins define the same rule name', async () => {
       return true;
     },
   );
+});
+
+void test('captures listener exceptions and continues other rules', async () => {
+  class ThrowingLoader implements PluginLoader {
+    load(): Promise<{ path: string; plugin: PluginModule }> {
+      const throwingRule: RuleModule = {
+        name: 'plugin/throwing-listener',
+        meta: { description: 'throws from listener' },
+        create: () => ({
+          onNode() {
+            throw new Error('listener exploded');
+          },
+        }),
+      };
+      const healthyRule: RuleModule = {
+        name: 'plugin/healthy-listener',
+        meta: { description: 'still runs after failures' },
+        create: (context) => ({
+          onNode() {
+            context.report({
+              message: 'healthy listener executed',
+              line: 1,
+              column: 1,
+            });
+          },
+        }),
+      };
+      return Promise.resolve({
+        path: 'throwing-loader',
+        plugin: {
+          name: 'throwing-loader',
+          rules: [throwingRule, healthyRule],
+        },
+      });
+    }
+  }
+
+  const linter = initLinter(
+    {
+      plugins: ['throwing-loader'],
+      rules: {
+        'plugin/throwing-listener': 'error',
+        'plugin/healthy-listener': 'error',
+      },
+    },
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new ThrowingLoader(),
+    },
+  );
+
+  const result = await linter.lintText('const value = 1;', 'sample.ts');
+  const runtimeErrors = result.messages.filter(
+    (message) => message.ruleId === RUNTIME_ERROR_RULE_ID,
+  );
+  assert.equal(runtimeErrors.length, 1);
+
+  const [runtimeError] = runtimeErrors;
+  assert.match(runtimeError.message, /plugin\/throwing-listener/);
+  assert.ok(runtimeError.metadata);
+  assert.equal(runtimeError.metadata.sourceRule, 'plugin/throwing-listener');
+  assert.equal(runtimeError.metadata.sourceHook, 'onNode');
+
+  const healthyMessages = result.messages.filter(
+    (message) => message.ruleId === 'plugin/healthy-listener',
+  );
+  assert.ok(healthyMessages.length > 0);
+  assert.equal(healthyMessages[0]?.message, 'healthy listener executed');
 });
 
 void test('getPluginPaths returns resolved plugin paths', async () => {

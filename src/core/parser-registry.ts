@@ -1,6 +1,6 @@
 import type {
   LintMessage,
-  RuleModule,
+  RegisteredRuleListener,
   TokenReferenceCandidate,
 } from './types.js';
 import { lintVue } from './framework-parsers/vue-parser.js';
@@ -15,7 +15,7 @@ export interface ParserPassResult {
 export type ParserStrategy = (
   text: string,
   sourceId: string,
-  listeners: ReturnType<RuleModule['create']>[],
+  listeners: RegisteredRuleListener[],
   messages: LintMessage[],
 ) => Promise<ParserPassResult> | ParserPassResult;
 
