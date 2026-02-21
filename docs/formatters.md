@@ -54,7 +54,7 @@ Invoke it with a relative path:
 npx design-lint src --format ./formatter.js
 ```
 
-For a reusable package, publish the formatter to npm and reference it by name. See the [plugins guide](./plugins.md#formatters-as-plugins) for packaging tips.
+For a reusable package, publish the formatter to npm and reference it by name. See the [plugins guide](./plugins.md#rule-plugins-vs-formatter-modules) for packaging tips and plugin/formatter loading differences.
 
 ## Using formatters in CI
 Formatters determine how results are captured by CI systems:
