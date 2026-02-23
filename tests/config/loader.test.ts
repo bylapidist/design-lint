@@ -131,18 +131,18 @@ void test('validates additional token groups', async () => {
     JSON.stringify({
       tokens: {
         $version: '1.0.0',
-        spacing: {
-          sm: lengthPx(2),
-          lg: lengthPx(8),
-        },
-        radii: {
-          sm: lengthPx(4),
-        },
         borders: {
           thin: lengthPx(1),
         },
         color: {
           primary: srgb([0.25, 0.25, 0.25]),
+        },
+        radii: {
+          sm: lengthPx(4),
+        },
+        spacing: {
+          lg: lengthPx(8),
+          sm: lengthPx(2),
         },
       },
     }),
@@ -491,8 +491,8 @@ void test('allows token names differing only by case', async () => {
       tokens: {
         $version: '1.0.0',
         color: {
-          Blue: srgb([0, 0, 1]),
           blue: srgb([0, 0, 0.8]),
+          Blue: srgb([0, 0, 1]),
         },
       },
     }),

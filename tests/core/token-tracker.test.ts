@@ -93,8 +93,8 @@ void test('TokenTracker tracks usage from css var identity references', async ()
   const tokens: DesignTokens = {
     $version: '1.0.0',
     color: {
-      used: { $type: 'string', $value: 'var(--color-used)' },
       unused: { $type: 'string', $value: 'var(--color-unused)' },
+      used: { $type: 'string', $value: 'var(--color-used)' },
     },
   };
   const tracker = new TokenTracker(makeProvider(tokens));
@@ -149,6 +149,10 @@ void test('TokenTracker includes token metadata in reports', async () => {
   const tokens: DesignTokens = {
     $version: '1.0.0',
     color: {
+      replacement: {
+        $type: 'string',
+        $value: '#000000',
+      },
       unused: {
         $type: 'string',
         $value: '#123456',
@@ -161,7 +165,9 @@ void test('TokenTracker includes token metadata in reports', async () => {
   await tracker.configure([
     { rule: trackingRule, options: {}, severity: 'warn' },
   ]);
-  const [unused] = await tracker.getUnusedTokens();
+  const unused = (await tracker.getUnusedTokens()).find(
+    (entry) => entry.value === '#123456',
+  );
   assert(unused);
   assertTokenMetadata(unused);
   assert.equal(unused.path, 'color.unused');

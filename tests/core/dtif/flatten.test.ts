@@ -53,7 +53,7 @@ void test('parseDtifTokensFromFile returns metadata and resolution snapshots', a
   assert.strictEqual(metadata.description, 'Alias to the background color');
   const superseded = metadata.deprecated?.supersededBy;
   assert(superseded);
-  assert.strictEqual(superseded.pointer, '#/typography/button/text');
+  assert.strictEqual(superseded.pointer, '#/color/button/background');
 
   const resolution = expectResolution(resolutionIndex.get(alias.id), alias.id);
   assert.strictEqual(resolution.references.length > 0, true);

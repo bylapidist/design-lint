@@ -67,7 +67,7 @@ void test('normalizes theme records without shared token keys when metadata pres
       space: {
         medium: {
           $type: 'dimension',
-          $value: { value: 1, unit: 'rem', dimensionType: 'length' },
+          $value: { dimensionType: 'length', value: 1, unit: 'rem' },
         },
       },
     },
@@ -87,9 +87,9 @@ void test('normalizes theme records without shared token keys when metadata pres
     };
   };
   assert.deepEqual(dark.space.medium.$value, {
+    dimensionType: 'length',
     value: 1,
     unit: 'rem',
-    dimensionType: 'length',
   });
 });
 
