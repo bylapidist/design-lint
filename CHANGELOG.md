@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 7.0.1
+
+### Patch Changes
+
+- 0e35cd3: fix DTIF v2 ordering compatibility for inline tokens and update DTIF fixtures/tests
+
 ## 7.0.0
 
 ### Major Changes
