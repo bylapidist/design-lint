@@ -9,14 +9,14 @@ importers:
   .:
     dependencies:
       '@lapidist/dtif-parser':
-        specifier: 1.0.6
-        version: 1.0.6
+        specifier: 2.0.0
+        version: 2.0.0
       '@lapidist/dtif-schema':
-        specifier: 1.0.6
-        version: 1.0.6
+        specifier: 2.0.0
+        version: 2.0.0
       '@lapidist/dtif-validator':
-        specifier: 1.0.6
-        version: 1.0.6
+        specifier: 2.0.0
+        version: 2.0.0
       '@vue/compiler-dom':
         specifier: 3.5.28
         version: 3.5.28
@@ -728,18 +728,18 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@lapidist/dtif-parser@1.0.6':
-    resolution: {integrity: sha512-ah/1QtG5dXV9a6y7k0RzMPcOzov6szAWMi3nugSCRbMoeg+zwvx/wqXGGyrdYAwuRt6ySaLhCXXF/85GiPHkTg==}
-    engines: {node: '>=22', npm: '>=10'}
+  '@lapidist/dtif-parser@2.0.0':
+    resolution: {integrity: sha512-iMXH3RMWBJhsLbtq5zFyq2A6Xv/X2sSrgo5Xft1YFPk8z+7LZEnQI308Dz3aYmlzW88ifXS9aF4a5sB4Z9uV2A==}
+    engines: {node: '>=22', pnpm: '>=10'}
     hasBin: true
 
-  '@lapidist/dtif-schema@1.0.6':
-    resolution: {integrity: sha512-FTGAPzrZwcHjFKUl5aP+KwlET4HMMMRSwqxb6j3fePVEwsKiQrHepu9ZghvG/VijiL0UsAl3Rq8dSKIzUXF9Mg==}
-    engines: {node: '>=22', npm: '>=10'}
+  '@lapidist/dtif-schema@2.0.0':
+    resolution: {integrity: sha512-EiM7tF+WpwOHWX7W+wjbpHSdcNpGq2SAfSsf3YWvMD1pdsAor1QZOXn6Spi7kHG5kXgBk7urdWKfqslmATt/FA==}
+    engines: {node: '>=22', pnpm: '>=10'}
 
-  '@lapidist/dtif-validator@1.0.6':
-    resolution: {integrity: sha512-A+MkTiphQVaqH9My2kHbo7fX7nhfI0NGbNJljddi+lXxm3dTguy2t7CgvHNAFc8Sr7H2OadXEGdMESDttuWxAg==}
-    engines: {node: '>=22', npm: '>=10'}
+  '@lapidist/dtif-validator@2.0.0':
+    resolution: {integrity: sha512-x0C6xEyaaF17MOBhJXdPRRx3lsO3Q9JgLJfxhQ8Ept6wPt0+tmLgD7K8CbMWmC00gnf66v3h4iA3gIAMk6hBgw==}
+    engines: {node: '>=22', pnpm: '>=10'}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -3063,17 +3063,17 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@lapidist/dtif-parser@1.0.6':
+  '@lapidist/dtif-parser@2.0.0':
     dependencies:
-      '@lapidist/dtif-schema': 1.0.6
-      '@lapidist/dtif-validator': 1.0.6
+      '@lapidist/dtif-schema': 2.0.0
+      '@lapidist/dtif-validator': 2.0.0
       yaml: 2.8.2
 
-  '@lapidist/dtif-schema@1.0.6': {}
+  '@lapidist/dtif-schema@2.0.0': {}
 
-  '@lapidist/dtif-validator@1.0.6':
+  '@lapidist/dtif-validator@2.0.0':
     dependencies:
-      '@lapidist/dtif-schema': 1.0.6
+      '@lapidist/dtif-schema': 2.0.0
       ajv: 8.18.0
       ajv-formats: 3.0.1(ajv@8.18.0)
 
