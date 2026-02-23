@@ -17,14 +17,14 @@ void test('tokens command exports resolved tokens with extensions', () => {
   const tokens = {
     $version: '1.0.0',
     color: {
+      blue: {
+        $type: 'color',
+        $ref: '#/color/red',
+      },
       red: {
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [1, 0, 0] },
         $extensions: { 'vendor.ext': { foo: 'bar' } },
-      },
-      blue: {
-        $type: 'color',
-        $ref: '#/color/red',
       },
     },
   };

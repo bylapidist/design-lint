@@ -48,7 +48,11 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
   const { results } = await linter.lintDocuments([doc]);
   const msg = results
     .flatMap((r) => r.messages)
-    .find((m) => m.ruleId === 'design-system/no-unused-tokens');
+    .find(
+      (m) =>
+        m.ruleId === 'design-system/no-unused-tokens' &&
+        m.message.includes('#123456'),
+    );
   assert(msg);
   assert.equal(msg.severity, 'warn');
   assert.ok(msg.message.includes('#123456'));
@@ -58,6 +62,10 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   const tokens = {
     $version: '1.0.0',
     color: {
+      primary: {
+        $type: 'string',
+        $value: '#000000',
+      },
       unused: {
         $type: 'string',
         $value: '#123456',
@@ -81,7 +89,11 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   const { results } = await linter.lintDocuments([doc]);
   const msg = results
     .flatMap((r) => r.messages)
-    .find((m) => m.ruleId === 'design-system/no-unused-tokens');
+    .find(
+      (m) =>
+        m.ruleId === 'design-system/no-unused-tokens' &&
+        m.message.includes('#123456'),
+    );
   assert(msg);
   assertTokenMetadata(msg.metadata);
   assert.equal(msg.metadata.path, 'color.unused');
@@ -306,9 +318,9 @@ void test('design-system/no-unused-tokens recognizes explicit references across 
   const tokens = {
     $version: '1.0.0',
     color: {
+      accent: { $type: 'string', $value: 'var(--color-accent)' },
       primary: { $type: 'string', $value: '#000000' },
       secondary: { $type: 'string', $value: '#111111' },
-      accent: { $type: 'string', $value: 'var(--color-accent)' },
     },
     spacing: {
       medium: { $type: 'string', $value: '8px' },

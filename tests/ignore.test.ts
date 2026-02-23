@@ -8,14 +8,14 @@ import { FileSource } from '../src/adapters/node/file-source.js';
 
 const tokens = {
   $version: '1.0.0',
+  new: {
+    $type: 'color',
+    $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+  },
   old: {
     $type: 'color',
     $value: { colorSpace: 'srgb', components: [0, 0, 0] },
     $deprecated: { $replacement: '#/new' },
-  },
-  new: {
-    $type: 'color',
-    $value: { colorSpace: 'srgb', components: [1, 1, 1] },
   },
 };
 

@@ -1,60 +1,121 @@
 {
+  "rules": {
+    "design-system/component-usage": [
+      "error",
+      {
+        "substitutions": {
+          "button": "DSButton"
+        }
+      }
+    ],
+    "design-system/deprecation": "error",
+    "design-system/no-unused-tokens": "warn",
+    "design-token/colors": "error",
+    "design-token/font-family": "error",
+    "design-token/font-size": "error",
+    "design-token/spacing": "error"
+  },
   "tokens": {
     "$version": "1.0.0",
     "color": {
       "primary": {
         "$type": "color",
-        "$value": { "colorSpace": "srgb", "components": [0, 0, 0] }
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0,
+            0,
+            0
+          ]
+        }
       },
       "unused": {
         "$type": "color",
-        "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            1,
+            1,
+            1
+          ]
+        }
       }
     },
-    "spacing": {
-      "sm": {
-        "$type": "dimension",
-        "$value": { "value": 4, "unit": "px", "dimensionType": "length" }
+    "fonts": {
+      "sans": {
+        "$type": "fontFamily",
+        "$value": "Arial"
       }
     },
     "fontSizes": {
       "sm": {
         "$type": "dimension",
-        "$value": { "value": 12, "unit": "px", "dimensionType": "length" }
+        "$value": {
+          "dimensionType": "length",
+          "value": 12,
+          "unit": "px"
+        }
       }
-    },
-    "fonts": {
-      "sans": { "$type": "fontFamily", "$value": "Arial" }
-    },
-    "old-token": {
-      "$type": "color",
-      "$value": { "colorSpace": "srgb", "components": [0, 0, 0] },
-      "$deprecated": { "$replacement": "#/new-token" }
     },
     "new-token": {
       "$type": "color",
-      "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
-    },
-    "OldComponent": {
-      "$type": "color",
-      "$value": { "colorSpace": "srgb", "components": [0, 0, 0] },
-      "$deprecated": { "$replacement": "#/NewComponent" }
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          1,
+          1,
+          1
+        ]
+      }
     },
     "NewComponent": {
       "$type": "color",
-      "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    "old-token": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0,
+          0,
+          0
+        ]
+      },
+      "$deprecated": {
+        "$replacement": "#/new-token"
+      }
+    },
+    "OldComponent": {
+      "$type": "color",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0,
+          0,
+          0
+        ]
+      },
+      "$deprecated": {
+        "$replacement": "#/NewComponent"
+      }
+    },
+    "spacing": {
+      "sm": {
+        "$type": "dimension",
+        "$value": {
+          "dimensionType": "length",
+          "value": 4,
+          "unit": "px"
+        }
+      }
     }
-  },
-  "rules": {
-    "design-token/colors": "error",
-    "design-token/spacing": "error",
-    "design-token/font-size": "error",
-    "design-token/font-family": "error",
-    "design-system/no-unused-tokens": "warn",
-    "design-system/component-usage": [
-      "error",
-      { "substitutions": { "button": "DSButton" } }
-    ],
-    "design-system/deprecation": "error"
   }
 }

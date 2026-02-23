@@ -105,14 +105,14 @@ const srgb = (components: [number, number, number]) => ({
 function createDeprecatedTokens() {
   return {
     $version: '1.0.0',
+    new: {
+      $type: 'color',
+      $value: srgb([1, 1, 1]),
+    },
     old: {
       $type: 'color',
       $value: srgb([0, 0, 0]),
       $deprecated: { $replacement: '#/new' },
-    },
-    new: {
-      $type: 'color',
-      $value: srgb([1, 1, 1]),
     },
   };
 }

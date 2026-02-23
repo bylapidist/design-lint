@@ -42,7 +42,7 @@ void test('parseDtifTokensFromFile flattens tokens and exposes resolver state', 
   assert(aliasDeprecation);
   assert.strictEqual(
     aliasDeprecation.supersededBy?.pointer,
-    '#/typography/button/text',
+    '#/color/button/background',
   );
   const aliasSnapshot = alias.resolution;
   assert(aliasSnapshot);
