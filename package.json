@@ -99,7 +99,7 @@
     "c8": "11.0.0",
     "eslint": "10.0.2",
     "markdownlint": "0.40.0",
-    "markdownlint-cli": "0.47.0",
+    "markdownlint-cli": "0.48.0",
     "prettier": "3.8.1",
     "tsx": "4.21.0",
     "vitepress": "1.6.4"
