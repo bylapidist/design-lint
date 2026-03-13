@@ -90,7 +90,7 @@
     "@changesets/cli": "2.30.0",
     "@types/color-name": "2.0.0",
     "@types/culori": "4.0.1",
-    "@types/node": "25.4.0",
+    "@types/node": "25.5.0",
     "@types/picomatch": "4.0.2",
     "@types/postcss-less": "4.0.7",
     "@types/write-file-atomic": "4.0.3",
