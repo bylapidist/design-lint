@@ -81,8 +81,8 @@ importers:
         specifier: 4.2.0
         version: 4.2.0
       svelte:
-        specifier: 5.54.1
-        version: 5.54.1
+        specifier: 5.55.0
+        version: 5.55.0
       tempy:
         specifier: 3.2.0
         version: 3.2.0
@@ -2263,8 +2263,8 @@ packages:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
     engines: {node: '>=8'}
 
-  svelte@5.54.1:
-    resolution: {integrity: sha512-ow8tncN097Ty8U1H+C3bM1xNlsCbnO2UZeN0lWBnv8f3jKho7QTTQ2LWbMXrPQDodLjH91n4kpNnLolyRhVE6A==}
+  svelte@5.55.0:
+    resolution: {integrity: sha512-SThllKq6TRMBwPtat7ASnm/9CDXnIhBR0NPGw0ujn2DVYx9rVwsPZxDaDQcYGdUz/3BYVsCzdq7pZarRQoGvtw==}
     engines: {node: '>=18'}
 
   tabbable@6.4.0:
@@ -4694,7 +4694,7 @@ snapshots:
     dependencies:
       has-flag: 4.0.0
 
-  svelte@5.54.1:
+  svelte@5.55.0:
     dependencies:
       '@jridgewell/remapping': 2.3.5
       '@jridgewell/sourcemap-codec': 1.5.5
