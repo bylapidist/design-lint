@@ -75,7 +75,7 @@
     "ignore": "7.0.5",
     "leven": "4.1.0",
     "p-limit": "7.3.0",
-    "picomatch": "4.0.3",
+    "picomatch": "4.0.4",
     "postcss": "8.5.8",
     "postcss-less": "6.0.0",
     "postcss-scss": "4.0.9",
