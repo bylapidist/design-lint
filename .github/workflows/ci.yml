@@ -35,7 +35,7 @@ jobs:
           version: 10.33.0
       - uses: actions/setup-node@v6
         with:
-          node-version: 24.14.0
+          node-version: 24.14.1
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile --prefer-offline
