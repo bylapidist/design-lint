@@ -97,7 +97,7 @@
     "@typescript-eslint/eslint-plugin": "8.57.1",
     "@typescript-eslint/parser": "8.57.1",
     "c8": "11.0.0",
-    "eslint": "10.1.0",
+    "eslint": "10.2.0",
     "markdownlint": "0.40.0",
     "markdownlint-cli": "0.48.0",
     "prettier": "3.8.1",
