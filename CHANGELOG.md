@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 7.0.2
+
+### Patch Changes
+
+- f800d15: force micromatch to resolve picomatch 2.3.2 to remediate high severity ReDoS advisory
+
 ## 7.0.1
 
 ### Patch Changes
