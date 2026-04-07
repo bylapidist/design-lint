@@ -61,7 +61,7 @@ export async function loadConfig(
     configSources: results.map((entry) => realpathIfExists(entry.filepath)),
   };
 
-  const merged = results.reduce<Record<string, unknown>>((acc, result) => {
+  const merged = results.reduce((acc, result) => {
     if (!isRecord(result.config)) {
       return acc;
     }
