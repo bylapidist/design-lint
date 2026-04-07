@@ -123,7 +123,7 @@
   },
   "pnpm": {
     "overrides": {
-      "micromatch>picomatch": "2.3.2"
+      "micromatch>picomatch": "4.0.4"
     }
   }
 }
