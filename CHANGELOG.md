@@ -1,5 +1,11 @@
 # @lapidist/design-lint
 
+## 7.0.3
+
+### Patch Changes
+
+- 92ecbf8: fix config loader lint error by removing unnecessary reduce type argument
+
 ## 7.0.2
 
 ### Patch Changes
