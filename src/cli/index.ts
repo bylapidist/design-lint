@@ -193,6 +193,15 @@ export async function run(argv = process.argv.slice(2)): Promise<void> {
   } catch (err) {
     logger.error(err);
   }
+
+  // Modules loaded at startup (chokidar, flat-cache, etc.) can leave open
+  // libuv handles on Linux that prevent natural process exit. Watch mode keeps
+  // the event loop alive intentionally via chokidar; all other commands must
+  // exit explicitly so spawned child processes (e.g. in tests) close promptly.
+  const opts = program.opts<{ watch?: boolean }>();
+  if (!opts.watch) {
+    process.exit(process.exitCode ?? 0);
+  }
 }
 
 try {
