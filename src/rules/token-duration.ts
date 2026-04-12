@@ -11,7 +11,16 @@ const {
 
 export const durationRule = tokenRule({
   name: 'design-token/duration',
-  meta: { description: 'enforce duration tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce duration tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw animation durations diverge from the motion scale and cannot be tuned globally when the design system changes.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'duration',
   message:
     'design-token/duration requires duration tokens; configure tokens with $type "duration" under a "durations" group to enable this rule.',

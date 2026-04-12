@@ -54,7 +54,16 @@ const parse = (val: string): number | null => {
 
 export const lineHeightRule = tokenRule({
   name: 'design-token/line-height',
-  meta: { description: 'enforce line-height tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce line-height tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw line-height values break vertical rhythm and cannot be adjusted globally when the leading scale changes.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'number',
   message:
     'design-token/line-height requires line height tokens; configure tokens with $type "number" under a "lineHeights" group to enable this rule.',

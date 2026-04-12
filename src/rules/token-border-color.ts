@@ -14,6 +14,12 @@ export const borderColorRule = tokenRule({
   meta: {
     description: 'enforce border-color tokens',
     category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw border colors drift from the color palette and break brand consistency when tokens are updated.',
+      since: 'v8.0.0',
+    },
   },
   tokens: 'color',
   message:

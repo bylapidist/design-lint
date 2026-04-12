@@ -12,6 +12,12 @@ export const componentUsageRule: RuleModule<ComponentUsageOptions> = {
     description:
       'disallow raw HTML elements when design system components exist',
     category: 'component',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw HTML elements bypass design system semantics, accessibility enhancements, and theming — eroding the component abstraction layer over time.',
+      since: 'v8.0.0',
+    },
     schema: z
       .object({ substitutions: z.record(z.string(), z.string()).optional() })
       .optional(),

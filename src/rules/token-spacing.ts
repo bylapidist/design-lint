@@ -21,6 +21,12 @@ export const spacingRule = tokenRule<SpacingOptions>({
   meta: {
     description: 'enforce spacing scale',
     category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw spacing values diverge from the spacing scale and accumulate layout debt that cannot be fixed with a single token update.',
+      since: 'v8.0.0',
+    },
     schema: z
       .object({
         base: z.number().optional(),
