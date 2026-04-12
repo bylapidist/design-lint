@@ -2,6 +2,7 @@ import type {
   DtifFlattenedToken,
   RuleContext,
   RuleListener,
+  RuleMeta,
   RuleModule,
 } from '../../core/types.js';
 import { z } from 'zod';
@@ -17,14 +18,7 @@ import { toArray } from '../collections/index.js';
 interface TokenRuleConfig<TOptions, TAllowed> {
   /** The rule name, e.g. `design-token/example`. */
   name: string;
-  meta: {
-    /** A human-readable description of the rule. */
-    description: string;
-    /** Optional rule category. */
-    category?: string;
-    /** Optional JSON schema for rule options. */
-    schema?: z.ZodType;
-  };
+  meta: RuleMeta;
   /** Token type(s) the rule should operate on. */
   tokens: string | string[];
   /** Message to report when no allowed tokens are found. */

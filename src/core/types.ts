@@ -136,19 +136,42 @@ export interface RuleSymbolResolutionHelpers {
   getSymbolName: (node: ts.Node) => string | undefined;
 }
 
+export type RuleEdit =
+  | { type: 'replace'; range: [number, number]; text: string }
+  | { type: 'insert'; offset: number; text: string }
+  | { type: 'delete'; range: [number, number] };
+
+export interface FixContext<TOptions = unknown> {
+  sourceId: string;
+  text: string;
+  options?: TOptions;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RuleMeta {
+  description: string;
+  category?: string;
+  fixable?: 'code' | 'tokens' | null;
+  stability?: 'stable' | 'experimental' | 'deprecated';
+  rationale?: {
+    why: string;
+    owner?: string;
+    exceptions?: string;
+    since?: string;
+  };
+  schema?: z.ZodType;
+  capabilities?: RuleCapabilities;
+}
+
 export interface RuleModule<
   TOptions = unknown,
   TContext extends RuleContext<TOptions> = RuleContext<TOptions>,
 > {
   name: string;
-  meta: {
-    description: string;
-    category?: string;
-    schema?: z.ZodType;
-    capabilities?: RuleCapabilities;
-  };
+  meta: RuleMeta;
   create(context: TContext): RuleListener;
   createRun?(context: RuleRunContext<TOptions>): RuleRunListener;
+  fix?(ctx: FixContext<TOptions>): RuleEdit[];
 }
 
 export interface RuleCapabilities {

@@ -4,7 +4,7 @@ import { RuleRegistry } from './rule-registry.js';
 import { TokenTracker } from './token-tracker.js';
 import { LintService } from './lint-service.js';
 import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
-import type { DesignTokens } from './types.js';
+import type { DesignTokens, DtifFlattenedToken } from './types.js';
 
 function isDesignTokens(val: unknown): val is DesignTokens {
   return typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -32,7 +32,9 @@ export function setupLinter(
   };
   const ruleRegistry = new RuleRegistry(resolvedConfig, env);
   const tokenTracker = new TokenTracker(provider);
-  const tokensReady = ruleRegistry
+  const tokensReady: Promise<
+    Record<string, DesignTokens | readonly DtifFlattenedToken[]>
+  > = ruleRegistry
     .load()
     .then(() => provider.load())
     .then(async (tokensByTheme) => {
