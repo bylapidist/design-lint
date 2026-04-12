@@ -5,7 +5,6 @@ import { NodePluginLoader } from './plugin-loader.js';
 import { NodeCacheProvider } from './node-cache-provider.js';
 import { NodeTokenProvider } from './token-provider.js';
 import { DsrTokenProvider } from './dsr-token-provider.js';
-import { NodeEnvironment as DsrNodeEnvironment } from '@lapidist/dsr/environments/node';
 
 export interface DsrOptions {
   /** Path to the Unix domain socket. Defaults to /tmp/designlint-kernel.sock */
@@ -32,8 +31,13 @@ export function createNodeEnvironment(
   options: CreateNodeEnvironmentOptions = {},
 ): Environment {
   const { cacheLocation, dsr } = options;
-  const tokenProvider = dsr
-    ? new DsrTokenProvider(() => new DsrNodeEnvironment(dsr))
+  const dsrOptions = dsr;
+  const tokenProvider = dsrOptions
+    ? new DsrTokenProvider(async () => {
+        const { NodeEnvironment } =
+          await import('@lapidist/dsr/environments/node');
+        return new NodeEnvironment(dsrOptions);
+      })
     : new NodeTokenProvider(config.tokens);
   return {
     documentSource: new FileSource(),
