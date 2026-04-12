@@ -169,7 +169,11 @@ importers:
         specifier: workspace:*
         version: link:../..
 
-  packages/lsp: {}
+  packages/lsp:
+    devDependencies:
+      '@lapidist/design-lint':
+        specifier: workspace:*
+        version: link:../..
 
   packages/mcp:
     devDependencies:

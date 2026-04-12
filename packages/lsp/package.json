@@ -33,5 +33,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "format:check": "prettier --check 'src/**/*.ts'"
+  },
+  "peerDependencies": {
+    "@lapidist/design-lint": ">=7"
+  },
+  "devDependencies": {
+    "@lapidist/design-lint": "workspace:*"
   }
 }
