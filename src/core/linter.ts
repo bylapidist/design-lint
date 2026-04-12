@@ -5,6 +5,7 @@ import type {
   RuleContext,
   RuleRunContext,
   DesignTokens,
+  DtifFlattenedToken,
   RegisteredRuleListener,
   RuleSymbolResolutionHelpers,
   RuleRunListener,
@@ -59,7 +60,10 @@ interface ResolvedConfig extends Omit<Config, 'tokens'> {
  */
 export class Linter {
   private config: ResolvedConfig;
-  private tokensByTheme: Record<string, DesignTokens> = {};
+  private tokensByTheme: Record<
+    string,
+    DesignTokens | readonly DtifFlattenedToken[]
+  > = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
   private tokensReady: Promise<void>;
@@ -71,7 +75,9 @@ export class Linter {
       | {
           ruleRegistry: RuleRegistry;
           tokenTracker: TokenTracker;
-          tokensReady: Promise<Record<string, DesignTokens>>;
+          tokensReady: Promise<
+            Record<string, DesignTokens | readonly DtifFlattenedToken[]>
+          >;
         }
       | Environment,
   ) {
@@ -86,7 +92,9 @@ export class Linter {
       | {
           ruleRegistry: RuleRegistry;
           tokenTracker: TokenTracker;
-          tokensReady: Promise<Record<string, DesignTokens>>;
+          tokensReady: Promise<
+            Record<string, DesignTokens | readonly DtifFlattenedToken[]>
+          >;
         }
       | undefined;
     let env: Environment | undefined;
