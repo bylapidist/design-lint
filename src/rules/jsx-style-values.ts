@@ -1,11 +1,6 @@
 import ts from 'typescript';
 import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
-import { guards } from '../utils/index.js';
-
-const {
-  ast: { isStyleName },
-} = guards;
 
 /**
  * Detects raw hard-coded values inside JSX inline style objects.
@@ -61,8 +56,6 @@ function checkJsxStyleAttribute(
   for (const prop of expr.properties) {
     if (!ts.isPropertyAssignment(prop)) continue;
     const propName = ts.isIdentifier(prop.name) ? prop.name.text : '';
-    if (!isStyleName(prop.name)) continue;
-
     checkStyleValue(prop.initializer, propName, context);
   }
 }
