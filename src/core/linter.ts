@@ -35,6 +35,12 @@ import { isRecord } from '../utils/guards/data/is-record.js';
 type EnabledRule = ReturnType<RuleRegistry['getEnabledRules']>[number];
 
 export interface Config {
+  /**
+   * One or more base config objects to extend. Rules and settings from each
+   * entry are merged left-to-right, with later entries taking precedence.
+   * User-level `rules` override all extended values.
+   */
+  extends?: Config[];
   format?: string;
   tokens?:
     | DesignTokens

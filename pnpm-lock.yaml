@@ -173,6 +173,15 @@ importers:
 
   packages/mcp: {}
 
+  packages/rdk:
+    devDependencies:
+      '@lapidist/design-lint':
+        specifier: workspace:*
+        version: link:../..
+      '@lapidist/design-lint-testing':
+        specifier: workspace:*
+        version: link:../testing
+
   packages/telemetry: {}
 
   packages/testing:
