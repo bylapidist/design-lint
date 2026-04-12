@@ -23,6 +23,12 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
   meta: {
     description: 'disallow raw colors',
     category: 'design-token',
+    fixable: 'code' as const,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw color values sever the link between code and the color palette. A single token rename requires grep-and-replace instead of a single config change.',
+      since: 'v8.0.0',
+    },
     schema: z
       .object({
         allow: z

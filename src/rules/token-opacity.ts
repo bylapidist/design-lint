@@ -11,7 +11,16 @@ const {
 
 export const opacityRule = tokenRule({
   name: 'design-token/opacity',
-  meta: { description: 'enforce opacity tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce opacity tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw opacity values prevent consistent transparency management and make design-wide opacity adjustments require manual effort.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'number',
   message:
     'design-token/opacity requires opacity tokens; configure tokens with $type "number" under an "opacity" group to enable this rule.',

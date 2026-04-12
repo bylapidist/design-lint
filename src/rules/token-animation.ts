@@ -12,7 +12,16 @@ const normalize = (val: string): string =>
 
 export const animationRule = tokenRule({
   name: 'design-token/animation',
-  meta: { description: 'enforce animation tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce animation tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Ad-hoc animation values produce inconsistent motion that cannot be updated globally when the design system evolves.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'string',
   message:
     'design-token/animation requires animation tokens; configure tokens with $type "string" under an "animations" group to enable this rule.',

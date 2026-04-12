@@ -13,6 +13,12 @@ export const importPathRule: RuleModule<ImportPathOptions> = {
     description:
       'ensure design system components are imported from configured packages',
     category: 'component',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Components imported from incorrect paths bypass versioning and tree-shaking guarantees, and cannot be tracked by automated migration tools.',
+      since: 'v8.0.0',
+    },
     schema: z
       .object({
         packages: z.array(z.string()).optional(),
