@@ -22,6 +22,7 @@ import { exportTokens } from './tokens.js';
 import { validateConfig } from './validate-config.js';
 import { generateDocs } from './docs.js';
 import { migrateConfig } from './migrate.js';
+import { exportDesignSystemMd } from './export-design-system-md.js';
 import { createLogger, type Logger } from './logger.js';
 
 type CliOptions = ExecuteOptions &
@@ -174,6 +175,23 @@ function createProgram(version: string, logger: Logger) {
         }
       },
     );
+
+  program
+    .command('export-design-system-md')
+    .description('Generate DESIGN_SYSTEM.md for AI agent consumption (DSCP v1)')
+    .option('--out <file>', 'Output file path', 'DESIGN_SYSTEM.md')
+    .option('--config <path>', 'Path to configuration file')
+    .action(async (opts: { out?: string; config?: string }, cmd: Command) => {
+      try {
+        const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+        await exportDesignSystemMd({
+          out: opts.out,
+          config: opts.config ?? parent.config,
+        });
+      } catch (err) {
+        logger.error(err);
+      }
+    });
 
   program
     .command('migrate')
