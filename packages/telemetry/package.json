@@ -1,0 +1,38 @@
+{
+  "name": "@lapidist/design-lint-telemetry",
+  "version": "0.0.0",
+  "description": "DLTS v1 telemetry event types, SDK utilities, and OTel integration for @lapidist/design-lint.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bylapidist/design-lint.git",
+    "directory": "packages/telemetry"
+  },
+  "bugs": {
+    "url": "https://github.com/bylapidist/design-lint/issues"
+  },
+  "keywords": [
+    "dtif",
+    "design tokens",
+    "lint",
+    "telemetry",
+    "otel",
+    "dlts"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "format:check": "prettier --check 'src/**/*.ts'"
+  }
+}
