@@ -7,4 +7,8 @@ export type {
   TokenCompletion,
   ComponentValidationResult,
   DiagnosticExplanation,
+  MCPFileType,
+  CorrectionReasoning,
 } from './types.js';
+
+export { createMCPServer, type MCPServer } from './server.js';

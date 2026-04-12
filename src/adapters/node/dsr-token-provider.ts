@@ -3,7 +3,7 @@ import type { DesignTokens, DtifFlattenedToken } from '../../core/types.js';
 import type { NodeEnvironment } from '@lapidist/dsr/environments/node';
 import type { DtifFlattenedToken as ParserDtifFlattenedToken } from '@lapidist/dtif-parser';
 
-export type DsrEnvironmentFactory = () => NodeEnvironment;
+export type DsrEnvironmentFactory = () => Promise<NodeEnvironment>;
 
 /**
  * Maps a @lapidist/dtif-parser DtifFlattenedToken to the design-lint
@@ -48,7 +48,7 @@ export class DsrTokenProvider implements TokenProvider {
   async load(): Promise<
     Record<string, DesignTokens | readonly DtifFlattenedToken[]>
   > {
-    const env = this.#factory();
+    const env = await this.#factory();
     await env.connect();
     this.#env = env;
 
