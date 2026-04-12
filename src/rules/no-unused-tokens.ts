@@ -10,6 +10,12 @@ export const noUnusedTokensRule: RuleModule<NoUnusedTokensOptions> = {
   meta: {
     description: 'report unused design tokens',
     category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Unused tokens accumulate in the token graph and block safe removal. Surfacing them at lint time enables confident token pruning.',
+      since: 'v8.0.0',
+    },
     capabilities: {
       tokenUsage: true,
     },

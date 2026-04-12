@@ -18,6 +18,12 @@ export const blurRule = tokenRule<BlurRuleOptions>({
   meta: {
     description: 'enforce blur tokens',
     category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw blur values bypass the blur scale and produce visual inconsistency across surfaces.',
+      since: 'v8.0.0',
+    },
     schema: z.object({ units: z.array(z.string()).optional() }).optional(),
   },
   tokens: 'dimension',

@@ -8,7 +8,16 @@ const {
 
 export const fontFamilyRule = tokenRule({
   name: 'design-token/font-family',
-  meta: { description: 'enforce font-family tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce font-family tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw font families prevent global typeface changes and risk rendering fallbacks inconsistently across the product.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'fontFamily',
   message:
     'design-token/font-family requires font tokens; configure tokens with $type "fontFamily" under a "fonts" group to enable this rule.',

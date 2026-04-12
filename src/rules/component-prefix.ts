@@ -162,6 +162,12 @@ export const componentPrefixRule: RuleModule<ComponentPrefixOptions> = {
   meta: {
     description: 'enforce a prefix for design system components',
     category: 'component',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Without a consistent prefix, design system components are indistinguishable from project-local components, making audits and migrations error-prone.',
+      since: 'v8.0.0',
+    },
     schema: z
       .object({
         prefix: z.string().optional(),
