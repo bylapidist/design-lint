@@ -1,5 +1,6 @@
 import type { LintMessage, RuleModule } from '@lapidist/design-lint';
 import assert from 'node:assert/strict';
+import { SnippetLinter } from './snippet-linter.js';
 
 /** A file type accepted by the linter. */
 export type FileType = 'css' | 'ts' | 'tsx' | 'vue' | 'svelte';
@@ -62,9 +63,9 @@ export interface RuleTesterConfig {
  * @example
  * ```ts
  * const tester = new RuleTester({ defaultFileType: 'css' });
- * tester.run('design-token/colors', colorsRule, {
- *   valid: [{ code: 'a { color: var(--color-brand-primary); }' }],
- *   invalid: [{ code: 'a { color: #3B82F6; }', errors: [{ ruleId: 'design-token/colors' }] }],
+ * await tester.run('design-token/colors', colorsRule, {
+ *   valid: [{ code: 'a { color: var(--color-brand-primary); }', fileType: 'css' }],
+ *   invalid: [{ code: 'a { color: #3B82F6; }', fileType: 'css', errors: [{ ruleId: 'design-token/colors' }] }],
  * });
  * ```
  */
@@ -81,12 +82,23 @@ export class RuleTester {
    * Runs the test suite for a single rule.
    *
    * @param {string} ruleName - The rule's canonical name (e.g. `design-token/colors`).
-   * @param {RuleModule} _rule - The rule module under test.
+   * @param {RuleModule} rule - The rule module under test.
    * @param {RuleTesterTests} tests - Valid and invalid test cases.
+   * @returns {Promise<void>} Resolves when all assertions pass.
    */
-  run(ruleName: string, _rule: RuleModule, tests: RuleTesterTests): void {
+  async run(
+    ruleName: string,
+    rule: RuleModule,
+    tests: RuleTesterTests,
+  ): Promise<void> {
     for (const testCase of tests.valid) {
-      const diagnostics = this.#lint(testCase.code, testCase.fileType ?? this.#config.defaultFileType);
+      const fileType = testCase.fileType ?? this.#config.defaultFileType;
+      const diagnostics = await this.#lint(
+        rule,
+        testCase.code,
+        fileType,
+        testCase.options,
+      );
       assert.equal(
         diagnostics.length,
         0,
@@ -95,7 +107,13 @@ export class RuleTester {
     }
 
     for (const testCase of tests.invalid) {
-      const diagnostics = this.#lint(testCase.code, testCase.fileType ?? this.#config.defaultFileType);
+      const fileType = testCase.fileType ?? this.#config.defaultFileType;
+      const diagnostics = await this.#lint(
+        rule,
+        testCase.code,
+        fileType,
+        testCase.options,
+      );
       assert.ok(
         diagnostics.length >= testCase.errors.length,
         `Rule "${ruleName}" expected at least ${String(testCase.errors.length)} diagnostic(s) but got ${String(diagnostics.length)}:\n${testCase.code}`,
@@ -107,7 +125,11 @@ export class RuleTester {
         if (expected === undefined || actual === undefined) continue;
 
         if (expected.ruleId !== undefined) {
-          assert.equal(actual.ruleId, expected.ruleId, `Diagnostic ${String(i)} ruleId mismatch`);
+          assert.equal(
+            actual.ruleId,
+            expected.ruleId,
+            `Diagnostic ${String(i)} ruleId mismatch`,
+          );
         }
         if (expected.message !== undefined) {
           assert.ok(
@@ -116,25 +138,40 @@ export class RuleTester {
           );
         }
         if (expected.line !== undefined) {
-          assert.equal(actual.line, expected.line, `Diagnostic ${String(i)} line mismatch`);
+          assert.equal(
+            actual.line,
+            expected.line,
+            `Diagnostic ${String(i)} line mismatch`,
+          );
         }
         if (expected.column !== undefined) {
-          assert.equal(actual.column, expected.column, `Diagnostic ${String(i)} column mismatch`);
+          assert.equal(
+            actual.column,
+            expected.column,
+            `Diagnostic ${String(i)} column mismatch`,
+          );
         }
       }
     }
   }
 
   /**
-   * Runs the linter synchronously against a code snippet.
-   * Returns an empty array until the async linting API is wired up in Phase 3.
+   * Runs the linter against a code snippet using a `SnippetLinter` that
+   * injects the rule under test directly, bypassing the rule registry.
    *
-   * @param {string} _code - Source code to lint.
-   * @param {FileType} _fileType - The file type to lint as.
-   * @returns {LintMessage[]} Diagnostics produced by the rule.
+   * @param {RuleModule} rule - The rule module to test.
+   * @param {string} code - Source code to lint.
+   * @param {FileType} fileType - The file type to lint as.
+   * @param {unknown} options - Rule-specific options.
+   * @returns {Promise<LintMessage[]>} Diagnostics produced by the rule.
    */
-  #lint(_code: string, _fileType: FileType): LintMessage[] {
-    // TODO(Phase 3): wire up to lintSnippet() once the async API is stable.
-    return [];
+  async #lint(
+    rule: RuleModule,
+    code: string,
+    fileType: FileType,
+    options?: unknown,
+  ): Promise<LintMessage[]> {
+    const linter = new SnippetLinter(rule, options);
+    return linter.lintSnippet(code, fileType);
   }
 }
