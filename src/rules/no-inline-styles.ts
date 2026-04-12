@@ -17,6 +17,12 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     description:
       'disallow inline style or className attributes on design system components',
     category: 'component',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Inline styles and ad-hoc class names on design system components circumvent the theming and variant model, making global appearance changes impossible.',
+      since: 'v8.0.0',
+    },
     schema: z
       .object({
         ignoreClassName: z.boolean().optional(),

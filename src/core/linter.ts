@@ -5,6 +5,7 @@ import type {
   RuleContext,
   RuleRunContext,
   DesignTokens,
+  DtifFlattenedToken,
   RegisteredRuleListener,
   RuleSymbolResolutionHelpers,
   RuleRunListener,
@@ -34,6 +35,12 @@ import { isRecord } from '../utils/guards/data/is-record.js';
 type EnabledRule = ReturnType<RuleRegistry['getEnabledRules']>[number];
 
 export interface Config {
+  /**
+   * One or more base config objects to extend. Rules and settings from each
+   * entry are merged left-to-right, with later entries taking precedence.
+   * User-level `rules` override all extended values.
+   */
+  extends?: Config[];
   format?: string;
   tokens?:
     | DesignTokens
@@ -59,7 +66,10 @@ interface ResolvedConfig extends Omit<Config, 'tokens'> {
  */
 export class Linter {
   private config: ResolvedConfig;
-  private tokensByTheme: Record<string, DesignTokens> = {};
+  private tokensByTheme: Record<
+    string,
+    DesignTokens | readonly DtifFlattenedToken[]
+  > = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
   private tokensReady: Promise<void>;
@@ -71,7 +81,9 @@ export class Linter {
       | {
           ruleRegistry: RuleRegistry;
           tokenTracker: TokenTracker;
-          tokensReady: Promise<Record<string, DesignTokens>>;
+          tokensReady: Promise<
+            Record<string, DesignTokens | readonly DtifFlattenedToken[]>
+          >;
         }
       | Environment,
   ) {
@@ -86,7 +98,9 @@ export class Linter {
       | {
           ruleRegistry: RuleRegistry;
           tokenTracker: TokenTracker;
-          tokensReady: Promise<Record<string, DesignTokens>>;
+          tokensReady: Promise<
+            Record<string, DesignTokens | readonly DtifFlattenedToken[]>
+          >;
         }
       | undefined;
     let env: Environment | undefined;

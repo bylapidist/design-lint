@@ -14,7 +14,16 @@ const normalize = (val: string): string =>
 
 export const boxShadowRule = tokenRule({
   name: 'design-token/box-shadow',
-  meta: { description: 'enforce box-shadow tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce box-shadow tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw box-shadow values detach elevation from the design system, preventing systematic depth scale updates.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'shadow',
   message:
     'design-token/box-shadow requires shadow tokens; configure tokens with $type "shadow" under a "shadows" group to enable this rule.',

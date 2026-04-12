@@ -39,7 +39,16 @@ function isMatchingInlineStyleProperty(
 
 export const zIndexRule = tokenRule({
   name: 'design-token/z-index',
-  meta: { description: 'enforce z-index tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce z-index tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Ad-hoc z-index values produce stacking context collisions that are impossible to audit or coordinate without a token layer.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'number',
   message:
     'design-token/z-index requires z-index tokens; configure tokens with $type "number" under a "zIndex" group to enable this rule.',

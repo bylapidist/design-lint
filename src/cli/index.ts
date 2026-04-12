@@ -20,6 +20,9 @@ import { watchMode } from './watch.js';
 import { initConfig } from './init-config.js';
 import { exportTokens } from './tokens.js';
 import { validateConfig } from './validate-config.js';
+import { generateDocs } from './docs.js';
+import { migrateConfig } from './migrate.js';
+import { exportDesignSystemMd } from './export-design-system-md.js';
 import { createLogger, type Logger } from './logger.js';
 
 type CliOptions = ExecuteOptions &
@@ -141,6 +144,73 @@ function createProgram(version: string, logger: Logger) {
       },
     );
 
+  program
+    .command('docs')
+    .description('Generate a documentation site for tokens and rules')
+    .option(
+      '--out <dir>',
+      'Output directory for generated docs',
+      'docs/design-system',
+    )
+    .option(
+      '--format <name>',
+      "Output format: 'vitepress' (default) or 'markdown'",
+      'vitepress',
+    )
+    .option('--config <path>', 'Path to configuration file')
+    .action(
+      async (
+        opts: { out?: string; format?: string; config?: string },
+        cmd: Command,
+      ) => {
+        try {
+          const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+          await generateDocs({
+            out: opts.out,
+            format: opts.format === 'markdown' ? 'markdown' : 'vitepress',
+            config: opts.config ?? parent.config,
+          });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
+
+  program
+    .command('export-design-system-md')
+    .description('Generate DESIGN_SYSTEM.md for AI agent consumption (DSCP v1)')
+    .option('--out <file>', 'Output file path', 'DESIGN_SYSTEM.md')
+    .option('--config <path>', 'Path to configuration file')
+    .action(async (opts: { out?: string; config?: string }, cmd: Command) => {
+      try {
+        const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+        await exportDesignSystemMd({
+          out: opts.out,
+          config: opts.config ?? parent.config,
+        });
+      } catch (err) {
+        logger.error(err);
+      }
+    });
+
+  program
+    .command('migrate')
+    .description('Codemod v7 config shapes to v8 format')
+    .option('--config <path>', 'Path to config file to migrate')
+    .option('--out <path>', 'Write migrated config to a new file')
+    .option('--dry-run', 'Print changes without writing files')
+    .action((opts: { config?: string; out?: string; dryRun?: boolean }) => {
+      try {
+        migrateConfig({
+          config: opts.config,
+          out: opts.out,
+          dryRun: opts.dryRun,
+        });
+      } catch (err) {
+        logger.error(err);
+      }
+    });
+
   return program;
 }
 
@@ -192,6 +262,15 @@ export async function run(argv = process.argv.slice(2)): Promise<void> {
     await program.parseAsync(argv, { from: 'user' });
   } catch (err) {
     logger.error(err);
+  }
+
+  // Modules loaded at startup (chokidar, flat-cache, etc.) can leave open
+  // libuv handles on Linux that prevent natural process exit. Watch mode keeps
+  // the event loop alive intentionally via chokidar; all other commands must
+  // exit explicitly so spawned child processes (e.g. in tests) close promptly.
+  const opts = program.opts<{ watch?: boolean }>();
+  if (!opts.watch) {
+    process.exit(process.exitCode ?? 0);
   }
 }
 

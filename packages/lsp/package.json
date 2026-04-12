@@ -1,0 +1,43 @@
+{
+  "name": "@lapidist/design-lint-lsp",
+  "version": "0.0.0",
+  "description": "Language Server Protocol implementation for @lapidist/design-lint — diagnostics, code actions, completions, and hover over stdio.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bylapidist/design-lint.git",
+    "directory": "packages/lsp"
+  },
+  "bugs": {
+    "url": "https://github.com/bylapidist/design-lint/issues"
+  },
+  "keywords": [
+    "dtif",
+    "design tokens",
+    "lint",
+    "lsp",
+    "language-server"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "format:check": "prettier --check 'src/**/*.ts'"
+  },
+  "peerDependencies": {
+    "@lapidist/design-lint": ">=7"
+  },
+  "devDependencies": {
+    "@lapidist/design-lint": "workspace:*"
+  }
+}

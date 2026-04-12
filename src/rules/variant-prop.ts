@@ -13,6 +13,12 @@ export const variantPropRule: RuleModule<VariantPropOptions> = {
     description:
       'ensure specified components use allowed values for their variant prop',
     category: 'component',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Uncontrolled variant values produce undocumented visual states that bypass design review and break the component contract.',
+      since: 'v8.0.0',
+    },
     schema: z
       .object({
         components: z.record(z.string(), z.array(z.string())).optional(),

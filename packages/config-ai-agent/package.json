@@ -1,0 +1,44 @@
+{
+  "name": "@lapidist/design-lint-config-ai-agent",
+  "version": "0.0.0",
+  "description": "AI agent rule configuration preset for @lapidist/design-lint — enables all rules targeting AI code generation failure modes.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bylapidist/design-lint.git",
+    "directory": "packages/config-ai-agent"
+  },
+  "bugs": {
+    "url": "https://github.com/bylapidist/design-lint/issues"
+  },
+  "keywords": [
+    "dtif",
+    "design tokens",
+    "lint",
+    "config",
+    "ai",
+    "agent"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "format:check": "prettier --check 'src/**/*.ts'"
+  },
+  "peerDependencies": {
+    "@lapidist/design-lint": ">=7"
+  },
+  "devDependencies": {
+    "@lapidist/design-lint": "workspace:*"
+  }
+}

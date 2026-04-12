@@ -12,7 +12,16 @@ const normalize = (val: string): string =>
 
 export const outlineRule = tokenRule({
   name: 'design-token/outline',
-  meta: { description: 'enforce outline tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce outline tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw outline values bypass focus ring tokens and break accessibility consistency when focus styles are updated.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'string',
   message:
     'design-token/outline requires outline tokens; configure tokens with $type "string" under an "outlines" group to enable this rule.',

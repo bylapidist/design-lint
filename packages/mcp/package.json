@@ -1,0 +1,44 @@
+{
+  "name": "@lapidist/design-lint-mcp",
+  "version": "0.0.0",
+  "description": "Model Context Protocol server for @lapidist/design-lint — exposes lint_snippet, get_token_completions, and validate_component_usage tools to AI coding agents.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bylapidist/design-lint.git",
+    "directory": "packages/mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/bylapidist/design-lint/issues"
+  },
+  "keywords": [
+    "dtif",
+    "design tokens",
+    "lint",
+    "mcp",
+    "model-context-protocol",
+    "ai"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "format:check": "prettier --check 'src/**/*.ts'"
+  },
+  "peerDependencies": {
+    "@lapidist/design-lint": ">=7"
+  },
+  "devDependencies": {
+    "@lapidist/design-lint": "workspace:*"
+  }
+}
