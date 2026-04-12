@@ -13,7 +13,7 @@ export const compositeEquivalenceRule: RuleModule = {
       'disallow raw composite values that match an existing composite token',
     category: 'design-token',
     fixable: 'code' as const,
-    stability: 'experimental' as const,
+    stability: 'stable' as const,
     rationale: {
       why: 'Raw composite values bypass composite token semantics, making global design system updates impossible without manual find-and-replace.',
       since: 'v8.0.0',
