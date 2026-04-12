@@ -1,7 +1,7 @@
 import type { Config } from './linter.js';
 import type { PluginLoader } from './plugin-loader.js';
 import type { CacheProvider } from './cache-provider.js';
-import type { DesignTokens } from './types.js';
+import type { DesignTokens, DtifFlattenedToken } from './types.js';
 
 export interface LintDocument {
   id: string;
@@ -23,7 +23,9 @@ export interface DocumentSource {
 }
 
 export interface TokenProvider {
-  load(): Promise<Record<string, DesignTokens>>;
+  /** Returns a map of theme → tokens. Values may be raw DTIF documents or
+   *  pre-flattened token arrays (e.g. when sourced from the DSR kernel). */
+  load(): Promise<Record<string, DesignTokens | readonly DtifFlattenedToken[]>>;
 }
 
 export type VariableProvider = TokenProvider;
