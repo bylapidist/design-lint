@@ -171,7 +171,11 @@ importers:
 
   packages/lsp: {}
 
-  packages/mcp: {}
+  packages/mcp:
+    devDependencies:
+      '@lapidist/design-lint':
+        specifier: workspace:*
+        version: link:../..
 
   packages/rdk:
     devDependencies:
