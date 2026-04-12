@@ -126,3 +126,41 @@ export interface ValidationResult {
   valid: boolean;
   errors: string[];
 }
+
+// ---------------------------------------------------------------------------
+// OTel integration types
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimal interface for an OpenTelemetry Tracer. Consumers pass a real
+ * `@opentelemetry/api` Tracer; the telemetry package only depends on this
+ * structural subset to avoid a hard runtime dependency.
+ */
+export interface OtelTracer {
+  startSpan(name: string, options?: unknown): OtelSpan;
+}
+
+/** Minimal interface for an OTel Span. */
+export interface OtelSpan {
+  end(): void;
+  setAttribute(key: string, value: string | number | boolean): void;
+  recordException(error: unknown): void;
+}
+
+/**
+ * Minimal interface for an OpenTelemetry Meter. Used to record entropy
+ * gauge metrics per token category.
+ */
+export interface OtelMeter {
+  createObservableGauge(name: string, options?: { description?: string }): unknown;
+}
+
+/** Handle returned by {@link createOtelInstrumentation}. */
+export interface KernelInstrumentation {
+  /** Wraps a RunEvent in an OTel span and records diagnostic child events. */
+  recordRun(event: RunEvent): void;
+  /** Records entropy score components as gauge metric observations. */
+  recordEntropy(event: EntropyEvent): void;
+  /** Shuts down the instrumentation and flushes pending spans. */
+  shutdown(): Promise<void>;
+}

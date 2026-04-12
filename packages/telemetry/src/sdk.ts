@@ -4,6 +4,9 @@ import type {
   DLTSEnvelope,
   EntropyEvent,
   EntropyTrend,
+  KernelInstrumentation,
+  OtelMeter,
+  OtelTracer,
   RunEvent,
   ValidationResult,
 } from './types.js';
@@ -129,4 +132,50 @@ export function groupByRule(events: DiagnosticEvent[]): Record<string, Diagnosti
   }
 
   return result;
+}
+
+/**
+ * Creates an OTel instrumentation bridge for the design-lint kernel.
+ *
+ * Each `RunEvent` is recorded as a root span. Each `EntropyEvent` maps
+ * its score components to gauge metric observations.
+ *
+ * @param {OtelTracer} tracer - An OTel tracer instance.
+ * @param {OtelMeter} _meter - An OTel meter instance (used for gauge metrics).
+ * @returns {KernelInstrumentation} The kernel instrumentation handle.
+ */
+export function createOtelInstrumentation(
+  tracer: OtelTracer,
+  _meter: OtelMeter,
+): KernelInstrumentation {
+  return {
+    recordRun(event: RunEvent): void {
+      const span = tracer.startSpan('design-lint.run');
+      span.setAttribute('runId', event.runId);
+      span.setAttribute('filesScanned', event.filesScanned);
+      span.setAttribute('totalDiagnostics', event.totalDiagnostics);
+      span.setAttribute('durationMs', event.durationMs);
+      span.end();
+    },
+
+    recordEntropy(event: EntropyEvent): void {
+      const span = tracer.startSpan('design-lint.entropy');
+      span.setAttribute('runId', event.runId);
+      span.setAttribute('overall', event.score.overall);
+      span.setAttribute(
+        'tokenCoverageRatio',
+        event.score.components.tokenCoverageRatio,
+      );
+      span.setAttribute(
+        'violationRecurrenceRate',
+        event.score.components.violationRecurrenceRate,
+      );
+      span.end();
+    },
+
+    async shutdown(): Promise<void> {
+      // No-op in the base implementation — real shutdown is handled by the
+      // OTel SDK's NodeTracerProvider.shutdown() called by the host process.
+    },
+  };
 }

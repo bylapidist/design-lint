@@ -13,6 +13,10 @@ export type {
   AggregateReport,
   EntropyTrend,
   ValidationResult,
+  OtelTracer,
+  OtelSpan,
+  OtelMeter,
+  KernelInstrumentation,
 } from './types.js';
 export {
   parseDLTSStream,
@@ -21,4 +25,5 @@ export {
   computeEntropyTrend,
   filterByAgent,
   groupByRule,
+  createOtelInstrumentation,
 } from './sdk.js';
