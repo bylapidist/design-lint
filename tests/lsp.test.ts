@@ -111,7 +111,6 @@ function makeMockLinter(opts: MockLinterOptions = {}): Linter {
 void test('createLSPServer exposes capabilities object', () => {
   const server = createLSPServer(makeMockLinter());
   const caps = server.capabilities;
-  assert.ok(typeof caps === 'object' && caps !== null);
   assert.ok('textDocumentSync' in caps);
   assert.ok('codeActionProvider' in caps);
   assert.ok('completionProvider' in caps);
@@ -428,5 +427,8 @@ void test('LSP textDocument/didChange re-lints and publishes updated diagnostics
       'method' in f &&
       (f as { method: string }).method === 'textDocument/publishDiagnostics',
   );
-  assert.ok(notification !== undefined, 'didChange should trigger publishDiagnostics');
+  assert.ok(
+    notification !== undefined,
+    'didChange should trigger publishDiagnostics',
+  );
 });

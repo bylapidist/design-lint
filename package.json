@@ -95,6 +95,7 @@
     "@types/picomatch": "4.0.3",
     "@types/postcss-less": "4.0.7",
     "@types/write-file-atomic": "4.0.3",
+    "@lapidist/eslint-config": "1.0.0",
     "@typescript-eslint/eslint-plugin": "8.58.2",
     "@typescript-eslint/parser": "8.58.2",
     "c8": "11.0.0",

@@ -23,6 +23,9 @@ import { validateConfig } from './validate-config.js';
 import { generateDocs } from './docs.js';
 import { migrateConfig } from './migrate.js';
 import { exportDesignSystemMd } from './export-design-system-md.js';
+import { kernelStart, kernelStop, kernelStatus } from './kernel.js';
+import { exportRuntimeSnapshot } from './snapshot.js';
+import { diffSnapshots } from './diff.js';
 import { createLogger, type Logger } from './logger.js';
 
 type CliOptions = ExecuteOptions &
@@ -210,6 +213,117 @@ function createProgram(version: string, logger: Logger) {
         logger.error(err);
       }
     });
+
+  // ---------------------------------------------------------------------------
+  // Kernel lifecycle commands
+  // ---------------------------------------------------------------------------
+
+  const kernel = program
+    .command('kernel')
+    .description('Manage the DSR kernel daemon');
+
+  kernel
+    .command('start')
+    .description('Start the DSR kernel daemon in the background')
+    .option('--socket-path <path>', 'Unix socket path for the kernel')
+    .option('--http-port <n>', 'HTTP fallback port', (v) => parseInt(v, 10))
+    .option('--pid-file <path>', 'Path to the PID file')
+    .option('--no-http', 'Disable HTTP fallback transport')
+    .action(
+      (opts: {
+        socketPath?: string;
+        httpPort?: number;
+        pidFile?: string;
+        http?: boolean;
+      }) => {
+        try {
+          kernelStart({
+            socketPath: opts.socketPath,
+            httpPort: opts.httpPort,
+            pidFile: opts.pidFile,
+            noHttp: opts.http === false,
+          });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
+
+  kernel
+    .command('stop')
+    .description('Stop the running DSR kernel daemon')
+    .option('--pid-file <path>', 'Path to the PID file')
+    .action((opts: { pidFile?: string }) => {
+      try {
+        kernelStop({ pidFile: opts.pidFile });
+      } catch (err) {
+        logger.error(err);
+      }
+    });
+
+  kernel
+    .command('status')
+    .description('Print the current kernel status')
+    .option('--pid-file <path>', 'Path to the PID file')
+    .action((opts: { pidFile?: string }) => {
+      try {
+        kernelStatus({ pidFile: opts.pidFile });
+      } catch (err) {
+        logger.error(err);
+      }
+    });
+
+  program
+    .command('export-runtime-snapshot')
+    .description('Export a binary DSR kernel snapshot to a file')
+    .option(
+      '--out <path>',
+      'Output path for the snapshot',
+      '.designlint/snapshot.bin',
+    )
+    .option('--socket-path <path>', 'Unix socket path for the kernel')
+    .option('--http-port <n>', 'HTTP fallback port', (v) => parseInt(v, 10))
+    .action(
+      async (opts: {
+        out?: string;
+        socketPath?: string;
+        httpPort?: number;
+      }) => {
+        try {
+          await exportRuntimeSnapshot({
+            out: opts.out,
+            socketPath: opts.socketPath,
+            httpPort: opts.httpPort,
+          });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
+
+  program
+    .command('diff')
+    .description('Compare two DSR kernel snapshots')
+    .argument('<snapshot-a>', 'First (before) snapshot file')
+    .argument('<snapshot-b>', 'Second (after) snapshot file')
+    .option('--format <name>', 'Output format: text (default) or json', 'text')
+    .action(
+      async (
+        snapshotA: string,
+        snapshotB: string,
+        opts: { format?: string },
+      ) => {
+        try {
+          await diffSnapshots({
+            snapshotA,
+            snapshotB,
+            format: opts.format === 'json' ? 'json' : 'text',
+          });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
 
   return program;
 }

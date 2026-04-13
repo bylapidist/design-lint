@@ -38,7 +38,9 @@ function makeEnv(tokens: MockToken[]): NodeEnvironment {
     dsql: {
       tokens: () => query,
     },
-    onEvent: () => () => { /* no-op */ },
+    onEvent: () => () => {
+      /* no-op */
+    },
   } as unknown as NodeEnvironment;
 }
 
@@ -102,10 +104,12 @@ void test('DsrTokenProvider.load preserves all token fields including metadata d
   const provider = new DsrTokenProvider(makeFactory([kernelToken]));
   const result = await provider.load();
 
-  const [mapped] = result.default as [{ metadata: { extensions: Record<string, unknown> } }];
+  const [mapped] = result.default as [
+    { metadata: { extensions: Record<string, unknown> } },
+  ];
   // metadata is populated with safe defaults when kernel tokens don't carry it
   assert.ok(
-    typeof mapped.metadata === 'object' && mapped.metadata !== null,
+    typeof mapped.metadata === 'object',
     'should have a metadata object',
   );
   assert.ok(
@@ -125,7 +129,9 @@ void test('DsrTokenProvider.dispose disconnects the environment', async () => {
     dsql: {
       tokens: () => ({ forProperty: () => Promise.resolve([]) }),
     },
-    onEvent: () => () => { /* no-op */ },
+    onEvent: () => () => {
+      /* no-op */
+    },
   } as unknown as NodeEnvironment;
 
   const factory: DsrEnvironmentFactory = () => Promise.resolve(env);

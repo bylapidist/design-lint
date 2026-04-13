@@ -20,17 +20,14 @@ function isValidSeverity(v: unknown): v is 'error' | 'warn' | 'off' {
   return v === 'error' || v === 'warn' || v === 'off';
 }
 
+function isUnknownArray(v: unknown): v is unknown[] {
+  return Array.isArray(v);
+}
+
 function assertValidConfig(config: Config, name: string): void {
-  assert.ok(
-    typeof config === 'object' && config !== null,
-    `${name} must be an object`,
-  );
-  assert.ok(
-    typeof config.rules === 'object' && config.rules !== null,
-    `${name}.rules must be an object`,
-  );
-  for (const [ruleId, value] of Object.entries(config.rules)) {
-    const severity = Array.isArray(value) ? value[0] : value;
+  const rules: Record<string, unknown> = config.rules ?? {};
+  for (const [ruleId, value] of Object.entries(rules)) {
+    const severity: unknown = isUnknownArray(value) ? value[0] : value;
     assert.ok(
       isValidSeverity(severity),
       `${name}.rules["${ruleId}"] has invalid severity: ${String(severity)}`,
@@ -41,7 +38,7 @@ function assertValidConfig(config: Config, name: string): void {
 const builtInRuleNames = new Set(builtInRules.map((r) => r.name));
 
 function assertRulesExist(config: Config, name: string): void {
-  for (const ruleId of Object.keys(config.rules)) {
+  for (const ruleId of Object.keys(config.rules ?? {})) {
     assert.ok(
       builtInRuleNames.has(ruleId),
       `${name} references unknown rule "${ruleId}"`,
@@ -63,7 +60,7 @@ void test('config-recommended all rules reference existing built-ins', () => {
 
 void test('config-recommended uses warn severity for all rules', () => {
   for (const [ruleId, value] of Object.entries(recommended.rules)) {
-    const severity = Array.isArray(value) ? value[0] : value;
+    const severity: unknown = isUnknownArray(value) ? value[0] : value;
     assert.equal(
       severity,
       'warn',
@@ -108,7 +105,7 @@ void test('config-strict all rules reference existing built-ins', () => {
 
 void test('config-strict uses error severity for all rules', () => {
   for (const [ruleId, value] of Object.entries(strict.rules)) {
-    const severity = Array.isArray(value) ? value[0] : value;
+    const severity: unknown = isUnknownArray(value) ? value[0] : value;
     assert.equal(
       severity,
       'error',
@@ -147,7 +144,7 @@ void test('config-ai-agent all rules reference existing built-ins', () => {
 
 void test('config-ai-agent uses error severity for all rules', () => {
   for (const [ruleId, value] of Object.entries(aiAgent.rules)) {
-    const severity = Array.isArray(value) ? value[0] : value;
+    const severity: unknown = isUnknownArray(value) ? value[0] : value;
     assert.equal(
       severity,
       'error',
@@ -179,13 +176,10 @@ void test('config-ai-agent is composable with config-recommended', () => {
   } satisfies Config;
   assertValidConfig(merged, 'merged(recommended+aiAgent)');
   // ai-agent rules should win (all error) for any overlap
-  for (const [ruleId, value] of Object.entries(aiAgent.rules)) {
-    const mergedSeverity = Array.isArray(merged.rules[ruleId])
-      ? (merged.rules[ruleId] as unknown[])[0]
-      : merged.rules[ruleId];
-    assert.equal(
-      mergedSeverity,
-      value,
+  for (const ruleId of Object.keys(aiAgent.rules)) {
+    assert.deepStrictEqual(
+      merged.rules[ruleId],
+      aiAgent.rules[ruleId],
       `merged["${ruleId}"] should equal aiAgent value`,
     );
   }
@@ -201,10 +195,7 @@ void test('all presets have non-empty rules', () => {
     'recommended must have rules',
   );
   assert.ok(Object.keys(strict.rules).length > 0, 'strict must have rules');
-  assert.ok(
-    Object.keys(aiAgent.rules).length > 0,
-    'aiAgent must have rules',
-  );
+  assert.ok(Object.keys(aiAgent.rules).length > 0, 'aiAgent must have rules');
 });
 
 void test('no preset references unknown rules', () => {
