@@ -3,8 +3,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { RuleTester } from '../packages/testing/src/index.js';
-import { SnippetLinter } from '../packages/testing/src/snippet-linter.js';
+import { RuleTester, SnippetLinter } from '../packages/testing/src/index.js';
 import { noHardcodedSpacingRule } from '../src/rules/no-hardcoded-spacing.js';
 import type { RuleModule } from '../src/index.js';
 
