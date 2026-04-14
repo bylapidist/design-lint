@@ -430,7 +430,19 @@ void test('renderMeta includes the snapshot hash', () => {
 void test('renderMeta includes spec version and schema URL', () => {
   const meta = renderMeta('x');
   assert.ok(meta.includes('1.0.0'));
-  assert.ok(meta.includes('dscp.lapidist.net'));
+  const schemaLine = meta
+    .split('\n')
+    .find((line) => line.startsWith('<!-- $schema: ') && line.endsWith(' -->'));
+
+  assert.ok(schemaLine);
+
+  const schemaUrl = schemaLine
+    .replace('<!-- $schema: ', '')
+    .replace(' -->', '');
+  const parsedSchemaUrl = new URL(schemaUrl);
+
+  assert.equal(parsedSchemaUrl.hostname, 'dscp.lapidist.net');
+  assert.equal(parsedSchemaUrl.pathname, '/schema/v1.json');
 });
 
 // ---------------------------------------------------------------------------
