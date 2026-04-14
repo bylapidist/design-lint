@@ -1,15 +1,14 @@
 /**
  * Tests for the `design-lint diff` command.
  *
- * Mocks @lapidist/dsr's readSnapshot so no real kernel or snapshot file
- * is needed.
+ * Passes a stub readSnapshot function directly — no module mocking needed.
  */
-import { mock } from 'node:test';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { diffSnapshots } from '../../src/cli/diff.js';
 
 // ---------------------------------------------------------------------------
-// Snapshot stubs
+// Stub state factory
 // ---------------------------------------------------------------------------
 
 interface StubToken {
@@ -18,20 +17,10 @@ interface StubToken {
 }
 
 interface StubState {
-  tokenGraph: {
-    tokens: Map<string, StubToken>;
-  };
-  ruleRegistry: {
-    rules: Map<string, unknown>;
-  };
-  componentRegistry: {
-    components: Map<string, unknown>;
-  };
-  entropyState: {
-    current: {
-      overall: number;
-    };
-  };
+  tokenGraph: { tokens: Map<string, StubToken> };
+  ruleRegistry: { rules: Map<string, unknown> };
+  componentRegistry: { components: Map<string, unknown> };
+  entropyState: { current: { overall: number } };
 }
 
 function makeState(overrides?: Partial<StubState>): StubState {
@@ -45,24 +34,7 @@ function makeState(overrides?: Partial<StubState>): StubState {
 }
 
 // ---------------------------------------------------------------------------
-// Configurable mock — update readSnapshotImpl between tests
-// ---------------------------------------------------------------------------
-
-let readSnapshotImpl: () => Promise<{ state: StubState; hash: string }> = () =>
-  Promise.resolve({ state: makeState(), hash: 'abc123' });
-
-mock.module('@lapidist/dsr', {
-  namedExports: {
-    readSnapshot: (): Promise<{ state: StubState; hash: string }> =>
-      readSnapshotImpl(),
-  },
-});
-
-// Import after mock is registered
-const { diffSnapshots } = await import('../../src/cli/diff.js');
-
-// ---------------------------------------------------------------------------
-// Helpers
+// Helper
 // ---------------------------------------------------------------------------
 
 function captureLog(fn: () => Promise<void>): Promise<string[]> {
@@ -84,43 +56,55 @@ function captureLog(fn: () => Promise<void>): Promise<string[]> {
   });
 }
 
+// Stub readSnapshot that returns the same state for both calls
+function makeReader(
+  stateA: StubState,
+  stateB: StubState,
+  hashA = 'hashA',
+  hashB = 'hashB',
+) {
+  let call = 0;
+  return (): Promise<{ state: StubState; hash: string }> => {
+    call += 1;
+    return Promise.resolve(
+      call === 1
+        ? { state: stateA, hash: hashA }
+        : { state: stateB, hash: hashB },
+    );
+  };
+}
+
 // ---------------------------------------------------------------------------
 // No differences
 // ---------------------------------------------------------------------------
 
 void test('diffSnapshots reports no differences when snapshots are identical', async () => {
-  readSnapshotImpl = () =>
-    Promise.resolve({ state: makeState(), hash: 'abc123' });
-
+  const state = makeState();
   const lines = await captureLog(() =>
-    diffSnapshots({ snapshotA: 'a.bin', snapshotB: 'b.bin' }),
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(state, state),
+    ),
   );
   assert.ok(lines.some((l) => l.includes('No differences found')));
 });
 
 // ---------------------------------------------------------------------------
-// Tokens added / removed
+// Tokens added
 // ---------------------------------------------------------------------------
 
 void test('diffSnapshots reports added tokens', async () => {
-  let call = 0;
-  readSnapshotImpl = (): Promise<{ state: StubState; hash: string }> => {
-    call += 1;
-    if (call === 1) {
-      return Promise.resolve({ state: makeState(), hash: 'hashA' });
-    }
-    return Promise.resolve({
-      state: makeState({
-        tokenGraph: {
-          tokens: new Map([['#/color/new', { type: 'color', value: '#fff' }]]),
-        },
-      }),
-      hash: 'hashB',
-    });
-  };
-
+  const stateA = makeState();
+  const stateB = makeState({
+    tokenGraph: {
+      tokens: new Map([['#/color/new', { type: 'color', value: '#fff' }]]),
+    },
+  });
   const lines = await captureLog(() =>
-    diffSnapshots({ snapshotA: 'a.bin', snapshotB: 'b.bin' }),
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(stateA, stateB),
+    ),
   );
   assert.ok(
     lines.some((l) => l.includes('added') || l.includes('#/color/new')),
@@ -128,23 +112,131 @@ void test('diffSnapshots reports added tokens', async () => {
 });
 
 // ---------------------------------------------------------------------------
+// Tokens removed
+// ---------------------------------------------------------------------------
+
+void test('diffSnapshots reports removed tokens', async () => {
+  const stateA = makeState({
+    tokenGraph: {
+      tokens: new Map([['#/color/old', { type: 'color', value: '#000' }]]),
+    },
+  });
+  const stateB = makeState();
+  const lines = await captureLog(() =>
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(stateA, stateB),
+    ),
+  );
+  assert.ok(
+    lines.some((l) => l.includes('removed') || l.includes('#/color/old')),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Tokens changed
+// ---------------------------------------------------------------------------
+
+void test('diffSnapshots reports changed tokens', async () => {
+  const stateA = makeState({
+    tokenGraph: {
+      tokens: new Map([['#/color/brand', { type: 'color', value: '#000' }]]),
+    },
+  });
+  const stateB = makeState({
+    tokenGraph: {
+      tokens: new Map([['#/color/brand', { type: 'color', value: '#fff' }]]),
+    },
+  });
+  const lines = await captureLog(() =>
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(stateA, stateB),
+    ),
+  );
+  assert.ok(
+    lines.some((l) => l.includes('changed') || l.includes('#/color/brand')),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Rules changed
+// ---------------------------------------------------------------------------
+
+void test('diffSnapshots reports changed rules', async () => {
+  const stateA = makeState({
+    ruleRegistry: {
+      rules: new Map([['design-token/colors', { severity: 'warn' }]]),
+    },
+  });
+  const stateB = makeState({
+    ruleRegistry: {
+      rules: new Map([['design-token/colors', { severity: 'error' }]]),
+    },
+  });
+  const lines = await captureLog(() =>
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(stateA, stateB),
+    ),
+  );
+  assert.ok(
+    lines.some((l) => l.includes('Rules') || l.includes('design-token/colors')),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Components added / removed
+// ---------------------------------------------------------------------------
+
+void test('diffSnapshots reports added components', async () => {
+  const stateA = makeState();
+  const stateB = makeState({
+    componentRegistry: {
+      components: new Map([['Button', { package: '@acme/ui' }]]),
+    },
+  });
+  const lines = await captureLog(() =>
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(stateA, stateB),
+    ),
+  );
+  assert.ok(lines.some((l) => l.includes('Component') || l.includes('Button')));
+});
+
+void test('diffSnapshots reports removed components', async () => {
+  const stateA = makeState({
+    componentRegistry: {
+      components: new Map([['Button', { package: '@acme/ui' }]]),
+    },
+  });
+  const stateB = makeState();
+  const lines = await captureLog(() =>
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(stateA, stateB),
+    ),
+  );
+  assert.ok(lines.some((l) => l.includes('removed') || l.includes('Button')));
+});
+
+// ---------------------------------------------------------------------------
 // JSON output
 // ---------------------------------------------------------------------------
 
 void test('diffSnapshots outputs valid JSON when format is json', async () => {
-  readSnapshotImpl = () => Promise.resolve({ state: makeState(), hash: 'h1' });
-
+  const state = makeState();
   const jsonLines: string[] = [];
   const origLog = console.log;
   console.log = (v: unknown) => {
     jsonLines.push(String(v));
   };
   try {
-    await diffSnapshots({
-      snapshotA: 'a.bin',
-      snapshotB: 'b.bin',
-      format: 'json',
-    });
+    await diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin', format: 'json' },
+      makeReader(state, state, 'h1', 'h2'),
+    );
   } finally {
     console.log = origLog;
   }
@@ -158,19 +250,13 @@ void test('diffSnapshots outputs valid JSON when format is json', async () => {
 // ---------------------------------------------------------------------------
 
 void test('diffSnapshots reports entropy delta when scores differ', async () => {
-  let call2 = 0;
-  readSnapshotImpl = (): Promise<{ state: StubState; hash: string }> => {
-    call2 += 1;
-    return Promise.resolve({
-      state: makeState({
-        entropyState: { current: { overall: call2 === 1 ? 70 : 90 } },
-      }),
-      hash: `h${call2.toString()}`,
-    });
-  };
-
+  const stateA = makeState({ entropyState: { current: { overall: 70 } } });
+  const stateB = makeState({ entropyState: { current: { overall: 90 } } });
   const lines = await captureLog(() =>
-    diffSnapshots({ snapshotA: 'a.bin', snapshotB: 'b.bin' }),
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(stateA, stateB),
+    ),
   );
   assert.ok(
     lines.some(
@@ -180,4 +266,16 @@ void test('diffSnapshots reports entropy delta when scores differ', async () => 
         l.includes('degraded'),
     ),
   );
+});
+
+void test('diffSnapshots reports entropy degradation', async () => {
+  const stateA = makeState({ entropyState: { current: { overall: 90 } } });
+  const stateB = makeState({ entropyState: { current: { overall: 70 } } });
+  const lines = await captureLog(() =>
+    diffSnapshots(
+      { snapshotA: 'a.bin', snapshotB: 'b.bin' },
+      makeReader(stateA, stateB),
+    ),
+  );
+  assert.ok(lines.some((l) => l.includes('degraded')));
 });

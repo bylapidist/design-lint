@@ -156,21 +156,21 @@ function createProgram(version: string, logger: Logger) {
       'docs/design-system',
     )
     .option(
-      '--format <name>',
+      '--site-format <name>',
       "Output format: 'vitepress' (default) or 'markdown'",
       'vitepress',
     )
     .option('--config <path>', 'Path to configuration file')
     .action(
       async (
-        opts: { out?: string; format?: string; config?: string },
+        opts: { out?: string; siteFormat?: string; config?: string },
         cmd: Command,
       ) => {
         try {
           const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
           await generateDocs({
             out: opts.out,
-            format: opts.format === 'markdown' ? 'markdown' : 'vitepress',
+            format: opts.siteFormat === 'markdown' ? 'markdown' : 'vitepress',
             config: opts.config ?? parent.config,
           });
         } catch (err) {

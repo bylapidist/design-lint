@@ -17,12 +17,11 @@ import type { Config } from '@lapidist/design-lint';
 const recommended = {
   rules: {
     'design-token/colors': 'warn',
-    'design-token/typography': 'warn',
     'design-token/spacing': 'warn',
     'design-token/easing': 'warn',
     'design-token/css-var-provenance': 'warn',
     'design-token/composite-equivalence': 'warn',
-    'design-token/no-deprecated': 'warn',
+    'design-system/deprecation': 'warn',
     'design-system/jsx-style-values': 'warn',
     'design-system/no-hardcoded-spacing': 'warn',
   },

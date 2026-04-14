@@ -1,34 +1,38 @@
 /**
  * Tests for the `design-lint export-runtime-snapshot` command.
  *
- * Mocks @lapidist/dsr's UnixSocketClient and HttpClient so no real kernel
- * connection is needed.
+ * Passes stub transport constructors directly — no module mocking needed.
  */
-import { mock } from 'node:test';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { exportRuntimeSnapshot } from '../../src/cli/snapshot.js';
 
 // ---------------------------------------------------------------------------
-// Configurable mock transport state
+// Stub transports
 // ---------------------------------------------------------------------------
 
-let unixShouldFail = false;
-
-interface MockResponse {
+interface StubFrame {
   type: string;
-  payload: unknown;
+  id: string;
+  method?: string;
+  payload?: unknown;
 }
 
-class MockUnixSocketClient {
+class StubUnixClient {
+  readonly connected: boolean = false;
+
   connect(): Promise<void> {
-    if (unixShouldFail) return Promise.reject(new Error('ENOENT'));
     return Promise.resolve();
   }
 
-  request(): Promise<MockResponse> {
-    return Promise.resolve({ type: 'response', payload: 'sha256-unix' });
+  request(): Promise<StubFrame> {
+    return Promise.resolve({
+      type: 'response',
+      id: 'r1',
+      payload: 'sha256-unix',
+    });
   }
 
   disconnect(): Promise<void> {
@@ -36,13 +40,13 @@ class MockUnixSocketClient {
   }
 }
 
-class MockHttpClient {
+class FailingUnixClient {
   connect(): Promise<void> {
-    return Promise.resolve();
+    return Promise.reject(new Error('ENOENT'));
   }
 
-  request(): Promise<MockResponse> {
-    return Promise.resolve({ type: 'response', payload: 'sha256-http' });
+  request(): Promise<StubFrame> {
+    return Promise.resolve({ type: 'response', id: 'r1', payload: '' });
   }
 
   disconnect(): Promise<void> {
@@ -50,23 +54,27 @@ class MockHttpClient {
   }
 }
 
-mock.module('@lapidist/dsr', {
-  namedExports: {
-    UnixSocketClient: MockUnixSocketClient,
-    HttpClient: MockHttpClient,
-  },
-});
+class StubHttpClient {
+  connect(): Promise<void> {
+    return Promise.resolve();
+  }
 
-// Import after mock is registered
-const { exportRuntimeSnapshot } = await import('../../src/cli/snapshot.js');
+  request(): Promise<StubFrame> {
+    return Promise.resolve({
+      type: 'response',
+      id: 'r2',
+      payload: 'sha256-http',
+    });
+  }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function outPath(): string {
-  return join(tmpdir(), `snap-test-${Date.now().toString()}.bin`);
+  disconnect(): Promise<void> {
+    return Promise.resolve();
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Helper
+// ---------------------------------------------------------------------------
 
 function captureLog(fn: () => Promise<void>): Promise<string[]> {
   return new Promise((resolve, reject) => {
@@ -87,14 +95,20 @@ function captureLog(fn: () => Promise<void>): Promise<string[]> {
   });
 }
 
+function outPath(): string {
+  return join(tmpdir(), `snap-test-${Date.now().toString()}.bin`);
+}
+
 // ---------------------------------------------------------------------------
-// Unix socket happy path
+// Unix socket path
 // ---------------------------------------------------------------------------
 
-void test('exportRuntimeSnapshot succeeds via Unix socket', async () => {
-  unixShouldFail = false;
+void test('exportRuntimeSnapshot exports via Unix socket', async () => {
   const lines = await captureLog(() =>
-    exportRuntimeSnapshot({ out: outPath() }),
+    exportRuntimeSnapshot(
+      { out: outPath() },
+      { UnixSocketClient: StubUnixClient, HttpClient: StubHttpClient },
+    ),
   );
   assert.ok(lines.some((l) => l.includes('Snapshot exported')));
   assert.ok(lines.some((l) => l.includes('sha256-unix')));
@@ -105,11 +119,12 @@ void test('exportRuntimeSnapshot succeeds via Unix socket', async () => {
 // ---------------------------------------------------------------------------
 
 void test('exportRuntimeSnapshot falls back to HTTP when Unix socket fails', async () => {
-  unixShouldFail = true;
   const lines = await captureLog(() =>
-    exportRuntimeSnapshot({ out: outPath(), httpPort: 9991 }),
+    exportRuntimeSnapshot(
+      { out: outPath(), httpPort: 9991 },
+      { UnixSocketClient: FailingUnixClient, HttpClient: StubHttpClient },
+    ),
   );
-  unixShouldFail = false;
   assert.ok(lines.some((l) => l.includes('Snapshot exported')));
   assert.ok(lines.some((l) => l.includes('sha256-http')));
 });
@@ -119,7 +134,25 @@ void test('exportRuntimeSnapshot falls back to HTTP when Unix socket fails', asy
 // ---------------------------------------------------------------------------
 
 void test('exportRuntimeSnapshot uses default out path when none provided', async () => {
-  unixShouldFail = false;
-  const lines = await captureLog(() => exportRuntimeSnapshot({}));
+  const lines = await captureLog(() =>
+    exportRuntimeSnapshot(
+      {},
+      { UnixSocketClient: StubUnixClient, HttpClient: StubHttpClient },
+    ),
+  );
+  assert.ok(lines.some((l) => l.includes('Snapshot exported')));
+});
+
+// ---------------------------------------------------------------------------
+// Custom socket path
+// ---------------------------------------------------------------------------
+
+void test('exportRuntimeSnapshot accepts custom socket path', async () => {
+  const lines = await captureLog(() =>
+    exportRuntimeSnapshot(
+      { out: outPath(), socketPath: '/tmp/custom.sock' },
+      { UnixSocketClient: StubUnixClient, HttpClient: StubHttpClient },
+    ),
+  );
   assert.ok(lines.some((l) => l.includes('Snapshot exported')));
 });

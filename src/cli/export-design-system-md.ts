@@ -20,6 +20,7 @@ import { loadConfig } from '../config/loader.js';
 import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
 import { builtInRules } from '../rules/index.js';
 import type { DtifFlattenedToken } from '../core/types.js';
+import type { Config } from '../core/linter.js';
 
 const DSCP_SPEC_VERSION = '1.0.0';
 const DSCP_SCHEMA = 'https://dscp.lapidist.net/schema/v1.json';
@@ -31,14 +32,19 @@ interface ExportDesignSystemMdOptions {
   config?: string;
 }
 
-function tokenValueToString(value: unknown): string {
+export type LoadConfigFn = (
+  cwd: string,
+  configPath?: string,
+) => Promise<Config>;
+
+export function tokenValueToString(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
   return JSON.stringify(value);
 }
 
-function groupTokensByType(
+export function groupTokensByType(
   tokens: DtifFlattenedToken[],
 ): Map<string, DtifFlattenedToken[]> {
   const groups = new Map<string, DtifFlattenedToken[]>();
@@ -54,7 +60,7 @@ function groupTokensByType(
   return groups;
 }
 
-function renderTokenSection(
+export function renderTokenSection(
   type: string,
   tokens: DtifFlattenedToken[],
 ): string {
@@ -77,7 +83,7 @@ function renderTokenSection(
   ].join('\n');
 }
 
-function renderRulesSection(): string {
+export function renderRulesSection(): string {
   const rows = builtInRules.map((rule) => {
     const fixable = rule.meta.fixable ? '✓' : '';
     const rationale = rule.meta.rationale?.why ?? rule.meta.description;
@@ -98,7 +104,7 @@ function renderRulesSection(): string {
   ].join('\n');
 }
 
-function renderViolationsSection(): string {
+export function renderViolationsSection(): string {
   return [
     '<!-- dscp:violations -->',
     '### Known Violation Patterns',
@@ -110,7 +116,7 @@ function renderViolationsSection(): string {
   ].join('\n');
 }
 
-function renderMeta(snapshotHash: string): string {
+export function renderMeta(snapshotHash: string): string {
   const now = new Date().toISOString();
   return [
     '<!-- dscp:meta -->',
@@ -123,7 +129,7 @@ function renderMeta(snapshotHash: string): string {
   ].join('\n');
 }
 
-function generateSnapshotHash(tokens: DtifFlattenedToken[]): string {
+export function generateSnapshotHash(tokens: DtifFlattenedToken[]): string {
   // Deterministic hash stub: uses pointer list as a stable fingerprint.
   // Phase 5 will replace this with the DSR kernel's real snapshot hash.
   const payload = tokens
@@ -143,16 +149,19 @@ function generateSnapshotHash(tokens: DtifFlattenedToken[]): string {
  * Export a `DESIGN_SYSTEM.md` file from the current design-lint kernel state.
  *
  * @param options - Command options controlling output path and config location.
+ * @param loadConfigFn - Optional override for config loading (used in tests).
  */
 export async function exportDesignSystemMd(
   options: ExportDesignSystemMdOptions,
+  loadConfigFn?: LoadConfigFn,
 ): Promise<void> {
   const outPath = path.resolve(
     process.cwd(),
     options.out ?? 'DESIGN_SYSTEM.md',
   );
 
-  const config = await loadConfig(process.cwd(), options.config);
+  const configLoader = loadConfigFn ?? loadConfig;
+  const config = await configLoader(process.cwd(), options.config);
   const tokensByTheme = toThemeRecord(config.tokens);
   const themes = Object.keys(tokensByTheme);
   const primaryTheme = themes[0] ?? 'default';

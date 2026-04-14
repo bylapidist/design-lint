@@ -34,18 +34,42 @@ interface DiffResult {
 }
 
 /**
+ * Minimal subset of KernelState used by this command.
+ * The actual KernelState (from @lapidist/dsr) is a structural superset.
+ */
+interface SnapshotState {
+  tokenGraph: { tokens: ReadonlyMap<string, unknown> };
+  ruleRegistry: { rules: ReadonlyMap<string, unknown> };
+  componentRegistry: { components: ReadonlyMap<string, unknown> };
+  entropyState: { current: { overall: number } };
+}
+
+export type ReadSnapshotFn = (
+  filePath: string,
+) => Promise<{ state: SnapshotState; hash: string }>;
+
+async function loadDefaultReader(): Promise<ReadSnapshotFn> {
+  const { readSnapshot } = await import('@lapidist/dsr');
+  return readSnapshot;
+}
+
+/**
  * Compare two DSR binary snapshots and print the diff to stdout.
  *
  * @param options - Diff command options.
+ * @param readSnapshot - Optional override for reading snapshots (used in tests).
  */
-export async function diffSnapshots(options: DiffOptions): Promise<void> {
+export async function diffSnapshots(
+  options: DiffOptions,
+  readSnapshot?: ReadSnapshotFn,
+): Promise<void> {
   const pathA = path.resolve(process.cwd(), options.snapshotA);
   const pathB = path.resolve(process.cwd(), options.snapshotB);
 
-  const { readSnapshot } = await import('@lapidist/dsr');
+  const reader = readSnapshot ?? (await loadDefaultReader());
 
   const [{ state: stateA, hash: hashA }, { state: stateB, hash: hashB }] =
-    await Promise.all([readSnapshot(pathA), readSnapshot(pathB)]);
+    await Promise.all([reader(pathA), reader(pathB)]);
 
   const tokensA = new Set(stateA.tokenGraph.tokens.keys());
   const tokensB = new Set(stateB.tokenGraph.tokens.keys());

@@ -1,13 +1,17 @@
+/**
+ * Tests that built-in rules fire correctly against real fixture projects.
+ *
+ * Calls createLinter/lintTargets directly — no subprocess spawning.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createRequire } from 'module';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
-const tsxLoader = require.resolve('tsx/esm');
+import { loadConfig } from '../src/config/loader.js';
+import { createLinter } from '../src/index.js';
+import { createNodeEnvironment } from '../src/adapters/node/environment.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const baselineRules = [
   'design-system/component-usage',
@@ -82,31 +86,20 @@ const fixtures: Fixture[] = [
 ];
 
 for (const { name, files, rules } of fixtures) {
-  void test(`CLI reports built-in rule violations in ${name} fixture`, () => {
+  void test(`reports built-in rule violations in ${name} fixture`, async () => {
     const fixture = path.join(__dirname, 'fixtures', name);
-    const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-    const result = spawnSync(
-      process.execPath,
-      [
-        '--import',
-        tsxLoader,
-        cli,
-        fixture,
-        '--config',
-        path.join(fixture, 'designlint.config.json'),
-        '--format',
-        'json',
-      ],
-      { encoding: 'utf8' },
+    const configPath = path.join(fixture, 'designlint.config.json');
+
+    const config = await loadConfig(fixture, configPath);
+    const env = createNodeEnvironment(config, { configPath });
+    const linter = createLinter(config, env);
+    const { results } = await linter.lintTargets([fixture]);
+
+    const hasErrors = results.some((r) =>
+      r.messages.some((m) => m.severity === 'error'),
     );
-    assert.notEqual(result.status, 0);
-    interface Result {
-      sourceId: string;
-      messages: { ruleId: string }[];
-    }
-    const parsed = JSON.parse(result.stdout) as unknown;
-    assert(Array.isArray(parsed));
-    const results = parsed as Result[];
+    assert.ok(hasErrors, `Expected violations in ${name} fixture`);
+
     const byFile = Object.fromEntries(
       results.map((r) => [
         path.relative(fixture, r.sourceId),
@@ -114,6 +107,7 @@ for (const { name, files, rules } of fixtures) {
       ]),
     );
     assert.deepEqual(Object.keys(byFile).sort(), files.sort());
+
     const ruleSet = new Set(
       results.flatMap((r) => r.messages.map((m) => m.ruleId)),
     );

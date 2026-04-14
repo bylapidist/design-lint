@@ -79,8 +79,8 @@ void test('config-recommended includes core token rules', () => {
     'should include design-token/spacing',
   );
   assert.ok(
-    'design-token/typography' in recommended.rules,
-    'should include design-token/typography',
+    'design-token/easing' in recommended.rules,
+    'should include design-token/easing',
   );
 });
 
