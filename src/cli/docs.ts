@@ -130,7 +130,10 @@ export function generateRulePage(rule: RuleModule): string {
   ].join('\n');
 }
 
-export function generateIndexPage(tokenTypes: string[], ruleNames: string[]): string {
+export function generateIndexPage(
+  tokenTypes: string[],
+  ruleNames: string[],
+): string {
   const tokenList = tokenTypes
     .map((t) => `- [${t}](./tokens/${t}.md)`)
     .join('\n');

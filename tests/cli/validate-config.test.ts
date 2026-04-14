@@ -71,7 +71,9 @@ void test('validateConfig accepts a valid configuration', async () => {
 
   const lines: string[] = [];
   const orig = console.log;
-  console.log = (...args: unknown[]) => { lines.push(args.join(' ')); };
+  console.log = (...args: unknown[]) => {
+    lines.push(args.join(' '));
+  };
   try {
     await validateConfig({ config: configPath }, stubLogger());
   } finally {
@@ -139,7 +141,10 @@ void test('validateConfig throws on unknown rules', async () => {
   const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
-    JSON.stringify({ tokens: {}, rules: { 'design-token/not-a-rule': 'error' } }),
+    JSON.stringify({
+      tokens: {},
+      rules: { 'design-token/not-a-rule': 'error' },
+    }),
   );
 
   await assert.rejects(
@@ -167,7 +172,10 @@ void test('validateConfig throws on invalid rule options', async () => {
     () => validateConfig({ config: configPath }, stubLogger()),
     (err: unknown) => {
       assert.ok(err instanceof Error);
-      assert.ok(err.message.includes('Invalid options') || err.message.includes('no-unused-tokens'));
+      assert.ok(
+        err.message.includes('Invalid options') ||
+          err.message.includes('no-unused-tokens'),
+      );
       return true;
     },
   );

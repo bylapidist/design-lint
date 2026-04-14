@@ -145,22 +145,30 @@ void test('groupTokensByType uses "unknown" for tokens with no type', () => {
 // ---------------------------------------------------------------------------
 
 void test('generateTokenTypePage contains type name in heading', () => {
-  const page = generateTokenTypePage('color', [makeToken('#/color/brand', 'color', '#000')]);
+  const page = generateTokenTypePage('color', [
+    makeToken('#/color/brand', 'color', '#000'),
+  ]);
   assert.ok(page.includes('# Color Tokens'));
 });
 
 void test('generateTokenTypePage includes token pointer', () => {
-  const page = generateTokenTypePage('color', [makeToken('#/color/brand', 'color', '#000')]);
+  const page = generateTokenTypePage('color', [
+    makeToken('#/color/brand', 'color', '#000'),
+  ]);
   assert.ok(page.includes('#/color/brand'));
 });
 
 void test('generateTokenTypePage includes value in table', () => {
-  const page = generateTokenTypePage('color', [makeToken('#/color/brand', 'color', '#ff0000')]);
+  const page = generateTokenTypePage('color', [
+    makeToken('#/color/brand', 'color', '#ff0000'),
+  ]);
   assert.ok(page.includes('#ff0000'));
 });
 
 void test('generateTokenTypePage marks deprecated tokens', () => {
-  const page = generateTokenTypePage('color', [makeToken('#/color/old', 'color', '#333', true)]);
+  const page = generateTokenTypePage('color', [
+    makeToken('#/color/old', 'color', '#333', true),
+  ]);
   assert.ok(page.includes('deprecated'));
 });
 
@@ -179,18 +187,24 @@ void test('generateRulePage includes description', () => {
 });
 
 void test('generateRulePage shows fixable when set', () => {
-  const page = generateRulePage(makeRule('design-token/fix', { fixable: 'code' }));
+  const page = generateRulePage(
+    makeRule('design-token/fix', { fixable: 'code' }),
+  );
   assert.ok(page.includes('`code`'));
 });
 
 void test('generateRulePage shows No when not fixable', () => {
-  const page = generateRulePage(makeRule('design-token/nofix', { fixable: null }));
+  const page = generateRulePage(
+    makeRule('design-token/nofix', { fixable: null }),
+  );
   assert.ok(page.includes('No'));
 });
 
 void test('generateRulePage includes since field when present', () => {
   const page = generateRulePage(
-    makeRule('design-token/since', { rationale: { why: 'reason', since: '2.0.0' } }),
+    makeRule('design-token/since', {
+      rationale: { why: 'reason', since: '2.0.0' },
+    }),
   );
   assert.ok(page.includes('2.0.0'));
 });
@@ -307,7 +321,9 @@ void test('generateDocs logs generated count', async () => {
   const outDir = makeTmpOutDir();
   const lines: string[] = [];
   const orig = console.log;
-  console.log = (...args: unknown[]) => { lines.push(args.join(' ')); };
+  console.log = (...args: unknown[]) => {
+    lines.push(args.join(' '));
+  };
   try {
     await generateDocs({ out: outDir }, () => makeConfig());
   } finally {
@@ -354,7 +370,11 @@ void test('edsmGroupTokensByType groups by type', () => {
 
 void test('edsmGroupTokensByType falls back to unknown', () => {
   const token: DtifFlattenedToken = {
-    id: '#/x', pointer: '#/x', path: ['x'], name: 'x', metadata: { extensions: {} },
+    id: '#/x',
+    pointer: '#/x',
+    path: ['x'],
+    name: 'x',
+    metadata: { extensions: {} },
   };
   assert.ok(edsmGroupTokensByType([token]).has('unknown'));
 });
@@ -364,26 +384,31 @@ void test('edsmGroupTokensByType falls back to unknown', () => {
 // ---------------------------------------------------------------------------
 
 void test('renderTokenSection includes dscp comment delimiters', () => {
-  const section = renderTokenSection('color', [makeToken('#/color/a', 'color', '#000')]);
+  const section = renderTokenSection('color', [
+    makeToken('#/color/a', 'color', '#000'),
+  ]);
   assert.ok(section.includes('<!-- dscp:tokens:color -->'));
   assert.ok(section.includes('<!-- /dscp:tokens:color -->'));
 });
 
 void test('renderTokenSection includes token pointer', () => {
-  const section = renderTokenSection('color', [makeToken('#/color/brand', 'color', '#abc')]);
+  const section = renderTokenSection('color', [
+    makeToken('#/color/brand', 'color', '#abc'),
+  ]);
   assert.ok(section.includes('#/color/brand'));
 });
 
 void test('renderTokenSection marks deprecated tokens', () => {
-  const section = renderTokenSection('color', [makeToken('#/color/old', 'color', '#000', true)]);
+  const section = renderTokenSection('color', [
+    makeToken('#/color/old', 'color', '#000', true),
+  ]);
   assert.ok(section.includes('_(deprecated)_'));
 });
 
 void test('renderTokenSection includes description from metadata', () => {
-  const section = renderTokenSection(
-    'color',
-    [makeToken('#/color/x', 'color', '#fff', false, 'Primary brand color')],
-  );
+  const section = renderTokenSection('color', [
+    makeToken('#/color/x', 'color', '#fff', false, 'Primary brand color'),
+  ]);
   assert.ok(section.includes('Primary brand color'));
 });
 
@@ -476,38 +501,55 @@ void test('exportDesignSystemMd writes DESIGN_SYSTEM.md', async () => {
 });
 
 void test('exportDesignSystemMd includes dscp:meta section', async () => {
-  const outPath = path.join(tmpdir(), `dl-edsm-meta-${Date.now().toString()}.md`);
+  const outPath = path.join(
+    tmpdir(),
+    `dl-edsm-meta-${Date.now().toString()}.md`,
+  );
   await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('<!-- dscp:meta -->'));
 });
 
 void test('exportDesignSystemMd includes dscp:rules section', async () => {
-  const outPath = path.join(tmpdir(), `dl-edsm-rules-${Date.now().toString()}.md`);
+  const outPath = path.join(
+    tmpdir(),
+    `dl-edsm-rules-${Date.now().toString()}.md`,
+  );
   await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('<!-- dscp:rules -->'));
 });
 
 void test('exportDesignSystemMd includes dscp:violations section', async () => {
-  const outPath = path.join(tmpdir(), `dl-edsm-viol-${Date.now().toString()}.md`);
+  const outPath = path.join(
+    tmpdir(),
+    `dl-edsm-viol-${Date.now().toString()}.md`,
+  );
   await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('<!-- dscp:violations -->'));
 });
 
 void test('exportDesignSystemMd includes at least one rule row in rules section', async () => {
-  const outPath = path.join(tmpdir(), `dl-edsm-rulerow-${Date.now().toString()}.md`);
+  const outPath = path.join(
+    tmpdir(),
+    `dl-edsm-rulerow-${Date.now().toString()}.md`,
+  );
   await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('design-token'));
 });
 
 void test('exportDesignSystemMd logs generated count', async () => {
-  const outPath = path.join(tmpdir(), `dl-edsm-log-${Date.now().toString()}.md`);
+  const outPath = path.join(
+    tmpdir(),
+    `dl-edsm-log-${Date.now().toString()}.md`,
+  );
   const lines: string[] = [];
   const orig = console.log;
-  console.log = (...args: unknown[]) => { lines.push(args.join(' ')); };
+  console.log = (...args: unknown[]) => {
+    lines.push(args.join(' '));
+  };
   try {
     await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   } finally {
@@ -527,11 +569,16 @@ void test('migrateConfig detects no changes for a v8-compatible JSON config', ()
   );
   fs.mkdirSync(dir, { recursive: true });
   const configPath = path.join(dir, 'designlint.config.json');
-  fs.writeFileSync(configPath, JSON.stringify({ rules: { 'design-token/colors': 'error' } }));
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ rules: { 'design-token/colors': 'error' } }),
+  );
 
   const lines: string[] = [];
   const orig = console.log;
-  console.log = (...args: unknown[]) => { lines.push(args.join(' ')); };
+  console.log = (...args: unknown[]) => {
+    lines.push(args.join(' '));
+  };
   try {
     migrateConfig({ config: configPath });
   } finally {
@@ -549,12 +596,16 @@ void test('migrateConfig upgrades numeric severity codes', () => {
   const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
-    JSON.stringify({ rules: { 'design-token/colors': 2, 'design-token/spacing': 1 } }),
+    JSON.stringify({
+      rules: { 'design-token/colors': 2, 'design-token/spacing': 1 },
+    }),
   );
 
   const lines: string[] = [];
   const orig = console.log;
-  console.log = (...args: unknown[]) => { lines.push(args.join(' ')); };
+  console.log = (...args: unknown[]) => {
+    lines.push(args.join(' '));
+  };
   try {
     migrateConfig({ config: configPath, dryRun: true });
   } finally {
@@ -572,7 +623,10 @@ void test('migrateConfig writes migrated config to --out file', () => {
   fs.mkdirSync(dir, { recursive: true });
   const configPath = path.join(dir, 'designlint.config.json');
   const outPath = path.join(dir, 'migrated.json');
-  fs.writeFileSync(configPath, JSON.stringify({ rules: { 'design-token/colors': 2 } }));
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({ rules: { 'design-token/colors': 2 } }),
+  );
 
   migrateConfig({ config: configPath, out: outPath });
 
