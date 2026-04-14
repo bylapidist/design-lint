@@ -72,7 +72,7 @@ void test('fails on unresolved aliases', async () => {
           err.message.includes('unresolved') ||
           err.message.includes('alias') ||
           err.message.includes('missing'),
-        `Unexpected error message: ${String(err instanceof Error ? err.message : err)}`,
+        `Unexpected error message: ${err instanceof Error ? err.message : String(err)}`,
       );
       return true;
     },
