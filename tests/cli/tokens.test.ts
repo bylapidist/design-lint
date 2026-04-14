@@ -133,7 +133,9 @@ void test('exportTokens exports multiple themes', async () => {
 
   const lines: string[] = [];
   const orig = console.log;
-  console.log = (v: unknown) => { lines.push(String(v)); };
+  console.log = (v: unknown) => {
+    lines.push(String(v));
+  };
   try {
     await exportTokens({ config: configPath });
   } finally {
