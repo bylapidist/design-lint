@@ -11,19 +11,39 @@ const DEFAULT_SOCKET_PATH = '/tmp/designlint-kernel.sock';
 const DEFAULT_HTTP_PORT = 7341;
 const DEFAULT_OUT = '.designlint/snapshot.bin';
 
+interface KWPFrame {
+  type: string;
+  id: string;
+  method?: string;
+  payload?: unknown;
+}
+
+interface TransportClient {
+  connect(): Promise<void>;
+  request(frame: KWPFrame): Promise<KWPFrame>;
+  disconnect(): Promise<void>;
+}
+
 interface ExportSnapshotOptions {
   out?: string;
   socketPath?: string;
   httpPort?: number;
 }
 
+interface TransportDeps {
+  UnixSocketClient: new (path: string) => TransportClient;
+  HttpClient: new (port: number) => TransportClient;
+}
+
 /**
  * Connect to the running kernel and trigger a snapshot export.
  *
  * @param options - Command options.
+ * @param deps - Optional transport constructors (used in tests).
  */
 export async function exportRuntimeSnapshot(
   options: ExportSnapshotOptions,
+  deps?: TransportDeps,
 ): Promise<void> {
   const outPath = path.resolve(process.cwd(), options.out ?? DEFAULT_OUT);
 
@@ -31,7 +51,8 @@ export async function exportRuntimeSnapshot(
   const { mkdir } = await import('node:fs/promises');
   await mkdir(path.dirname(outPath), { recursive: true });
 
-  const { UnixSocketClient } = await import('@lapidist/dsr');
+  const { UnixSocketClient, HttpClient } =
+    deps ?? (await import('@lapidist/dsr'));
 
   const client = new UnixSocketClient(
     options.socketPath ?? DEFAULT_SOCKET_PATH,
@@ -41,7 +62,6 @@ export async function exportRuntimeSnapshot(
     await client.connect();
   } catch {
     // Fall back to HTTP
-    const { HttpClient } = await import('@lapidist/dsr');
     const httpClient = new HttpClient(options.httpPort ?? DEFAULT_HTTP_PORT);
     await httpClient.connect();
 

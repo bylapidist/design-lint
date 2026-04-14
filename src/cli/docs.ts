@@ -15,7 +15,8 @@ import path from 'path';
 import { loadConfig } from '../config/loader.js';
 import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
 import { builtInRules } from '../rules/index.js';
-import type { DtifFlattenedToken } from '../core/types.js';
+import type { DtifFlattenedToken, RuleModule } from '../core/types.js';
+import type { Config } from '../core/linter.js';
 
 type DocsFormat = 'vitepress' | 'markdown';
 
@@ -28,6 +29,11 @@ interface DocsCommandOptions {
   config?: string;
 }
 
+export type LoadConfigFn = (
+  cwd: string,
+  configPath?: string,
+) => Promise<Config>;
+
 function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -39,14 +45,14 @@ function writeFile(filePath: string, content: string): void {
   fs.writeFileSync(filePath, content, 'utf8');
 }
 
-function tokenValueToString(value: unknown): string {
+export function tokenValueToString(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return String(value);
   return JSON.stringify(value);
 }
 
-function groupTokensByType(
+export function groupTokensByType(
   tokens: DtifFlattenedToken[],
 ): Map<string, DtifFlattenedToken[]> {
   const groups = new Map<string, DtifFlattenedToken[]>();
@@ -62,7 +68,7 @@ function groupTokensByType(
   return groups;
 }
 
-function generateTokenTypePage(
+export function generateTokenTypePage(
   typeName: string,
   tokens: DtifFlattenedToken[],
 ): string {
@@ -87,7 +93,7 @@ function generateTokenTypePage(
   ].join('\n');
 }
 
-function generateRulePage(rule: (typeof builtInRules)[number]): string {
+export function generateRulePage(rule: RuleModule): string {
   const { name, meta } = rule;
   const stability = meta.stability ?? 'stable';
   const fixable = meta.fixable ? `\`${meta.fixable}\`` : 'No';
@@ -124,7 +130,7 @@ function generateRulePage(rule: (typeof builtInRules)[number]): string {
   ].join('\n');
 }
 
-function generateIndexPage(tokenTypes: string[], ruleNames: string[]): string {
+export function generateIndexPage(tokenTypes: string[], ruleNames: string[]): string {
   const tokenList = tokenTypes
     .map((t) => `- [${t}](./tokens/${t}.md)`)
     .join('\n');
@@ -148,7 +154,7 @@ function generateIndexPage(tokenTypes: string[], ruleNames: string[]): string {
   ].join('\n');
 }
 
-function generateVitePressConfig(
+export function generateVitePressConfig(
   tokenTypes: string[],
   ruleNames: string[],
 ): string {
@@ -195,8 +201,12 @@ function generateVitePressConfig(
  * Generate a static documentation site from design-lint kernel state.
  *
  * @param options - Command options controlling output directory and format.
+ * @param loadConfigFn - Optional override for config loading (used in tests).
  */
-export async function generateDocs(options: DocsCommandOptions): Promise<void> {
+export async function generateDocs(
+  options: DocsCommandOptions,
+  loadConfigFn?: LoadConfigFn,
+): Promise<void> {
   const outDir = path.resolve(
     process.cwd(),
     options.out ?? 'docs/design-system',
@@ -204,7 +214,8 @@ export async function generateDocs(options: DocsCommandOptions): Promise<void> {
   const format: DocsFormat = options.format ?? 'vitepress';
 
   // Load tokens from config
-  const config = await loadConfig(process.cwd(), options.config);
+  const configLoader = loadConfigFn ?? loadConfig;
+  const config = await configLoader(process.cwd(), options.config);
   const tokensByTheme = toThemeRecord(config.tokens);
   const themes = Object.keys(tokensByTheme);
   const primaryTheme = themes[0] ?? 'default';

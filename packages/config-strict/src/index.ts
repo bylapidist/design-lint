@@ -17,12 +17,11 @@ import type { Config } from '@lapidist/design-lint';
 const strict = {
   rules: {
     'design-token/colors': 'error',
-    'design-token/typography': 'error',
     'design-token/spacing': 'error',
     'design-token/easing': 'error',
     'design-token/css-var-provenance': 'error',
     'design-token/composite-equivalence': 'error',
-    'design-token/no-deprecated': 'error',
+    'design-system/deprecation': 'error',
     'design-system/jsx-style-values': 'error',
     'design-system/no-hardcoded-spacing': 'error',
   },

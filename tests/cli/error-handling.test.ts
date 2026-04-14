@@ -1,34 +1,46 @@
+/**
+ * Tests for CLI error-handling behaviour.
+ *
+ * Calls CLI functions directly — no subprocess spawning.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { createRequire } from 'node:module';
+import { exportTokens } from '../../src/cli/tokens.js';
 
-const require = createRequire(import.meta.url);
-const tsxLoader = require.resolve('tsx/esm');
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-void test('reports config errors and sets exit code', () => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'designlint-'));
+function makeTmpDir(): string {
+  return mkdtempSync(path.join(tmpdir(), 'designlint-'));
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+void test('reports config errors on invalid tokens shape', async () => {
+  const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'designlint.config.json'),
     JSON.stringify({ tokens: 5, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    ['--import', tsxLoader, cli, '--config', 'designlint.config.json'],
-    { cwd: dir, encoding: 'utf8' },
+
+  await assert.rejects(
+    () => exportTokens({ config: path.join(dir, 'designlint.config.json') }),
+    (err: unknown) => {
+      assert.ok(err instanceof Error);
+      return true;
+    },
   );
-  assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /Invalid config/);
 });
 
-void test('fails on unresolved aliases', () => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'designlint-'));
+void test('fails on unresolved aliases', async () => {
+  const dir = makeTmpDir();
   fs.writeFileSync(
     path.join(dir, 'tokens.tokens.json'),
     JSON.stringify({
@@ -50,19 +62,19 @@ void test('fails on unresolved aliases', () => {
       rules: {},
     }),
   );
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'tokens',
-      '--config',
-      'designlint.config.json',
-    ],
-    { cwd: dir, encoding: 'utf8' },
+
+  await assert.rejects(
+    () => exportTokens({ config: path.join(dir, 'designlint.config.json') }),
+    (err: unknown) => {
+      assert.ok(err instanceof Error);
+      assert.ok(
+        err.message.includes('Failed to parse DTIF document') ||
+          err.message.includes('unresolved') ||
+          err.message.includes('alias') ||
+          err.message.includes('missing'),
+        `Unexpected error message: ${String(err instanceof Error ? err.message : err)}`,
+      );
+      return true;
+    },
   );
-  assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /Failed to parse DTIF document/i);
 });

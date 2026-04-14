@@ -12,33 +12,68 @@
  *   --no-http              Disable HTTP fallback transport
  */
 
-// Dynamically import KernelProcess so the build can tree-shake this file
-// from the main CLI bundle.
-const { KernelProcess } = await import('@lapidist/dsr');
-
-const args = process.argv.slice(2);
-
-function getArg(flag: string): string | undefined {
-  const idx = args.indexOf(flag);
-  return idx !== -1 ? args[idx + 1] : undefined;
+interface KernelOptions {
+  socketPath?: string;
+  httpPort?: number;
+  pidFile?: string;
+  enableHttp?: boolean;
 }
 
-function hasFlag(flag: string): boolean {
-  return args.includes(flag);
+interface StartableKernel {
+  start(): Promise<void>;
 }
 
-const socketPath = getArg('--socket-path');
-const httpPortStr = getArg('--http-port');
-const pidFile = getArg('--pid-file');
-const noHttp = hasFlag('--no-http');
+export type KernelProcessCtor = new (options: KernelOptions) => StartableKernel;
 
-const kernel = new KernelProcess({
-  socketPath,
-  httpPort: httpPortStr !== undefined ? parseInt(httpPortStr, 10) : undefined,
-  pidFile,
-  enableHttp: !noHttp,
-});
+function parseArgs(argv: string[]): KernelOptions {
+  function getArg(flag: string): string | undefined {
+    const idx = argv.indexOf(flag);
+    return idx !== -1 ? argv[idx + 1] : undefined;
+  }
 
-await kernel.start();
+  function hasFlag(flag: string): boolean {
+    return argv.includes(flag);
+  }
 
-console.log(`[kernel-daemon] started (PID ${process.pid.toString()})`);
+  const socketPath = getArg('--socket-path');
+  const httpPortStr = getArg('--http-port');
+  const pidFile = getArg('--pid-file');
+  const noHttp = hasFlag('--no-http');
+
+  return {
+    socketPath,
+    httpPort: httpPortStr !== undefined ? parseInt(httpPortStr, 10) : undefined,
+    pidFile,
+    enableHttp: !noHttp,
+  };
+}
+
+async function loadKernelProcess(): Promise<KernelProcessCtor> {
+  const { KernelProcess } = await import('@lapidist/dsr');
+  return KernelProcess;
+}
+
+/**
+ * Start the kernel daemon.
+ *
+ * Accepts an optional KernelProcess constructor so the function can be tested
+ * without spawning a real kernel.
+ *
+ * @param argv - CLI arguments (defaults to process.argv.slice(2)).
+ * @param KernelProcessClass - Optional KernelProcess constructor override.
+ */
+export async function startDaemon(
+  argv = process.argv.slice(2),
+  KernelProcessClass?: KernelProcessCtor,
+): Promise<void> {
+  const options = parseArgs(argv);
+  const Ctor = KernelProcessClass ?? (await loadKernelProcess());
+  const kernel = new Ctor(options);
+  await kernel.start();
+  console.log(`[kernel-daemon] started (PID ${process.pid.toString()})`);
+}
+
+// Run when invoked as a standalone process (not when imported in tests).
+if (!process.env.DESIGN_LINT_TEST_MODE) {
+  await startDaemon();
+}
