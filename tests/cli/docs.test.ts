@@ -246,13 +246,13 @@ void test('generateVitePressConfig produces rule entries with slash replaced', (
 
 void test('generateDocs writes index.md to output directory', async () => {
   const outDir = makeTmpOutDir();
-  await generateDocs({ out: outDir }, async () => makeConfig());
+  await generateDocs({ out: outDir }, () => makeConfig());
   assert.ok(fs.existsSync(path.join(outDir, 'index.md')));
 });
 
 void test('generateDocs writes rule pages to rules/ directory', async () => {
   const outDir = makeTmpOutDir();
-  await generateDocs({ out: outDir }, async () => makeConfig());
+  await generateDocs({ out: outDir }, () => makeConfig());
   const rulesDir = path.join(outDir, 'rules');
   assert.ok(fs.existsSync(rulesDir));
   assert.ok(fs.readdirSync(rulesDir).length > 0);
@@ -260,13 +260,13 @@ void test('generateDocs writes rule pages to rules/ directory', async () => {
 
 void test('generateDocs writes VitePress config for vitepress format', async () => {
   const outDir = makeTmpOutDir();
-  await generateDocs({ out: outDir, format: 'vitepress' }, async () => makeConfig());
+  await generateDocs({ out: outDir, format: 'vitepress' }, () => makeConfig());
   assert.ok(fs.existsSync(path.join(outDir, '.vitepress', 'config.mts')));
 });
 
 void test('generateDocs VitePress config contains defineConfig', async () => {
   const outDir = makeTmpOutDir();
-  await generateDocs({ out: outDir, format: 'vitepress' }, async () => makeConfig());
+  await generateDocs({ out: outDir, format: 'vitepress' }, () => makeConfig());
   const content = fs.readFileSync(
     path.join(outDir, '.vitepress', 'config.mts'),
     'utf8',
@@ -277,13 +277,13 @@ void test('generateDocs VitePress config contains defineConfig', async () => {
 
 void test('generateDocs skips VitePress config for markdown format', async () => {
   const outDir = makeTmpOutDir();
-  await generateDocs({ out: outDir, format: 'markdown' }, async () => makeConfig());
+  await generateDocs({ out: outDir, format: 'markdown' }, () => makeConfig());
   assert.ok(!fs.existsSync(path.join(outDir, '.vitepress', 'config.mts')));
 });
 
 void test('generateDocs index.md includes Design System Documentation heading', async () => {
   const outDir = makeTmpOutDir();
-  await generateDocs({ out: outDir }, async () => makeConfig());
+  await generateDocs({ out: outDir }, () => makeConfig());
   const content = fs.readFileSync(path.join(outDir, 'index.md'), 'utf8');
   assert.ok(content.includes('# Design System Documentation'));
 });
@@ -297,7 +297,7 @@ void test('generateDocs writes token type page when tokens are provided', async 
   // Inject a config + pre-flattened token list via the getFlattenedTokens path is
   // complex, so we verify the pure generateTokenTypePage helper is tested above.
   // Here we confirm generateDocs completes and writes the index page.
-  await generateDocs({ out: outDir }, async () => makeConfig());
+  await generateDocs({ out: outDir }, () => makeConfig());
   assert.ok(fs.existsSync(path.join(outDir, 'index.md')));
   // Suppress unused variable warning
   assert.ok(tokens.length > 0);
@@ -309,7 +309,7 @@ void test('generateDocs logs generated count', async () => {
   const orig = console.log;
   console.log = (...args: unknown[]) => { lines.push(args.join(' ')); };
   try {
-    await generateDocs({ out: outDir }, async () => makeConfig());
+    await generateDocs({ out: outDir }, () => makeConfig());
   } finally {
     console.log = orig;
   }
@@ -469,7 +469,7 @@ void test('generateSnapshotHash returns padded string for empty token list', () 
 
 void test('exportDesignSystemMd writes DESIGN_SYSTEM.md', async () => {
   const outPath = path.join(tmpdir(), `dl-edsm-${Date.now().toString()}.md`);
-  await exportDesignSystemMd({ out: outPath }, async () => makeConfig());
+  await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   assert.ok(fs.existsSync(outPath));
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('# DESIGN_SYSTEM.md'));
@@ -477,28 +477,28 @@ void test('exportDesignSystemMd writes DESIGN_SYSTEM.md', async () => {
 
 void test('exportDesignSystemMd includes dscp:meta section', async () => {
   const outPath = path.join(tmpdir(), `dl-edsm-meta-${Date.now().toString()}.md`);
-  await exportDesignSystemMd({ out: outPath }, async () => makeConfig());
+  await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('<!-- dscp:meta -->'));
 });
 
 void test('exportDesignSystemMd includes dscp:rules section', async () => {
   const outPath = path.join(tmpdir(), `dl-edsm-rules-${Date.now().toString()}.md`);
-  await exportDesignSystemMd({ out: outPath }, async () => makeConfig());
+  await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('<!-- dscp:rules -->'));
 });
 
 void test('exportDesignSystemMd includes dscp:violations section', async () => {
   const outPath = path.join(tmpdir(), `dl-edsm-viol-${Date.now().toString()}.md`);
-  await exportDesignSystemMd({ out: outPath }, async () => makeConfig());
+  await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('<!-- dscp:violations -->'));
 });
 
 void test('exportDesignSystemMd includes at least one rule row in rules section', async () => {
   const outPath = path.join(tmpdir(), `dl-edsm-rulerow-${Date.now().toString()}.md`);
-  await exportDesignSystemMd({ out: outPath }, async () => makeConfig());
+  await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('design-token'));
 });
@@ -509,7 +509,7 @@ void test('exportDesignSystemMd logs generated count', async () => {
   const orig = console.log;
   console.log = (...args: unknown[]) => { lines.push(args.join(' ')); };
   try {
-    await exportDesignSystemMd({ out: outPath }, async () => makeConfig());
+    await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   } finally {
     console.log = orig;
   }

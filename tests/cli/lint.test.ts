@@ -92,7 +92,7 @@ void test('fail-on-empty semantics: warning fires when no files match', async ()
   assert.equal(results.length, 0);
   assert.equal(warning, 'No files matched the provided patterns.');
   // failOnEmpty behaviour: exitCode is 1 when warning is present
-  const exitCode = warning === 'No files matched the provided patterns.' ? 1 : 0;
+  const exitCode = 1;
   assert.equal(exitCode, 1);
 });
 
