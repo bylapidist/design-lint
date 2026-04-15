@@ -26,6 +26,12 @@ import { exportDesignSystemMd } from './export-design-system-md.js';
 import { kernelStart, kernelStop, kernelStatus } from './kernel.js';
 import { exportRuntimeSnapshot } from './snapshot.js';
 import { diffSnapshots } from './diff.js';
+import {
+  tokenAdd,
+  tokenDeprecate,
+  componentRegister,
+  ruleConfigure,
+} from './write.js';
 import { createLogger, type Logger } from './logger.js';
 
 type CliOptions = ExecuteOptions &
@@ -295,6 +301,154 @@ function createProgram(version: string, logger: Logger) {
             socketPath: opts.socketPath,
             httpPort: opts.httpPort,
           });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
+
+  // ---------------------------------------------------------------------------
+  // token write commands
+  // ---------------------------------------------------------------------------
+
+  const token = program
+    .command('token')
+    .description('Design token write operations (requires a running kernel)');
+
+  token
+    .command('add <pointer>')
+    .description('Register a new design token in the running DSR kernel')
+    .requiredOption('--name <name>', 'Human-readable token name')
+    .option('--type <type>', 'DTIF token type (e.g. color, dimension)')
+    .option('--value <json>', 'Token value as a JSON string')
+    .option('--socket-path <path>', 'Unix socket path for the kernel')
+    .option('--http-port <n>', 'HTTP fallback port', (v: string) =>
+      parseInt(v, 10),
+    )
+    .action(
+      async (
+        pointer: string,
+        opts: {
+          name: string;
+          type?: string;
+          value?: string;
+          socketPath?: string;
+          httpPort?: number;
+        },
+      ) => {
+        try {
+          await tokenAdd({ pointer, ...opts });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
+
+  token
+    .command('deprecate <pointer>')
+    .description('Mark a design token as deprecated in the running DSR kernel')
+    .option('--replacement <pointer>', 'Replacement token pointer')
+    .option('--socket-path <path>', 'Unix socket path for the kernel')
+    .option('--http-port <n>', 'HTTP fallback port', (v: string) =>
+      parseInt(v, 10),
+    )
+    .action(
+      async (
+        pointer: string,
+        opts: {
+          replacement?: string;
+          socketPath?: string;
+          httpPort?: number;
+        },
+      ) => {
+        try {
+          await tokenDeprecate({ pointer, ...opts });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
+
+  // ---------------------------------------------------------------------------
+  // component write commands
+  // ---------------------------------------------------------------------------
+
+  const component = program
+    .command('component')
+    .description(
+      'Component registry write operations (requires a running kernel)',
+    );
+
+  component
+    .command('register <name>')
+    .description('Register a component in the running DSR kernel')
+    .requiredOption('--package <name>', 'Package that exports this component')
+    .option('--version <semver>', 'Package version')
+    .option(
+      '--replaces <names>',
+      'Comma-separated list of component names this replaces',
+    )
+    .option('--socket-path <path>', 'Unix socket path for the kernel')
+    .option('--http-port <n>', 'HTTP fallback port', (v: string) =>
+      parseInt(v, 10),
+    )
+    .action(
+      async (
+        name: string,
+        opts: {
+          package: string;
+          version?: string;
+          replaces?: string;
+          socketPath?: string;
+          httpPort?: number;
+        },
+      ) => {
+        try {
+          await componentRegister({
+            name,
+            packageName: opts.package,
+            version: opts.version,
+            replaces: opts.replaces,
+            socketPath: opts.socketPath,
+            httpPort: opts.httpPort,
+          });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
+
+  // ---------------------------------------------------------------------------
+  // rule write commands
+  // ---------------------------------------------------------------------------
+
+  const rule = program
+    .command('rule')
+    .description(
+      'Rule configuration write operations (requires a running kernel)',
+    );
+
+  rule
+    .command('configure <ruleId>')
+    .description('Update a rule severity or options in the running DSR kernel')
+    .option('--severity <level>', 'Rule severity: error, warn, or off')
+    .option('--options <json>', 'Rule options as a JSON string')
+    .option('--socket-path <path>', 'Unix socket path for the kernel')
+    .option('--http-port <n>', 'HTTP fallback port', (v: string) =>
+      parseInt(v, 10),
+    )
+    .action(
+      async (
+        ruleId: string,
+        opts: {
+          severity?: string;
+          options?: string;
+          socketPath?: string;
+          httpPort?: number;
+        },
+      ) => {
+        try {
+          await ruleConfigure({ ruleId, ...opts });
         } catch (err) {
           logger.error(err);
         }
