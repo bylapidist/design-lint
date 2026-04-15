@@ -15,6 +15,8 @@ void test('config exposes expected members', () => {
       'CONFIG_ARRAY_MERGE_KEYS',
       'defineConfig',
       'loadConfig',
+      'loadPolicy',
+      'enforcePolicy',
       'loadTokens',
       'normalizeTokens',
       'wrapTokenError',

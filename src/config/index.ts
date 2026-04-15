@@ -27,3 +27,5 @@ export { normalizeTokens } from '../utils/tokens/index.js';
 export * from './schema.js';
 export * from './token-loader.js';
 export { wrapTokenError } from '../utils/tokens/index.js';
+export { loadPolicy } from './policy-loader.js';
+export { enforcePolicy } from './policy-enforcer.js';
