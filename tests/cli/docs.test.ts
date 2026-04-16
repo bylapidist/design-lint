@@ -14,6 +14,7 @@ import {
   groupTokensByType,
   generateTokenTypePage,
   generateRulePage,
+  generateComponentsPage,
   generateIndexPage,
   generateVitePressConfig,
   generateDocs,
@@ -228,6 +229,55 @@ void test('generateIndexPage includes rule links with slash replaced', () => {
 void test('generateIndexPage shows no-tokens message when empty', () => {
   const page = generateIndexPage([], ['rule/a']);
   assert.ok(page.includes('_No tokens configured._'));
+});
+
+void test('generateIndexPage includes components link when hasComponents is true', () => {
+  const page = generateIndexPage(['color'], ['rule/a'], true);
+  assert.ok(page.includes('./components.md'));
+});
+
+void test('generateIndexPage omits components section when hasComponents is false', () => {
+  const page = generateIndexPage(['color'], ['rule/a'], false);
+  assert.ok(!page.includes('./components.md'));
+});
+
+// ---------------------------------------------------------------------------
+// docs.ts — generateComponentsPage
+// ---------------------------------------------------------------------------
+
+void test('generateComponentsPage includes components heading', () => {
+  const page = generateComponentsPage([
+    { name: 'Button', package: '@ds/button' },
+  ]);
+  assert.ok(page.includes('# Components'));
+});
+
+void test('generateComponentsPage includes component name', () => {
+  const page = generateComponentsPage([
+    { name: 'Button', package: '@ds/button' },
+  ]);
+  assert.ok(page.includes('Button'));
+  assert.ok(page.includes('@ds/button'));
+});
+
+void test('generateComponentsPage marks deprecated components', () => {
+  const page = generateComponentsPage([
+    {
+      name: 'OldButton',
+      package: '@ds/button',
+      deprecated: true,
+      replacedBy: 'Button',
+    },
+  ]);
+  assert.ok(page.includes('Yes'));
+  assert.ok(page.includes('Button'));
+});
+
+void test('generateComponentsPage shows version when provided', () => {
+  const page = generateComponentsPage([
+    { name: 'Button', package: '@ds/button', version: '2.0.0' },
+  ]);
+  assert.ok(page.includes('2.0.0'));
 });
 
 // ---------------------------------------------------------------------------

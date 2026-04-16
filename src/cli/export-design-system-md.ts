@@ -15,6 +15,7 @@ import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
 import { builtInRules } from '../rules/index.js';
 import type { DtifFlattenedToken } from '../core/types.js';
 import type { Config } from '../core/linter.js';
+import { tryFetchKernelData } from './kernel-client.js';
 
 interface ExportDesignSystemMdOptions {
   /** Output file path. Defaults to `./DESIGN_SYSTEM.md`. */
@@ -97,14 +98,20 @@ export async function exportDesignSystemMd(
     }
   }
 
+  const kernelData = await tryFetchKernelData();
+
   const input: GeneratorInput = {
-    snapshotHash: 'local',
+    snapshotHash: kernelData?.snapshotHash ?? 'local',
     tokenGraph: { tokens: tokenMap, byType },
     ruleRegistry: {
       rules: new Map(builtInRules.map((r) => [r.name, toRuleInput(r)])),
     },
-    componentRegistry: { components: new Map() },
-    deprecationLedger: { entries: new Map() },
+    componentRegistry: {
+      components: kernelData?.componentEntries ?? new Map(),
+    },
+    deprecationLedger: {
+      entries: kernelData?.deprecationEntries ?? new Map(),
+    },
     violations: [],
   };
 
