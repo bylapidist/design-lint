@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
-import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { ConfigTokenProvider } from '../../src/config/config-token-provider.js';
 import { createDtifTheme } from '../helpers/dtif.js';
 
 // The easing rule's getAllowed only collects string-valued cubicBezier tokens,
@@ -20,7 +20,7 @@ function createLinter() {
     { tokens, rules: { 'design-token/easing': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(tokens),
+      tokenProvider: new ConfigTokenProvider({ tokens }),
     },
   );
 }
@@ -95,7 +95,7 @@ void test('design-token/easing warns when no cubicBezier tokens provided', async
     { rules: { 'design-token/easing': 'warn' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(),
+      tokenProvider: new ConfigTokenProvider({}),
     },
   );
   const res = await linter.lintText('', 'file.css');

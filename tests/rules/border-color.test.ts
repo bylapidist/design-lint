@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
-import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { ConfigTokenProvider } from '../../src/config/config-token-provider.js';
 import { createDtifTheme } from '../helpers/dtif.js';
 
 void test('design-token/border-color reports invalid value', async () => {
@@ -13,7 +13,7 @@ void test('design-token/border-color reports invalid value', async () => {
     { tokens, rules: { 'design-token/border-color': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(tokens),
+      tokenProvider: new ConfigTokenProvider({ tokens }),
     },
   );
   const res = await linter.lintText('.a{border-color:#000000;}', 'file.css');
@@ -28,7 +28,7 @@ void test('design-token/border-color accepts valid values', async () => {
     { tokens, rules: { 'design-token/border-color': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(tokens),
+      tokenProvider: new ConfigTokenProvider({ tokens }),
     },
   );
   const res = await linter.lintText('.a{border-color:#ffffff;}', 'file.css');
@@ -40,7 +40,7 @@ void test('design-token/border-color warns when tokens missing', async () => {
     { rules: { 'design-token/border-color': 'warn' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(),
+      tokenProvider: new ConfigTokenProvider({}),
     },
   );
   const res = await linter.lintText('', 'file.ts');

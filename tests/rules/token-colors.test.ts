@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
-import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { ConfigTokenProvider } from '../../src/config/config-token-provider.js';
 import { createDtifTheme } from '../helpers/dtif.js';
 
 function createLinter(rule: unknown = 'error') {
@@ -13,7 +13,7 @@ function createLinter(rule: unknown = 'error') {
     { tokens, rules: { 'design-token/colors': rule } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(tokens),
+      tokenProvider: new ConfigTokenProvider({ tokens }),
     },
   );
 }

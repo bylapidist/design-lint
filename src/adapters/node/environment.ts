@@ -3,8 +3,8 @@ import type { Config } from '../../core/linter.js';
 import { FileSource } from './file-source.js';
 import { NodePluginLoader } from './plugin-loader.js';
 import { NodeCacheProvider } from './node-cache-provider.js';
-import { NodeTokenProvider } from './token-provider.js';
 import { DsrTokenProvider } from './dsr-token-provider.js';
+import { ConfigTokenProvider } from '../../config/config-token-provider.js';
 
 export interface DsrOptions {
   /** Path to the Unix domain socket. Defaults to /tmp/designlint-kernel.sock */
@@ -38,7 +38,7 @@ export function createNodeEnvironment(
           await import('@lapidist/dsr/environments/node');
         return new NodeEnvironment(dsrOptions);
       })
-    : new NodeTokenProvider(config.tokens);
+    : new ConfigTokenProvider(config);
   return {
     documentSource: new FileSource(),
     pluginLoader: new NodePluginLoader(),
