@@ -432,3 +432,148 @@ void test('LSP textDocument/didChange re-lints and publishes updated diagnostics
     'didChange should trigger publishDiagnostics',
   );
 });
+
+// ---------------------------------------------------------------------------
+// Suppress directives (Gap E1)
+// ---------------------------------------------------------------------------
+
+interface CodeActionResult {
+  id: number;
+  result: {
+    title: string;
+    kind: string;
+    documentUri: string;
+    edit: {
+      range: {
+        start: { line: number; character: number };
+        end: { line: number; character: number };
+      };
+      newText: string;
+    };
+  }[];
+}
+
+function isCodeActionResult(f: unknown): f is CodeActionResult {
+  return (
+    typeof f === 'object' &&
+    f !== null &&
+    'result' in f &&
+    Array.isArray((f as { result: unknown }).result)
+  );
+}
+
+async function openAndGetCodeActions(
+  uri: string,
+  text: string,
+  messages: LintMessage[],
+): Promise<CodeActionResult['result']> {
+  const frames = await runLSP(
+    [
+      {
+        jsonrpc: '2.0',
+        method: 'textDocument/didOpen',
+        params: {
+          textDocument: { uri, text, languageId: 'css', version: 1 },
+        },
+      },
+      {
+        jsonrpc: '2.0',
+        id: 99,
+        method: 'textDocument/codeAction',
+        params: {
+          textDocument: { uri },
+          range: {
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: 1 },
+          },
+          context: { diagnostics: [] },
+        },
+      },
+    ],
+    makeMockLinter({ messages }),
+  );
+  const response = frames.find(isCodeActionResult);
+  assert.ok(response !== undefined, 'should have a code action response');
+  return response.result;
+}
+
+void test('LSP codeAction offers suppress-line directive for a violation', async () => {
+  const msg: LintMessage = {
+    ruleId: 'design-token/colors',
+    severity: 'error',
+    message: 'Raw color value',
+    line: 1,
+    column: 5,
+  };
+  const actions = await openAndGetCodeActions(
+    'file:///suppress.css',
+    'a { color: red; }',
+    [msg],
+  );
+
+  const suppressLine = actions.find((a) => a.title.includes('for this line'));
+  assert.ok(suppressLine !== undefined, 'should offer suppress-line action');
+  assert.ok(suppressLine.edit.newText.includes('design-lint-disable-line'));
+  assert.ok(suppressLine.edit.newText.includes('design-token/colors'));
+});
+
+void test('LSP codeAction offers suppress-file directive for a violation', async () => {
+  const msg: LintMessage = {
+    ruleId: 'design-token/colors',
+    severity: 'error',
+    message: 'Raw color value',
+    line: 1,
+    column: 5,
+  };
+  const actions = await openAndGetCodeActions(
+    'file:///suppress-file.css',
+    'a { color: red; }',
+    [msg],
+  );
+
+  const suppressFile = actions.find((a) => a.title.includes('for this file'));
+  assert.ok(suppressFile !== undefined, 'should offer suppress-file action');
+  assert.ok(suppressFile.edit.newText.includes('design-lint-disable'));
+  assert.ok(suppressFile.edit.newText.includes('design-token/colors'));
+  assert.equal(suppressFile.edit.range.start.line, 0);
+  assert.equal(suppressFile.edit.range.start.character, 0);
+});
+
+void test('LSP codeAction suppress-file is inserted at top of file', async () => {
+  const msg: LintMessage = {
+    ruleId: 'design-token/spacing',
+    severity: 'warn',
+    message: 'Raw spacing',
+    line: 3,
+    column: 1,
+  };
+  const actions = await openAndGetCodeActions(
+    'file:///suppress-top.css',
+    'a {\n  margin: 4px;\n  padding: 8px;\n}',
+    [msg],
+  );
+
+  const suppressFile = actions.find((a) => a.title.includes('for this file'));
+  assert.ok(suppressFile !== undefined);
+  assert.equal(suppressFile.edit.range.start.line, 0);
+});
+
+void test('LSP codeAction still includes fix action when rule has a fix', async () => {
+  const msg: LintMessage = {
+    ruleId: 'design-token/colors',
+    severity: 'error',
+    message: 'Raw color',
+    line: 1,
+    column: 5,
+    fix: { range: [5, 8], text: 'var(--color-brand)' },
+  };
+  const actions = await openAndGetCodeActions(
+    'file:///fix-and-suppress.css',
+    'a { color: red; }',
+    [msg],
+  );
+
+  const fixAction = actions.find((a) => a.title.startsWith('Fix:'));
+  assert.ok(fixAction !== undefined, 'should still offer auto-fix action');
+  assert.equal(fixAction.edit.newText, 'var(--color-brand)');
+});

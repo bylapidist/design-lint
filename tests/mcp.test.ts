@@ -4,7 +4,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { handleLintSnippet } from '../packages/mcp/src/tools/lint-snippet.js';
-import { handleTokenCompletions } from '../packages/mcp/src/tools/token-completions.js';
+import {
+  handleTokenCompletions,
+  type TokenValueResolver,
+} from '../packages/mcp/src/tools/token-completions.js';
 import { handleValidateComponent } from '../packages/mcp/src/tools/validate-component.js';
 import { handleExplainDiagnostic } from '../packages/mcp/src/tools/explain-diagnostic.js';
 import { handleRequest, type RpcRequest } from '../packages/mcp/src/server.js';
@@ -278,6 +281,37 @@ void test('handleTokenCompletions returns all tokens when cssProperty is empty s
   // Empty cssProperty means no filter
   const result = handleTokenCompletions(linter, { cssProperty: '' });
   assert.equal(result.length, 2);
+});
+
+void test('handleTokenCompletions uses resolver value when provided', () => {
+  const linter = makeMockLinter({
+    tokenCompletions: { default: ['color.brand.primary'] },
+  });
+  const resolver: TokenValueResolver = {
+    resolve: (pointer) =>
+      pointer === 'color.brand.primary' ? '#0066ff' : undefined,
+  };
+  const result = handleTokenCompletions(
+    linter,
+    { cssProperty: 'color' },
+    resolver,
+  );
+  assert.equal(result.length, 1);
+  assert.equal(result[0].resolvedValue, '#0066ff');
+});
+
+void test('handleTokenCompletions falls back to fabricated value when resolver returns undefined', () => {
+  const linter = makeMockLinter({
+    tokenCompletions: { default: ['color.brand.primary'] },
+  });
+  const resolver: TokenValueResolver = { resolve: () => undefined };
+  const result = handleTokenCompletions(
+    linter,
+    { cssProperty: 'color' },
+    resolver,
+  );
+  assert.equal(result.length, 1);
+  assert.ok(result[0].resolvedValue.startsWith('var(--'));
 });
 
 // ---------------------------------------------------------------------------

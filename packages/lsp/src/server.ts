@@ -400,20 +400,56 @@ export function createLSPServer(
           sendResponse(output, id, []);
           return;
         }
-        const actions: LSPCodeAction[] = state.messages
-          .filter((msg) => msg.fix !== undefined)
-          .map((msg) => {
-            const diag = messageToLSPDiagnostic(msg);
-            return {
+
+        const actions: LSPCodeAction[] = [];
+
+        for (const msg of state.messages) {
+          const diag = messageToLSPDiagnostic(msg);
+
+          // Auto-fix action when the rule provides a fix.
+          if (msg.fix !== undefined) {
+            actions.push({
               title: `Fix: ${msg.ruleId}`,
               kind: 'quickfix' as const,
               documentUri: uri,
               edit: {
                 range: diag.range,
-                newText: msg.fix?.text ?? '',
+                newText: msg.fix.text,
               },
-            };
+            });
+          }
+
+          // Suppress-line: append // design-lint-disable-line <ruleId> at end of the line.
+          const lineEnd = diag.range.start.line;
+          const lineText = state.text.split('\n')[lineEnd] ?? '';
+          actions.push({
+            title: `Disable \`${msg.ruleId}\` for this line`,
+            kind: 'quickfix' as const,
+            documentUri: uri,
+            edit: {
+              range: {
+                start: { line: lineEnd, character: lineText.length },
+                end: { line: lineEnd, character: lineText.length },
+              },
+              newText: ` // design-lint-disable-line ${msg.ruleId}`,
+            },
           });
+
+          // Suppress-file: insert /* design-lint-disable <ruleId> */ at the top of the file.
+          actions.push({
+            title: `Disable \`${msg.ruleId}\` for this file`,
+            kind: 'quickfix' as const,
+            documentUri: uri,
+            edit: {
+              range: {
+                start: { line: 0, character: 0 },
+                end: { line: 0, character: 0 },
+              },
+              newText: `/* design-lint-disable ${msg.ruleId} */\n`,
+            },
+          });
+        }
+
         sendResponse(output, id, actions);
         return;
       }
