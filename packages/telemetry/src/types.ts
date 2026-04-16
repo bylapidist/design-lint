@@ -145,6 +145,20 @@ export interface OtelSpan {
   end(): void;
   setAttribute(key: string, value: string | number | boolean): void;
   recordException(error: unknown): void;
+  /** Adds a named event with optional attributes to the span timeline. */
+  addEvent(
+    name: string,
+    attributes?: Record<string, string | number | boolean>,
+  ): void;
+}
+
+/** Minimal interface for an OTel observable gauge. */
+export interface OtelGauge {
+  /** Records a single gauge observation. */
+  record(
+    value: number,
+    attributes?: Record<string, string | number | boolean>,
+  ): void;
 }
 
 /**
@@ -152,13 +166,24 @@ export interface OtelSpan {
  * gauge metrics per token category.
  */
 export interface OtelMeter {
-  createObservableGauge(name: string, options?: { description?: string }): unknown;
+  createObservableGauge(
+    name: string,
+    options?: { description?: string },
+  ): OtelGauge;
 }
 
 /** Handle returned by {@link createOtelInstrumentation}. */
 export interface KernelInstrumentation {
   /** Wraps a RunEvent in an OTel span and records diagnostic child events. */
   recordRun(event: RunEvent): void;
+  /** Records a DiagnosticEvent as a child span of the enclosing run. */
+  recordDiagnostic(event: DiagnosticEvent): void;
+  /** Records a FixEvent as a span event tagged with the applied fix text. */
+  recordFix(event: FixEvent): void;
+  /** Records a CorrectionEvent as a span event with convergence metadata. */
+  recordCorrection(event: CorrectionEvent): void;
+  /** Records a KernelMutationEvent as a span event on the active trace. */
+  recordKernelMutation(event: KernelMutationEvent): void;
   /** Records entropy score components as gauge metric observations. */
   recordEntropy(event: EntropyEvent): void;
   /** Shuts down the instrumentation and flushes pending spans. */

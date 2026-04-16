@@ -17,6 +17,9 @@ import type {
   RunEvent,
   EntropyEvent,
   DiagnosticEvent,
+  FixEvent,
+  CorrectionEvent,
+  KernelMutationEvent,
   OtelTracer,
   OtelSpan,
   OtelMeter,
@@ -82,6 +85,46 @@ function makeDiagnosticEvent(
     file: 'src/App.tsx',
     line: 1,
     column: 1,
+    ...overrides,
+  };
+}
+
+function makeFixEvent(overrides: Partial<FixEvent> = {}): FixEvent {
+  return {
+    ...makeEnvelope({ eventType: 'FixEvent' }),
+    eventType: 'FixEvent',
+    ruleId: 'design-token/colors',
+    file: 'src/App.tsx',
+    line: 5,
+    column: 3,
+    before: 'color: red',
+    after: 'color: var(--color-brand)',
+    ...overrides,
+  };
+}
+
+function makeCorrectionEvent(
+  overrides: Partial<CorrectionEvent> = {},
+): CorrectionEvent {
+  return {
+    ...makeEnvelope({ eventType: 'CorrectionEvent' }),
+    eventType: 'CorrectionEvent',
+    agentId: 'agent-1',
+    iterationsUsed: 2,
+    converged: true,
+    violationsRemaining: 0,
+    ...overrides,
+  };
+}
+
+function makeKernelMutationEvent(
+  overrides: Partial<KernelMutationEvent> = {},
+): KernelMutationEvent {
+  return {
+    ...makeEnvelope({ eventType: 'KernelMutationEvent' }),
+    eventType: 'KernelMutationEvent',
+    mutationType: 'add',
+    pointer: '#/color/brand',
     ...overrides,
   };
 }
@@ -319,36 +362,61 @@ void test('groupByRule creates separate bucket per unique rule', () => {
 interface SpanRecord {
   name: string;
   attrs: Record<string, string | number | boolean>;
+  events: {
+    name: string;
+    attributes: Record<string, string | number | boolean>;
+  }[];
   ended: boolean;
+}
+
+interface GaugeRecord {
+  name: string;
+  value: number;
+  attributes: Record<string, string | number | boolean>;
 }
 
 function makeTracerAndSpans(): {
   tracer: OtelTracer;
   meter: OtelMeter;
   spans: SpanRecord[];
+  gauges: GaugeRecord[];
 } {
   const spans: SpanRecord[] = [];
+  const gauges: GaugeRecord[] = [];
+
   const mockSpan: OtelSpan = {
     end() {
-      // spans always has an entry when end() is called immediately after startSpan
       spans[spans.length - 1].ended = true;
     },
     setAttribute(key, value) {
-      // attrs is always defined on the last span
       spans[spans.length - 1].attrs[key] = value;
     },
     recordException() {
       // no-op in test
     },
+    addEvent(name, attributes = {}) {
+      spans[spans.length - 1].events.push({ name, attributes });
+    },
   };
+
   const tracer: OtelTracer = {
     startSpan(name) {
-      spans.push({ name, attrs: {}, ended: false });
+      spans.push({ name, attrs: {}, events: [], ended: false });
       return mockSpan;
     },
   };
-  const meter: OtelMeter = { createObservableGauge: () => ({}) };
-  return { tracer, meter, spans };
+
+  const meter: OtelMeter = {
+    createObservableGauge(name) {
+      return {
+        record(value, attributes = {}) {
+          gauges.push({ name, value, attributes });
+        },
+      };
+    },
+  };
+
+  return { tracer, meter, spans, gauges };
 }
 
 void test('createOtelInstrumentation.recordRun starts and ends a span', () => {
@@ -384,20 +452,118 @@ void test('createOtelInstrumentation.recordEntropy starts and ends a span', () =
 });
 
 void test('createOtelInstrumentation.shutdown resolves without error', async () => {
-  const tracer: OtelTracer = {
-    startSpan: () => ({
-      end() {
-        /* no-op */
-      },
-      setAttribute() {
-        /* no-op */
-      },
-      recordException() {
-        /* no-op */
-      },
-    }),
-  };
-  const meter: OtelMeter = { createObservableGauge: () => ({}) };
+  const { tracer, meter } = makeTracerAndSpans();
   const instrumentation = createOtelInstrumentation(tracer, meter);
   await assert.doesNotReject(instrumentation.shutdown());
+});
+
+// ---------------------------------------------------------------------------
+// createOtelInstrumentation — new event types
+// ---------------------------------------------------------------------------
+
+void test('createOtelInstrumentation.recordDiagnostic creates a span with rule attributes', () => {
+  const { tracer, meter, spans } = makeTracerAndSpans();
+  const instrumentation = createOtelInstrumentation(tracer, meter);
+  instrumentation.recordDiagnostic(
+    makeDiagnosticEvent('design-token/colors', {
+      severity: 'warn',
+      line: 10,
+      column: 5,
+    }),
+  );
+
+  assert.equal(spans.length, 1);
+  assert.equal(spans[0].name, 'design-lint.diagnostic');
+  assert.equal(spans[0].attrs.ruleId, 'design-token/colors');
+  assert.equal(spans[0].attrs.severity, 'warn');
+  assert.equal(spans[0].attrs.line, 10);
+  assert.equal(spans[0].attrs.column, 5);
+  assert.equal(spans[0].ended, true);
+});
+
+void test('createOtelInstrumentation.recordFix creates a span with addEvent for before/after', () => {
+  const { tracer, meter, spans } = makeTracerAndSpans();
+  const instrumentation = createOtelInstrumentation(tracer, meter);
+  instrumentation.recordFix(
+    makeFixEvent({ before: 'color: red', after: 'color: var(--color-brand)' }),
+  );
+
+  assert.equal(spans.length, 1);
+  assert.equal(spans[0].name, 'design-lint.fix');
+  assert.equal(spans[0].events.length, 1);
+  assert.equal(spans[0].events[0].name, 'fix.applied');
+  assert.equal(spans[0].events[0].attributes.before, 'color: red');
+  assert.equal(
+    spans[0].events[0].attributes.after,
+    'color: var(--color-brand)',
+  );
+  assert.equal(spans[0].ended, true);
+});
+
+void test('createOtelInstrumentation.recordCorrection creates a span with convergence metadata', () => {
+  const { tracer, meter, spans } = makeTracerAndSpans();
+  const instrumentation = createOtelInstrumentation(tracer, meter);
+  instrumentation.recordCorrection(
+    makeCorrectionEvent({
+      converged: false,
+      iterationsUsed: 3,
+      violationsRemaining: 2,
+    }),
+  );
+
+  assert.equal(spans.length, 1);
+  assert.equal(spans[0].name, 'design-lint.correction');
+  assert.equal(spans[0].events.length, 1);
+  assert.equal(spans[0].events[0].name, 'correction.cycle');
+  assert.equal(spans[0].events[0].attributes.converged, false);
+  assert.equal(spans[0].events[0].attributes.iterationsUsed, 3);
+  assert.equal(spans[0].events[0].attributes.violationsRemaining, 2);
+  assert.equal(spans[0].ended, true);
+});
+
+void test('createOtelInstrumentation.recordKernelMutation creates a span with mutation details', () => {
+  const { tracer, meter, spans } = makeTracerAndSpans();
+  const instrumentation = createOtelInstrumentation(tracer, meter);
+  instrumentation.recordKernelMutation(
+    makeKernelMutationEvent({
+      mutationType: 'deprecate',
+      pointer: '#/color/old',
+    }),
+  );
+
+  assert.equal(spans.length, 1);
+  assert.equal(spans[0].name, 'design-lint.kernel-mutation');
+  assert.equal(spans[0].events.length, 1);
+  assert.equal(spans[0].events[0].name, 'kernel.mutation');
+  assert.equal(spans[0].events[0].attributes.mutationType, 'deprecate');
+  assert.equal(spans[0].events[0].attributes.pointer, '#/color/old');
+  assert.equal(spans[0].ended, true);
+});
+
+void test('createOtelInstrumentation.recordEntropy records gauge metrics for all components', () => {
+  const { tracer, meter, gauges } = makeTracerAndSpans();
+  const instrumentation = createOtelInstrumentation(tracer, meter);
+  instrumentation.recordEntropy(
+    makeEntropyEvent(75, '2026-04-12T00:00:00.000Z'),
+  );
+
+  const gaugeNames = gauges.map((g) => g.name);
+  assert.ok(gaugeNames.includes('design-lint.entropy.overall'));
+  assert.ok(gaugeNames.includes('design-lint.entropy.tokenCoverageRatio'));
+  assert.ok(gaugeNames.includes('design-lint.entropy.violationRecurrenceRate'));
+  assert.ok(gaugeNames.includes('design-lint.entropy.agentAttributionRatio'));
+  assert.ok(gaugeNames.includes('design-lint.entropy.rateOfChange'));
+  assert.ok(gaugeNames.includes('design-lint.entropy.violationConcentration'));
+});
+
+void test('createOtelInstrumentation.recordEntropy records correct overall value', () => {
+  const { tracer, meter, gauges } = makeTracerAndSpans();
+  const instrumentation = createOtelInstrumentation(tracer, meter);
+  instrumentation.recordEntropy(
+    makeEntropyEvent(82, '2026-04-12T00:00:00.000Z'),
+  );
+
+  const overall = gauges.find((g) => g.name === 'design-lint.entropy.overall');
+  assert.ok(overall !== undefined);
+  assert.equal(overall.value, 82);
 });

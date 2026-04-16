@@ -7,6 +7,7 @@ import { handleLintSnippet } from '../packages/mcp/src/tools/lint-snippet.js';
 import { handleTokenCompletions } from '../packages/mcp/src/tools/token-completions.js';
 import { handleValidateComponent } from '../packages/mcp/src/tools/validate-component.js';
 import { handleExplainDiagnostic } from '../packages/mcp/src/tools/explain-diagnostic.js';
+import { handleRequest, type RpcRequest } from '../packages/mcp/src/server.js';
 import type { Linter, LintMessage } from '../src/index.js';
 
 // ---------------------------------------------------------------------------
@@ -344,4 +345,55 @@ void test('handleValidateComponent attaches AEP response meta to result', async 
   assert.ok(result.meta.runId.length > 0);
   assert.ok(result.meta.kernelSnapshotHash.length > 0);
   assert.ok(result.meta.aepVersion.length > 0);
+});
+
+// ---------------------------------------------------------------------------
+// server.ts — AEP version validation
+// ---------------------------------------------------------------------------
+
+function makeToolsCallRequest(
+  toolName: string,
+  args: Record<string, unknown>,
+): RpcRequest {
+  return {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'tools/call',
+    params: { name: toolName, arguments: args },
+  };
+}
+
+void test('server rejects lint_snippet with unsupported aepVersion', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const req = makeToolsCallRequest('lint_snippet', {
+    code: 'color: red;',
+    fileType: 'css',
+    aepVersion: '99',
+  });
+  const response = await handleRequest(linter, req);
+  assert.ok('error' in response && response.error !== undefined);
+  assert.ok(response.error.message.includes('Unsupported AEP version'));
+  assert.ok(response.error.message.includes("'99'"));
+});
+
+void test('server accepts lint_snippet with aepVersion 1', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const req = makeToolsCallRequest('lint_snippet', {
+    code: 'color: red;',
+    fileType: 'css',
+    aepVersion: '1',
+  });
+  const response = await handleRequest(linter, req);
+  assert.ok('result' in response && response.result !== undefined);
+  assert.ok(!('error' in response) || response.error === undefined);
+});
+
+void test('server accepts lint_snippet without aepVersion', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const req = makeToolsCallRequest('lint_snippet', {
+    code: 'color: red;',
+    fileType: 'css',
+  });
+  const response = await handleRequest(linter, req);
+  assert.ok('result' in response && response.result !== undefined);
 });
