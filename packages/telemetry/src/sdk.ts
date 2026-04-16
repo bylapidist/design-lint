@@ -1,10 +1,13 @@
 import type {
   AggregateReport,
+  CorrectionEvent,
   DiagnosticEvent,
   DLTSEnvelope,
   EntropyEvent,
   EntropyTrend,
+  FixEvent,
   KernelInstrumentation,
+  KernelMutationEvent,
   OtelMeter,
   OtelTracer,
   RunEvent,
@@ -66,7 +69,12 @@ export function validateDLTSEvent(event: unknown): ValidationResult {
  */
 export function aggregateRunEvents(events: RunEvent[]): AggregateReport {
   if (events.length === 0) {
-    return { totalRuns: 0, totalFilesScanned: 0, totalDiagnostics: 0, averageDurationMs: 0 };
+    return {
+      totalRuns: 0,
+      totalFilesScanned: 0,
+      totalDiagnostics: 0,
+      averageDurationMs: 0,
+    };
   }
 
   let totalFilesScanned = 0;
@@ -94,9 +102,15 @@ export function aggregateRunEvents(events: RunEvent[]): AggregateReport {
  * @param {number} windowSize - Number of events in the sliding window.
  * @returns {EntropyTrend} The trend including delta between first and last point.
  */
-export function computeEntropyTrend(events: EntropyEvent[], windowSize: number): EntropyTrend {
+export function computeEntropyTrend(
+  events: EntropyEvent[],
+  windowSize: number,
+): EntropyTrend {
   const window = events.slice(-windowSize);
-  const points = window.map((e) => ({ timestamp: e.timestamp, overall: e.score.overall }));
+  const points = window.map((e) => ({
+    timestamp: e.timestamp,
+    overall: e.score.overall,
+  }));
   const first = points[0]?.overall ?? 0;
   const last = points.at(-1)?.overall ?? 0;
   return { windowSize, points, delta: last - first };
@@ -109,7 +123,10 @@ export function computeEntropyTrend(events: EntropyEvent[], windowSize: number):
  * @param {string} agentId - The agent id to match against.
  * @returns {DLTSEnvelope[]} Events attributed to the given agent.
  */
-export function filterByAgent(events: DLTSEnvelope[], agentId: string): DLTSEnvelope[] {
+export function filterByAgent(
+  events: DLTSEnvelope[],
+  agentId: string,
+): DLTSEnvelope[] {
   return events.filter((e) => e.agentId === agentId);
 }
 
@@ -119,7 +136,9 @@ export function filterByAgent(events: DLTSEnvelope[], agentId: string): DLTSEnve
  * @param {DiagnosticEvent[]} events - Diagnostic events to group.
  * @returns {Record<string, DiagnosticEvent[]>} Events keyed by rule id.
  */
-export function groupByRule(events: DiagnosticEvent[]): Record<string, DiagnosticEvent[]> {
+export function groupByRule(
+  events: DiagnosticEvent[],
+): Record<string, DiagnosticEvent[]> {
   const result: Record<string, DiagnosticEvent[]> = {};
 
   for (const event of events) {
@@ -137,16 +156,20 @@ export function groupByRule(events: DiagnosticEvent[]): Record<string, Diagnosti
 /**
  * Creates an OTel instrumentation bridge for the design-lint kernel.
  *
- * Each `RunEvent` is recorded as a root span. Each `EntropyEvent` maps
- * its score components to gauge metric observations.
+ * - `RunEvent` → root span with run metadata attributes
+ * - `DiagnosticEvent` → child span with ruleId, severity, line, column
+ * - `FixEvent` → span with addEvent carrying before/after text
+ * - `CorrectionEvent` → span with addEvent carrying convergence metadata
+ * - `KernelMutationEvent` → span with addEvent carrying mutation details
+ * - `EntropyEvent` → gauge metric observations for each entropy component
  *
  * @param {OtelTracer} tracer - An OTel tracer instance.
- * @param {OtelMeter} _meter - An OTel meter instance (used for gauge metrics).
+ * @param {OtelMeter} meter - An OTel meter instance (used for gauge metrics).
  * @returns {KernelInstrumentation} The kernel instrumentation handle.
  */
 export function createOtelInstrumentation(
   tracer: OtelTracer,
-  _meter: OtelMeter,
+  meter: OtelMeter,
 ): KernelInstrumentation {
   return {
     recordRun(event: RunEvent): void {
@@ -155,6 +178,57 @@ export function createOtelInstrumentation(
       span.setAttribute('filesScanned', event.filesScanned);
       span.setAttribute('totalDiagnostics', event.totalDiagnostics);
       span.setAttribute('durationMs', event.durationMs);
+      span.setAttribute('errorCount', event.errorCount);
+      span.setAttribute('warnCount', event.warnCount);
+      span.end();
+    },
+
+    recordDiagnostic(event: DiagnosticEvent): void {
+      const span = tracer.startSpan('design-lint.diagnostic');
+      span.setAttribute('runId', event.runId);
+      span.setAttribute('ruleId', event.ruleId);
+      span.setAttribute('severity', event.severity);
+      span.setAttribute('file', event.file);
+      span.setAttribute('line', event.line);
+      span.setAttribute('column', event.column);
+      if (event.agentId !== undefined) {
+        span.setAttribute('agentId', event.agentId);
+      }
+      span.end();
+    },
+
+    recordFix(event: FixEvent): void {
+      const span = tracer.startSpan('design-lint.fix');
+      span.setAttribute('runId', event.runId);
+      span.setAttribute('ruleId', event.ruleId);
+      span.setAttribute('file', event.file);
+      span.setAttribute('line', event.line);
+      span.addEvent('fix.applied', {
+        before: event.before,
+        after: event.after,
+      });
+      span.end();
+    },
+
+    recordCorrection(event: CorrectionEvent): void {
+      const span = tracer.startSpan('design-lint.correction');
+      span.setAttribute('runId', event.runId);
+      span.setAttribute('agentId', event.agentId);
+      span.addEvent('correction.cycle', {
+        iterationsUsed: event.iterationsUsed,
+        converged: event.converged,
+        violationsRemaining: event.violationsRemaining,
+      });
+      span.end();
+    },
+
+    recordKernelMutation(event: KernelMutationEvent): void {
+      const span = tracer.startSpan('design-lint.kernel-mutation');
+      span.setAttribute('runId', event.runId);
+      span.addEvent('kernel.mutation', {
+        mutationType: event.mutationType,
+        pointer: event.pointer,
+      });
       span.end();
     },
 
@@ -162,15 +236,45 @@ export function createOtelInstrumentation(
       const span = tracer.startSpan('design-lint.entropy');
       span.setAttribute('runId', event.runId);
       span.setAttribute('overall', event.score.overall);
-      span.setAttribute(
-        'tokenCoverageRatio',
-        event.score.components.tokenCoverageRatio,
-      );
-      span.setAttribute(
-        'violationRecurrenceRate',
-        event.score.components.violationRecurrenceRate,
-      );
       span.end();
+
+      const { components } = event.score;
+
+      meter
+        .createObservableGauge('design-lint.entropy.overall', {
+          description: 'Overall design-system entropy score (0–100)',
+        })
+        .record(event.score.overall, { runId: event.runId });
+
+      meter
+        .createObservableGauge('design-lint.entropy.tokenCoverageRatio', {
+          description: 'Ratio of design tokens used vs available',
+        })
+        .record(components.tokenCoverageRatio, { runId: event.runId });
+
+      meter
+        .createObservableGauge('design-lint.entropy.violationRecurrenceRate', {
+          description: 'Rate of recurring violations across runs',
+        })
+        .record(components.violationRecurrenceRate, { runId: event.runId });
+
+      meter
+        .createObservableGauge('design-lint.entropy.agentAttributionRatio', {
+          description: 'Ratio of violations attributed to AI agents',
+        })
+        .record(components.agentAttributionRatio, { runId: event.runId });
+
+      meter
+        .createObservableGauge('design-lint.entropy.rateOfChange', {
+          description: 'Rate of entropy change between runs',
+        })
+        .record(components.rateOfChange, { runId: event.runId });
+
+      meter
+        .createObservableGauge('design-lint.entropy.violationConcentration', {
+          description: 'Concentration of violations in a small set of files',
+        })
+        .record(components.violationConcentration, { runId: event.runId });
     },
 
     async shutdown(): Promise<void> {

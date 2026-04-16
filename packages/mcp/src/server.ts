@@ -29,7 +29,7 @@ function parseRpcId(val: unknown): number | string | null {
   return null;
 }
 
-interface RpcRequest {
+export interface RpcRequest {
   jsonrpc: string;
   id: number | string | null;
   method: string;
@@ -71,7 +71,9 @@ function isExplainDiagnosticArgs(val: unknown): val is { ruleId: string } {
   return true;
 }
 
-function isToolCallParams(val: unknown): val is { name: string; arguments: unknown } {
+function isToolCallParams(
+  val: unknown,
+): val is { name: string; arguments: unknown } {
   if (!isRecord(val)) return false;
   if (typeof val['name'] !== 'string') return false;
   return true;
@@ -94,7 +96,10 @@ function writeResponse(response: RpcResponse): void {
   process.stdout.write(header + body);
 }
 
-function successResponse(id: number | string | null, result: unknown): RpcResponse {
+function successResponse(
+  id: number | string | null,
+  result: unknown,
+): RpcResponse {
   return { jsonrpc: '2.0', id, result };
 }
 
@@ -149,7 +154,8 @@ const TOOL_DEFINITIONS = [
       properties: {
         cssProperty: {
           type: 'string',
-          description: 'The CSS property to complete for (e.g. color, font-size).',
+          description:
+            'The CSS property to complete for (e.g. color, font-size).',
         },
         partialValue: {
           type: 'string',
@@ -171,7 +177,10 @@ const TOOL_DEFINITIONS = [
     inputSchema: {
       type: 'object',
       properties: {
-        code: { type: 'string', description: 'Component source code to validate.' },
+        code: {
+          type: 'string',
+          description: 'Component source code to validate.',
+        },
         fileType: {
           type: 'string',
           enum: ['css', 'tsx', 'ts', 'vue', 'svelte'],
@@ -201,7 +210,7 @@ const TOOL_DEFINITIONS = [
 
 // ---------- Request handler ----------
 
-async function handleRequest(
+export async function handleRequest(
   linter: Linter,
   req: RpcRequest,
 ): Promise<RpcResponse> {
@@ -222,7 +231,11 @@ async function handleRequest(
 
   if (method === 'tools/call') {
     if (!isToolCallParams(params)) {
-      return errorResponse(rpcId, -32602, 'Invalid params: expected name and arguments');
+      return errorResponse(
+        rpcId,
+        -32602,
+        'Invalid params: expected name and arguments',
+      );
     }
     return handleToolCall(linter, rpcId, params.name, params['arguments']);
   }
@@ -243,26 +256,55 @@ async function handleToolCall(
 ): Promise<RpcResponse> {
   if (name === 'lint_snippet') {
     if (!isLintSnippetParams(args)) {
-      return errorResponse(id, -32602, 'lint_snippet requires code and fileType');
+      return errorResponse(
+        id,
+        -32602,
+        'lint_snippet requires code and fileType',
+      );
+    }
+    if (args.aepVersion !== undefined && args.aepVersion !== '1') {
+      return errorResponse(
+        id,
+        -32602,
+        `Unsupported AEP version: '${args.aepVersion}'. This server supports AEP version '1'.`,
+      );
     }
     const result = await handleLintSnippet(linter, args);
-    return successResponse(id, { content: [{ type: 'text', text: JSON.stringify(result) }] });
+    return successResponse(id, {
+      content: [{ type: 'text', text: JSON.stringify(result) }],
+    });
   }
 
   if (name === 'get_token_completions') {
     if (!isTokenCompletionParams(args)) {
-      return errorResponse(id, -32602, 'get_token_completions requires cssProperty');
+      return errorResponse(
+        id,
+        -32602,
+        'get_token_completions requires cssProperty',
+      );
     }
     const result = handleTokenCompletions(linter, args);
-    return successResponse(id, { content: [{ type: 'text', text: JSON.stringify(result) }] });
+    return successResponse(id, {
+      content: [{ type: 'text', text: JSON.stringify(result) }],
+    });
   }
 
   if (name === 'validate_component_usage') {
     if (!isValidateComponentArgs(args)) {
-      return errorResponse(id, -32602, 'validate_component_usage requires code and fileType');
+      return errorResponse(
+        id,
+        -32602,
+        'validate_component_usage requires code and fileType',
+      );
     }
-    const result = await handleValidateComponent(linter, args.code, args.fileType);
-    return successResponse(id, { content: [{ type: 'text', text: JSON.stringify(result) }] });
+    const result = await handleValidateComponent(
+      linter,
+      args.code,
+      args.fileType,
+    );
+    return successResponse(id, {
+      content: [{ type: 'text', text: JSON.stringify(result) }],
+    });
   }
 
   if (name === 'explain_diagnostic') {
@@ -270,7 +312,9 @@ async function handleToolCall(
       return errorResponse(id, -32602, 'explain_diagnostic requires ruleId');
     }
     const result = handleExplainDiagnostic(args.ruleId);
-    return successResponse(id, { content: [{ type: 'text', text: JSON.stringify(result) }] });
+    return successResponse(id, {
+      content: [{ type: 'text', text: JSON.stringify(result) }],
+    });
   }
 
   return errorResponse(id, -32601, `Unknown tool: ${name}`);
@@ -368,19 +412,21 @@ function dispatchMessage(linter: Linter, body: string): void {
 
   const rpcId = parseRpcId(parsed['id']);
 
-  handleRequest(linter, parsed).then((response) => {
-    // Don't write responses to notifications (id is null and method is a notification)
-    const isNotification =
-      parsed['id'] === undefined &&
-      (parsed['method'] === 'initialized' ||
-        parsed['method'] === 'notifications/initialized');
-    if (!isNotification) {
-      writeResponse(response);
-    }
-  }).catch((err: unknown) => {
-    const message = err instanceof Error ? err.message : String(err);
-    writeResponse(errorResponse(rpcId, -32603, `Internal error: ${message}`));
-  });
+  handleRequest(linter, parsed)
+    .then((response) => {
+      // Don't write responses to notifications (id is null and method is a notification)
+      const isNotification =
+        parsed['id'] === undefined &&
+        (parsed['method'] === 'initialized' ||
+          parsed['method'] === 'notifications/initialized');
+      if (!isNotification) {
+        writeResponse(response);
+      }
+    })
+    .catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      writeResponse(errorResponse(rpcId, -32603, `Internal error: ${message}`));
+    });
 }
 
 // ---------- Public API ----------

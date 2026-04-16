@@ -30,6 +30,12 @@ export interface LintSnippetParams {
   withSuggestions?: boolean;
   /** Maximum number of correction iterations before returning to the caller. */
   iterationDepth?: number;
+  /**
+   * AEP protocol version declared by the caller. When provided, the server
+   * validates that it matches the supported version (`'1'`) and returns a
+   * structured error if it does not.
+   */
+  aepVersion?: string;
 }
 
 /** Result returned by the `lint_snippet` MCP tool. */
