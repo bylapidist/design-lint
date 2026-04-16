@@ -1,11 +1,14 @@
+import { randomUUID } from 'node:crypto';
 import type { Linter, LintDocument, LintMessage } from '@lapidist/design-lint';
 import type {
   ComponentValidationResult,
   AEPDiagnostic,
+  AepResponseMeta,
   MCPFileType,
 } from '../types.js';
 
 const AEP_VERSION = '1';
+const KERNEL_SNAPSHOT_HASH = 'local';
 
 function messageToAEPDiagnostic(msg: LintMessage): AEPDiagnostic {
   return {
@@ -47,8 +50,15 @@ export async function handleValidateComponent(
 
   const diagnostics: AEPDiagnostic[] = result.messages.map(messageToAEPDiagnostic);
 
+  const meta: AepResponseMeta = {
+    runId: randomUUID(),
+    kernelSnapshotHash: KERNEL_SNAPSHOT_HASH,
+    aepVersion: AEP_VERSION,
+  };
+
   return {
     valid: diagnostics.length === 0,
     diagnostics,
+    meta,
   };
 }
