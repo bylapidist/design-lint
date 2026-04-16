@@ -17,6 +17,8 @@ import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
 import { builtInRules } from '../rules/index.js';
 import type { DtifFlattenedToken, RuleModule } from '../core/types.js';
 import type { Config } from '../core/linter.js';
+import { tryFetchKernelData } from './kernel-client.js';
+import type { ComponentInput } from '@lapidist/dscp';
 
 type DocsFormat = 'vitepress' | 'markdown';
 
@@ -130,9 +132,35 @@ export function generateRulePage(rule: RuleModule): string {
   ].join('\n');
 }
 
+export function generateComponentsPage(components: ComponentInput[]): string {
+  const rows = components
+    .map((c) => {
+      const deprecated = c.deprecated
+        ? c.replacedBy
+          ? `Yes → \`${c.replacedBy}\``
+          : 'Yes'
+        : 'No';
+      const version = c.version ?? '—';
+      return `| \`${c.name}\` | \`${c.package}\` | ${version} | ${deprecated} |`;
+    })
+    .join('\n');
+
+  return [
+    '# Components',
+    '',
+    'Component registry sourced from the DSR kernel.',
+    '',
+    '| Name | Package | Version | Deprecated |',
+    '|------|---------|---------|------------|',
+    rows,
+    '',
+  ].join('\n');
+}
+
 export function generateIndexPage(
   tokenTypes: string[],
   ruleNames: string[],
+  hasComponents = false,
 ): string {
   const tokenList = tokenTypes
     .map((t) => `- [${t}](./tokens/${t}.md)`)
@@ -140,6 +168,9 @@ export function generateIndexPage(
   const ruleList = ruleNames
     .map((r) => `- [\`${r}\`](./rules/${r.replaceAll('/', '-')}.md)`)
     .join('\n');
+  const componentsSection = hasComponents
+    ? ['## Components', '', '- [Components](./components.md)', ''].join('\n')
+    : '';
 
   return [
     '# Design System Documentation',
@@ -154,6 +185,7 @@ export function generateIndexPage(
     '',
     ruleList,
     '',
+    componentsSection,
   ].join('\n');
 }
 
@@ -232,6 +264,13 @@ export async function generateDocs(
   const tokenGroups = groupTokensByType(allTokens);
   const tokenTypes = [...tokenGroups.keys()].sort();
 
+  // Attempt to enrich with live kernel state
+  const kernelData = await tryFetchKernelData();
+  const components = kernelData
+    ? [...kernelData.componentEntries.values()]
+    : [];
+  const hasComponents = components.length > 0;
+
   // Generate token pages
   for (const [typeName, tokens] of tokenGroups) {
     const content = generateTokenTypePage(typeName, tokens);
@@ -245,12 +284,20 @@ export async function generateDocs(
     writeFile(path.join(outDir, 'rules', `${slug}.md`), content);
   }
 
+  // Generate components page from kernel state when available
+  if (hasComponents) {
+    writeFile(
+      path.join(outDir, 'components.md'),
+      generateComponentsPage(components),
+    );
+  }
+
   const ruleNames = builtInRules.map((r) => r.name);
 
   // Generate index page
   writeFile(
     path.join(outDir, 'index.md'),
-    generateIndexPage(tokenTypes, ruleNames),
+    generateIndexPage(tokenTypes, ruleNames, hasComponents),
   );
 
   // Generate VitePress config
@@ -263,7 +310,11 @@ export async function generateDocs(
 
   const tokenCount = allTokens.length;
   const ruleCount = ruleNames.length;
+  const componentCount = components.length;
+  const componentSuffix = hasComponents
+    ? `, ${componentCount.toString()} components`
+    : '';
   console.log(
-    `Generated docs: ${tokenCount.toString()} tokens, ${ruleCount.toString()} rules → ${outDir}`,
+    `Generated docs: ${tokenCount.toString()} tokens, ${ruleCount.toString()} rules${componentSuffix} → ${outDir}`,
   );
 }
