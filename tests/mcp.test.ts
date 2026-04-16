@@ -206,6 +206,26 @@ void test('handleLintSnippet returns aepVersion on each diagnostic', async () =>
   assert.ok(result.diagnostics[0].aepVersion.length > 0);
 });
 
+void test('handleLintSnippet attaches AEP response meta to result', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const result = await handleLintSnippet(linter, {
+    code: 'a { color: var(--color-brand); }',
+    fileType: 'css',
+  });
+  assert.ok(result.meta.runId.length > 0);
+  assert.ok(result.meta.kernelSnapshotHash.length > 0);
+  assert.ok(result.meta.aepVersion.length > 0);
+});
+
+void test('handleLintSnippet meta.runId is unique per invocation', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const [r1, r2] = await Promise.all([
+    handleLintSnippet(linter, { code: 'a{}', fileType: 'css' }),
+    handleLintSnippet(linter, { code: 'a{}', fileType: 'css' }),
+  ]);
+  assert.notEqual(r1.meta.runId, r2.meta.runId);
+});
+
 // ---------------------------------------------------------------------------
 // handleTokenCompletions
 // ---------------------------------------------------------------------------
@@ -316,4 +336,12 @@ void test('handleValidateComponent populates all AEPDiagnostic fields', async ()
   assert.equal(diag.rawValue, 'my-class');
   assert.ok(diag.correction !== null);
   assert.equal(diag.aepVersion, '1');
+});
+
+void test('handleValidateComponent attaches AEP response meta to result', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const result = await handleValidateComponent(linter, '<Button />', 'tsx');
+  assert.ok(result.meta.runId.length > 0);
+  assert.ok(result.meta.kernelSnapshotHash.length > 0);
+  assert.ok(result.meta.aepVersion.length > 0);
 });

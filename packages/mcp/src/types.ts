@@ -1,3 +1,13 @@
+/** AEP response envelope metadata attached to every tool response. */
+export interface AepResponseMeta {
+  /** Unique identifier for this tool invocation. */
+  runId: string;
+  /** Hash of the kernel snapshot used during this invocation. */
+  kernelSnapshotHash: string;
+  /** AEP protocol version. */
+  aepVersion: string;
+}
+
 /** File types accepted by the MCP `lint_snippet` tool. */
 export type MCPFileType = 'css' | 'tsx' | 'ts' | 'vue' | 'svelte';
 
@@ -34,6 +44,8 @@ export interface GenerationResult {
   iterationsUsed: number;
   /** Number of violations remaining after correction. */
   violationsRemaining: number;
+  /** AEP response envelope metadata. */
+  meta: AepResponseMeta;
 }
 
 /** A single diagnostic returned by the MCP server. */
@@ -96,6 +108,8 @@ export interface ComponentValidationResult {
   valid: boolean;
   /** Diagnostics for any non-compliant usages. */
   diagnostics: AEPDiagnostic[];
+  /** AEP response envelope metadata. */
+  meta: AepResponseMeta;
 }
 
 /** Explanation of a single diagnostic returned by `explain_diagnostic`. */

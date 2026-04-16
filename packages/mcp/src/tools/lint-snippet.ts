@@ -1,13 +1,16 @@
+import { randomUUID } from 'node:crypto';
 import type { Linter, LintDocument, LintMessage } from '@lapidist/design-lint';
 import { applyFixes } from '@lapidist/design-lint';
 import type {
   LintSnippetParams,
   GenerationResult,
   AEPDiagnostic,
+  AepResponseMeta,
   RankedCorrection,
 } from '../types.js';
 
 const AEP_VERSION = '1';
+const KERNEL_SNAPSHOT_HASH = 'local';
 const DEFAULT_ITERATION_DEPTH = 3;
 
 function messageToAEPDiagnostic(
@@ -84,11 +87,18 @@ export async function handleLintSnippet(
     messageToAEPDiagnostic(msg, agentId),
   );
 
+  const meta: AepResponseMeta = {
+    runId: randomUUID(),
+    kernelSnapshotHash: KERNEL_SNAPSHOT_HASH,
+    aepVersion: AEP_VERSION,
+  };
+
   return {
     diagnostics,
     correctedSnippet: current,
     converged,
     iterationsUsed,
     violationsRemaining: lastMessages.length,
+    meta,
   };
 }
