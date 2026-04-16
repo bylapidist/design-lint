@@ -18,16 +18,7 @@ import {
   generateVitePressConfig,
   generateDocs,
 } from '../../src/cli/docs.js';
-import {
-  tokenValueToString as edsmTokenValueToString,
-  groupTokensByType as edsmGroupTokensByType,
-  renderTokenSection,
-  renderRulesSection,
-  renderViolationsSection,
-  renderMeta,
-  generateSnapshotHash,
-  exportDesignSystemMd,
-} from '../../src/cli/export-design-system-md.js';
+import { exportDesignSystemMd } from '../../src/cli/export-design-system-md.js';
 import { migrateConfig } from '../../src/cli/migrate.js';
 import type { DtifFlattenedToken, RuleModule } from '../../src/core/types.js';
 import type { Config } from '../../src/core/linter.js';
@@ -333,163 +324,12 @@ void test('generateDocs logs generated count', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// export-design-system-md.ts — edsmTokenValueToString
-// ---------------------------------------------------------------------------
-
-void test('edsmTokenValueToString returns empty string for null', () => {
-  assert.equal(edsmTokenValueToString(null), '');
-});
-
-void test('edsmTokenValueToString returns empty string for undefined', () => {
-  assert.equal(edsmTokenValueToString(undefined), '');
-});
-
-void test('edsmTokenValueToString returns string as-is', () => {
-  assert.equal(edsmTokenValueToString('rem'), 'rem');
-});
-
-void test('edsmTokenValueToString converts number', () => {
-  assert.equal(edsmTokenValueToString(8), '8');
-});
-
-void test('edsmTokenValueToString JSON-stringifies objects', () => {
-  assert.equal(edsmTokenValueToString([1, 2]), '[1,2]');
-});
-
-// ---------------------------------------------------------------------------
-// export-design-system-md.ts — edsmGroupTokensByType
-// ---------------------------------------------------------------------------
-
-void test('edsmGroupTokensByType groups by type', () => {
-  const groups = edsmGroupTokensByType([
-    makeToken('#/color/a', 'color', '#000'),
-    makeToken('#/spacing/b', 'dimension', '4px'),
-  ]);
-  assert.equal(groups.size, 2);
-});
-
-void test('edsmGroupTokensByType falls back to unknown', () => {
-  const token: DtifFlattenedToken = {
-    id: '#/x',
-    pointer: '#/x',
-    path: ['x'],
-    name: 'x',
-    metadata: { extensions: {} },
-  };
-  assert.ok(edsmGroupTokensByType([token]).has('unknown'));
-});
-
-// ---------------------------------------------------------------------------
-// export-design-system-md.ts — renderTokenSection
-// ---------------------------------------------------------------------------
-
-void test('renderTokenSection includes dscp comment delimiters', () => {
-  const section = renderTokenSection('color', [
-    makeToken('#/color/a', 'color', '#000'),
-  ]);
-  assert.ok(section.includes('<!-- dscp:tokens:color -->'));
-  assert.ok(section.includes('<!-- /dscp:tokens:color -->'));
-});
-
-void test('renderTokenSection includes token pointer', () => {
-  const section = renderTokenSection('color', [
-    makeToken('#/color/brand', 'color', '#abc'),
-  ]);
-  assert.ok(section.includes('#/color/brand'));
-});
-
-void test('renderTokenSection marks deprecated tokens', () => {
-  const section = renderTokenSection('color', [
-    makeToken('#/color/old', 'color', '#000', true),
-  ]);
-  assert.ok(section.includes('_(deprecated)_'));
-});
-
-void test('renderTokenSection includes description from metadata', () => {
-  const section = renderTokenSection('color', [
-    makeToken('#/color/x', 'color', '#fff', false, 'Primary brand color'),
-  ]);
-  assert.ok(section.includes('Primary brand color'));
-});
-
-// ---------------------------------------------------------------------------
-// export-design-system-md.ts — renderRulesSection
-// ---------------------------------------------------------------------------
-
-void test('renderRulesSection includes dscp comment delimiters', () => {
-  const section = renderRulesSection();
-  assert.ok(section.includes('<!-- dscp:rules -->'));
-  assert.ok(section.includes('<!-- /dscp:rules -->'));
-});
-
-void test('renderRulesSection includes at least one built-in rule', () => {
-  const section = renderRulesSection();
-  assert.ok(section.includes('design-token'));
-});
-
-// ---------------------------------------------------------------------------
-// export-design-system-md.ts — renderViolationsSection
-// ---------------------------------------------------------------------------
-
-void test('renderViolationsSection includes dscp comment delimiters', () => {
-  const section = renderViolationsSection();
-  assert.ok(section.includes('<!-- dscp:violations -->'));
-  assert.ok(section.includes('<!-- /dscp:violations -->'));
-});
-
-// ---------------------------------------------------------------------------
-// export-design-system-md.ts — renderMeta
-// ---------------------------------------------------------------------------
-
-void test('renderMeta includes dscp:meta delimiters', () => {
-  const meta = renderMeta('abc123');
-  assert.ok(meta.includes('<!-- dscp:meta -->'));
-  assert.ok(meta.includes('<!-- /dscp:meta -->'));
-});
-
-void test('renderMeta includes the snapshot hash', () => {
-  const meta = renderMeta('deadbeef');
-  assert.ok(meta.includes('deadbeef'));
-});
-
-void test('renderMeta includes spec version and schema URL', () => {
-  const meta = renderMeta('x');
-  assert.ok(meta.includes('1.0.0'));
-  const schemaLine = meta
-    .split('\n')
-    .find((line) => line.startsWith('<!-- $schema: ') && line.endsWith(' -->'));
-
-  assert.ok(schemaLine);
-
-  const schemaUrl = schemaLine
-    .replace('<!-- $schema: ', '')
-    .replace(' -->', '');
-  const parsedSchemaUrl = new URL(schemaUrl);
-
-  assert.equal(parsedSchemaUrl.hostname, 'dscp.lapidist.net');
-  assert.equal(parsedSchemaUrl.pathname, '/schema/v1.json');
-});
-
-// ---------------------------------------------------------------------------
-// export-design-system-md.ts — generateSnapshotHash
-// ---------------------------------------------------------------------------
-
-void test('generateSnapshotHash returns an 8-char hex string', () => {
-  const hash = generateSnapshotHash([makeToken('#/color/a', 'color', '#000')]);
-  assert.match(hash, /^[0-9a-f]{8}$/);
-});
-
-void test('generateSnapshotHash is deterministic for the same tokens', () => {
-  const tokens = [makeToken('#/color/a', 'color', '#000')];
-  assert.equal(generateSnapshotHash(tokens), generateSnapshotHash(tokens));
-});
-
-void test('generateSnapshotHash returns padded string for empty token list', () => {
-  assert.equal(generateSnapshotHash([]).length, 8);
-});
-
-// ---------------------------------------------------------------------------
 // export-design-system-md.ts — exportDesignSystemMd (injected config loader)
+//
+// The module now delegates entirely to @lapidist/dscp's generateDocument +
+// renderMarkdown. Helper functions (tokenValueToString, groupTokensByType,
+// renderTokenSection, renderRulesSection, renderViolationsSection, renderMeta,
+// generateSnapshotHash) have been removed — they are internal to dscp.
 // ---------------------------------------------------------------------------
 
 void test('exportDesignSystemMd writes DESIGN_SYSTEM.md', async () => {
@@ -500,14 +340,14 @@ void test('exportDesignSystemMd writes DESIGN_SYSTEM.md', async () => {
   assert.ok(content.includes('# DESIGN_SYSTEM.md'));
 });
 
-void test('exportDesignSystemMd includes dscp:meta section', async () => {
+void test('exportDesignSystemMd includes kernel snapshot line', async () => {
   const outPath = path.join(
     tmpdir(),
-    `dl-edsm-meta-${Date.now().toString()}.md`,
+    `dl-edsm-snap-${Date.now().toString()}.md`,
   );
   await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
-  assert.ok(content.includes('<!-- dscp:meta -->'));
+  assert.ok(content.includes('Kernel snapshot:'));
 });
 
 void test('exportDesignSystemMd includes dscp:rules section', async () => {
@@ -518,16 +358,7 @@ void test('exportDesignSystemMd includes dscp:rules section', async () => {
   await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('<!-- dscp:rules -->'));
-});
-
-void test('exportDesignSystemMd includes dscp:violations section', async () => {
-  const outPath = path.join(
-    tmpdir(),
-    `dl-edsm-viol-${Date.now().toString()}.md`,
-  );
-  await exportDesignSystemMd({ out: outPath }, () => makeConfig());
-  const content = fs.readFileSync(outPath, 'utf8');
-  assert.ok(content.includes('<!-- dscp:violations -->'));
+  assert.ok(content.includes('<!-- /dscp:rules -->'));
 });
 
 void test('exportDesignSystemMd includes at least one rule row in rules section', async () => {
@@ -538,6 +369,16 @@ void test('exportDesignSystemMd includes at least one rule row in rules section'
   await exportDesignSystemMd({ out: outPath }, () => makeConfig());
   const content = fs.readFileSync(outPath, 'utf8');
   assert.ok(content.includes('design-token'));
+});
+
+void test('exportDesignSystemMd does not emit violations section when there are no violations', async () => {
+  const outPath = path.join(
+    tmpdir(),
+    `dl-edsm-viol-${Date.now().toString()}.md`,
+  );
+  await exportDesignSystemMd({ out: outPath }, () => makeConfig());
+  const content = fs.readFileSync(outPath, 'utf8');
+  assert.ok(!content.includes('<!-- dscp:violations -->'));
 });
 
 void test('exportDesignSystemMd logs generated count', async () => {

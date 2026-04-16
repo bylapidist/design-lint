@@ -11,6 +11,9 @@ importers:
 
   .:
     dependencies:
+      '@lapidist/dscp':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@lapidist/dsr':
         specifier: ^0.1.0
         version: 0.1.0
@@ -776,6 +779,10 @@ packages:
 
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
+
+  '@lapidist/dscp@0.2.0':
+    resolution: {integrity: sha512-U6/5XEpbU6sUvZAUIF39xNhkhqQScwxE0I7CY7VleRHDyn3ePPHCMR7NLnT61DUlNkSlBMlB7V1nKcTkqCm63Q==}
+    engines: {node: '>=22'}
 
   '@lapidist/dsr@0.1.0':
     resolution: {integrity: sha512-VTc1lhT6bWEc/t20wVrbXr3XRbb2bG8IPYXt+3rbtV/9HyrVBnK2VfyEH7o9QA7iGP3xdJl9YAo+LsQlSAKYCA==}
@@ -3114,6 +3121,8 @@ snapshots:
       keyv: 5.6.0
 
   '@keyv/serialize@1.1.1': {}
+
+  '@lapidist/dscp@0.2.0': {}
 
   '@lapidist/dsr@0.1.0':
     dependencies:
