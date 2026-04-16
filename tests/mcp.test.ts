@@ -12,6 +12,7 @@ import { handleValidateComponent } from '../packages/mcp/src/tools/validate-comp
 import { handleExplainDiagnostic } from '../packages/mcp/src/tools/explain-diagnostic.js';
 import { handleRequest, type RpcRequest } from '../packages/mcp/src/server.js';
 import type { Linter, LintMessage } from '../src/index.js';
+import type { SnapshotHashProvider } from '../packages/mcp/src/types.js';
 
 // ---------------------------------------------------------------------------
 // Mock Linter factory
@@ -230,6 +231,41 @@ void test('handleLintSnippet meta.runId is unique per invocation', async () => {
   assert.notEqual(r1.meta.runId, r2.meta.runId);
 });
 
+void test('handleLintSnippet uses snapshotHashProvider when provided', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const provider: SnapshotHashProvider = {
+    getHash: () => Promise.resolve('abc123kernel'),
+  };
+  const result = await handleLintSnippet(
+    linter,
+    { code: 'a{}', fileType: 'css' },
+    provider,
+  );
+  assert.equal(result.meta.kernelSnapshotHash, 'abc123kernel');
+});
+
+void test('handleLintSnippet falls back to local hash when no snapshotHashProvider', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const result = await handleLintSnippet(linter, {
+    code: 'a{}',
+    fileType: 'css',
+  });
+  assert.equal(result.meta.kernelSnapshotHash, 'local');
+});
+
+void test('handleLintSnippet falls back to local hash when provider returns undefined', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const provider: SnapshotHashProvider = {
+    getHash: () => Promise.resolve(undefined),
+  };
+  const result = await handleLintSnippet(
+    linter,
+    { code: 'a{}', fileType: 'css' },
+    provider,
+  );
+  assert.equal(result.meta.kernelSnapshotHash, 'local');
+});
+
 // ---------------------------------------------------------------------------
 // handleTokenCompletions
 // ---------------------------------------------------------------------------
@@ -379,6 +415,26 @@ void test('handleValidateComponent attaches AEP response meta to result', async 
   assert.ok(result.meta.runId.length > 0);
   assert.ok(result.meta.kernelSnapshotHash.length > 0);
   assert.ok(result.meta.aepVersion.length > 0);
+});
+
+void test('handleValidateComponent uses snapshotHashProvider when provided', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const provider: SnapshotHashProvider = {
+    getHash: () => Promise.resolve('deadbeefkernel'),
+  };
+  const result = await handleValidateComponent(
+    linter,
+    '<Button />',
+    'tsx',
+    provider,
+  );
+  assert.equal(result.meta.kernelSnapshotHash, 'deadbeefkernel');
+});
+
+void test('handleValidateComponent falls back to local hash when no snapshotHashProvider', async () => {
+  const linter = makeMockLinter({ messages: [] });
+  const result = await handleValidateComponent(linter, '<Button />', 'tsx');
+  assert.equal(result.meta.kernelSnapshotHash, 'local');
 });
 
 // ---------------------------------------------------------------------------

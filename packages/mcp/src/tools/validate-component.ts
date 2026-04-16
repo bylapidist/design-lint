@@ -5,6 +5,7 @@ import type {
   AEPDiagnostic,
   AepResponseMeta,
   MCPFileType,
+  SnapshotHashProvider,
 } from '../types.js';
 
 const AEP_VERSION = '1';
@@ -38,6 +39,7 @@ export async function handleValidateComponent(
   linter: Linter,
   code: string,
   fileType: MCPFileType,
+  snapshotHashProvider?: SnapshotHashProvider,
 ): Promise<ComponentValidationResult> {
   const snapshot = code;
   const doc: LintDocument = {
@@ -50,9 +52,11 @@ export async function handleValidateComponent(
 
   const diagnostics: AEPDiagnostic[] = result.messages.map(messageToAEPDiagnostic);
 
+  const kernelSnapshotHash =
+    (await snapshotHashProvider?.getHash()) ?? KERNEL_SNAPSHOT_HASH;
   const meta: AepResponseMeta = {
     runId: randomUUID(),
-    kernelSnapshotHash: KERNEL_SNAPSHOT_HASH,
+    kernelSnapshotHash,
     aepVersion: AEP_VERSION,
   };
 

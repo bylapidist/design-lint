@@ -7,6 +7,7 @@ import type {
   LintSnippetParams,
   TokenCompletionParams,
   MCPFileType,
+  SnapshotHashProvider,
 } from './types.js';
 
 const SERVER_NAME = 'design-lint-mcp';
@@ -213,6 +214,7 @@ const TOOL_DEFINITIONS = [
 export async function handleRequest(
   linter: Linter,
   req: RpcRequest,
+  snapshotHashProvider?: SnapshotHashProvider,
 ): Promise<RpcResponse> {
   const { id, method, params } = req;
   const rpcId = parseRpcId(id);
@@ -237,7 +239,13 @@ export async function handleRequest(
         'Invalid params: expected name and arguments',
       );
     }
-    return handleToolCall(linter, rpcId, params.name, params['arguments']);
+    return handleToolCall(
+      linter,
+      rpcId,
+      params.name,
+      params['arguments'],
+      snapshotHashProvider,
+    );
   }
 
   // Notifications (no id, no response needed)
@@ -253,6 +261,7 @@ async function handleToolCall(
   id: number | string | null,
   name: string,
   args: unknown,
+  snapshotHashProvider?: SnapshotHashProvider,
 ): Promise<RpcResponse> {
   if (name === 'lint_snippet') {
     if (!isLintSnippetParams(args)) {
@@ -269,7 +278,7 @@ async function handleToolCall(
         `Unsupported AEP version: '${args.aepVersion}'. This server supports AEP version '1'.`,
       );
     }
-    const result = await handleLintSnippet(linter, args);
+    const result = await handleLintSnippet(linter, args, snapshotHashProvider);
     return successResponse(id, {
       content: [{ type: 'text', text: JSON.stringify(result) }],
     });
@@ -301,6 +310,7 @@ async function handleToolCall(
       linter,
       args.code,
       args.fileType,
+      snapshotHashProvider,
     );
     return successResponse(id, {
       content: [{ type: 'text', text: JSON.stringify(result) }],
@@ -334,12 +344,15 @@ function uint8ToString(arr: Uint8Array, start: number, end: number): string {
   return Buffer.from(arr.subarray(start, end)).toString('utf8');
 }
 
-function startStdioTransport(linter: Linter): void {
+function startStdioTransport(
+  linter: Linter,
+  snapshotHashProvider?: SnapshotHashProvider,
+): void {
   let buffer: Uint8Array = new Uint8Array(0);
 
   process.stdin.on('data', (chunk: Uint8Array) => {
     buffer = concatUint8Arrays(buffer, chunk);
-    buffer = processBuffer(linter, buffer);
+    buffer = processBuffer(linter, buffer, snapshotHashProvider);
   });
 
   process.stdin.on('end', () => {
@@ -347,7 +360,11 @@ function startStdioTransport(linter: Linter): void {
   });
 }
 
-function processBuffer(linter: Linter, incoming: Uint8Array): Uint8Array {
+function processBuffer(
+  linter: Linter,
+  incoming: Uint8Array,
+  snapshotHashProvider?: SnapshotHashProvider,
+): Uint8Array {
   let buf = incoming;
 
   while (buf.length > 0) {
@@ -364,7 +381,7 @@ function processBuffer(linter: Linter, incoming: Uint8Array): Uint8Array {
     const body = uint8ToString(buf, bodyStart, bodyStart + contentLength);
     buf = buf.subarray(bodyStart + contentLength);
 
-    dispatchMessage(linter, body);
+    dispatchMessage(linter, body, snapshotHashProvider);
   }
 
   return buf;
@@ -396,7 +413,11 @@ function parseContentLength(header: string): number | null {
   return null;
 }
 
-function dispatchMessage(linter: Linter, body: string): void {
+function dispatchMessage(
+  linter: Linter,
+  body: string,
+  snapshotHashProvider?: SnapshotHashProvider,
+): void {
   let parsed: unknown;
   try {
     parsed = JSON.parse(body);
@@ -412,7 +433,7 @@ function dispatchMessage(linter: Linter, body: string): void {
 
   const rpcId = parseRpcId(parsed['id']);
 
-  handleRequest(linter, parsed)
+  handleRequest(linter, parsed, snapshotHashProvider)
     .then((response) => {
       // Don't write responses to notifications (id is null and method is a notification)
       const isNotification =
@@ -435,10 +456,18 @@ export interface MCPServer {
   start(): void;
 }
 
-export function createMCPServer(linter: Linter): MCPServer {
+export interface MCPServerOptions {
+  /** When provided, tool responses include the authoritative kernel snapshot hash. */
+  snapshotHashProvider?: SnapshotHashProvider;
+}
+
+export function createMCPServer(
+  linter: Linter,
+  options?: MCPServerOptions,
+): MCPServer {
   return {
     start() {
-      startStdioTransport(linter);
+      startStdioTransport(linter, options?.snapshotHashProvider);
     },
   };
 }

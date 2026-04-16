@@ -7,6 +7,7 @@ import type {
   AEPDiagnostic,
   AepResponseMeta,
   RankedCorrection,
+  SnapshotHashProvider,
 } from '../types.js';
 
 const AEP_VERSION = '1';
@@ -45,6 +46,7 @@ function extractCorrection(msg: LintMessage): string | null {
 export async function handleLintSnippet(
   linter: Linter,
   params: LintSnippetParams,
+  snapshotHashProvider?: SnapshotHashProvider,
 ): Promise<GenerationResult> {
   const { code, fileType, agentId, iterationDepth = DEFAULT_ITERATION_DEPTH } =
     params;
@@ -87,9 +89,11 @@ export async function handleLintSnippet(
     messageToAEPDiagnostic(msg, agentId),
   );
 
+  const kernelSnapshotHash =
+    (await snapshotHashProvider?.getHash()) ?? KERNEL_SNAPSHOT_HASH;
   const meta: AepResponseMeta = {
     runId: randomUUID(),
-    kernelSnapshotHash: KERNEL_SNAPSHOT_HASH,
+    kernelSnapshotHash,
     aepVersion: AEP_VERSION,
   };
 
