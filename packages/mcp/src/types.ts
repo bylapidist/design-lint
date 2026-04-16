@@ -1,3 +1,13 @@
+/**
+ * Optional provider for the authoritative kernel snapshot hash.
+ * When supplied to tool handlers, the resolved hash replaces the `'local'`
+ * fallback in `AepResponseMeta.kernelSnapshotHash`.
+ */
+export interface SnapshotHashProvider {
+  /** Returns the current kernel snapshot hash, or `undefined` when unavailable. */
+  getHash(): Promise<string | undefined>;
+}
+
 /** AEP response envelope metadata attached to every tool response. */
 export interface AepResponseMeta {
   /** Unique identifier for this tool invocation. */
