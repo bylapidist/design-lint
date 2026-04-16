@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
-import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { ConfigTokenProvider } from '../../src/config/config-token-provider.js';
 import { createDtifTheme } from '../helpers/dtif.js';
 
 const tokens = createDtifTheme({
@@ -14,7 +14,7 @@ function createLinter() {
     { tokens, rules: { 'design-token/outline': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(tokens),
+      tokenProvider: new ConfigTokenProvider({ tokens }),
     },
   );
 }
@@ -36,7 +36,7 @@ void test('design-token/outline warns when tokens missing', async () => {
     { rules: { 'design-token/outline': 'warn' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(),
+      tokenProvider: new ConfigTokenProvider({}),
     },
   );
   const res = await linter.lintText('', 'file.ts');

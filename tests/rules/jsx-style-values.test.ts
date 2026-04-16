@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
-import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { ConfigTokenProvider } from '../../src/config/config-token-provider.js';
 
 function createLinter() {
   return initLinter(
     { rules: { 'design-system/jsx-style-values': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(),
+      tokenProvider: new ConfigTokenProvider({}),
     },
   );
 }
