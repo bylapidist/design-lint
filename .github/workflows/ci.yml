@@ -39,8 +39,9 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile --prefer-offline
-      - name: Audit dependencies
-        run: pnpm audit --prod --audit-level high
+      # pnpm audit disabled — npm registry audit endpoints returning 410 (pnpm/pnpm#11265)
+      # - name: Audit dependencies
+      #   run: pnpm audit --prod --audit-level high
       - run: pnpm run build
         if: steps.changes.outputs['non-docs'] == 'true'
       - run: pnpm run lint
