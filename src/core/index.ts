@@ -64,5 +64,4 @@ export {
   DtifTokenRegistry,
   type DtifTokenRegistryOptions,
 } from './dtif/token-registry.js';
-export { TokenRegistry, type TokenRegistryOptions } from './token-registry.js';
 /* c8 ignore stop */

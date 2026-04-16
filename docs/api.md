@@ -97,10 +97,6 @@ Key methods:
   that back rule contexts without materializing compatibility views.
 - `RuleContext#getTokenPath(token)` – derive the normalized path for a DTIF
   token using the configured name transform.
-- `TokenRegistry#getDtifTokenByPointer(pointer, theme?)` /
-  `TokenRegistry#getDtifTokenByName(name, theme?)` /
-  `TokenRegistry#getDtifTokens(theme?)` – retrieve the cached DTIF entries that
-  power the registry when parsing DTIF documents.
 - `indexDtifTokens(tokens)` / `createDtifNameIndex(tokens)` – build pointer-
   based lookup maps for flattened DTIF tokens.
 - `DtifTokenRegistry(tokensByTheme, options?)` – aggregate flattened DTIF

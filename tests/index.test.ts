@@ -7,7 +7,6 @@ import {
   createLinter,
   createLintService,
   builtInRules,
-  TokenRegistry,
   type Config,
   type DocumentSource,
   type Environment,
@@ -104,13 +103,8 @@ void test('createLinter accepts Environment inputs directly', async () => {
   assert.deepEqual(result.results, []);
 });
 
-void test('TokenRegistry is re-exported from top-level index', () => {
-  assert.equal(typeof TokenRegistry, 'function');
-});
-
 void test('namespace export getters are reachable from top-level index', async () => {
   const mod = await import('../src/index.js');
-  assert.equal(typeof mod.TokenRegistry, 'function');
   assert.equal(typeof mod.createLinter, 'function');
   assert.equal(typeof mod.createLintService, 'function');
 });
