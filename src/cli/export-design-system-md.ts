@@ -43,14 +43,36 @@ function toTokenInput(token: DtifFlattenedToken): TokenInput {
 }
 
 /**
- * Map a built-in rule to the RuleInput shape expected by @lapidist/dscp.
+ * Resolve the configured severity and enabled state of a rule from config.rules.
+ * Falls back to `{ severity: 'warn', enabled: true }` when the rule is not
+ * explicitly configured (i.e. default-enabled rules).
  */
-function toRuleInput(rule: (typeof builtInRules)[number]): RuleInput {
+function resolveRuleConfig(
+  ruleName: string,
+  configRules: Record<string, unknown>,
+): { severity: 'warn' | 'error'; enabled: boolean } {
+  const setting = configRules[ruleName];
+  if (setting === undefined) return { severity: 'warn', enabled: true };
+  const raw: unknown = Array.isArray(setting) ? setting[0] : setting;
+  if (raw === 'off' || raw === 0) return { severity: 'warn', enabled: false };
+  if (raw === 'error' || raw === 2) return { severity: 'error', enabled: true };
+  return { severity: 'warn', enabled: true };
+}
+
+/**
+ * Map a built-in rule to the RuleInput shape expected by @lapidist/dscp,
+ * using the actual severity and enabled state from the loaded config.
+ */
+function toRuleInput(
+  rule: (typeof builtInRules)[number],
+  configRules: Record<string, unknown>,
+): RuleInput {
+  const { severity, enabled } = resolveRuleConfig(rule.name, configRules);
   return {
     id: rule.name,
     description: rule.meta.description,
-    severity: 'warn',
-    enabled: true,
+    severity,
+    enabled,
     category: String(rule.meta.category),
     fixable: rule.meta.fixable != null,
   };
@@ -100,11 +122,14 @@ export async function exportDesignSystemMd(
 
   const kernelData = await tryFetchKernelData();
 
+  const configRules = config.rules ?? {};
   const input: GeneratorInput = {
     snapshotHash: kernelData?.snapshotHash ?? 'local',
     tokenGraph: { tokens: tokenMap, byType },
     ruleRegistry: {
-      rules: new Map(builtInRules.map((r) => [r.name, toRuleInput(r)])),
+      rules: new Map(
+        builtInRules.map((r) => [r.name, toRuleInput(r, configRules)]),
+      ),
     },
     componentRegistry: {
       components: kernelData?.componentEntries ?? new Map(),
