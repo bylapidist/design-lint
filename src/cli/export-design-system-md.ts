@@ -1,29 +1,20 @@
 /**
  * `design-lint export-design-system-md` command implementation.
  *
- * Generates a `DESIGN_SYSTEM.md` file from the current kernel state.
- *
- * The output is structured for both human reading and agent parsing via typed
- * fenced sections that use `<!-- dscp:<type> -->` comment delimiters, as
- * specified in the DSCP v1 format.
- *
- * ### Output sections
- *
- * - `dscp:meta`      — schema version, generation timestamp, snapshot hash
- * - `dscp:tokens:<type>` — one section per DTIF token type
- * - `dscp:rules`     — all active rules with severity and rationale
- * - `dscp:violations` — placeholder for violation patterns (populated at runtime)
+ * Generates a `DESIGN_SYSTEM.md` file from the current kernel state using the
+ * canonical `@lapidist/dscp` generator. The output conforms to the DSCP v1
+ * specification and is structured for both human reading and AI agent
+ * consumption via typed fenced sections.
  */
 import fs from 'fs';
 import path from 'path';
+import { generateDocument, renderMarkdown } from '@lapidist/dscp';
+import type { GeneratorInput, TokenInput, RuleInput } from '@lapidist/dscp';
 import { loadConfig } from '../config/loader.js';
 import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
 import { builtInRules } from '../rules/index.js';
 import type { DtifFlattenedToken } from '../core/types.js';
 import type { Config } from '../core/linter.js';
-
-const DSCP_SPEC_VERSION = '1.0.0';
-const DSCP_SCHEMA = 'https://dscp.lapidist.net/schema/v1.json';
 
 interface ExportDesignSystemMdOptions {
   /** Output file path. Defaults to `./DESIGN_SYSTEM.md`. */
@@ -37,118 +28,37 @@ export type LoadConfigFn = (
   configPath?: string,
 ) => Promise<Config>;
 
-export function tokenValueToString(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number') return String(value);
-  return JSON.stringify(value);
-}
-
-export function groupTokensByType(
-  tokens: DtifFlattenedToken[],
-): Map<string, DtifFlattenedToken[]> {
-  const groups = new Map<string, DtifFlattenedToken[]>();
-  for (const token of tokens) {
-    const type = token.type ?? 'unknown';
-    const existing = groups.get(type);
-    if (existing) {
-      existing.push(token);
-    } else {
-      groups.set(type, [token]);
-    }
+/**
+ * Map a DtifFlattenedToken to the minimal TokenInput shape expected by
+ * @lapidist/dscp. DtifFlattenedToken satisfies TokenInput structurally, but
+ * we map explicitly so the compiler can verify compatibility.
+ */
+function toTokenInput(token: DtifFlattenedToken): TokenInput {
+  const base: TokenInput = { pointer: token.pointer, name: token.name };
+  if (token.type !== undefined) {
+    return { ...base, type: token.type };
   }
-  return groups;
-}
-
-export function renderTokenSection(
-  type: string,
-  tokens: DtifFlattenedToken[],
-): string {
-  const rows = tokens.map((t) => {
-    const value = tokenValueToString(t.value);
-    const desc = t.metadata.description ?? '';
-    const deprecated = t.metadata.deprecated ? ' _(deprecated)_' : '';
-    return `| \`${t.pointer}\` | \`${value}\` | ${desc}${deprecated} |`;
-  });
-
-  return [
-    `<!-- dscp:tokens:${type} -->`,
-    `### ${type.charAt(0).toUpperCase() + type.slice(1)} Tokens`,
-    '',
-    '| Token | Value | Description |',
-    '|-------|-------|-------------|',
-    ...rows,
-    `<!-- /dscp:tokens:${type} -->`,
-    '',
-  ].join('\n');
-}
-
-export function renderRulesSection(): string {
-  const rows = builtInRules.map((rule) => {
-    const fixable = rule.meta.fixable ? '✓' : '';
-    const rationale = rule.meta.rationale?.why ?? rule.meta.description;
-    const short =
-      rationale.length > 80 ? rationale.slice(0, 77) + '…' : rationale;
-    return `| \`${rule.name}\` | ${String(rule.meta.category)} | ${fixable} | ${short} |`;
-  });
-
-  return [
-    '<!-- dscp:rules -->',
-    '### Design Lint Rules',
-    '',
-    '| Rule | Category | Auto-fix | Rationale |',
-    '|------|----------|----------|-----------|',
-    ...rows,
-    '<!-- /dscp:rules -->',
-    '',
-  ].join('\n');
-}
-
-export function renderViolationsSection(): string {
-  return [
-    '<!-- dscp:violations -->',
-    '### Known Violation Patterns',
-    '',
-    '_Populated at runtime by `design-lint`. Run `design-lint export-design-system-md` after a full lint pass to include violation frequency data._',
-    '',
-    '<!-- /dscp:violations -->',
-    '',
-  ].join('\n');
-}
-
-export function renderMeta(snapshotHash: string): string {
-  const now = new Date().toISOString();
-  return [
-    '<!-- dscp:meta -->',
-    `<!-- $schema: ${DSCP_SCHEMA} -->`,
-    `<!-- specVersion: ${DSCP_SPEC_VERSION} -->`,
-    `<!-- generatedAt: ${now} -->`,
-    `<!-- kernelSnapshotHash: ${snapshotHash} -->`,
-    '<!-- /dscp:meta -->',
-    '',
-  ].join('\n');
-}
-
-export function generateSnapshotHash(tokens: DtifFlattenedToken[]): string {
-  // Deterministic hash stub: uses pointer list as a stable fingerprint.
-  // Phase 5 will replace this with the DSR kernel's real snapshot hash.
-  const payload = tokens
-    .map((t) => t.pointer)
-    .sort()
-    .join('|');
-  let hash = 0;
-  for (let i = 0; i < payload.length; i++) {
-    const char = payload.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(16).padStart(8, '0');
+  return base;
 }
 
 /**
- * Export a `DESIGN_SYSTEM.md` file from the current design-lint kernel state.
+ * Map a built-in rule to the RuleInput shape expected by @lapidist/dscp.
+ */
+function toRuleInput(rule: (typeof builtInRules)[number]): RuleInput {
+  return {
+    id: rule.name,
+    description: rule.meta.description,
+    severity: 'warn',
+    enabled: true,
+    category: String(rule.meta.category),
+    fixable: rule.meta.fixable != null,
+  };
+}
+
+/**
+ * Export a `DESIGN_SYSTEM.md` file from the current design-lint configuration.
  *
- * @param options - Command options controlling output path and config location.
+ * @param options      - Command options controlling output path and config location.
  * @param loadConfigFn - Optional override for config loading (used in tests).
  */
 export async function exportDesignSystemMd(
@@ -172,44 +82,38 @@ export async function exportDesignSystemMd(
     }),
   ];
 
-  const tokenGroups = groupTokensByType(allTokens);
-  const snapshotHash = generateSnapshotHash(allTokens);
-
-  const sections: string[] = [
-    '# DESIGN_SYSTEM.md',
-    '',
-    '> Auto-generated by `design-lint export-design-system-md`. Do not edit by hand.',
-    '>',
-    '> Structured for both human reading and AI agent consumption (DSCP v1).',
-    '',
-    renderMeta(snapshotHash),
-    '---',
-    '',
-    '## Tokens',
-    '',
-  ];
-
-  for (const [type, tokens] of [...tokenGroups.entries()].sort(([a], [b]) =>
-    a.localeCompare(b),
-  )) {
-    sections.push(renderTokenSection(type, tokens));
-  }
-
-  sections.push('---', '', '## Rules', '', renderRulesSection());
-  sections.push(
-    '---',
-    '',
-    '## Violation Patterns',
-    '',
-    renderViolationsSection(),
+  const tokenMap = new Map<string, TokenInput>(
+    allTokens.map((t) => [t.pointer, toTokenInput(t)]),
   );
 
-  const content = sections.join('\n');
+  const byType = new Map<string, TokenInput[]>();
+  for (const token of allTokens) {
+    const type = token.type ?? 'unknown';
+    const existing = byType.get(type);
+    if (existing) {
+      existing.push(toTokenInput(token));
+    } else {
+      byType.set(type, [toTokenInput(token)]);
+    }
+  }
+
+  const input: GeneratorInput = {
+    snapshotHash: 'local',
+    tokenGraph: { tokens: tokenMap, byType },
+    ruleRegistry: {
+      rules: new Map(builtInRules.map((r) => [r.name, toRuleInput(r)])),
+    },
+    componentRegistry: { components: new Map() },
+    deprecationLedger: { entries: new Map() },
+    violations: [],
+  };
+
+  const doc = generateDocument(input);
+  const content = renderMarkdown(doc);
+
   fs.writeFileSync(outPath, content, 'utf8');
 
-  const tokenCount = allTokens.length;
-  const ruleCount = builtInRules.length;
   console.log(
-    `DESIGN_SYSTEM.md generated: ${tokenCount.toString()} tokens, ${ruleCount.toString()} rules → ${outPath}`,
+    `DESIGN_SYSTEM.md generated: ${allTokens.length.toString()} tokens, ${builtInRules.length.toString()} rules → ${outPath}`,
   );
 }
