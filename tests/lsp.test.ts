@@ -583,7 +583,81 @@ void test('LSP codeAction still includes fix action when rule has a fix', async 
 // KernelChangeSubscriber (Gap E2)
 // ---------------------------------------------------------------------------
 
-void test('LSP re-lints open documents when kernel token graph changes', async () => {
+void test('LSP re-lints open documents when kernel token graph changes (pointer match)', async () => {
+  const TOKEN_POINTER = '#/color/brand/primary';
+  let lintCallCount = 0;
+  // Linter returns a message whose metadata.pointer matches the changed token,
+  // so the document is indexed with that pointer and targeted re-lint fires.
+  const linter = {
+    lintDocument: () => {
+      lintCallCount++;
+      return Promise.resolve({
+        sourceId: 'mock',
+        messages: [
+          {
+            ruleId: 'design-system/deprecation',
+            severity: 'warn' as const,
+            message: 'Token is deprecated',
+            line: 1,
+            column: 5,
+            metadata: { pointer: TOKEN_POINTER },
+          },
+        ],
+      });
+    },
+    lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
+    getTokenCompletions: () => ({}),
+  } as unknown as Linter;
+
+  let captured: ((pointers: string[]) => void) | undefined;
+  const subscriber: KernelChangeSubscriber = {
+    onTokensChanged(cb) {
+      captured = cb;
+      return () => undefined;
+    },
+  };
+
+  const input = new PassThrough();
+  const output = new PassThrough();
+  const server = createLSPServer(linter, {
+    kernelChangeSubscriber: subscriber,
+  });
+  server.start(input, output);
+
+  // Open a document — triggers lintDocument once and indexes the pointer
+  input.write(
+    encodeRpc({
+      jsonrpc: '2.0',
+      method: 'textDocument/didOpen',
+      params: {
+        textDocument: {
+          uri: 'file:///kernel-change.css',
+          text: 'a { color: red; }',
+          languageId: 'css',
+          version: 1,
+        },
+      },
+    }),
+  );
+
+  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  assert.equal(lintCallCount, 1, 'initial lint on open');
+
+  // Simulate kernel token graph change for the indexed pointer
+  assert.ok(captured !== undefined, 'subscriber callback should be registered');
+  captured([TOKEN_POINTER]);
+
+  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  assert.equal(
+    lintCallCount,
+    2,
+    're-lint triggered by matching pointer change',
+  );
+
+  input.end();
+});
+
+void test('LSP skips re-lint when changed pointers do not match document', async () => {
   let lintCallCount = 0;
   const linter = {
     lintDocument: () => {
@@ -609,14 +683,13 @@ void test('LSP re-lints open documents when kernel token graph changes', async (
   });
   server.start(input, output);
 
-  // Open a document — triggers lintDocument once
   input.write(
     encodeRpc({
       jsonrpc: '2.0',
       method: 'textDocument/didOpen',
       params: {
         textDocument: {
-          uri: 'file:///kernel-change.css',
+          uri: 'file:///no-match.css',
           text: 'a { color: red; }',
           languageId: 'css',
           version: 1,
@@ -628,12 +701,70 @@ void test('LSP re-lints open documents when kernel token graph changes', async (
   await new Promise<void>((resolve) => setTimeout(resolve, 50));
   assert.equal(lintCallCount, 1, 'initial lint on open');
 
-  // Simulate kernel token graph change
-  assert.ok(captured !== undefined, 'subscriber callback should be registered');
-  captured(['#/color/brand/primary']);
+  assert.ok(captured !== undefined);
+  // Fire with a pointer that does not appear in the document's dependency graph
+  captured(['#/spacing/scale/4']);
 
   await new Promise<void>((resolve) => setTimeout(resolve, 50));
-  assert.equal(lintCallCount, 2, 're-lint triggered by kernel change');
+  assert.equal(
+    lintCallCount,
+    1,
+    'no re-lint when changed pointer not in document graph',
+  );
+
+  input.end();
+});
+
+void test('LSP re-lints all open documents on full-graph invalidation (empty pointer list)', async () => {
+  let lintCallCount = 0;
+  const linter = {
+    lintDocument: () => {
+      lintCallCount++;
+      return Promise.resolve({ sourceId: 'mock', messages: [] });
+    },
+    lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
+    getTokenCompletions: () => ({}),
+  } as unknown as Linter;
+
+  let captured: ((pointers: string[]) => void) | undefined;
+  const subscriber: KernelChangeSubscriber = {
+    onTokensChanged(cb) {
+      captured = cb;
+      return () => undefined;
+    },
+  };
+
+  const input = new PassThrough();
+  const output = new PassThrough();
+  const server = createLSPServer(linter, {
+    kernelChangeSubscriber: subscriber,
+  });
+  server.start(input, output);
+
+  input.write(
+    encodeRpc({
+      jsonrpc: '2.0',
+      method: 'textDocument/didOpen',
+      params: {
+        textDocument: {
+          uri: 'file:///full-invalidate.css',
+          text: 'a { color: red; }',
+          languageId: 'css',
+          version: 1,
+        },
+      },
+    }),
+  );
+
+  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  assert.equal(lintCallCount, 1, 'initial lint on open');
+
+  assert.ok(captured !== undefined);
+  // Empty array signals full-graph invalidation — re-lint all open documents
+  captured([]);
+
+  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  assert.equal(lintCallCount, 2, 're-lint all on full-graph invalidation');
 
   input.end();
 });
