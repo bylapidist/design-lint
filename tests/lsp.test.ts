@@ -8,6 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PassThrough } from 'node:stream';
 import { createLSPServer } from '../packages/lsp/src/index.js';
+import type { KernelChangeSubscriber } from '../packages/lsp/src/server.js';
 import type { Linter, LintMessage, LintResult } from '../src/index.js';
 
 // ---------------------------------------------------------------------------
@@ -576,4 +577,99 @@ void test('LSP codeAction still includes fix action when rule has a fix', async 
   const fixAction = actions.find((a) => a.title.startsWith('Fix:'));
   assert.ok(fixAction !== undefined, 'should still offer auto-fix action');
   assert.equal(fixAction.edit.newText, 'var(--color-brand)');
+});
+
+// ---------------------------------------------------------------------------
+// KernelChangeSubscriber (Gap E2)
+// ---------------------------------------------------------------------------
+
+void test('LSP re-lints open documents when kernel token graph changes', async () => {
+  let lintCallCount = 0;
+  const linter = {
+    lintDocument: () => {
+      lintCallCount++;
+      return Promise.resolve({ sourceId: 'mock', messages: [] });
+    },
+    lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
+    getTokenCompletions: () => ({}),
+  } as unknown as Linter;
+
+  let captured: ((pointers: string[]) => void) | undefined;
+  const subscriber: KernelChangeSubscriber = {
+    onTokensChanged(cb) {
+      captured = cb;
+      return () => undefined;
+    },
+  };
+
+  const input = new PassThrough();
+  const output = new PassThrough();
+  const server = createLSPServer(linter, {
+    kernelChangeSubscriber: subscriber,
+  });
+  server.start(input, output);
+
+  // Open a document — triggers lintDocument once
+  input.write(
+    encodeRpc({
+      jsonrpc: '2.0',
+      method: 'textDocument/didOpen',
+      params: {
+        textDocument: {
+          uri: 'file:///kernel-change.css',
+          text: 'a { color: red; }',
+          languageId: 'css',
+          version: 1,
+        },
+      },
+    }),
+  );
+
+  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  assert.equal(lintCallCount, 1, 'initial lint on open');
+
+  // Simulate kernel token graph change
+  assert.ok(captured !== undefined, 'subscriber callback should be registered');
+  captured(['#/color/brand/primary']);
+
+  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  assert.equal(lintCallCount, 2, 're-lint triggered by kernel change');
+
+  input.end();
+});
+
+void test('LSP does not re-lint when no documents are open', async () => {
+  let lintCallCount = 0;
+  const linter = {
+    lintDocument: () => {
+      lintCallCount++;
+      return Promise.resolve({ sourceId: 'mock', messages: [] });
+    },
+    lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
+    getTokenCompletions: () => ({}),
+  } as unknown as Linter;
+
+  let captured: ((pointers: string[]) => void) | undefined;
+  const subscriber: KernelChangeSubscriber = {
+    onTokensChanged(cb) {
+      captured = cb;
+      return () => undefined;
+    },
+  };
+
+  const input = new PassThrough();
+  const output = new PassThrough();
+  const server = createLSPServer(linter, {
+    kernelChangeSubscriber: subscriber,
+  });
+  server.start(input, output);
+
+  assert.ok(captured !== undefined);
+  // Fire change with no documents open
+  captured(['#/color/brand/primary']);
+
+  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  assert.equal(lintCallCount, 0, 'no re-lint when no documents are open');
+
+  input.end();
 });

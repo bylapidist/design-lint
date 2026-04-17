@@ -15,6 +15,7 @@ import type {
   LSPHover,
   LSPTokenDependencyGraph,
   LSPServerOptions,
+  KernelChangeSubscriber,
 } from './types.js';
 
 // ---------------------------------------------------------------------------
@@ -28,6 +29,7 @@ export type {
   LSPHover,
   LSPTokenDependencyGraph,
   LSPServerOptions,
+  KernelChangeSubscriber,
 };
 
 // ---------------------------------------------------------------------------
@@ -270,11 +272,12 @@ export function createLSPServer(
   linter: Linter,
   options?: LSPServerOptions,
 ): LSPServer {
-  // options is reserved for future connection configuration (kernel socket / URL)
-  void options;
-
   const documents = new Map<string, DocumentState>();
   const dependencyGraph: LSPTokenDependencyGraph = { entries: {} };
+
+  // Mutable reference to the active output stream, set in start().
+  // Used by the kernel change subscriber to publish re-lint diagnostics.
+  let activeOutput: NodeJS.WritableStream | null = null;
 
   // -- Lint a document and publish diagnostics --------------------------------
 
@@ -599,6 +602,7 @@ export function createLSPServer(
     input: NodeJS.ReadableStream = process.stdin,
     output: NodeJS.WritableStream = process.stdout,
   ): void {
+    activeOutput = output;
     let buffer: Uint8Array = new Uint8Array(0);
 
     input.on('data', (chunk: Uint8Array) => {
@@ -609,6 +613,17 @@ export function createLSPServer(
     input.on('end', () => {
       process.exit(0);
     });
+
+    // Subscribe to kernel token graph changes and re-lint open documents.
+    if (options?.kernelChangeSubscriber) {
+      options.kernelChangeSubscriber.onTokensChanged(() => {
+        if (!activeOutput) return;
+        const out = activeOutput;
+        for (const [uri, state] of documents) {
+          lintAndPublish(uri, state.text, out).catch(() => undefined);
+        }
+      });
+    }
   }
 
   return {
