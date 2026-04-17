@@ -14,6 +14,7 @@ import type { Linter } from '../index.js';
 import type { LintResult } from '../core/types.js';
 import { createNodeEnvironment } from '../adapters/node/environment.js';
 import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
+import type { DesignLintPolicy } from '../core/types.js';
 import { loadPolicy } from '../config/policy-loader.js';
 import { enforcePolicy } from '../config/policy-enforcer.js';
 
@@ -47,6 +48,8 @@ export interface Environment {
   state: { pluginPaths: string[]; ignoreFilePaths: string[] };
   /** Retrieve the active ignore matcher. */
   getIg: () => Ignore;
+  /** Active policy loaded from `designlint.policy.json`, if present. */
+  policy?: DesignLintPolicy;
   /** Options used when creating the environment. */
   envOptions: {
     cacheLocation?: string;
@@ -111,6 +114,8 @@ export async function prepareEnvironment(
   if (policy !== undefined) {
     enforcePolicy(config, policy);
   }
+  // `policy` is retained and returned so the execute layer can apply runtime
+  // enforcement (tokenCoverage, ratchet, agentPolicy) after the lint run.
 
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
@@ -164,6 +169,7 @@ export async function prepareEnvironment(
     gitIgnore,
     refreshIgnore,
     state,
+    policy,
     getIg: () => ig,
     envOptions: {
       cacheLocation,
