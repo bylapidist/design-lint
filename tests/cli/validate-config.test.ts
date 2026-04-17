@@ -198,3 +198,84 @@ void test('validateConfig throws on unknown formatter', async () => {
     },
   );
 });
+
+void test('validateConfig enforces designlint.policy.json requiredRules', async () => {
+  const dir = makeTmpDir();
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(configPath, JSON.stringify({ tokens: {}, rules: {} }));
+  // Policy requires a rule that is not configured
+  fs.writeFileSync(
+    path.join(dir, 'designlint.policy.json'),
+    JSON.stringify({ requiredRules: ['design-token/colors'], minSeverity: {} }),
+  );
+
+  await assert.rejects(
+    () => validateConfig({ config: configPath }, stubLogger()),
+    (err: unknown) => {
+      assert.ok(err instanceof Error);
+      assert.ok(err.message.includes('design-token/colors'));
+      assert.ok(err.message.includes('required'));
+      return true;
+    },
+  );
+});
+
+void test('validateConfig enforces designlint.policy.json minSeverity', async () => {
+  const dir = makeTmpDir();
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: {},
+      rules: { 'design-token/colors': 'warn' },
+    }),
+  );
+  fs.writeFileSync(
+    path.join(dir, 'designlint.policy.json'),
+    JSON.stringify({
+      requiredRules: [],
+      minSeverity: { 'design-token/colors': 'error' },
+    }),
+  );
+
+  await assert.rejects(
+    () => validateConfig({ config: configPath }, stubLogger()),
+    (err: unknown) => {
+      assert.ok(err instanceof Error);
+      assert.ok(err.message.includes('design-token/colors'));
+      assert.ok(err.message.includes('error'));
+      return true;
+    },
+  );
+});
+
+void test('validateConfig passes when policy constraints are satisfied', async () => {
+  const dir = makeTmpDir();
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: {},
+      rules: { 'design-token/colors': 'error' },
+    }),
+  );
+  fs.writeFileSync(
+    path.join(dir, 'designlint.policy.json'),
+    JSON.stringify({
+      requiredRules: ['design-token/colors'],
+      minSeverity: { 'design-token/colors': 'error' },
+    }),
+  );
+
+  const lines: string[] = [];
+  const orig = console.log;
+  console.log = (...args: unknown[]) => {
+    lines.push(args.join(' '));
+  };
+  try {
+    await validateConfig({ config: configPath }, stubLogger());
+  } finally {
+    console.log = orig;
+  }
+  assert.ok(lines.some((l) => l.includes('Configuration is valid')));
+});
