@@ -303,9 +303,17 @@ export function createLSPServer(
       messages: result.messages,
     });
 
-    // Track rule ids referenced in this file as a proxy for token dependencies
-    const tokenRefs = result.messages.map((m) => m.ruleId);
-    dependencyGraph.entries[uri] = tokenRefs;
+    // Collect DTIF token pointers referenced in this file.
+    // Rules that detect specific token usage emit metadata.pointer; collect
+    // those first. Deduplicate via Set so each pointer appears at most once.
+    const pointerSet = new Set<string>();
+    for (const m of result.messages) {
+      const ptr = m.metadata?.pointer;
+      if (typeof ptr === 'string' && ptr.length > 0) {
+        pointerSet.add(ptr);
+      }
+    }
+    dependencyGraph.entries[uri] = Array.from(pointerSet);
 
     sendNotification(output, 'textDocument/publishDiagnostics', {
       uri,
@@ -614,15 +622,26 @@ export function createLSPServer(
       process.exit(0);
     });
 
-    // Subscribe to kernel token graph changes and re-lint open documents.
+    // Subscribe to kernel token graph changes and re-lint affected open documents.
+    // When changedPointers is non-empty, only re-lint documents that reference
+    // at least one of the changed tokens (via the dependency graph). When the
+    // list is empty (full-graph invalidation), re-lint all open documents.
     if (options?.kernelChangeSubscriber) {
-      options.kernelChangeSubscriber.onTokensChanged(() => {
-        if (!activeOutput) return;
-        const out = activeOutput;
-        for (const [uri, state] of documents) {
-          lintAndPublish(uri, state.text, out).catch(() => undefined);
-        }
-      });
+      options.kernelChangeSubscriber.onTokensChanged(
+        (changedPointers: string[]) => {
+          if (!activeOutput) return;
+          const out = activeOutput;
+          for (const [uri, state] of documents) {
+            const docPointers = dependencyGraph.entries[uri] ?? [];
+            const affected =
+              changedPointers.length === 0 ||
+              docPointers.some((p) => changedPointers.includes(p));
+            if (affected) {
+              lintAndPublish(uri, state.text, out).catch(() => undefined);
+            }
+          }
+        },
+      );
     }
   }
 
