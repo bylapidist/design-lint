@@ -68,6 +68,20 @@ export interface LSPTokenDependencyGraph {
   entries: Record<string, string[]>;
 }
 
+/**
+ * Subscriber interface for DSR kernel token graph change events.
+ * When provided to `createLSPServer`, the server re-lints all affected open
+ * documents whenever the design token graph changes in the kernel.
+ */
+export interface KernelChangeSubscriber {
+  /**
+   * Register a callback that fires whenever the kernel's token graph changes.
+   * The callback receives the DTIF pointers of the changed tokens.
+   * Returns an unsubscribe function; call it to clean up on server shutdown.
+   */
+  onTokensChanged(callback: (changedPointers: string[]) => void): () => void;
+}
+
 /** Options for creating the language server. */
 export interface LSPServerOptions {
   /** Path to the DSR kernel Unix socket (falls back to HTTP if absent). */
@@ -76,4 +90,9 @@ export interface LSPServerOptions {
   kernelUrl?: string;
   /** Maximum number of files to lint concurrently. */
   concurrency?: number;
+  /**
+   * When provided, the server subscribes to kernel token graph changes and
+   * triggers targeted re-lint of all open documents when tokens are mutated.
+   */
+  kernelChangeSubscriber?: KernelChangeSubscriber;
 }
