@@ -14,6 +14,8 @@ import type { Linter } from '../index.js';
 import type { LintResult } from '../core/types.js';
 import { createNodeEnvironment } from '../adapters/node/environment.js';
 import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
+import { loadPolicy } from '../config/policy-loader.js';
+import { enforcePolicy } from '../config/policy-enforcer.js';
 
 /**
  * Represents the prepared environment used by CLI commands.
@@ -99,6 +101,17 @@ export async function prepareEnvironment(
   if (config.configPath) {
     config.configPath = realpathIfExists(config.configPath);
   }
+
+  // Enforce designlint.policy.json when present. Static checks (required rules,
+  // min severity) throw a ConfigError before any linting begins.
+  const policyDir = config.configPath
+    ? path.dirname(config.configPath)
+    : process.cwd();
+  const policy = loadPolicy(policyDir);
+  if (policy !== undefined) {
+    enforcePolicy(config, policy);
+  }
+
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
