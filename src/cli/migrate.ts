@@ -15,6 +15,13 @@
  *    to `import`-based presets.
  * 4. **`plugins`** key: v8 has no top-level `plugins` — each plugin registers
  *    its rules via `createLinter`. A migration comment is inserted.
+ * 5. **`ignorePatterns`** key: renamed to `ignoreFiles` in v8.
+ * 6. **`overrides`** key: per-file rule overrides are not supported in v8.
+ *    The field is removed and a migration note is emitted.
+ * 7. **`root`** key: no-op in v8 (config resolution is project-relative).
+ *    The field is removed.
+ * 8. **`env`** key: environment globals are not used by design-lint.
+ *    The field is removed and a migration note is emitted.
  */
 import fs from 'fs';
 import path from 'path';
@@ -65,31 +72,79 @@ function migrateRules(rules: unknown): unknown {
   return migrated;
 }
 
-/** Return an array of human-readable change descriptions. */
-function diffChanges(original: RawConfig, migrated: RawConfig): string[] {
+/**
+ * Apply all structural migrations to a JSON config object.
+ *
+ * Returns the transformed config and a list of change descriptions.
+ */
+export function applyMigrations(original: RawConfig): {
+  migrated: RawConfig;
+  changes: string[];
+} {
+  const migrated: RawConfig = { ...original };
   const changes: string[] = [];
-  const origStr = JSON.stringify(original);
-  const migrStr = JSON.stringify(migrated);
-  if (origStr === migrStr) return changes;
 
-  if (JSON.stringify(original.rules) !== JSON.stringify(migrated.rules)) {
+  // 1. Numeric severity codes → string equivalents
+  if ('rules' in migrated) {
+    const migratedRules = migrateRules(migrated.rules);
+    if (JSON.stringify(migratedRules) !== JSON.stringify(migrated.rules)) {
+      changes.push(
+        'rules: numeric severity codes migrated to string equivalents',
+      );
+    }
+    migrated.rules = migratedRules;
+  }
+
+  // 2. `ignorePatterns` → `ignoreFiles`
+  if ('ignorePatterns' in migrated) {
+    migrated.ignoreFiles = migrated.ignorePatterns;
+    delete migrated.ignorePatterns;
+    changes.push('ignorePatterns: renamed to ignoreFiles (v7 → v8 key rename)');
+  }
+
+  // 3. `overrides` — not supported in v8; remove and note
+  if ('overrides' in migrated) {
+    delete migrated.overrides;
     changes.push(
-      'rules: numeric severity codes migrated to string equivalents',
+      'overrides: removed — per-file rule overrides are not supported in v8. ' +
+        'Use separate config files or rule-level options instead.',
     );
   }
-  if ('plugins' in original) {
+
+  // 4. `root` — no-op in v8; remove silently
+  if ('root' in migrated) {
+    delete migrated.root;
+    changes.push(
+      'root: removed — v8 resolves config relative to the project root automatically.',
+    );
+  }
+
+  // 5. `env` — not used by design-lint; remove and note
+  if ('env' in migrated) {
+    delete migrated.env;
+    changes.push(
+      'env: removed — design-lint does not use environment globals. ' +
+        'Token and rule configuration drives all behaviour.',
+    );
+  }
+
+  // 6. `plugins` comment note
+  if ('plugins' in migrated) {
     changes.push(
       'plugins: v8 no longer uses a top-level plugins array; ' +
         'register rules via createLinter() options instead.',
     );
   }
-  if ('extends' in original) {
+
+  // 7. `extends` comment note
+  if ('extends' in migrated) {
     changes.push(
       'extends: v8 uses import-based presets (e.g. @lapidist/design-lint-config-recommended); ' +
         'replace the extends array with spread imports.',
     );
   }
-  return changes;
+
+  return { migrated, changes };
 }
 
 /**
@@ -167,13 +222,7 @@ export function migrateConfig(options: MigrateOptions): void {
 
   // JSON config — apply transformations
   const original = parseJsonConfig(source);
-  const migrated: RawConfig = { ...original };
-
-  if ('rules' in migrated) {
-    migrated.rules = migrateRules(migrated.rules);
-  }
-
-  const changes = diffChanges(original, migrated);
+  const { migrated, changes } = applyMigrations(original);
 
   if (changes.length === 0) {
     console.log('Config is already compatible with v8 — no changes needed.');
