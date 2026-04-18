@@ -108,6 +108,9 @@ importers:
       '@changesets/cli':
         specifier: 2.31.0
         version: 2.31.0(@types/node@25.6.0)
+      '@lapidist/eslint-config':
+        specifier: 1.0.0
+        version: 1.0.0(@typescript-eslint/eslint-plugin@8.58.2(@typescript-eslint/parser@8.58.2(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(@typescript-eslint/parser@8.58.2(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(eslint@10.2.1(jiti@2.6.1))
       '@types/color-name':
         specifier: 2.0.0
         version: 2.0.0
@@ -800,6 +803,14 @@ packages:
   '@lapidist/dtif-validator@2.0.0':
     resolution: {integrity: sha512-x0C6xEyaaF17MOBhJXdPRRx3lsO3Q9JgLJfxhQ8Ept6wPt0+tmLgD7K8CbMWmC00gnf66v3h4iA3gIAMk6hBgw==}
     engines: {node: '>=22', pnpm: '>=10'}
+
+  '@lapidist/eslint-config@1.0.0':
+    resolution: {integrity: sha512-WIBO41HOsWEeL443gCoTbp2bCkP7XXhlvR/4vzmMJ+Hw2Dh+qrMiSVS9FA5I1XIOjCvM4vrg+fMfK14Yq2fkfg==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      '@typescript-eslint/eslint-plugin': '>=8'
+      '@typescript-eslint/parser': '>=8'
+      eslint: '>=9'
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -3142,6 +3153,12 @@ snapshots:
       '@lapidist/dtif-schema': 2.0.0
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
+
+  '@lapidist/eslint-config@1.0.0(@typescript-eslint/eslint-plugin@8.58.2(@typescript-eslint/parser@8.58.2(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(@typescript-eslint/parser@8.58.2(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(eslint@10.2.1(jiti@2.6.1))':
+    dependencies:
+      '@typescript-eslint/eslint-plugin': 8.58.2(@typescript-eslint/parser@8.58.2(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3))(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)
+      '@typescript-eslint/parser': 8.58.2(eslint@10.2.1(jiti@2.6.1))(typescript@6.0.3)
+      eslint: 10.2.1(jiti@2.6.1)
 
   '@manypkg/find-root@1.1.0':
     dependencies:
