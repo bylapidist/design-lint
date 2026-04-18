@@ -1,4 +1,4 @@
-import type { LintMessage, RuleModule } from '@lapidist/design-lint';
+import type { LintMessage, RuleModule, DtifFlattenedToken } from '@lapidist/design-lint';
 import assert from 'node:assert/strict';
 import { SnippetLinter } from './snippet-linter.js';
 
@@ -13,6 +13,12 @@ export interface ValidCase {
   fileType: FileType;
   /** Optional rule-specific options. */
   options?: unknown;
+  /**
+   * Flattened DTIF tokens to inject into the linter for this case.
+   * Required when testing token-based rules that need a non-empty token set
+   * to exercise real validation (rather than the "configure tokens" message).
+   */
+  tokens?: DtifFlattenedToken[];
 }
 
 /** An expected diagnostic produced by an invalid case. */
@@ -35,6 +41,12 @@ export interface InvalidCase {
   fileType: FileType;
   /** Optional rule-specific options. */
   options?: unknown;
+  /**
+   * Flattened DTIF tokens to inject into the linter for this case.
+   * Required when testing token-based rules that need a non-empty token set
+   * to exercise real validation (rather than the "configure tokens" message).
+   */
+  tokens?: DtifFlattenedToken[];
   /** The diagnostics that must be reported — at least one required. */
   errors: [ExpectedError, ...ExpectedError[]];
   /** Expected auto-fixed output, if the rule is fixable. */
@@ -98,6 +110,7 @@ export class RuleTester {
         testCase.code,
         fileType,
         testCase.options,
+        testCase.tokens,
       );
       assert.equal(
         diagnostics.length,
@@ -113,6 +126,7 @@ export class RuleTester {
         testCase.code,
         fileType,
         testCase.options,
+        testCase.tokens,
       );
       assert.ok(
         diagnostics.length >= testCase.errors.length,
@@ -170,8 +184,9 @@ export class RuleTester {
     code: string,
     fileType: FileType,
     options?: unknown,
+    tokens?: DtifFlattenedToken[],
   ): Promise<LintMessage[]> {
-    const linter = new SnippetLinter(rule, options);
+    const linter = new SnippetLinter(rule, options, tokens);
     return linter.lintSnippet(code, fileType);
   }
 }
