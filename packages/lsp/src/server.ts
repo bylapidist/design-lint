@@ -472,11 +472,17 @@ export function createLSPServer(
         const items: LSPCompletion[] = [];
         for (const [, paths] of Object.entries(allCompletions)) {
           for (const tokenPath of paths) {
+            const token = linter.getDtifTokenByPath(tokenPath);
             const cssVar = tokenPathToCssVar(tokenPath);
+            const rawVal = token?.value;
+            const detail =
+              rawVal !== undefined && rawVal !== null
+                ? String(rawVal)
+                : cssVar;
             items.push({
               label: tokenPath.split('.').at(-1) ?? tokenPath,
               insertText: cssVar,
-              detail: cssVar,
+              detail,
               preselect: position !== null,
             });
           }
@@ -492,22 +498,35 @@ export function createLSPServer(
           sendResponse(output, id, null);
           return;
         }
-        const cssVar = tokenPathToCssVar(tokenPath);
+        const token = linter.getDtifTokenByPath(tokenPath);
+        const rawVal = token?.value;
+        const resolvedValue =
+          rawVal !== undefined && rawVal !== null
+            ? String(rawVal)
+            : tokenPathToCssVar(tokenPath);
+        const pointer = token?.pointer ?? tokenPath;
+        const deprecation = token?.metadata.deprecated;
         const hover: LSPHover = {
-          pointer: tokenPath,
-          resolvedValue: cssVar,
+          pointer,
+          resolvedValue,
+          type: token?.type,
+          deprecationNotice: deprecation
+            ? (deprecation.reason ?? 'Deprecated')
+            : undefined,
           docsUrl: `https://github.com/bylapidist/design-lint/tree/main/docs/tokens/${tokenPath.replaceAll('.', '/')}.md`,
         };
+        const lines: string[] = [
+          `**Token:** \`${tokenPath}\``,
+          `**Resolved value:** \`${hover.resolvedValue}\``,
+        ];
+        if (hover.type) lines.push(`**Type:** \`${hover.type}\``);
+        if (hover.deprecationNotice)
+          lines.push(`> **Deprecated:** ${hover.deprecationNotice}`);
+        if (hover.docsUrl) lines.push(`[Documentation](${hover.docsUrl})`);
         sendResponse(output, id, {
           contents: {
             kind: 'markdown',
-            value: [
-              `**Token:** \`${tokenPath}\``,
-              `**Resolved value:** \`${hover.resolvedValue}\``,
-              hover.docsUrl ? `[Documentation](${hover.docsUrl})` : '',
-            ]
-              .filter(Boolean)
-              .join('\n\n'),
+            value: lines.join('\n\n'),
           },
         });
         return;

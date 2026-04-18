@@ -232,6 +232,28 @@ export class Linter {
     return completions;
   }
 
+  /**
+   * Look up a flattened DTIF token by its dot-separated path string.
+   *
+   * The path is the same string produced by `getTokenCompletions` — e.g.
+   * `"color.brand.primary"`. Searches all loaded themes and returns the first
+   * matching token, or `undefined` when no token matches.
+   *
+   * @param tokenPath - Dot-separated token path (e.g. `"color.brand.primary"`).
+   * @returns The matching {@link DtifFlattenedToken}, or `undefined`.
+   */
+  getDtifTokenByPath(tokenPath: string): DtifFlattenedToken | undefined {
+    if (!this.tokenRegistry) return undefined;
+    const transform = this.config.nameTransform;
+    for (const theme of Object.keys(this.tokensByTheme)) {
+      const dtifTokens = this.tokenRegistry.getDtifTokens(theme);
+      for (const token of dtifTokens) {
+        if (deriveTokenPath(token, transform) === tokenPath) return token;
+      }
+    }
+    return undefined;
+  }
+
   async getPluginPaths(): Promise<string[]> {
     return this.ruleRegistry.getPluginPaths();
   }

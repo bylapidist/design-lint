@@ -102,6 +102,7 @@ function makeMockLinter(opts: MockLinterOptions = {}): Linter {
     lintDocument: () => Promise.resolve(makeResult(opts.messages ?? [])),
     lintSnippet: () => Promise.resolve(makeResult([])),
     getTokenCompletions: () => opts.tokenCompletions ?? {},
+    getDtifTokenByPath: () => undefined,
   } as unknown as Linter;
 }
 
@@ -329,6 +330,113 @@ void test('LSP textDocument/completion returns token completions', async () => {
   assert.ok('items' in response.result);
   assert.ok(Array.isArray(response.result.items));
   assert.ok(response.result.items.length >= 2);
+});
+
+void test('LSP textDocument/completion uses real token value when available', async () => {
+  const linter = {
+    lintDocument: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
+    lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
+    getTokenCompletions: () => ({ color: ['color.primary'] }),
+    getDtifTokenByPath: (path: string) => {
+      if (path === 'color.primary') {
+        return {
+          id: 'color-primary',
+          pointer: '#/color/primary',
+          path: ['color', 'primary'],
+          name: 'color.primary',
+          type: 'color',
+          value: '#FF0000',
+          metadata: { extensions: {} },
+        };
+      }
+      return undefined;
+    },
+  } as unknown as Linter;
+
+  const frames = await runLSP(
+    [
+      {
+        jsonrpc: '2.0',
+        id: 20,
+        method: 'textDocument/completion',
+        params: {
+          textDocument: { uri: 'file:///real-value.css' },
+          position: { line: 0, character: 10 },
+        },
+      },
+    ],
+    linter,
+  );
+
+  const response = frames.find(
+    (f): f is { id: number; result: { items: { detail: string }[] } } =>
+      typeof f === 'object' && f !== null && 'result' in f,
+  );
+  assert.ok(response !== undefined);
+  assert.ok(response.result.items.length > 0, 'should have at least one item');
+  // detail should be the real token value, not a synthesized CSS var
+  assert.equal(response.result.items[0]?.detail, '#FF0000');
+});
+
+void test('LSP textDocument/hover returns real token metadata', async () => {
+  const linter = {
+    lintDocument: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
+    lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
+    getTokenCompletions: () => ({}),
+    getDtifTokenByPath: (path: string) => {
+      if (path === 'color.brand') {
+        return {
+          id: 'color-brand',
+          pointer: '#/color/brand',
+          path: ['color', 'brand'],
+          name: 'color.brand',
+          type: 'color',
+          value: '#0000FF',
+          metadata: {
+            extensions: {},
+            deprecated: { reason: 'Use color.primary instead' },
+          },
+        };
+      }
+      return undefined;
+    },
+  } as unknown as Linter;
+
+  const frames = await runLSP(
+    [
+      {
+        jsonrpc: '2.0',
+        id: 21,
+        method: 'textDocument/hover',
+        params: {
+          textDocument: { uri: 'file:///hover.css' },
+          position: { line: 0, character: 5 },
+          context: { tokenPath: 'color.brand' },
+        },
+      },
+    ],
+    linter,
+  );
+
+  const response = frames.find(
+    (
+      f,
+    ): f is {
+      id: number;
+      result: { contents: { kind: string; value: string } };
+    } => typeof f === 'object' && f !== null && 'result' in f,
+  );
+  assert.ok(response !== undefined);
+  const { value } = response.result.contents;
+  // Resolved value should be the actual token value, not a CSS var
+  assert.ok(value.includes('#0000FF'), 'should show real token value');
+  // Token type should be present
+  assert.ok(value.includes('color'), 'should show token type');
+  // Deprecation notice should appear
+  assert.ok(
+    value.includes('Use color.primary instead'),
+    'should show deprecation notice',
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -607,6 +715,7 @@ void test('LSP re-lints open documents when kernel token graph changes (pointer 
     },
     lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
     getTokenCompletions: () => ({}),
+    getDtifTokenByPath: () => undefined,
   } as unknown as Linter;
 
   let captured: ((pointers: string[]) => void) | undefined;
@@ -666,6 +775,7 @@ void test('LSP skips re-lint when changed pointers do not match document', async
     },
     lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
     getTokenCompletions: () => ({}),
+    getDtifTokenByPath: () => undefined,
   } as unknown as Linter;
 
   let captured: ((pointers: string[]) => void) | undefined;
@@ -724,6 +834,7 @@ void test('LSP re-lints all open documents on full-graph invalidation (empty poi
     },
     lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
     getTokenCompletions: () => ({}),
+    getDtifTokenByPath: () => undefined,
   } as unknown as Linter;
 
   let captured: ((pointers: string[]) => void) | undefined;
@@ -778,6 +889,7 @@ void test('LSP does not re-lint when no documents are open', async () => {
     },
     lintSnippet: () => Promise.resolve({ sourceId: 'mock', messages: [] }),
     getTokenCompletions: () => ({}),
+    getDtifTokenByPath: () => undefined,
   } as unknown as Linter;
 
   let captured: ((pointers: string[]) => void) | undefined;

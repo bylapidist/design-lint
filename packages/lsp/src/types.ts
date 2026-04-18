@@ -56,6 +56,8 @@ export interface LSPHover {
   pointer: string;
   /** Resolved CSS value. */
   resolvedValue: string;
+  /** DTIF token type (e.g. `color`, `dimension`). */
+  type?: string;
   /** Deprecation notice if the token is deprecated. */
   deprecationNotice?: string;
   /** Link to the token's documentation. */
