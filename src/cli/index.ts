@@ -190,17 +190,28 @@ function createProgram(version: string, logger: Logger) {
     .description('Generate DESIGN_SYSTEM.md for AI agent consumption (DSCP v1)')
     .option('--out <file>', 'Output file path', 'DESIGN_SYSTEM.md')
     .option('--config <path>', 'Path to configuration file')
-    .action(async (opts: { out?: string; config?: string }, cmd: Command) => {
-      try {
-        const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
-        await exportDesignSystemMd({
-          out: opts.out,
-          config: opts.config ?? parent.config,
-        });
-      } catch (err) {
-        logger.error(err);
-      }
-    });
+    .option(
+      '--lint',
+      'Run a lint pass and populate the violations section',
+      false,
+    )
+    .action(
+      async (
+        opts: { out?: string; config?: string; lint?: boolean },
+        cmd: Command,
+      ) => {
+        try {
+          const parent = cmd.parent?.opts<{ config?: string }>() ?? {};
+          await exportDesignSystemMd({
+            out: opts.out,
+            config: opts.config ?? parent.config,
+            lint: opts.lint,
+          });
+        } catch (err) {
+          logger.error(err);
+        }
+      },
+    );
 
   program
     .command('migrate')
