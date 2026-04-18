@@ -31,7 +31,7 @@ import type {
 
 function makeEnvelope(overrides: Partial<DLTSEnvelope> = {}): DLTSEnvelope {
   return {
-    $schema: 'https://design-lint.lapidist.net/schema/dlts/v1.json',
+    $schema: 'https://telemetry.design-lint.lapidist.net/schema/v1.json',
     specVersion: '1.0.0',
     eventType: 'RunEvent',
     timestamp: '2026-04-12T00:00:00.000Z',
