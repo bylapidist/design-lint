@@ -19,7 +19,10 @@ import {
   generateVitePressConfig,
   generateDocs,
 } from '../../src/cli/docs.js';
-import { exportDesignSystemMd } from '../../src/cli/export-design-system-md.js';
+import {
+  exportDesignSystemMd,
+  aggregateViolations,
+} from '../../src/cli/export-design-system-md.js';
 import { migrateConfig } from '../../src/cli/migrate.js';
 import type { DtifFlattenedToken, RuleModule } from '../../src/core/types.js';
 import type { Config } from '../../src/core/linter.js';
@@ -447,6 +450,116 @@ void test('exportDesignSystemMd logs generated count', async () => {
     console.log = orig;
   }
   assert.ok(lines.some((l) => l.includes('DESIGN_SYSTEM.md generated')));
+});
+
+// ---------------------------------------------------------------------------
+// aggregateViolations
+// ---------------------------------------------------------------------------
+
+void test('aggregateViolations returns empty array for no results', () => {
+  assert.deepEqual(aggregateViolations([]), []);
+});
+
+void test('aggregateViolations skips messages for non-token rules', () => {
+  const results = [
+    {
+      sourceId: 'test.ts',
+      messages: [
+        {
+          ruleId: 'component-usage',
+          severity: 'warn' as const,
+          message: 'Unknown component',
+          line: 1,
+          column: 1,
+        },
+      ],
+    },
+  ];
+  assert.deepEqual(aggregateViolations(results), []);
+});
+
+void test('aggregateViolations maps design-token/colors to color property', () => {
+  const results = [
+    {
+      sourceId: 'test.css',
+      messages: [
+        {
+          ruleId: 'design-token/colors',
+          severity: 'error' as const,
+          message: 'Unexpected color "#FF0000"',
+          line: 1,
+          column: 5,
+        },
+      ],
+    },
+  ];
+  const violations = aggregateViolations(results);
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0].property, 'color');
+  assert.equal(violations[0].rawValue, '#FF0000');
+  assert.equal(violations[0].frequency, 1);
+  assert.equal(violations[0].correctToken, null);
+  assert.equal(violations[0].agentAttributed, false);
+});
+
+void test('aggregateViolations groups duplicate property+rawValue entries', () => {
+  const msg = {
+    ruleId: 'design-token/colors',
+    severity: 'error' as const,
+    message: 'Unexpected color "#FF0000"',
+    line: 1,
+    column: 5,
+  };
+  const results = [
+    { sourceId: 'a.css', messages: [msg] },
+    { sourceId: 'b.css', messages: [msg] },
+  ];
+  const violations = aggregateViolations(results);
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0].frequency, 2);
+});
+
+void test('aggregateViolations uses metadata.rawValue when available', () => {
+  const results = [
+    {
+      sourceId: 'test.css',
+      messages: [
+        {
+          ruleId: 'design-token/colors',
+          severity: 'error' as const,
+          message: 'Use a color token',
+          line: 1,
+          column: 1,
+          metadata: { rawValue: 'rgb(255,0,0)', pointer: undefined },
+        },
+      ],
+    },
+  ];
+  const violations = aggregateViolations(results);
+  assert.equal(violations[0].rawValue, 'rgb(255,0,0)');
+});
+
+void test('aggregateViolations records correctToken from fix text', () => {
+  const results = [
+    {
+      sourceId: 'test.css',
+      messages: [
+        {
+          ruleId: 'design-token/colors',
+          severity: 'error' as const,
+          message: 'Unexpected color "#FF0000"',
+          line: 1,
+          column: 5,
+          fix: {
+            range: [5, 12] as [number, number],
+            text: 'var(--color-brand)',
+          },
+        },
+      ],
+    },
+  ];
+  const violations = aggregateViolations(results);
+  assert.equal(violations[0].correctToken, 'var(--color-brand)');
 });
 
 // ---------------------------------------------------------------------------
