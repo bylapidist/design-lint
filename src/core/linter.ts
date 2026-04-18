@@ -72,8 +72,10 @@ export class Linter {
   > = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
-  private tokensReady: Promise<void>;
-  private tokenRegistry?: TokenRegistry;
+  /** @internal Accessible to subclasses for sequencing after token resolution. */
+  protected tokensReady: Promise<void>;
+  /** @internal Accessible to subclasses for token injection in testing contexts. */
+  protected tokenRegistry?: TokenRegistry;
   private service?: LintService;
   constructor(
     config: Config,
@@ -476,7 +478,8 @@ export class Linter {
     listeners: RegisteredRuleListener[],
     messages: LintMessage[],
   ): Promise<ParserPassResult | undefined> {
-    const type = docType ?? inferFileType(sourceId);
+    const rawType = docType ?? inferFileType(sourceId);
+    const type = FILE_TYPE_MAP[rawType] ?? rawType;
     const parser = parserRegistry[type];
     if (parser) {
       return parser(text, sourceId, listeners, messages, {

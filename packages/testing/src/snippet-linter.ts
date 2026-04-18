@@ -1,9 +1,10 @@
-import { Linter } from '@lapidist/design-lint';
+import { Linter, TokenRegistry } from '@lapidist/design-lint';
 import type {
   RuleModule,
   LintMessage,
   LintDocument,
   LintResult,
+  DtifFlattenedToken,
 } from '@lapidist/design-lint';
 
 /** Minimal enabled-rule shape (mirrors the internal RuleRegistry return type). */
@@ -24,13 +25,32 @@ const stubSource = {
  * Overrides `buildRuleContexts` to inject a single rule under test, bypassing
  * the `RuleRegistry` entirely. This allows testing rules that are not in the
  * built-in rule set.
+ *
+ * Optionally accepts a list of {@link DtifFlattenedToken}s to inject into the
+ * token registry, enabling `RuleTester` coverage of token-based rules that
+ * need a non-empty token set to exercise their real validation logic (rather
+ * than the "configure tokens" early-exit path).
  */
 export class SnippetLinter extends Linter {
   readonly #injected: EnabledRule;
 
-  constructor(rule: RuleModule, options: unknown = undefined) {
+  constructor(
+    rule: RuleModule,
+    options: unknown = undefined,
+    tokens: DtifFlattenedToken[] = [],
+  ) {
     super({ rules: {} }, { documentSource: stubSource });
     this.#injected = { rule, options, severity: 'error' };
+    if (tokens.length > 0) {
+      // The base class's tokensReady promise resolves by setting this.tokenRegistry
+      // from the (empty) config tokens. We chain an additional .then() here so
+      // our injected registry is applied AFTER the base-class resolution, winning
+      // the assignment race.
+      const registry = new TokenRegistry({ default: tokens });
+      this.tokensReady = this.tokensReady.then(() => {
+        this.tokenRegistry = registry;
+      });
+    }
   }
 
   /**

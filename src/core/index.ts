@@ -1,5 +1,6 @@
 /* c8 ignore start */
 export { Linter, type Config } from './linter.js';
+export { TokenRegistry, type TokenRegistryOptions } from './token-registry.js';
 export { LintService } from './lint-service.js';
 export { setupLinter } from './setup.js';
 export { applyFixes } from './apply-fixes.js';
