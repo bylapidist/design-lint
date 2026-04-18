@@ -100,7 +100,15 @@ function createProgram(version: string, logger: Logger) {
       'Exit with code 1 when no files match the provided targets',
     )
     .option('--watch', 'Watch files and re-lint on changes')
-    .option('--fix', 'Automatically fix problems');
+    .option('--fix', 'Automatically fix problems')
+    .option(
+      '--kernel',
+      'Connect to a running DSR kernel for token resolution (kernel must be started separately via kernel start)',
+    )
+    .option(
+      '--kernel-socket-path <path>',
+      'Path to the DSR kernel Unix socket (default: /tmp/designlint-kernel.sock)',
+    );
 
   program
     .command('init')
@@ -246,12 +254,17 @@ function createProgram(version: string, logger: Logger) {
     .option('--http-port <n>', 'HTTP fallback port', (v) => parseInt(v, 10))
     .option('--pid-file <path>', 'Path to the PID file')
     .option('--no-http', 'Disable HTTP fallback transport')
+    .option(
+      '--config-path <path>',
+      'Path to designlint.config.* — load tokens from config into the kernel on startup',
+    )
     .action(
       (opts: {
         socketPath?: string;
         httpPort?: number;
         pidFile?: string;
         http?: boolean;
+        configPath?: string;
       }) => {
         try {
           kernelStart({
@@ -259,6 +272,7 @@ function createProgram(version: string, logger: Logger) {
             httpPort: opts.httpPort,
             pidFile: opts.pidFile,
             noHttp: opts.http === false,
+            configPath: opts.configPath,
           });
         } catch (err) {
           logger.error(err);

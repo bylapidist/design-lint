@@ -19,6 +19,8 @@ interface KernelStartOptions {
   httpPort?: number;
   pidFile?: string;
   noHttp?: boolean;
+  /** Path to designlint.config.* — when provided, tokens are loaded into the kernel on startup. */
+  configPath?: string;
 }
 
 interface KernelStatusOptions {
@@ -74,6 +76,7 @@ export function kernelStart(options: KernelStartOptions): void {
     args.push('--http-port', options.httpPort.toString());
   if (options.pidFile) args.push('--pid-file', options.pidFile);
   if (options.noHttp) args.push('--no-http');
+  if (options.configPath) args.push('--config-path', options.configPath);
 
   const child = spawn(process.execPath, args, {
     detached: true,

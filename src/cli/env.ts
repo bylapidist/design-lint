@@ -76,6 +76,14 @@ export interface PrepareEnvironmentOptions {
   ignorePath?: string;
   /** File patterns to lint. */
   patterns?: string[];
+  /**
+   * When `true`, connect to a running DSR kernel for token resolution.
+   * The kernel must be started separately via `design-lint kernel start`.
+   * Defaults to `false` — local config tokens are used unless this is set.
+   */
+  kernel?: boolean;
+  /** Path to the DSR kernel Unix socket. Defaults to /tmp/designlint-kernel.sock. */
+  kernelSocketPath?: string;
 }
 
 /**
@@ -120,10 +128,15 @@ export async function prepareEnvironment(
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
+
+  const socketPath = options.kernelSocketPath ?? '/tmp/designlint-kernel.sock';
+  const useKernel = options.kernel === true;
+
   const env = createNodeEnvironment(config, {
     cacheLocation,
     configPath: config.configPath,
     patterns: options.patterns,
+    dsr: useKernel ? { socketPath } : undefined,
   });
   const cache = env.cacheProvider;
   const linterRef = {
