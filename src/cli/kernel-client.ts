@@ -13,6 +13,8 @@ import type { ComponentInput, DeprecationEntryInput } from '@lapidist/dscp';
 export interface KernelData {
   /** Deterministic SHA-256 hash of the token graph, computed from sorted pointers. */
   snapshotHash: string;
+  /** All tokens from the kernel token graph, keyed by pointer. */
+  tokenEntries: Map<string, { pointer: string; name: string; type?: string }>;
   /** Deprecation ledger entries keyed by token pointer. */
   deprecationEntries: Map<string, DeprecationEntryInput>;
   /** Component registry entries keyed by component name. */
@@ -34,40 +36,50 @@ export async function tryFetchKernelData(): Promise<KernelData | null> {
     env = new Env({ connectTimeoutMs: 2_000 });
     await env.connect();
 
-    const [allTokens, deprecatedTokens, allComponents] = await Promise.all([
-      env.dsql.tokens().forProperty(''),
-      env.dsql.tokens().deprecated(),
-      env.dsql.components().all(),
-    ]);
+    // forProperty('') returns all non-deprecated tokens (empty string maps to no
+    // specific types, so the executor falls back to the full token set)
+    const allTokens = await env.dsql.tokens().forProperty('');
+    const deprecatedTokens = await env.dsql.tokens().deprecated();
+    const allComponents = await env.dsql.components().all();
 
     const snapshotHash = computeHash(allTokens.map((t) => t.pointer));
 
+    const tokenEntries = new Map<
+      string,
+      { pointer: string; name: string; type?: string }
+    >(
+      allTokens.map((t) => [
+        t.pointer,
+        { pointer: t.pointer, name: t.name, type: t.type },
+      ]),
+    );
+
     const deprecationEntries = new Map<string, DeprecationEntryInput>(
-      deprecatedTokens.map(({ entry }) => [
-        entry.pointer,
+      deprecatedTokens.map((dt) => [
+        dt.entry.pointer,
         {
-          pointer: entry.pointer,
-          replacement: entry.replacement,
-          since: entry.since,
-          reason: entry.reason,
+          pointer: dt.entry.pointer,
+          replacement: dt.entry.replacement,
+          since: dt.entry.since,
+          reason: dt.entry.reason,
         },
       ]),
     );
 
     const componentEntries = new Map<string, ComponentInput>(
-      allComponents.map((c) => [
-        c.name,
+      allComponents.map((comp) => [
+        comp.name,
         {
-          name: c.name,
-          package: c.package,
-          version: c.version,
-          deprecated: c.deprecated,
-          replacedBy: c.replacedBy,
+          name: comp.name,
+          package: comp.package,
+          version: comp.version,
+          deprecated: comp.deprecated,
+          replacedBy: comp.replacedBy,
         },
       ]),
     );
 
-    return { snapshotHash, deprecationEntries, componentEntries };
+    return { snapshotHash, tokenEntries, deprecationEntries, componentEntries };
   } catch {
     return null;
   } finally {
