@@ -227,6 +227,29 @@ export async function exportDesignSystemMd(
 
   const kernelData = await tryFetchKernelData();
 
+  // When the kernel is running, use its authoritative token graph instead of
+  // re-parsing the local config. This ensures the DESIGN_SYSTEM.md reflects
+  // live kernel state (including tokens added via the write-API at runtime).
+  if (kernelData !== null && kernelData.tokenEntries.size > 0) {
+    tokenMap.clear();
+    byType.clear();
+    for (const [pointer, token] of kernelData.tokenEntries) {
+      const input: TokenInput = { pointer: token.pointer, name: token.name };
+      if (token.type !== undefined) {
+        const typed: TokenInput = { ...input, type: token.type };
+        tokenMap.set(pointer, typed);
+        const existing = byType.get(token.type);
+        if (existing) {
+          existing.push(typed);
+        } else {
+          byType.set(token.type, [typed]);
+        }
+      } else {
+        tokenMap.set(pointer, input);
+      }
+    }
+  }
+
   // Optionally run a lint pass to populate the violations section.
   let violations: ViolationInput[] = [];
   if (options.lint) {

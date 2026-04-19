@@ -77,9 +77,10 @@ export interface PrepareEnvironmentOptions {
   /** File patterns to lint. */
   patterns?: string[];
   /**
-   * When `true`, connect to a running DSR kernel for token resolution.
-   * The kernel must be started separately via `design-lint kernel start`.
-   * Defaults to `false` — local config tokens are used unless this is set.
+   * When `true`, force kernel connection. When `false`, disable kernel even if the
+   * socket exists. When omitted, the kernel socket is auto-detected: if
+   * `/tmp/designlint-kernel.sock` (or `kernelSocketPath`) exists and
+   * `DESIGN_LINT_NO_KERNEL` is not set, the kernel is used automatically.
    */
   kernel?: boolean;
   /** Path to the DSR kernel Unix socket. Defaults to /tmp/designlint-kernel.sock. */
@@ -130,7 +131,10 @@ export async function prepareEnvironment(
     : undefined;
 
   const socketPath = options.kernelSocketPath ?? '/tmp/designlint-kernel.sock';
-  const useKernel = options.kernel === true;
+  const noKernelEnv = process.env.DESIGN_LINT_NO_KERNEL === '1';
+  const useKernel =
+    options.kernel === true ||
+    (options.kernel !== false && !noKernelEnv && fs.existsSync(socketPath));
 
   const env = createNodeEnvironment(config, {
     cacheLocation,
