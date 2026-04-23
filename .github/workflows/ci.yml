@@ -32,7 +32,7 @@ jobs:
               - '!*.md'
       - uses: pnpm/action-setup@v6
         with:
-          version: 10.33.1
+          version: 10.33.2
       - uses: actions/setup-node@v6
         with:
           node-version: 24.15.0

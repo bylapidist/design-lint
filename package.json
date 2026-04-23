@@ -24,7 +24,7 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.33.1",
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.ts'",
