@@ -102,11 +102,6 @@ function createProgram(version: string, logger: Logger) {
     .option('--watch', 'Watch files and re-lint on changes')
     .option('--fix', 'Automatically fix problems')
     .option(
-      '--kernel',
-      'Force connection to the DSR kernel (auto-detected when socket exists and DESIGN_LINT_NO_KERNEL is unset)',
-    )
-    .option('--no-kernel', 'Disable DSR kernel even if the socket is present')
-    .option(
       '--kernel-socket-path <path>',
       'Path to the DSR kernel Unix socket (default: /tmp/designlint-kernel.sock)',
     );

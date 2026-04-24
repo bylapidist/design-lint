@@ -1,7 +1,7 @@
 /**
  * Tests for the lint command behaviour.
  *
- * Uses createLinter/createNodeEnvironment directly — no subprocess spawning.
+ * Uses createLinter directly with explicit token provider — no subprocess spawning.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,7 +10,8 @@ import path from 'node:path';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
 import { loadConfig } from '../../src/config/loader.js';
 import { createLinter } from '../../src/index.js';
-import { createNodeEnvironment } from '../../src/adapters/node/environment.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import { ConfigTokenProvider } from '../../src/config/config-token-provider.js';
 import { getFormatter } from '../../src/formatters/index.js';
 
 // ---------------------------------------------------------------------------
@@ -32,6 +33,13 @@ function writeColorTokens(dir: string): void {
   );
 }
 
+function makeEnv(config: Awaited<ReturnType<typeof loadConfig>>) {
+  return {
+    documentSource: new FileSource(),
+    tokenProvider: new ConfigTokenProvider(config),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -51,8 +59,7 @@ void test('lint command reports token color violations', async () => {
   fs.writeFileSync(inputFile, 'a { color: #fff; }');
 
   const config = await loadConfig(dir, configPath);
-  const env = createNodeEnvironment(config, { configPath });
-  const linter = createLinter(config, env);
+  const linter = createLinter(config, makeEnv(config));
   const formatter = await getFormatter('stylish');
   const { results } = await linter.lintTargets([inputFile]);
   const output = formatter(results, false);
@@ -69,8 +76,7 @@ void test('lint exits successfully when no files match by default', async () => 
   fs.writeFileSync(configPath, '{}');
 
   const config = await loadConfig(dir, configPath);
-  const env = createNodeEnvironment(config, { configPath });
-  const linter = createLinter(config, env);
+  const linter = createLinter(config, makeEnv(config));
   const { results, warning } = await linter.lintTargets([
     path.join(dir, 'missing/**/*.css'),
   ]);
@@ -84,8 +90,7 @@ void test('fail-on-empty semantics: warning fires when no files match', async ()
   fs.writeFileSync(configPath, '{}');
 
   const config = await loadConfig(dir, configPath);
-  const env = createNodeEnvironment(config, { configPath });
-  const linter = createLinter(config, env);
+  const linter = createLinter(config, makeEnv(config));
   const { results, warning } = await linter.lintTargets([
     path.join(dir, 'missing/**/*.css'),
   ]);
@@ -104,8 +109,7 @@ void test('lint reports parse-error for unsupported explicit file types', async 
   fs.writeFileSync(htmlFile, '<div />');
 
   const config = await loadConfig(dir, configPath);
-  const env = createNodeEnvironment(config, { configPath });
-  const linter = createLinter(config, env);
+  const linter = createLinter(config, makeEnv(config));
   const { results } = await linter.lintTargets([htmlFile]);
   const formatter = await getFormatter('stylish');
   const output = formatter(results, false);
@@ -129,8 +133,7 @@ void test('lint uses formatter from config when none is specified', async () => 
   fs.writeFileSync(inputFile, 'a { color: #fff; }');
 
   const config = await loadConfig(dir, configPath);
-  const env = createNodeEnvironment(config, { configPath });
-  const linter = createLinter(config, env);
+  const linter = createLinter(config, makeEnv(config));
   // use formatter from config (json)
   const formatter = await getFormatter(config.format ?? 'stylish');
   const { results } = await linter.lintTargets([inputFile]);
@@ -157,8 +160,7 @@ void test('CLI --format overrides formatter from config', async () => {
   fs.writeFileSync(inputFile, 'a { color: #fff; }');
 
   const config = await loadConfig(dir, configPath);
-  const env = createNodeEnvironment(config, { configPath });
-  const linter = createLinter(config, env);
+  const linter = createLinter(config, makeEnv(config));
   // simulate --format stylish overriding config's json
   const formatter = await getFormatter('stylish');
   const { results } = await linter.lintTargets([inputFile]);

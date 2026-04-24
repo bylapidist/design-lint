@@ -258,16 +258,20 @@ export async function exportDesignSystemMd(
         import('../adapters/node/environment.js'),
         import('../index.js'),
       ]);
+      // Reuse the kernel socket that is already running (kernelData was fetched
+      // above). The lint pass is optional — any error proceeds with empty violations.
+      const socketPath = '/tmp/designlint-kernel.sock';
       const env = createNodeEnvironment(config, {
         configPath: config.configPath,
         patterns: config.patterns,
+        dsr: { socketPath },
       });
       const linter = createLinter(config, env);
       const patterns = config.patterns ?? ['.'];
       const { results } = await linter.lintTargets(patterns, false, []);
       violations = aggregateViolations(results);
     } catch {
-      // Lint pass failed (e.g. no source files) — proceed with empty violations
+      // Lint pass failed (e.g. no source files or no kernel) — proceed with empty violations
     }
   }
 

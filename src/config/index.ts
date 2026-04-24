@@ -18,7 +18,6 @@
  *   definitions.
  */
 
-export * from './config-token-provider.js';
 export * from './define-config.js';
 export * from './file-resolution.js';
 export * from './loader.js';

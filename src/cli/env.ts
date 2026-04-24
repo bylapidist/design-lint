@@ -76,13 +76,6 @@ export interface PrepareEnvironmentOptions {
   ignorePath?: string;
   /** File patterns to lint. */
   patterns?: string[];
-  /**
-   * When `true`, force kernel connection. When `false`, disable kernel even if the
-   * socket exists. When omitted, the kernel socket is auto-detected: if
-   * `/tmp/designlint-kernel.sock` (or `kernelSocketPath`) exists and
-   * `DESIGN_LINT_NO_KERNEL` is not set, the kernel is used automatically.
-   */
-  kernel?: boolean;
   /** Path to the DSR kernel Unix socket. Defaults to /tmp/designlint-kernel.sock. */
   kernelSocketPath?: string;
 }
@@ -131,16 +124,29 @@ export async function prepareEnvironment(
     : undefined;
 
   const socketPath = options.kernelSocketPath ?? '/tmp/designlint-kernel.sock';
-  const noKernelEnv = process.env.DESIGN_LINT_NO_KERNEL === '1';
-  const useKernel =
-    options.kernel === true ||
-    (options.kernel !== false && !noKernelEnv && fs.existsSync(socketPath));
+
+  // In v8, the DSR kernel is the only token source. If the socket is not
+  // present, auto-launch the kernel daemon before connecting.
+  if (!fs.existsSync(socketPath)) {
+    const { kernelStart } = await import('./kernel.js');
+    // Log to stderr so kernel startup messages don't corrupt stdout (e.g. JSON format output)
+    process.stderr.write(
+      `[design-lint] Starting DSR kernel (socket: ${socketPath})...\n`,
+    );
+    kernelStart({ socketPath, configPath: config.configPath, quiet: true });
+    if (!fs.existsSync(socketPath)) {
+      throw new Error(
+        `DSR kernel failed to start (socket not found at ${socketPath}). ` +
+          "Run 'design-lint kernel start' manually and check system logs.",
+      );
+    }
+  }
 
   const env = createNodeEnvironment(config, {
     cacheLocation,
     configPath: config.configPath,
     patterns: options.patterns,
-    dsr: useKernel ? { socketPath } : undefined,
+    dsr: { socketPath },
   });
   const cache = env.cacheProvider;
   const linterRef = {
