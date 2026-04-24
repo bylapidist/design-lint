@@ -144,6 +144,10 @@ export class Linter {
         nameTransform: this.config.nameTransform,
       });
     });
+    // Attach a no-op rejection handler so Node.js does not emit an
+    // unhandled-rejection warning when tokens are never needed (e.g. no files
+    // matched and lintDocuments is never called by LintService).
+    this.tokensReady.catch(() => undefined);
 
     if (env) {
       const service = new LintService(this, resolvedConfig, env);
