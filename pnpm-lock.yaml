@@ -15,8 +15,8 @@ importers:
         specifier: ^0.2.0
         version: 0.2.0
       '@lapidist/dsr':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0
       '@lapidist/dtif-parser':
         specifier: 2.0.0
         version: 2.0.0
@@ -787,8 +787,8 @@ packages:
     resolution: {integrity: sha512-U6/5XEpbU6sUvZAUIF39xNhkhqQScwxE0I7CY7VleRHDyn3ePPHCMR7NLnT61DUlNkSlBMlB7V1nKcTkqCm63Q==}
     engines: {node: '>=22'}
 
-  '@lapidist/dsr@0.1.0':
-    resolution: {integrity: sha512-VTc1lhT6bWEc/t20wVrbXr3XRbb2bG8IPYXt+3rbtV/9HyrVBnK2VfyEH7o9QA7iGP3xdJl9YAo+LsQlSAKYCA==}
+  '@lapidist/dsr@0.2.0':
+    resolution: {integrity: sha512-9GVglpH3LGIZYf8y9wPfiLRA3YswoHDkyUZtmDlJCNjAOA8s+/+kaNbdHFJ0kpNRiepJ0iOqcaPdiKlE9kTEGA==}
     engines: {node: '>=22'}
 
   '@lapidist/dtif-parser@2.0.0':
@@ -2072,8 +2072,8 @@ packages:
     resolution: {integrity: sha512-P0efT1C9jIdVRefqjzOQ9Xml57zpOXnIuS+csaB4MdZbTdmGDLo8XhzBG1N7aO11gKDDkJvBLULeFTo46wwreA==}
     hasBin: true
 
-  msgpackr@1.11.9:
-    resolution: {integrity: sha512-FkoAAyyA6HM8wL882EcEyFZ9s7hVADSwG9xrVx3dxxNQAtgADTrJoEWivID82Iv1zWDsv/OtbrrcZAzGzOMdNw==}
+  msgpackr@1.11.10:
+    resolution: {integrity: sha512-iCZNq+HszvF+fC3anCm4nBmWEnbeIAfpDs6IStAEKhQ2YSgkjzVG2FF9XJqwwQh5bH3N9OUTUt4QwVN6MLMLtA==}
 
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
@@ -3135,10 +3135,10 @@ snapshots:
 
   '@lapidist/dscp@0.2.0': {}
 
-  '@lapidist/dsr@0.1.0':
+  '@lapidist/dsr@0.2.0':
     dependencies:
       '@lapidist/dtif-parser': 2.0.0
-      msgpackr: 1.11.9
+      msgpackr: 1.11.10
 
   '@lapidist/dtif-parser@2.0.0':
     dependencies:
@@ -4561,7 +4561,7 @@ snapshots:
       '@msgpackr-extract/msgpackr-extract-win32-x64': 3.0.3
     optional: true
 
-  msgpackr@1.11.9:
+  msgpackr@1.11.10:
     optionalDependencies:
       msgpackr-extract: 3.0.3
 

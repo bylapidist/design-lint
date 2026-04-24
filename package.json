@@ -57,7 +57,7 @@
   "license": "MIT",
   "dependencies": {
     "@lapidist/dscp": "^0.2.0",
-    "@lapidist/dsr": "^0.1.0",
+    "@lapidist/dsr": "^0.2.0",
     "@lapidist/dtif-parser": "2.0.0",
     "@lapidist/dtif-schema": "2.0.0",
     "@lapidist/dtif-validator": "2.0.0",
