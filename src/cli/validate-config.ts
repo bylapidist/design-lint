@@ -2,7 +2,7 @@ import path from 'node:path';
 import { loadConfig } from '../config/loader.js';
 import { loadPolicy } from '../config/policy-loader.js';
 import { enforcePolicy } from '../config/policy-enforcer.js';
-import { createNodeEnvironment } from '../adapters/node/environment.js';
+import { FileSource } from '../adapters/node/file-source.js';
 import { createLinter } from '../index.js';
 import { getFormatter } from '../formatters/index.js';
 import type { Logger } from './logger.js';
@@ -31,7 +31,8 @@ export async function validateConfig(
     const cwd = process.cwd();
     const config = await loadConfig(cwd, options.config);
     await getFormatter(config.format ?? 'stylish');
-    const linter = createLinter(config, createNodeEnvironment(config));
+    // validate-config only checks rule configuration — no token loading required.
+    const linter = createLinter(config, { documentSource: new FileSource() });
     await linter.hasRunLevelRules();
 
     // Enforce policy if a designlint.policy.json is present

@@ -21,6 +21,12 @@ interface KernelStartOptions {
   noHttp?: boolean;
   /** Path to designlint.config.* — when provided, tokens are loaded into the kernel on startup. */
   configPath?: string;
+  /**
+   * When true, suppress stdout progress messages. Errors still go to stderr.
+   * Used by auto-launch from prepareEnvironment so kernel startup messages do
+   * not corrupt formatter output (e.g. JSON) on stdout.
+   */
+  quiet?: boolean;
 }
 
 interface KernelStatusOptions {
@@ -56,9 +62,15 @@ function isProcessRunning(pid: number): boolean {
 export function kernelStart(options: KernelStartOptions): void {
   const pidFile = options.pidFile ?? DEFAULT_PID_FILE;
 
+  const log = options.quiet
+    ? () => undefined
+    : (msg: string) => {
+        console.log(msg);
+      };
+
   const existingPid = readPid(pidFile);
   if (existingPid !== null && isProcessRunning(existingPid)) {
-    console.log(
+    log(
       `Kernel is already running (PID ${existingPid.toString()}). Use 'design-lint kernel status' to inspect.`,
     );
     return;
@@ -92,10 +104,10 @@ export function kernelStart(options: KernelStartOptions): void {
     void spawnResult;
     const pid = readPid(pidFile);
     if (pid !== null && isProcessRunning(pid)) {
-      console.log(`Kernel started (PID ${pid.toString()})`);
-      console.log(`  Socket: ${options.socketPath ?? DEFAULT_SOCKET_PATH}`);
+      log(`Kernel started (PID ${pid.toString()})`);
+      log(`  Socket: ${options.socketPath ?? DEFAULT_SOCKET_PATH}`);
       if (!options.noHttp) {
-        console.log(
+        log(
           `  HTTP:   http://127.0.0.1:${(options.httpPort ?? DEFAULT_HTTP_PORT).toString()}/kwp/status`,
         );
       }

@@ -37,6 +37,8 @@ export interface WatchState {
 
 export interface WatchCliOptions extends ExecuteOptions {
   config?: string;
+  /** Path to the DSR kernel Unix socket, forwarded to createNodeEnvironment on reload. */
+  kernelSocketPath?: string;
 }
 
 export interface WatchOptions {
@@ -251,10 +253,13 @@ export async function startWatch(
           fs.unlinkSync(cacheLocation);
         } catch {}
       }
+      const socketPath =
+        options.kernelSocketPath ?? '/tmp/designlint-kernel.sock';
       const env = deps.createNodeEnvironment(config, {
         cacheLocation,
         configPath: config.configPath,
         patterns: config.patterns,
+        dsr: { socketPath },
       });
       cache = env.cacheProvider;
       linterRef.current = deps.createLinter(config, env);

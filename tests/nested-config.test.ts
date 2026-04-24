@@ -11,7 +11,8 @@ import { fileURLToPath } from 'node:url';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { loadConfig } from '../src/config/loader.js';
 import { createLinter } from '../src/index.js';
-import { createNodeEnvironment } from '../src/adapters/node/environment.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
+import { ConfigTokenProvider } from '../src/config/config-token-provider.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,8 +27,10 @@ void test('loads nearest config and reports violations in nested project', async
   const configPath = path.join(appDir, 'designlint.config.json');
 
   const config = await loadConfig(appDir, configPath);
-  const env = createNodeEnvironment(config, { configPath });
-  const linter = createLinter(config, env);
+  const linter = createLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: new ConfigTokenProvider(config),
+  });
   const { results } = await linter.lintTargets([appDir]);
 
   assert.ok(results.length > 0, 'Expected lint results');
