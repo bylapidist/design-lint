@@ -305,11 +305,14 @@ jobs:
           }
           EOF
           echo ".a{padding:5px;}" > suggestion.css
-          # Remove the shared kernel socket so this invocation auto-launches a
-          # fresh kernel loaded from suggestion.config.json (spacing tokens).
-          # Without this, the kernel started earlier by the color-token tests
-          # would serve stale tokens and the spacing rule would not fire.
-          rm -f /tmp/designlint-kernel.sock
+          # Kill the old kernel process so a fresh one is auto-launched with
+          # suggestion.config.json's spacing tokens. Deleting the socket alone
+          # is insufficient: kernelStart() returns early when the PID file still
+          # points to a running process (kernel.ts:71-77). After the kill, the
+          # new kernel daemon removes the stale socket and creates a fresh one
+          # (KernelProcess.start() always unlinks before binding).
+          if [ -f /tmp/designlint-kernel.pid ]; then kill "$(cat /tmp/designlint-kernel.pid)" 2>/dev/null || true; sleep 0.5; fi
+          rm -f /tmp/designlint-kernel.sock /tmp/designlint-kernel.pid
           npx design-lint suggestion.css --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt || true
           grep -Fq "Unexpected spacing 5px" suggestion.txt
           npx design-lint file.ts --format json || true
