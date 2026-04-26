@@ -30,17 +30,6 @@ export class LintService {
       ignoreFiles: scanIgnores,
       warning: scanWarning,
     } = await this.source.scan(targets, this.config, ignore);
-
-    // Short-circuit when no documents matched so token loading (and therefore
-    // the DSR kernel connection) is never triggered for empty-glob invocations.
-    if (documents.length === 0) {
-      return {
-        results: [],
-        ignoreFiles: scanIgnores,
-        warning: scanWarning ?? 'No files matched the provided patterns.',
-      };
-    }
-
     const {
       results,
       ignoreFiles: runIgnores,
