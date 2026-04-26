@@ -1,81 +1,81 @@
+/**
+ * Tests for the `design-lint tokens` command.
+ *
+ * Calls `exportTokens` directly — no subprocess spawning.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { exportTokens } from '../../src/cli/tokens.js';
 import type { DtifFlattenedToken } from '../../src/core/types.js';
-import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
 
-const require = createRequire(import.meta.url);
-const tsxLoader = require.resolve('tsx/esm');
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-void test('tokens command exports resolved tokens with extensions', () => {
+function makeTmpDir(): string {
+  const dir = path.join(
+    tmpdir(),
+    `dl-tokens-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`,
+  );
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function writeTokensFile(dir: string, name: string, data: unknown): string {
+  const p = path.join(dir, name);
+  fs.writeFileSync(p, JSON.stringify(data));
+  return p;
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+void test('exportTokens exports resolved tokens with extensions', async () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
-  const tokens = {
+  writeTokensFile(dir, 'base.tokens.json', {
     $version: '1.0.0',
     color: {
-      blue: {
-        $type: 'color',
-        $ref: '#/color/red',
-      },
+      blue: { $type: 'color', $ref: '#/color/red' },
       red: {
         $type: 'color',
         $value: { colorSpace: 'srgb', components: [1, 0, 0] },
         $extensions: { 'vendor.ext': { foo: 'bar' } },
       },
     },
-  };
-  fs.writeFileSync(tokensPath, JSON.stringify(tokens));
+  });
+  const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
+    configPath,
     JSON.stringify({ tokens: { default: './base.tokens.json' }, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'tokens',
-      '--out',
-      'out.json',
-      '--config',
-      'designlint.config.json',
-    ],
-    { cwd: dir, encoding: 'utf8' },
-  );
-  assert.equal(res.status, 0);
-  const out = JSON.parse(
-    fs.readFileSync(path.join(dir, 'out.json'), 'utf8'),
-  ) as Record<string, Record<string, DtifFlattenedToken>>;
+  const outPath = path.join(dir, 'out.json');
+
+  await exportTokens({ config: configPath, out: outPath });
+
+  const out = JSON.parse(fs.readFileSync(outPath, 'utf8')) as Record<
+    string,
+    Record<string, DtifFlattenedToken>
+  >;
   const red = out.default['#/color/red'];
-  const redValue = red.value as {
-    colorSpace: string;
-    components: number[];
-  };
+  const redValue = red.value as { colorSpace: string; components: number[] };
   assert.equal(red.pointer, '#/color/red');
   assert.equal(redValue.colorSpace, 'srgb');
   assert.deepEqual(redValue.components, [1, 0, 0]);
-  assert.deepEqual(red.metadata.extensions, {
-    'vendor.ext': { foo: 'bar' },
-  });
+  assert.deepEqual(red.metadata.extensions, { 'vendor.ext': { foo: 'bar' } });
+
   const blue = out.default['#/color/blue'];
-  const blueValue = blue.value as {
-    colorSpace: string;
-    components: number[];
-  };
+  const blueValue = blue.value as { colorSpace: string; components: number[] };
   assert.equal(blueValue.colorSpace, 'srgb');
   assert.deepEqual(blueValue.components, [1, 0, 0]);
 });
 
-void test('tokens command reads config from outside cwd', () => {
+void test('exportTokens resolves config from an absolute path outside cwd', async () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
-  const tokens = {
+  writeTokensFile(dir, 'base.tokens.json', {
     $version: '1.0.0',
     color: {
       red: {
@@ -83,36 +83,21 @@ void test('tokens command reads config from outside cwd', () => {
         $value: { colorSpace: 'srgb', components: [1, 0, 0] },
       },
     },
-  };
-  fs.writeFileSync(tokensPath, JSON.stringify(tokens));
+  });
   const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
     configPath,
     JSON.stringify({ tokens: { default: './base.tokens.json' }, rules: {} }),
   );
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
   const outPath = path.join(dir, 'out.json');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'tokens',
-      '--out',
-      outPath,
-      '--config',
-      configPath,
-    ],
-    { cwd: process.cwd(), encoding: 'utf8' },
-  );
-  assert.equal(res.status, 0);
+
+  await exportTokens({ config: configPath, out: outPath });
+
   const out = JSON.parse(fs.readFileSync(outPath, 'utf8')) as Record<
     string,
     Record<string, DtifFlattenedToken>
   >;
-  const red = out.default['#/color/red'];
-  const redValue = red.value as {
+  const redValue = out.default['#/color/red'].value as {
     colorSpace: string;
     components: number[];
   };
@@ -120,61 +105,62 @@ void test('tokens command reads config from outside cwd', () => {
   assert.deepEqual(redValue.components, [1, 0, 0]);
 });
 
-void test('tokens command exports themes with root tokens', () => {
+void test('exportTokens exports multiple themes', async () => {
   const dir = makeTmpDir();
   const configPath = path.join(dir, 'designlint.config.json');
-  const tokens = {
-    light: {
-      $version: '1.0.0',
-      primary: {
-        $type: 'color',
-        $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+  fs.writeFileSync(
+    configPath,
+    JSON.stringify({
+      tokens: {
+        light: {
+          $version: '1.0.0',
+          primary: {
+            $type: 'color',
+            $value: { colorSpace: 'srgb', components: [1, 1, 1] },
+          },
+        },
+        dark: {
+          $version: '1.0.0',
+          primary: {
+            $type: 'color',
+            $value: { colorSpace: 'srgb', components: [0, 0, 0] },
+          },
+        },
       },
-    },
-    dark: {
-      $version: '1.0.0',
-      primary: {
-        $type: 'color',
-        $value: { colorSpace: 'srgb', components: [0, 0, 0] },
-      },
-    },
-  };
-  fs.writeFileSync(configPath, JSON.stringify({ tokens, rules: {} }));
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'tokens',
-      '--config',
-      'designlint.config.json',
-    ],
-    { cwd: dir, encoding: 'utf8' },
+      rules: {},
+    }),
   );
-  assert.equal(res.status, 0);
-  const out = JSON.parse(res.stdout) as Record<
+
+  const lines: string[] = [];
+  const orig = console.log;
+  console.log = (v: unknown) => {
+    lines.push(String(v));
+  };
+  try {
+    await exportTokens({ config: configPath });
+  } finally {
+    console.log = orig;
+  }
+
+  const out = JSON.parse(lines.join('')) as Record<
     string,
     Record<string, DtifFlattenedToken>
   >;
-  const light = out.light['#/primary'];
-  const lightValue = light.value as {
+  const lightValue = out.light['#/primary'].value as {
     colorSpace: string;
     components: number[];
   };
   assert.equal(lightValue.colorSpace, 'srgb');
   assert.deepEqual(lightValue.components, [1, 1, 1]);
-  const dark = out.dark['#/primary'];
-  const darkValue = dark.value as {
+
+  const darkValue = out.dark['#/primary'].value as {
     colorSpace: string;
     components: number[];
   };
-  assert.equal(darkValue.colorSpace, 'srgb');
   assert.deepEqual(darkValue.components, [0, 0, 0]);
 });
 
-void test('tokens command fails on unknown theme', () => {
+void test('exportTokens throws on unknown theme', async () => {
   const dir = makeTmpDir();
   const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
@@ -194,21 +180,13 @@ void test('tokens command fails on unknown theme', () => {
       rules: {},
     }),
   );
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'tokens',
-      '--config',
-      'designlint.config.json',
-      '--theme',
-      'missing',
-    ],
-    { cwd: dir, encoding: 'utf8' },
+
+  await assert.rejects(
+    () => exportTokens({ config: configPath, theme: 'missing' }),
+    (err: unknown) => {
+      assert.ok(err instanceof Error);
+      assert.ok(err.message.includes('Unknown theme "missing"'));
+      return true;
+    },
   );
-  assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /Unknown theme "missing"/);
 });

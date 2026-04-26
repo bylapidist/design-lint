@@ -136,19 +136,42 @@ export interface RuleSymbolResolutionHelpers {
   getSymbolName: (node: ts.Node) => string | undefined;
 }
 
+export type RuleEdit =
+  | { type: 'replace'; range: [number, number]; text: string }
+  | { type: 'insert'; offset: number; text: string }
+  | { type: 'delete'; range: [number, number] };
+
+export interface FixContext<TOptions = unknown> {
+  sourceId: string;
+  text: string;
+  options?: TOptions;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RuleMeta {
+  description: string;
+  category?: string;
+  fixable?: 'code' | 'tokens' | null;
+  stability?: 'stable' | 'experimental' | 'deprecated';
+  rationale?: {
+    why: string;
+    owner?: string;
+    exceptions?: string;
+    since?: string;
+  };
+  schema?: z.ZodType;
+  capabilities?: RuleCapabilities;
+}
+
 export interface RuleModule<
   TOptions = unknown,
   TContext extends RuleContext<TOptions> = RuleContext<TOptions>,
 > {
   name: string;
-  meta: {
-    description: string;
-    category?: string;
-    schema?: z.ZodType;
-    capabilities?: RuleCapabilities;
-  };
+  meta: RuleMeta;
   create(context: TContext): RuleListener;
   createRun?(context: RuleRunContext<TOptions>): RuleRunListener;
+  fix?(ctx: FixContext<TOptions>): RuleEdit[];
 }
 
 export interface RuleCapabilities {
@@ -234,3 +257,53 @@ export type ColorFormat =
   | 'lch'
   | 'color'
   | 'named';
+
+// ---------------------------------------------------------------------------
+// Policy
+// ---------------------------------------------------------------------------
+
+export type PolicySeverity = 'error' | 'warn';
+
+/**
+ * Agent-specific policy constraints applied during AI-assisted code generation.
+ */
+export interface AgentPolicy {
+  /** Maximum allowed violation rate (violations per file). */
+  maxViolationRate: number;
+  /** Whether agent sessions must converge to zero violations. */
+  requiredConvergence: boolean;
+  /** Agent ids exempt from policy enforcement. */
+  trustedAgents: string[];
+}
+
+/**
+ * Ratchet configuration — prevents entropy from increasing over time.
+ */
+export interface PolicyRatchet {
+  /** Whether to enforce by entropy score or by raw violation count. */
+  mode: 'entropy' | 'metric';
+  /** Maximum allowed entropy delta between runs. */
+  maxDelta?: number;
+  /** Minimum acceptable entropy score (0–100). */
+  minScore?: number;
+}
+
+/**
+ * Shape of `designlint.policy.json` — a centrally-owned policy file that
+ * downstream configs cannot weaken. Published as a package and consumed by
+ * all child workspaces.
+ */
+export interface DesignLintPolicy {
+  /** Other policy files to extend. Merged left-to-right. */
+  extends?: string[];
+  /** Rule ids that must be enabled in every consumer config. */
+  requiredRules: string[];
+  /** Minimum severity for specific rules — consumers cannot lower these. */
+  minSeverity: Record<string, PolicySeverity>;
+  /** Minimum token coverage ratios per DTIF token type (0–1). */
+  tokenCoverage: Partial<Record<string, number>>;
+  /** AI agent-specific constraints. */
+  agentPolicy?: AgentPolicy;
+  /** Ratchet settings to prevent design-system entropy from increasing. */
+  ratchet: PolicyRatchet;
+}

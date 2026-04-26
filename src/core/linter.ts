@@ -5,6 +5,7 @@ import type {
   RuleContext,
   RuleRunContext,
   DesignTokens,
+  DtifFlattenedToken,
   RegisteredRuleListener,
   RuleSymbolResolutionHelpers,
   RuleRunListener,
@@ -34,6 +35,12 @@ import { isRecord } from '../utils/guards/data/is-record.js';
 type EnabledRule = ReturnType<RuleRegistry['getEnabledRules']>[number];
 
 export interface Config {
+  /**
+   * One or more base config objects to extend. Rules and settings from each
+   * entry are merged left-to-right, with later entries taking precedence.
+   * User-level `rules` override all extended values.
+   */
+  extends?: Config[];
   format?: string;
   tokens?:
     | DesignTokens
@@ -59,11 +66,16 @@ interface ResolvedConfig extends Omit<Config, 'tokens'> {
  */
 export class Linter {
   private config: ResolvedConfig;
-  private tokensByTheme: Record<string, DesignTokens> = {};
+  private tokensByTheme: Record<
+    string,
+    DesignTokens | readonly DtifFlattenedToken[]
+  > = {};
   private ruleRegistry: RuleRegistry;
   private tokenTracker: TokenTracker;
-  private tokensReady: Promise<void>;
-  private tokenRegistry?: TokenRegistry;
+  /** @internal Accessible to subclasses for sequencing after token resolution. */
+  protected tokensReady: Promise<void>;
+  /** @internal Accessible to subclasses for token injection in testing contexts. */
+  protected tokenRegistry?: TokenRegistry;
   private service?: LintService;
   constructor(
     config: Config,
@@ -71,7 +83,9 @@ export class Linter {
       | {
           ruleRegistry: RuleRegistry;
           tokenTracker: TokenTracker;
-          tokensReady: Promise<Record<string, DesignTokens>>;
+          tokensReady: Promise<
+            Record<string, DesignTokens | readonly DtifFlattenedToken[]>
+          >;
         }
       | Environment,
   ) {
@@ -86,7 +100,9 @@ export class Linter {
       | {
           ruleRegistry: RuleRegistry;
           tokenTracker: TokenTracker;
-          tokensReady: Promise<Record<string, DesignTokens>>;
+          tokensReady: Promise<
+            Record<string, DesignTokens | readonly DtifFlattenedToken[]>
+          >;
         }
       | undefined;
     let env: Environment | undefined;
@@ -216,6 +232,28 @@ export class Linter {
       }
     }
     return completions;
+  }
+
+  /**
+   * Look up a flattened DTIF token by its dot-separated path string.
+   *
+   * The path is the same string produced by `getTokenCompletions` — e.g.
+   * `"color.brand.primary"`. Searches all loaded themes and returns the first
+   * matching token, or `undefined` when no token matches.
+   *
+   * @param tokenPath - Dot-separated token path (e.g. `"color.brand.primary"`).
+   * @returns The matching {@link DtifFlattenedToken}, or `undefined`.
+   */
+  getDtifTokenByPath(tokenPath: string): DtifFlattenedToken | undefined {
+    if (!this.tokenRegistry) return undefined;
+    const transform = this.config.nameTransform;
+    for (const theme of Object.keys(this.tokensByTheme)) {
+      const dtifTokens = this.tokenRegistry.getDtifTokens(theme);
+      for (const token of dtifTokens) {
+        if (deriveTokenPath(token, transform) === tokenPath) return token;
+      }
+    }
+    return undefined;
   }
 
   async getPluginPaths(): Promise<string[]> {
@@ -440,7 +478,8 @@ export class Linter {
     listeners: RegisteredRuleListener[],
     messages: LintMessage[],
   ): Promise<ParserPassResult | undefined> {
-    const type = docType ?? inferFileType(sourceId);
+    const rawType = docType ?? inferFileType(sourceId);
+    const type = FILE_TYPE_MAP[rawType] ?? rawType;
     const parser = parserRegistry[type];
     if (parser) {
       return parser(text, sourceId, listeners, messages, {

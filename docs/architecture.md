@@ -55,7 +55,7 @@ plugins to the linter. See [`src/core/plugin-manager.ts`](https://github.com/byl
 Stores persistent cache entries across runs. [`src/adapters/node/node-cache-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/node-cache-provider.ts) caches to disk.
 
 ### Token provider
-Supplies design tokens to rules. [`src/adapters/node/token-provider.ts`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/token-provider.ts) normalises tokens from configuration.
+Supplies design tokens to rules. Two providers ship with the package: [`ConfigTokenProvider`](https://github.com/bylapidist/design-lint/blob/main/src/config/config-token-provider.ts) loads tokens from the local config file, while [`DsrTokenProvider`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/dsr-token-provider.ts) fetches live token data from a running DSR kernel process. The active provider is selected in [`createNodeEnvironment`](https://github.com/bylapidist/design-lint/blob/main/src/adapters/node/environment.ts) based on whether a DSR connection is configured.
 
 ### Token tracker
 Keeps track of token usage across linted files and reports unused values for the [`design-system/no-unused-tokens`](./rules/design-system/no-unused-tokens.md) rule. Implementation: [`src/core/token-tracker.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/token-tracker.ts).

@@ -1,0 +1,320 @@
+/**
+ * `design-lint docs` command implementation.
+ *
+ * Generates a static documentation site (VitePress or raw markdown) from the
+ * current design-lint kernel state — token registry and built-in rule catalogue.
+ *
+ * Output layout (VitePress):
+ *   <out>/index.md        — overview page
+ *   <out>/tokens/<type>.md — one page per DTIF token type
+ *   <out>/rules/<rule>.md  — one page per rule
+ *   <out>/.vitepress/config.mts — VitePress sidebar config
+ */
+import fs from 'fs';
+import path from 'path';
+import { loadConfig } from '../config/loader.js';
+import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
+import { builtInRules } from '../rules/index.js';
+import type { DtifFlattenedToken, RuleModule } from '../core/types.js';
+import type { Config } from '../core/linter.js';
+import { tryFetchKernelData } from './kernel-client.js';
+import type { ComponentInput } from '@lapidist/dscp';
+
+type DocsFormat = 'vitepress' | 'markdown';
+
+interface DocsCommandOptions {
+  /** Output directory. Defaults to `./docs/design-system`. */
+  out?: string;
+  /** Output format. Defaults to `vitepress`. */
+  format?: DocsFormat;
+  /** Optional path to a configuration file. */
+  config?: string;
+}
+
+export type LoadConfigFn = (
+  cwd: string,
+  configPath?: string,
+) => Promise<Config>;
+
+function ensureDir(dir: string): void {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+function writeFile(filePath: string, content: string): void {
+  ensureDir(path.dirname(filePath));
+  fs.writeFileSync(filePath, content, 'utf8');
+}
+
+export function tokenValueToString(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return JSON.stringify(value);
+}
+
+export function groupTokensByType(
+  tokens: DtifFlattenedToken[],
+): Map<string, DtifFlattenedToken[]> {
+  const groups = new Map<string, DtifFlattenedToken[]>();
+  for (const token of tokens) {
+    const type = token.type ?? 'unknown';
+    const existing = groups.get(type);
+    if (existing) {
+      existing.push(token);
+    } else {
+      groups.set(type, [token]);
+    }
+  }
+  return groups;
+}
+
+export function generateTokenTypePage(
+  typeName: string,
+  tokens: DtifFlattenedToken[],
+): string {
+  const title = typeName.charAt(0).toUpperCase() + typeName.slice(1);
+  const rows = tokens
+    .map((t) => {
+      const value = tokenValueToString(t.value);
+      const deprecated = t.metadata.deprecated ? '⚠️ deprecated' : '';
+      return `| \`${t.pointer}\` | \`${value}\` | ${deprecated} |`;
+    })
+    .join('\n');
+
+  return [
+    `# ${title} Tokens`,
+    '',
+    `Design token type: \`${typeName}\``,
+    '',
+    '| Pointer | Value | Notes |',
+    '|---------|-------|-------|',
+    rows,
+    '',
+  ].join('\n');
+}
+
+export function generateRulePage(rule: RuleModule): string {
+  const { name, meta } = rule;
+  const stability = meta.stability ?? 'stable';
+  const fixable = meta.fixable ? `\`${meta.fixable}\`` : 'No';
+  const rationale = meta.rationale?.why ?? meta.description;
+  const since = meta.rationale?.since ?? '';
+  const schemaSection = meta.schema?.description
+    ? `\n## Options\n\n${meta.schema.description}\n`
+    : '';
+
+  return [
+    `# \`${name}\``,
+    '',
+    `> ${meta.description}`,
+    '',
+    '## Metadata',
+    '',
+    `| | |`,
+    `|---|---|`,
+    `| **Category** | \`${String(meta.category)}\` |`,
+    `| **Stability** | ${stability} |`,
+    `| **Fixable** | ${fixable} |`,
+    since ? `| **Since** | ${since} |` : '',
+    '',
+    '## Rationale',
+    '',
+    rationale,
+    schemaSection,
+    '## Example configuration',
+    '',
+    '```json',
+    JSON.stringify({ rules: { [name]: 'error' } }, null, 2),
+    '```',
+    '',
+  ].join('\n');
+}
+
+export function generateComponentsPage(components: ComponentInput[]): string {
+  const rows = components
+    .map((c) => {
+      const deprecated = c.deprecated
+        ? c.replacedBy
+          ? `Yes → \`${c.replacedBy}\``
+          : 'Yes'
+        : 'No';
+      const version = c.version ?? '—';
+      return `| \`${c.name}\` | \`${c.package}\` | ${version} | ${deprecated} |`;
+    })
+    .join('\n');
+
+  return [
+    '# Components',
+    '',
+    'Component registry sourced from the DSR kernel.',
+    '',
+    '| Name | Package | Version | Deprecated |',
+    '|------|---------|---------|------------|',
+    rows,
+    '',
+  ].join('\n');
+}
+
+export function generateIndexPage(
+  tokenTypes: string[],
+  ruleNames: string[],
+  hasComponents = false,
+): string {
+  const tokenList = tokenTypes
+    .map((t) => `- [${t}](./tokens/${t}.md)`)
+    .join('\n');
+  const ruleList = ruleNames
+    .map((r) => `- [\`${r}\`](./rules/${r.replaceAll('/', '-')}.md)`)
+    .join('\n');
+  const componentsSection = hasComponents
+    ? ['## Components', '', '- [Components](./components.md)', ''].join('\n')
+    : '';
+
+  return [
+    '# Design System Documentation',
+    '',
+    'Auto-generated by `design-lint docs`.',
+    '',
+    '## Token Categories',
+    '',
+    tokenList || '_No tokens configured._',
+    '',
+    '## Rules',
+    '',
+    ruleList,
+    '',
+    componentsSection,
+  ].join('\n');
+}
+
+export function generateVitePressConfig(
+  tokenTypes: string[],
+  ruleNames: string[],
+): string {
+  const tokenItems = tokenTypes.map(
+    (t) => `      { text: '${t}', link: '/tokens/${t}' }`,
+  );
+  const ruleItems = ruleNames.map((r) => {
+    const link = r.replaceAll('/', '-');
+    return `      { text: '${r}', link: '/rules/${link}' }`;
+  });
+
+  return [
+    `import { defineConfig } from 'vitepress'`,
+    '',
+    `export default defineConfig({`,
+    `  title: 'Design System',`,
+    `  description: 'Generated by design-lint docs',`,
+    `  themeConfig: {`,
+    `    sidebar: [`,
+    `      {`,
+    `        text: 'Overview',`,
+    `        items: [{ text: 'Introduction', link: '/' }],`,
+    `      },`,
+    `      {`,
+    `        text: 'Tokens',`,
+    `        items: [`,
+    ...tokenItems,
+    `        ],`,
+    `      },`,
+    `      {`,
+    `        text: 'Rules',`,
+    `        items: [`,
+    ...ruleItems,
+    `        ],`,
+    `      },`,
+    `    ],`,
+    `  },`,
+    `})`,
+    '',
+  ].join('\n');
+}
+
+/**
+ * Generate a static documentation site from design-lint kernel state.
+ *
+ * @param options - Command options controlling output directory and format.
+ * @param loadConfigFn - Optional override for config loading (used in tests).
+ */
+export async function generateDocs(
+  options: DocsCommandOptions,
+  loadConfigFn?: LoadConfigFn,
+): Promise<void> {
+  const outDir = path.resolve(
+    process.cwd(),
+    options.out ?? 'docs/design-system',
+  );
+  const format: DocsFormat = options.format ?? 'vitepress';
+
+  // Load tokens from config
+  const configLoader = loadConfigFn ?? loadConfig;
+  const config = await configLoader(process.cwd(), options.config);
+  const tokensByTheme = toThemeRecord(config.tokens);
+  const themes = Object.keys(tokensByTheme);
+  const primaryTheme = themes[0] ?? 'default';
+
+  const allTokens = [
+    ...getFlattenedTokens(tokensByTheme, primaryTheme, {
+      nameTransform: config.nameTransform,
+    }),
+  ];
+
+  const tokenGroups = groupTokensByType(allTokens);
+  const tokenTypes = [...tokenGroups.keys()].sort();
+
+  // Attempt to enrich with live kernel state
+  const kernelData = await tryFetchKernelData();
+  const components = kernelData
+    ? [...kernelData.componentEntries.values()]
+    : [];
+  const hasComponents = components.length > 0;
+
+  // Generate token pages
+  for (const [typeName, tokens] of tokenGroups) {
+    const content = generateTokenTypePage(typeName, tokens);
+    writeFile(path.join(outDir, 'tokens', `${typeName}.md`), content);
+  }
+
+  // Generate rule pages
+  for (const rule of builtInRules) {
+    const slug = rule.name.replaceAll('/', '-');
+    const content = generateRulePage(rule);
+    writeFile(path.join(outDir, 'rules', `${slug}.md`), content);
+  }
+
+  // Generate components page from kernel state when available
+  if (hasComponents) {
+    writeFile(
+      path.join(outDir, 'components.md'),
+      generateComponentsPage(components),
+    );
+  }
+
+  const ruleNames = builtInRules.map((r) => r.name);
+
+  // Generate index page
+  writeFile(
+    path.join(outDir, 'index.md'),
+    generateIndexPage(tokenTypes, ruleNames, hasComponents),
+  );
+
+  // Generate VitePress config
+  if (format === 'vitepress') {
+    writeFile(
+      path.join(outDir, '.vitepress', 'config.mts'),
+      generateVitePressConfig(tokenTypes, ruleNames),
+    );
+  }
+
+  const tokenCount = allTokens.length;
+  const ruleCount = ruleNames.length;
+  const componentCount = components.length;
+  const componentSuffix = hasComponents
+    ? `, ${componentCount.toString()} components`
+    : '';
+  console.log(
+    `Generated docs: ${tokenCount.toString()} tokens, ${ruleCount.toString()} rules${componentSuffix} → ${outDir}`,
+  );
+}

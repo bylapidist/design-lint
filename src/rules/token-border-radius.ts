@@ -19,6 +19,12 @@ export const borderRadiusRule = tokenRule<BorderRadiusOptions>({
   meta: {
     description: 'enforce border-radius tokens',
     category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Hard-coded border radii break shape scale consistency and cannot be updated across components in a single token change.',
+      since: 'v8.0.0',
+    },
     schema: z.object({ units: z.array(z.string()).optional() }).optional(),
   },
   tokens: 'dimension',

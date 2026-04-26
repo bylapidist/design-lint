@@ -14,10 +14,6 @@ export { loadConfig } from './config/loader.js';
 export { defineConfig } from './config/define-config.js';
 export { getFormatter } from './formatters/index.js';
 export { builtInRules } from './rules/index.js';
-export {
-  TokenRegistry,
-  type TokenRegistryOptions,
-} from './core/token-registry.js';
 export * from './output/index.js';
 
 type EnvInput = Environment | DocumentSource;

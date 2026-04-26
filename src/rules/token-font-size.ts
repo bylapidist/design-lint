@@ -30,7 +30,16 @@ const parseSize = (val: unknown): number | null => {
 
 export const fontSizeRule = tokenRule({
   name: 'design-token/font-size',
-  meta: { description: 'enforce font-size tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce font-size tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw font sizes break the type scale and make responsive sizing changes require manual multi-file edits.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'dimension',
   message:
     'design-token/font-size requires font size tokens; configure tokens with $type "dimension" under a "fontSizes" group to enable this rule.',

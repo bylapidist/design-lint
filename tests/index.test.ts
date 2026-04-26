@@ -7,12 +7,11 @@ import {
   createLinter,
   createLintService,
   builtInRules,
-  TokenRegistry,
   type Config,
   type DocumentSource,
   type Environment,
 } from '../src/index.js';
-import { createNodeEnvironment } from '../src/adapters/node/environment.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
 
 class StubDocumentSource implements DocumentSource {
   public calls: {
@@ -104,21 +103,15 @@ void test('createLinter accepts Environment inputs directly', async () => {
   assert.deepEqual(result.results, []);
 });
 
-void test('TokenRegistry is re-exported from top-level index', () => {
-  assert.equal(typeof TokenRegistry, 'function');
-});
-
 void test('namespace export getters are reachable from top-level index', async () => {
   const mod = await import('../src/index.js');
-  assert.equal(typeof mod.TokenRegistry, 'function');
   assert.equal(typeof mod.createLinter, 'function');
   assert.equal(typeof mod.createLintService, 'function');
 });
 
 void test('createLinter handles fully constructed Environment objects', async () => {
   const config: Config = {};
-  const env = createNodeEnvironment(config);
-  const linter = createLinter(config, env);
+  const linter = createLinter(config, { documentSource: new FileSource() });
   const result = await linter.lintTargets(['missing/**/*.ts']);
   assert.deepEqual(result.results, []);
 });

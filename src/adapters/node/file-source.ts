@@ -89,6 +89,7 @@ export class FileSource implements DocumentSource {
           gitignore: false,
           dot: true,
           absolute: true,
+          ignore: ['**/node_modules/**', '**/.git/**'],
         })
       ).map(realpathIfExists),
       ...additionalIgnorePaths.map(realpathIfExists),

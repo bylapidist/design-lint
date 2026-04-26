@@ -13,10 +13,19 @@ export const deprecationRule: RuleModule = {
   meta: {
     description: 'flag deprecated tokens',
     category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Deprecated token usage accumulates silently and blocks token removal. Surfacing these at lint time gives teams a clear migration signal.',
+      since: 'v8.0.0',
+    },
     schema: z.void(),
   },
   create(context) {
-    const deprecated = new Map<string, { reason?: string; suggest?: string }>();
+    const deprecated = new Map<
+      string,
+      { pointer: string; reason?: string; suggest?: string }
+    >();
     const dtifTokens = context.getDtifTokens();
     const pathByPointer = new Map<string, string>();
     for (const token of dtifTokens) {
@@ -30,7 +39,7 @@ export const deprecationRule: RuleModule = {
         pathByPointer,
       );
       if (!info) continue;
-      deprecated.set(path, info);
+      deprecated.set(path, { pointer: token.pointer, ...info });
     }
     if (deprecated.size === 0) return {};
     const names = new Set(deprecated.keys());
@@ -49,6 +58,7 @@ export const deprecationRule: RuleModule = {
               }`,
               line: pos.line + 1,
               column: pos.character + 1,
+              metadata: { pointer: info?.pointer },
               ...(info?.suggest
                 ? {
                     fix: {
@@ -71,6 +81,7 @@ export const deprecationRule: RuleModule = {
             }`,
             line: decl.line,
             column: decl.column,
+            metadata: { pointer: info?.pointer },
             ...(info?.suggest ? { suggest: info.suggest } : {}),
           });
         }
