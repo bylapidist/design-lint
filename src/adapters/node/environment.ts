@@ -12,12 +12,6 @@ export interface DsrOptions {
   httpPort?: number;
   /** Timeout in milliseconds for the initial connection attempt. Defaults to 5000. */
   connectTimeoutMs?: number;
-  /**
-   * Optional async hook called immediately before the kernel connection is
-   * established. Use this to ensure the kernel daemon is running (e.g. auto-
-   * launch) without coupling the adapter to CLI-layer imports.
-   */
-  beforeConnect?: () => Promise<void>;
 }
 
 export interface CreateNodeEnvironmentOptions {
@@ -45,7 +39,6 @@ export function createNodeEnvironment(
   const { cacheLocation, dsr } = options;
 
   const tokenProvider = new DsrTokenProvider(async () => {
-    if (dsr.beforeConnect) await dsr.beforeConnect();
     const { NodeEnvironment: Env } =
       await import('@lapidist/dsr/environments/node');
     return new Env(dsr);
