@@ -6,6 +6,7 @@ import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import type { Config } from '../../src/core/linter.js';
+import { createConfigTokenProvider } from '../helpers/token-provider.js';
 
 // Ensure FileSource.scan logs when profiling is enabled
 // This also covers the catch branch for missing files by passing a non-existent target
@@ -16,7 +17,7 @@ void test('FileSource.scan logs when DESIGNLINT_PROFILE is set', async () => {
   const dir = makeTmpDir();
   fs.writeFileSync(path.join(dir, 'file.ts'), '');
   const config = { tokens: {}, rules: {} };
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
   const cwd = process.cwd();
   process.chdir(dir);
   process.env.DESIGNLINT_PROFILE = '1';

@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { applyFixes } from '../../src/index.js';
+import { createEmptyTokenProvider } from '../helpers/token-provider.js';
 
 void test('design-system/icon-usage reports raw svg', async () => {
   const linter = initLinter(
     {
       rules: { 'design-system/icon-usage': 'error' },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code = 'const a = <svg/>;';
   const res = await linter.lintText(code, 'file.tsx');
@@ -23,7 +24,7 @@ void test('design-system/icon-usage applies fix when replacement is in scope', a
     {
       rules: { 'design-system/icon-usage': 'error' },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code = 'import { Icon } from "./icons";\nconst a = <svg/>;';
   const res = await linter.lintText(code, 'file.tsx');
@@ -43,7 +44,7 @@ void test('design-system/icon-usage matches substitutions', async () => {
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code =
     'import { Icon } from "./icons";\nconst a = <FooIcon></FooIcon>;';
@@ -62,7 +63,7 @@ void test('design-system/icon-usage fixes svg opening and closing tags', async (
     {
       rules: { 'design-system/icon-usage': 'error' },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code = 'import { Icon } from "./icons";\nconst a = <svg></svg>;';
   const res = await linter.lintText(code, 'file.tsx');

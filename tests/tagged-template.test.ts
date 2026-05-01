@@ -4,13 +4,14 @@ import path from 'node:path';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 import { loadConfig } from '../src/config/loader.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const fixtureDir = path.join(__dirname, 'fixtures', 'tagged-template');
 
 void test('reports CSS in tagged template literals', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
   const file = path.join(fixtureDir, 'src', 'styled.ts');
   const {
     results: [res],
@@ -23,7 +24,7 @@ void test('reports CSS in tagged template literals', async () => {
 
 void test('reports static declarations inside interpolated tagged templates', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
   const res = await linter.lintText(
     [
       "import styled from 'styled-components';",
@@ -48,7 +49,7 @@ void test('reports static declarations inside interpolated tagged templates', as
 
 void test('does not lint unknown tagged templates unless explicitly configured', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
   const res = await linter.lintText(
     'const cssx = (input) => input; const Button = cssx`color: red;`;',
     'styled.ts',
@@ -65,7 +66,7 @@ void test('lints explicitly configured template tags', async () => {
     ...config,
     templateTags: ['cssx'],
   };
-  const linter = initLinter(strictConfig, { documentSource: new FileSource() });
+  const linter = initLinter(strictConfig, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(strictConfig) });
   const res = await linter.lintText(
     'const cssx = (input) => input; const Button = cssx`color: red;`;',
     'styled.ts',

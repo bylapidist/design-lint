@@ -11,6 +11,7 @@ import type { Linter } from '../../src/core/linter.js';
 import { parserRegistry } from '../../src/core/parser-registry.js';
 import { TokenRegistry } from '../../src/core/token-registry.js';
 import { RUNTIME_ERROR_RULE_ID } from '../../src/core/cache-manager.js';
+import { createEmptyTokenProvider } from '../helpers/token-provider.js';
 
 const env: Environment = {
   documentSource: {
@@ -18,6 +19,7 @@ const env: Environment = {
       return Promise.resolve({ documents: [], ignoreFiles: [] });
     },
   },
+  tokenProvider: createEmptyTokenProvider(),
 };
 
 void test('buildRuleContexts records rule metadata and reports messages', () => {

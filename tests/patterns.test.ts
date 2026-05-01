@@ -5,6 +5,7 @@ import path from 'node:path';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const srgb = (components: [number, number, number]) => ({
   colorSpace: 'srgb',
@@ -27,12 +28,13 @@ void test('lintTargets uses patterns option to include custom extensions', async
   const cwd = process.cwd();
   process.chdir(tmp);
   try {
-    const defaultLinter = initLinter(baseConfig, new FileSource());
+    const defaultLinter = initLinter(baseConfig, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(baseConfig) });
     const { results: defaultResults } = await defaultLinter.lintTargets(['.']);
     assert.equal(defaultResults.length, 0);
+    const customConfig = { ...baseConfig, patterns: ['**/*.foo'] };
     const customLinter = initLinter(
-      { ...baseConfig, patterns: ['**/*.foo'] },
-      new FileSource(),
+      customConfig,
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(customConfig) },
     );
     const { results: customResults } = await customLinter.lintTargets(['.']);
     assert.equal(customResults.length, 1);

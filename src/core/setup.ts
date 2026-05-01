@@ -14,18 +14,13 @@ export function setupLinter(
   config: Config,
   env: Environment,
 ): { linter: Linter; service: LintService } {
+  if (!env.tokenProvider) {
+    throw new Error(
+      'v8: Environment.tokenProvider is required. Ensure the DSR kernel is running and createNodeEnvironment was called with valid DsrOptions.',
+    );
+  }
+  const provider: TokenProvider = env.tokenProvider;
   const inlineTokens = config.tokens;
-  const defaultProvider: TokenProvider = {
-    load: async () => {
-      if (inlineTokens && isDesignTokens(inlineTokens)) {
-        await ensureDtifFlattenedTokens(inlineTokens);
-        return { default: inlineTokens };
-      }
-      const empty: Record<string, DesignTokens> = {};
-      return empty;
-    },
-  };
-  const provider: TokenProvider = env.tokenProvider ?? defaultProvider;
   const resolvedConfig: Config = {
     ...config,
     tokens: inlineTokens ?? {},

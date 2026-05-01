@@ -28,7 +28,6 @@ import { parserRegistry } from './parser-registry.js';
 import type { ParserPassResult } from './parser-registry.js';
 import { FILE_TYPE_MAP } from './file-types.js';
 import { RUNTIME_ERROR_RULE_ID } from './cache-manager.js';
-import { ensureDtifFlattenedTokens } from '../utils/tokens/dtif-cache.js';
 import { getTokenPath as deriveTokenPath } from '../utils/tokens/token-view.js';
 import { isRecord } from '../utils/guards/data/is-record.js';
 
@@ -109,20 +108,15 @@ export class Linter {
 
     if (isEnv(depsOrEnv)) {
       env = depsOrEnv;
-      const inlineTokens = config.tokens;
-      const provider: TokenProvider = env.tokenProvider ?? {
-        async load() {
-          if (inlineTokens && isDesignTokens(inlineTokens)) {
-            await ensureDtifFlattenedTokens(inlineTokens);
-            return { default: inlineTokens };
-          }
-          const empty: Record<string, DesignTokens> = {};
-          return empty;
-        },
-      };
+      if (!env.tokenProvider) {
+        throw new Error(
+          'v8: Environment.tokenProvider is required. Ensure the DSR kernel is running and createNodeEnvironment was called with valid DsrOptions.',
+        );
+      }
+      const provider: TokenProvider = env.tokenProvider;
       resolvedConfig = {
         ...config,
-        tokens: inlineTokens ?? {},
+        tokens: config.tokens ?? {},
       };
       const ruleRegistry = new RuleRegistry(resolvedConfig, env);
       const tokenTracker = new TokenTracker(provider);
@@ -647,10 +641,6 @@ function createNodeLookup(sourceFile: ts.SourceFile): Map<string, ts.Node> {
 }
 
 export { applyFixes } from './apply-fixes.js';
-
-function isDesignTokens(val: unknown): val is DesignTokens {
-  return typeof val === 'object' && val !== null;
-}
 
 interface DisabledRules {
   all: boolean;

@@ -7,6 +7,7 @@ import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { applyFixes } from '../../src/index.js';
 import ts from 'typescript';
+import { createEmptyTokenProvider } from '../helpers/token-provider.js';
 
 void test('design-system/component-prefix does not enforce without scoped sources', async () => {
   const linter = initLinter(
@@ -15,7 +16,7 @@ void test('design-system/component-prefix does not enforce without scoped source
         'design-system/component-prefix': ['error', { prefix: 'DS' }],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText('const a = <Button/>;', 'file.tsx');
   assert.equal(res.messages.length, 0);
@@ -31,7 +32,7 @@ void test('design-system/component-prefix enforces prefix on components', async 
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText('const a = <Button/>;', 'file.tsx');
   assert.equal(res.messages.length, 1);
@@ -48,7 +49,7 @@ void test('design-system/component-prefix ignores lowercase tags', async () => {
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText('const a = <div/>;', 'file.tsx');
   assert.equal(res.messages.length, 0);
@@ -64,7 +65,7 @@ void test('design-system/component-prefix fixes self-closing tags', async () => 
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code = 'const a = <Button/>';
   const res = await linter.lintText(code, 'file.tsx');
@@ -84,7 +85,7 @@ void test('design-system/component-prefix fixes opening and closing tags', async
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code = 'const a = <Button></Button>';
   const res = await linter.lintText(code, 'file.tsx');
@@ -104,7 +105,7 @@ void test('design-system/component-prefix enforces prefix in Vue components', as
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     '<template><Button/></template>',
@@ -123,7 +124,7 @@ void test('design-system/component-prefix enforces prefix in Svelte components',
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText('<Button/>', 'file.svelte');
   assert.equal(res.messages.length, 1);
@@ -139,7 +140,7 @@ void test('design-system/component-prefix enforces prefix on custom elements', a
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code = 'const a = <my-button></my-button>';
   const res = await linter.lintText(code, 'file.tsx');
@@ -158,7 +159,7 @@ void test('design-system/component-prefix preserves kebab-case custom element pr
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code = 'const a = <my-button></my-button>';
   const res = await linter.lintText(code, 'file.tsx');
@@ -178,7 +179,7 @@ void test('design-system/component-prefix normalizes custom element prefixes to 
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const code = 'const a = <my-button></my-button>';
   const res = await linter.lintText(code, 'file.tsx');
@@ -198,7 +199,7 @@ void test('design-system/component-prefix does not double-prefix prefixed tags',
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const pascalRes = await pascalLinter.lintText(
     'const a = <DSButton/>;',
@@ -215,7 +216,7 @@ void test('design-system/component-prefix does not double-prefix prefixed tags',
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const customRes = await customLinter.lintText(
     'const b = <ds-my-button/>;',
@@ -234,7 +235,7 @@ void test('design-system/component-prefix reports JSX member expressions without
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const uiMemberRes = await linter.lintText(
     'const a = <UI.Button />;',
@@ -265,7 +266,7 @@ void test('design-system/component-prefix ignores non-scoped imports', async () 
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
 
   const res = await linter.lintText(
@@ -290,7 +291,7 @@ void test('design-system/component-prefix enforces scoped design-system imports'
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-lint-'));

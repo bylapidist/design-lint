@@ -5,6 +5,7 @@ import path from 'node:path';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
+import { createEmptyTokenProvider } from './helpers/token-provider.js';
 
 void test('lintTargets expands glob patterns with globby', async () => {
   const dir = makeTmpDir();
@@ -14,7 +15,7 @@ void test('lintTargets expands glob patterns with globby', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = initLinter({ tokens: {}, rules: {} }, new FileSource());
+    const linter = initLinter({ tokens: {}, rules: {} }, { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() });
     const { results, warning } = await linter.lintTargets([
       '**/*.module.{css,scss}',
     ]);

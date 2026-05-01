@@ -5,6 +5,7 @@ import path from 'node:path';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const tokens = {
   $version: '1.0.0',
@@ -36,7 +37,7 @@ void test('lintTargets ignores common directories by default', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId));
@@ -58,7 +59,7 @@ void test('lintTargets respects .gitignore via globby', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
@@ -84,7 +85,7 @@ void test('.designlintignore can unignore paths', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
@@ -106,7 +107,7 @@ void test('.designlintignore overrides .gitignore', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
@@ -131,7 +132,7 @@ void test('.designlintignore supports negative patterns', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
@@ -153,7 +154,7 @@ void test('.designlintignore supports Windows paths', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
@@ -178,7 +179,7 @@ void test('config ignoreFiles are respected', async () => {
         rules: { 'design-system/deprecation': 'error' },
         ignoreFiles: ['src/skip.ts'],
       },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' }, ignoreFiles: ['src/skip.ts'] }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
@@ -201,7 +202,7 @@ void test('additional ignore file is respected', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.'], false, [extra]);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
@@ -223,7 +224,7 @@ void test('lintTargets respects nested .gitignore', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();
@@ -246,7 +247,7 @@ void test('nested .designlintignore overrides parent patterns', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
     );
     const { results } = await linter.lintTargets(['.']);
     const files = results.map((r) => path.relative(dir, r.sourceId)).sort();

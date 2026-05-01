@@ -4,6 +4,7 @@ import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import type { PluginLoader } from '../../src/core/plugin-loader.js';
 import type { PluginModule, RuleModule } from '../../src/core/types.js';
+import { createEmptyTokenProvider } from '../helpers/token-provider.js';
 
 void test('metadata propagates through report', async () => {
   class MockLoader implements PluginLoader {
@@ -34,7 +35,7 @@ void test('metadata propagates through report', async () => {
   }
   const linter = initLinter(
     { plugins: ['mock'], rules: { 'mock/rule': 'error' } },
-    { documentSource: new FileSource(), pluginLoader: new MockLoader() },
+    { documentSource: new FileSource(), pluginLoader: new MockLoader(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages[0]?.metadata?.foo, 'bar');

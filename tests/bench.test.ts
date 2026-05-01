@@ -23,6 +23,7 @@ import { loadConfig } from '../src/config/loader.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import type { Linter } from '../src/index.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const sampleFixture = path.join(__dirname, 'fixtures', 'sample');
@@ -37,7 +38,7 @@ let linter: Linter;
 
 before(async () => {
   const config = await loadConfig(sampleFixture);
-  linter = initLinter(config, { documentSource: new FileSource() });
+  linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
 
   // Warm-up: prime any internal caches before the timed assertions
   await linter.lintDocument({
@@ -140,6 +141,7 @@ describe('Release gate: 10k file workspace scan', () => {
       const config = await loadConfig(tmp);
       const scanLinter = initLinter(config, {
         documentSource: new FileSource(),
+        tokenProvider: createConfigTokenProvider(config),
       });
 
       // Time only the lint pass, not file creation or config loading

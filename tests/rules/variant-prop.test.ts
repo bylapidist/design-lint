@@ -6,6 +6,7 @@ import path from 'node:path';
 import ts from 'typescript';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
+import { createEmptyTokenProvider } from '../helpers/token-provider.js';
 
 void test('design-system/variant-prop flags invalid variant', async () => {
   const linter = initLinter(
@@ -17,7 +18,7 @@ void test('design-system/variant-prop flags invalid variant', async () => {
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     'const a = <Button variant="danger" />;',
@@ -37,7 +38,7 @@ void test('design-system/variant-prop allows valid variant', async () => {
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     'const a = <Button variant="primary" />;',
@@ -56,7 +57,7 @@ void test('design-system/variant-prop flags string literals in expressions', asy
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     "const a = <Button variant={'danger'} />;",
@@ -76,7 +77,7 @@ void test('design-system/variant-prop ignores dynamic expressions', async () => 
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     'const a = <Button variant={foo} />;',
@@ -95,7 +96,7 @@ void test('design-system/variant-prop supports custom prop names', async () => {
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     'const a = <Alert tone="warn" />;',
@@ -115,7 +116,7 @@ void test('design-system/variant-prop flags invalid variant in Vue components', 
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     '<template><Button variant="danger" /></template>',
@@ -134,7 +135,7 @@ void test('design-system/variant-prop flags invalid variant in Svelte components
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     '<Button variant="danger" />',
@@ -153,7 +154,7 @@ void test('design-system/variant-prop flags invalid variant on custom elements',
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
   const res = await linter.lintText(
     'const a = <my-button variant="danger" />;',
@@ -172,7 +173,7 @@ void test('design-system/variant-prop resolves aliased JSX components using Type
         ],
       },
     },
-    new FileSource(),
+    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
   );
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-lint-'));

@@ -5,13 +5,14 @@ import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 import { loadConfig } from '../src/config/loader.js';
 import { createDtifTheme } from './helpers/dtif.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
 async function lint(file: string) {
   const config = await loadConfig(fixtureDir);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
   const { results } = await linter.lintTargets(
     [path.join(fixtureDir, 'src', file)],
     false,
@@ -51,14 +52,15 @@ void test('style bindings inside control-flow blocks parse without crashing', as
 });
 
 void test('style directives skip dynamic expression values', async () => {
+  const svelteConfig = {
+    tokens: createDtifTheme({
+      'spacing.sm': { type: 'dimension', value: { value: 4, unit: 'px' } },
+    }),
+    rules: { 'design-token/spacing': 'error' },
+  };
   const linter = initLinter(
-    {
-      tokens: createDtifTheme({
-        'spacing.sm': { type: 'dimension', value: { value: 4, unit: 'px' } },
-      }),
-      rules: { 'design-token/spacing': 'error' },
-    },
-    { documentSource: new FileSource() },
+    svelteConfig,
+    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(svelteConfig) },
   );
   const res = await linter.lintText(
     [

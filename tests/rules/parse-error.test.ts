@@ -8,9 +8,10 @@ import { FileSource } from '../../src/adapters/node/file-source.js';
 import { NodePluginLoader } from '../../src/adapters/node/plugin-loader.js';
 import { createFileDocument } from '../../src/adapters/node/file-document.js';
 import { RUNTIME_ERROR_RULE_ID } from '../../src/core/cache-manager.js';
+import { createEmptyTokenProvider } from '../helpers/token-provider.js';
 
 void test('reports CSS parse errors', async () => {
-  const linter = initLinter({}, new FileSource());
+  const linter = initLinter({}, { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() });
   const res = await linter.lintText('.a { color: red;', 'bad.css');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].severity, 'error');
@@ -53,6 +54,7 @@ void test('does not map rule execution failures to parse-error', async () => {
   const linter = initLinter(config, {
     documentSource: new FileSource(),
     pluginLoader: new NodePluginLoader(),
+    tokenProvider: createEmptyTokenProvider(),
   });
   const result = await linter.lintDocument(createFileDocument(cssFile));
 
