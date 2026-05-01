@@ -84,15 +84,12 @@ async function bootstrapTokens(
   configPath: string,
   kernel: StartableKernel,
 ): Promise<void> {
-  const [
-    { loadConfig },
-    { ConfigTokenProvider },
-    { ensureDtifFlattenedTokens, getDtifFlattenedTokens },
-  ] = await Promise.all([
-    import('../config/loader.js'),
-    import('../config/config-token-provider.js'),
-    import('../utils/tokens/dtif-cache.js'),
-  ]);
+  const [{ loadConfig }, { ConfigTokenProvider }, { parseDtifTokenObject }] =
+    await Promise.all([
+      import('../config/loader.js'),
+      import('../config/config-token-provider.js'),
+      import('../core/dtif/parse.js'),
+    ]);
 
   const config = await loadConfig(process.cwd(), configPath);
   const provider = new ConfigTokenProvider(config);
@@ -101,13 +98,16 @@ async function bootstrapTokens(
 
   let injected = 0;
   for (const tokens of Object.values(tokensByTheme)) {
-    await ensureDtifFlattenedTokens(tokens);
-    const flattened = getDtifFlattenedTokens(tokens);
-    if (flattened) {
-      for (const token of flattened) {
-        kernel.addToken(token.pointer, token);
-        injected++;
-      }
+    // Use parseDtifTokenObject so bootstrapped tokens carry full metadata
+    // (description, extensions, deprecation, source) — not just the flattened
+    // structural fields. The kernel stores the enriched objects so DSQL queries
+    // return complete token data to DsrTokenProvider.
+    const result = await parseDtifTokenObject(tokens, {
+      uri: 'memory://kernel-bootstrap/tokens.json',
+    });
+    for (const token of result.tokens) {
+      kernel.addToken(token.pointer, token);
+      injected++;
     }
   }
 
