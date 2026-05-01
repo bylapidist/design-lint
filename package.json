@@ -90,6 +90,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "2.31.0",
+    "@lapidist/eslint-config": "1.0.0",
     "@types/color-name": "2.0.0",
     "@types/culori": "4.0.1",
     "@types/node": "25.6.2",
