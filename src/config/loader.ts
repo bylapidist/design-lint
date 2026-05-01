@@ -5,7 +5,8 @@
  */
 import path from 'node:path';
 import { collections, guards } from '../utils/index.js';
-import type { Config } from '../core/linter.js';
+import type { KernelConfig } from './kernel-config.js';
+
 import { configSchema } from './schema.js';
 import { realpathIfExists } from '../adapters/node/utils/paths.js';
 import { resolveConfigFiles } from './file-resolution.js';
@@ -45,7 +46,7 @@ const mergeArrayValues = (current: unknown, incoming: unknown[]): unknown[] => [
 export async function loadConfig(
   cwd: string,
   configPath?: string,
-): Promise<Config> {
+): Promise<KernelConfig> {
   const results = await resolveConfigFiles(cwd, configPath);
   const nearestConfig =
     results.length > 0 ? results[results.length - 1] : undefined;
@@ -90,7 +91,7 @@ export async function loadConfig(
       remediation: 'Review and fix the configuration file.',
     });
   }
-  const config = parsed.data;
+  const config: KernelConfig = { ...parsed.data };
   if (isRecord(config.tokens) && Object.keys(config.tokens).length > 0) {
     const baseDir = config.configPath ? path.dirname(config.configPath) : cwd;
     config.tokens = await loadTokens(config.tokens, baseDir);

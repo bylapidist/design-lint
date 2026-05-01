@@ -9,12 +9,20 @@
 import { createHash } from 'node:crypto';
 import type { NodeEnvironment } from '@lapidist/dsr/environments/node';
 import type { ComponentInput, DeprecationEntryInput } from '@lapidist/dscp';
+import { isJsonPointer } from '@lapidist/dtif-parser';
+import type { JsonPointer } from '../core/types.js';
+
+export interface KernelTokenEntry {
+  pointer: JsonPointer;
+  name: string;
+  type?: string;
+}
 
 export interface KernelData {
   /** Deterministic SHA-256 hash of the token graph, computed from sorted pointers. */
   snapshotHash: string;
   /** All tokens from the kernel token graph, keyed by pointer. */
-  tokenEntries: Map<string, { pointer: string; name: string; type?: string }>;
+  tokenEntries: Map<JsonPointer, KernelTokenEntry>;
   /** Deprecation ledger entries keyed by token pointer. */
   deprecationEntries: Map<string, DeprecationEntryInput>;
   /** Component registry entries keyed by component name. */
@@ -44,15 +52,16 @@ export async function tryFetchKernelData(): Promise<KernelData | null> {
 
     const snapshotHash = computeHash(allTokens.map((t) => t.pointer));
 
-    const tokenEntries = new Map<
-      string,
-      { pointer: string; name: string; type?: string }
-    >(
-      allTokens.map((t) => [
-        t.pointer,
-        { pointer: t.pointer, name: t.name, type: t.type },
-      ]),
-    );
+    const tokenEntries = new Map<JsonPointer, KernelTokenEntry>();
+    for (const t of allTokens) {
+      if (isJsonPointer(t.pointer)) {
+        tokenEntries.set(t.pointer, {
+          pointer: t.pointer,
+          name: t.name,
+          type: t.type,
+        });
+      }
+    }
 
     const deprecationEntries = new Map<string, DeprecationEntryInput>(
       deprecatedTokens.map((dt) => [

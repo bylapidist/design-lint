@@ -16,14 +16,9 @@ import type {
   ViolationInput,
 } from '@lapidist/dscp';
 import { loadConfig } from '../config/loader.js';
-import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
 import { builtInRules } from '../rules/index.js';
-import type {
-  DtifFlattenedToken,
-  LintResult,
-  LintMessage,
-} from '../core/types.js';
-import type { Config } from '../core/linter.js';
+import type { LintResult, LintMessage } from '../core/types.js';
+import type { KernelConfig } from '../config/kernel-config.js';
 import { tryFetchKernelData } from './kernel-client.js';
 
 interface ExportDesignSystemMdOptions {
@@ -42,20 +37,7 @@ interface ExportDesignSystemMdOptions {
 export type LoadConfigFn = (
   cwd: string,
   configPath?: string,
-) => Promise<Config>;
-
-/**
- * Map a DtifFlattenedToken to the minimal TokenInput shape expected by
- * @lapidist/dscp. DtifFlattenedToken satisfies TokenInput structurally, but
- * we map explicitly so the compiler can verify compatibility.
- */
-function toTokenInput(token: DtifFlattenedToken): TokenInput {
-  const base: TokenInput = { pointer: token.pointer, name: token.name };
-  if (token.type !== undefined) {
-    return { ...base, type: token.type };
-  }
-  return base;
-}
+) => Promise<KernelConfig>;
 
 /**
  * Resolve the configured severity and enabled state of a rule from config.rules.
@@ -200,39 +182,14 @@ export async function exportDesignSystemMd(
 
   const configLoader = loadConfigFn ?? loadConfig;
   const config = await configLoader(process.cwd(), options.config);
-  const tokensByTheme = toThemeRecord(config.tokens);
-  const themes = Object.keys(tokensByTheme);
-  const primaryTheme = themes[0] ?? 'default';
 
-  const allTokens = [
-    ...getFlattenedTokens(tokensByTheme, primaryTheme, {
-      nameTransform: config.nameTransform,
-    }),
-  ];
-
-  const tokenMap = new Map<string, TokenInput>(
-    allTokens.map((t) => [t.pointer, toTokenInput(t)]),
-  );
-
-  const byType = new Map<string, TokenInput[]>();
-  for (const token of allTokens) {
-    const type = token.type ?? 'unknown';
-    const existing = byType.get(type);
-    if (existing) {
-      existing.push(toTokenInput(token));
-    } else {
-      byType.set(type, [toTokenInput(token)]);
-    }
-  }
-
+  // In v8 the DSR kernel is the authoritative token source.
   const kernelData = await tryFetchKernelData();
 
-  // When the kernel is running, use its authoritative token graph instead of
-  // re-parsing the local config. This ensures the DESIGN_SYSTEM.md reflects
-  // live kernel state (including tokens added via the write-API at runtime).
-  if (kernelData !== null && kernelData.tokenEntries.size > 0) {
-    tokenMap.clear();
-    byType.clear();
+  const tokenMap = new Map<string, TokenInput>();
+  const byType = new Map<string, TokenInput[]>();
+
+  if (kernelData !== null) {
     for (const [pointer, token] of kernelData.tokenEntries) {
       const input: TokenInput = { pointer: token.pointer, name: token.name };
       if (token.type !== undefined) {
@@ -303,6 +260,6 @@ export async function exportDesignSystemMd(
       ? `, ${violations.length.toString()} violation pattern${violations.length === 1 ? '' : 's'}`
       : '';
   console.log(
-    `DESIGN_SYSTEM.md generated: ${allTokens.length.toString()} tokens, ${builtInRules.length.toString()} rules${violationsNote} → ${outPath}`,
+    `DESIGN_SYSTEM.md generated: ${tokenMap.size.toString()} tokens, ${builtInRules.length.toString()} rules${violationsNote} → ${outPath}`,
   );
 }

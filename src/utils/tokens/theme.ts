@@ -4,7 +4,7 @@
  * Helpers for normalizing token configuration into theme records.
  */
 
-import type { Config } from '../../core/linter.js';
+import type { KernelConfig } from '../../config/kernel-config.js';
 import type { DesignTokens } from '../../core/types.js';
 import { isDesignTokens, isThemeRecord } from '../guards/domain/index.js';
 import { getDtifFlattenedTokens } from './dtif-cache.js';
@@ -21,7 +21,7 @@ import { getDtifFlattenedTokens } from './dtif-cache.js';
  * @returns A record of theme names mapped to design token objects.
  */
 export function toThemeRecord(
-  tokens: Config['tokens'],
+  tokens: KernelConfig['tokens'],
 ): Record<string, DesignTokens> {
   if (!tokens) return {};
   if (getDtifFlattenedTokens(tokens)) {

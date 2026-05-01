@@ -41,10 +41,6 @@ export interface Config {
    */
   extends?: Config[];
   format?: string;
-  tokens?:
-    | DesignTokens
-    | Record<string, DesignTokens | string>
-    | Record<string, unknown>;
   rules?: Record<string, unknown>;
   ignoreFiles?: string[];
   plugins?: string[];
@@ -56,7 +52,7 @@ export interface Config {
   templateTags?: string[];
 }
 
-interface ResolvedConfig extends Omit<Config, 'tokens'> {
+interface ResolvedConfig extends Config {
   tokens: Record<string, unknown>;
 }
 
@@ -93,7 +89,7 @@ export class Linter {
 
     let resolvedConfig: ResolvedConfig = {
       ...config,
-      tokens: config.tokens ?? {},
+      tokens: {},
     };
     let deps:
       | {
@@ -116,7 +112,7 @@ export class Linter {
       const provider: TokenProvider = env.tokenProvider;
       resolvedConfig = {
         ...config,
-        tokens: config.tokens ?? {},
+        tokens: {},
       };
       const ruleRegistry = new RuleRegistry(resolvedConfig, env);
       const tokenTracker = new TokenTracker(provider);

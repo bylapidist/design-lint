@@ -4,7 +4,7 @@
  * Token provider for design tokens declared directly within a
  * {@link Config} object.
  */
-import type { Config } from '../core/linter.js';
+import type { KernelConfig } from './kernel-config.js';
 import type { DesignTokens } from '../core/types.js';
 import { tokens } from '../utils/index.js';
 
@@ -24,14 +24,14 @@ export class ConfigTokenProvider {
   /**
    * Resolved configuration containing token definitions.
    */
-  private readonly config: Config;
+  private readonly config: KernelConfig;
 
   /**
    * Creates a token provider from a resolved configuration.
    *
    * @param config - Parsed linter configuration.
    */
-  constructor(config: Config) {
+  constructor(config: KernelConfig) {
     this.config = config;
   }
 

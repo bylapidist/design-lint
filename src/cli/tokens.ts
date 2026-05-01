@@ -2,38 +2,54 @@ import fs from 'fs';
 import path from 'path';
 import type { DtifFlattenedToken } from '../core/types.js';
 import { loadConfig } from '../config/loader.js';
-import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
+import { getFlattenedTokens } from '../utils/tokens/index.js';
+import { tryFetchKernelData } from './kernel-client.js';
 
 /**
  * Options for the `tokens` CLI command.
- *
- * Allows selecting a single theme and writing output to a file instead of
- * stdout. When `config` is provided, tokens are loaded relative to that file.
  */
 interface TokensCommandOptions {
-  /** Theme name to export. When omitted all themes are included. */
   theme?: string;
-  /** Optional file path to write the JSON output. */
   out?: string;
-  /** Optional path to a configuration file. */
   config?: string;
 }
 
 /**
- * Export flattened design tokens as JSON.
+ * Export flattened design tokens as JSON from the DSR kernel.
  *
- * Loads token definitions from the resolved configuration, flattens them
- * per-theme, and writes the result either to stdout or to a file when `out`
- * is provided.
- *
- * @param options - Command options controlling theme selection and output path.
+ * In v8 the authoritative token source is the running DSR kernel. The kernel
+ * must be started before invoking this command.
  */
 export async function exportTokens(
   options: TokensCommandOptions,
 ): Promise<void> {
   const config = await loadConfig(process.cwd(), options.config);
-  const tokensByTheme = toThemeRecord(config.tokens);
-  if (options.theme && !(options.theme in tokensByTheme)) {
+  const kernelData = await tryFetchKernelData();
+
+  if (kernelData === null || kernelData.tokenEntries.size === 0) {
+    throw new Error(
+      'No token data available from the DSR kernel. ' +
+        'Start the kernel first with `design-lint kernel start --config <config>`.',
+    );
+  }
+
+  const emptyPath: readonly string[] = Object.freeze([]);
+  const defaultTokens: DtifFlattenedToken[] = Array.from(
+    kernelData.tokenEntries.values(),
+  ).map((t) => ({
+    id: t.pointer,
+    pointer: t.pointer,
+    name: t.name,
+    path: emptyPath,
+    metadata: { extensions: {} },
+    ...(t.type !== undefined ? { type: t.type } : {}),
+  }));
+
+  const tokensByTheme: Record<string, DtifFlattenedToken[]> = {
+    default: defaultTokens,
+  };
+
+  if (options.theme !== undefined && !(options.theme in tokensByTheme)) {
     const available = Object.keys(tokensByTheme).sort();
     const details =
       available.length > 0
@@ -41,7 +57,9 @@ export async function exportTokens(
         : ' No themes are configured.';
     throw new Error(`Unknown theme "${options.theme}".${details}`);
   }
-  const themes = options.theme ? [options.theme] : Object.keys(tokensByTheme);
+
+  const themes =
+    options.theme !== undefined ? [options.theme] : Object.keys(tokensByTheme);
   const output: Record<string, Record<string, DtifFlattenedToken>> = {};
 
   for (const theme of themes) {
@@ -56,7 +74,7 @@ export async function exportTokens(
   }
 
   const json = JSON.stringify(output, null, 2);
-  if (options.out) {
+  if (options.out !== undefined) {
     const filePath = path.resolve(process.cwd(), options.out);
     fs.writeFileSync(filePath, json);
   } else {

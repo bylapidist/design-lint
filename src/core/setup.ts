@@ -20,10 +20,8 @@ export function setupLinter(
     );
   }
   const provider: TokenProvider = env.tokenProvider;
-  const inlineTokens = config.tokens;
   const resolvedConfig: Config = {
     ...config,
-    tokens: inlineTokens ?? {},
   };
   const ruleRegistry = new RuleRegistry(resolvedConfig, env);
   const tokenTracker = new TokenTracker(provider);

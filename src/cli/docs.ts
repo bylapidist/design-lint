@@ -13,10 +13,10 @@
 import fs from 'fs';
 import path from 'path';
 import { loadConfig } from '../config/loader.js';
-import { getFlattenedTokens, toThemeRecord } from '../utils/tokens/index.js';
+import { getFlattenedTokens } from '../utils/tokens/index.js';
 import { builtInRules } from '../rules/index.js';
 import type { DtifFlattenedToken, RuleModule } from '../core/types.js';
-import type { Config } from '../core/linter.js';
+import type { KernelConfig } from '../config/kernel-config.js';
 import { tryFetchKernelData } from './kernel-client.js';
 import type { ComponentInput } from '@lapidist/dscp';
 
@@ -34,7 +34,7 @@ interface DocsCommandOptions {
 export type LoadConfigFn = (
   cwd: string,
   configPath?: string,
-) => Promise<Config>;
+) => Promise<KernelConfig>;
 
 function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) {
@@ -248,24 +248,30 @@ export async function generateDocs(
   );
   const format: DocsFormat = options.format ?? 'vitepress';
 
-  // Load tokens from config
   const configLoader = loadConfigFn ?? loadConfig;
   const config = await configLoader(process.cwd(), options.config);
-  const tokensByTheme = toThemeRecord(config.tokens);
-  const themes = Object.keys(tokensByTheme);
-  const primaryTheme = themes[0] ?? 'default';
 
-  const allTokens = [
-    ...getFlattenedTokens(tokensByTheme, primaryTheme, {
-      nameTransform: config.nameTransform,
-    }),
-  ];
+  // In v8 the DSR kernel is the authoritative token source
+  const kernelData = await tryFetchKernelData();
+
+  const emptyPath: readonly string[] = Object.freeze([]);
+  const allTokens: DtifFlattenedToken[] = kernelData
+    ? Array.from(kernelData.tokenEntries.values()).map((t) => ({
+        id: t.pointer,
+        pointer: t.pointer,
+        name: t.name,
+        path: emptyPath,
+        metadata: { extensions: {} },
+        ...(t.type !== undefined ? { type: t.type } : {}),
+      }))
+    : [
+        ...getFlattenedTokens({}, 'default', {
+          nameTransform: config.nameTransform,
+        }),
+      ];
 
   const tokenGroups = groupTokensByType(allTokens);
   const tokenTypes = [...tokenGroups.keys()].sort();
-
-  // Attempt to enrich with live kernel state
-  const kernelData = await tryFetchKernelData();
   const components = kernelData
     ? [...kernelData.componentEntries.values()]
     : [];
