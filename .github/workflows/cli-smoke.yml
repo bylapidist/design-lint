@@ -312,7 +312,7 @@ jobs:
           # new kernel daemon removes the stale socket and creates a fresh one
           # (KernelProcess.start() always unlinks before binding).
           if [ -f /tmp/designlint-kernel.pid ]; then kill "$(cat /tmp/designlint-kernel.pid)" 2>/dev/null || true; sleep 0.5; fi
-          rm -f /tmp/designlint-kernel.sock /tmp/designlint-kernel.pid
+          rm -f /tmp/designlint-kernel.sock /tmp/designlint-kernel.pid /tmp/designlint-kernel.ready
           npx design-lint suggestion.css --config suggestion.config.json --format stylish 2>&1 | tee suggestion.txt || true
           grep -Fq "Unexpected spacing 5px" suggestion.txt
           npx design-lint file.ts --format json || true

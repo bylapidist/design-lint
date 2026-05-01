@@ -27,6 +27,13 @@ interface KernelStartOptions {
    * not corrupt formatter output (e.g. JSON) on stdout.
    */
   quiet?: boolean;
+  /**
+   * Path to the ready sentinel file. The daemon writes this file after token
+   * bootstrap completes. kernelStart() polls for it instead of the PID file
+   * so it only returns once the kernel's token graph is fully populated.
+   * Defaults to <socketPath>.ready.
+   */
+  readyFile?: string;
 }
 
 interface KernelStatusOptions {
@@ -35,6 +42,7 @@ interface KernelStatusOptions {
 
 interface KernelStopOptions {
   pidFile?: string;
+  socketPath?: string;
 }
 
 function readPid(pidFile: string): number | null {
@@ -61,6 +69,12 @@ function isProcessRunning(pid: number): boolean {
  */
 export function kernelStart(options: KernelStartOptions): void {
   const pidFile = options.pidFile ?? DEFAULT_PID_FILE;
+  const socketPath = options.socketPath ?? DEFAULT_SOCKET_PATH;
+  // The ready file is written by the daemon after token bootstrap completes.
+  // Polling for it (rather than the PID file) ensures the kernel's token graph
+  // is fully populated before kernelStart returns.
+  const readyFile =
+    options.readyFile ?? socketPath.replace(/\.sock$/, '.ready');
 
   const log = options.quiet
     ? () => undefined
@@ -89,6 +103,7 @@ export function kernelStart(options: KernelStartOptions): void {
   if (options.pidFile) args.push('--pid-file', options.pidFile);
   if (options.noHttp) args.push('--no-http');
   if (options.configPath) args.push('--config-path', options.configPath);
+  args.push('--ready-file', readyFile);
 
   const child = spawn(process.execPath, args, {
     detached: true,
@@ -97,15 +112,17 @@ export function kernelStart(options: KernelStartOptions): void {
 
   child.unref();
 
-  // Brief pause to let the daemon write its PID file
-  const deadline = Date.now() + 2_000;
+  // Poll for the ready file — written by the daemon after token bootstrap
+  // completes. This is later than the PID file (written by KernelProcess.start
+  // before bootstrap), so polling here guarantees tokens are loaded when we
+  // return. 5 s to allow for process spawn overhead + bootstrap time in CI.
+  const deadline = Date.now() + 5_000;
   while (Date.now() < deadline) {
     const spawnResult = spawnSync('sleep', ['0.1']);
     void spawnResult;
-    const pid = readPid(pidFile);
-    if (pid !== null && isProcessRunning(pid)) {
-      log(`Kernel started (PID ${pid.toString()})`);
-      log(`  Socket: ${options.socketPath ?? DEFAULT_SOCKET_PATH}`);
+    if (fs.existsSync(readyFile)) {
+      log(`Kernel started (PID ${readPid(pidFile)?.toString() ?? '?'})`);
+      log(`  Socket: ${socketPath}`);
       if (!options.noHttp) {
         log(
           `  HTTP:   http://127.0.0.1:${(options.httpPort ?? DEFAULT_HTTP_PORT).toString()}/kwp/status`,
@@ -116,7 +133,7 @@ export function kernelStart(options: KernelStartOptions): void {
   }
 
   console.error(
-    'Kernel did not start within 2 seconds. Check system logs for details.',
+    'Kernel did not start within 5 seconds. Check system logs for details.',
   );
   process.exitCode = 1;
 }
@@ -126,6 +143,8 @@ export function kernelStart(options: KernelStartOptions): void {
  */
 export function kernelStop(options: KernelStopOptions): void {
   const pidFile = options.pidFile ?? DEFAULT_PID_FILE;
+  const socketPath = options.socketPath ?? DEFAULT_SOCKET_PATH;
+  const readyFile = socketPath.replace(/\.sock$/, '.ready');
   const pid = readPid(pidFile);
 
   if (pid === null) {
@@ -139,6 +158,11 @@ export function kernelStop(options: KernelStopOptions): void {
     );
     try {
       fs.unlinkSync(pidFile);
+    } catch {
+      /* already gone */
+    }
+    try {
+      fs.unlinkSync(readyFile);
     } catch {
       /* already gone */
     }

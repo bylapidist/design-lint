@@ -12,6 +12,8 @@
  *   --no-http              Disable HTTP fallback transport
  *   --config-path <path>   Path to designlint.config.* — when provided, tokens are
  *                          loaded from config and injected into the kernel on startup
+ *   --ready-file  <path>   Written after bootstrap completes; kernelStart() polls
+ *                          for this file so it returns only when tokens are loaded
  */
 
 interface KernelOptions {
@@ -32,6 +34,7 @@ export type KernelProcessCtor = new (options: KernelOptions) => StartableKernel;
 
 interface ParsedArgs extends KernelOptions {
   configPath?: string;
+  readyFile?: string;
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -49,6 +52,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   const pidFile = getArg('--pid-file');
   const noHttp = hasFlag('--no-http');
   const configPath = getArg('--config-path');
+  const readyFile = getArg('--ready-file');
 
   return {
     socketPath,
@@ -56,6 +60,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     pidFile,
     enableHttp: !noHttp,
     configPath,
+    readyFile,
   };
 }
 
@@ -124,7 +129,7 @@ export async function startDaemon(
   argv = process.argv.slice(2),
   KernelProcessClass?: KernelProcessCtor,
 ): Promise<void> {
-  const { configPath, ...options } = parseArgs(argv);
+  const { configPath, readyFile, ...options } = parseArgs(argv);
   const Ctor = KernelProcessClass ?? (await loadKernelProcess());
   const kernel = new Ctor(options);
   await kernel.start();
@@ -138,6 +143,26 @@ export async function startDaemon(
         `[kernel-daemon] token bootstrap failed: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
+  }
+
+  // Write the ready file after bootstrap (if any) so that kernelStart() only
+  // returns once tokens are fully loaded into the kernel's token graph.
+  if (readyFile) {
+    const { writeFileSync, unlinkSync } = await import('node:fs');
+    try {
+      writeFileSync(readyFile, String(process.pid), 'utf8');
+    } catch {
+      // Non-fatal — kernelStart will timeout and report an error
+    }
+    const cleanup = () => {
+      try {
+        unlinkSync(readyFile);
+      } catch {
+        // already gone
+      }
+    };
+    process.on('SIGTERM', cleanup);
+    process.on('SIGINT', cleanup);
   }
 }
 
