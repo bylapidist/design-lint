@@ -6,12 +6,10 @@
  * code is incorrect in a logical sense.
  *
  * Release gates covered here:
+ *   - CLI on warm kernel < 50ms  (skipped when no kernel socket is present)
  *   - lint_snippet via MCP < 50ms
  *   - LSP diagnostics (lintDocument) < 100ms
  *   - 10k file workspace scan < 10s  (tested at 1000 files, same throughput)
- *
- * Note: "CLI on warm kernel < 50ms" requires a running kernel socket and is
- * verified manually / in integration tests, not in this unit benchmark suite.
  */
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -50,6 +48,52 @@ before(async () => {
     getText: () => Promise.resolve('export const x = 1;\n'),
   });
 });
+
+// ---------------------------------------------------------------------------
+// Release gate: CLI on warm kernel < 50ms
+//
+// Requires a running DSR kernel at /tmp/designlint-kernel.sock. The test is
+// skipped automatically when no socket is present so the suite can run in
+// pure unit-test environments. The cli-smoke.yml CI workflow starts the kernel
+// before running the full test suite, so this gate is exercised in CI.
+// ---------------------------------------------------------------------------
+
+describe(
+  'Release gate: CLI on warm kernel',
+  { skip: !fs.existsSync('/tmp/designlint-kernel.sock') },
+  () => {
+    it('lintDocument via DsrTokenProvider in under 50ms', async () => {
+      const { createNodeEnvironment } =
+        await import('../src/adapters/node/environment.js');
+      const config = await loadConfig(sampleFixture);
+      const env = createNodeEnvironment(config, {
+        dsr: {
+          socketPath: '/tmp/designlint-kernel.sock',
+          connectTimeoutMs: 2000,
+        },
+      });
+      const kernelLinter = initLinter(config, env);
+      // Warm up — connect + load tokens before the timed assertion.
+      await kernelLinter.lintDocument({
+        id: 'warmup-kernel.ts',
+        type: 'typescript',
+        getText: () => Promise.resolve('export const x = 1;\n'),
+      });
+
+      const start = Date.now();
+      await kernelLinter.lintDocument({
+        id: 'bench-kernel.ts',
+        type: 'typescript',
+        getText: () => Promise.resolve("const style = { color: '#ff0000' };\n"),
+      });
+      const elapsed = Date.now() - start;
+      assert.ok(
+        elapsed < 50,
+        `CLI on warm kernel took ${elapsed.toString()}ms — must be < 50ms`,
+      );
+    });
+  },
+);
 
 // ---------------------------------------------------------------------------
 // Release gate: lint_snippet via MCP < 50ms
