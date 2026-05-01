@@ -30,14 +30,20 @@ function assertIds(messages: { ruleId: string }[]) {
 }
 
 void test('reports raw tokens in .scss files', async () => {
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(cssSample, 'file.scss');
   assert.equal(res.messages.length, 3);
   assertIds(res.messages);
 });
 
 void test('reports deterministic parse-error for indented .sass files', async () => {
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(
     '.a\n  color: #fff\n  margin: 5px\n  opacity: 0.5\n',
     'file.sass',
@@ -53,7 +59,10 @@ void test('reports deterministic parse-error for indented .sass files', async ()
 });
 
 void test('reports raw tokens in Vue <style lang="scss">', async () => {
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(
     `<template><div/></template><style lang="scss">${cssSample}</style>`,
     'Comp.vue',
@@ -63,7 +72,10 @@ void test('reports raw tokens in Vue <style lang="scss">', async () => {
 });
 
 void test('reports raw tokens in Svelte <style lang="scss">', async () => {
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(
     `<div></div><style lang="scss">${cssSample}</style>`,
     'Comp.svelte',
@@ -73,7 +85,10 @@ void test('reports raw tokens in Svelte <style lang="scss">', async () => {
 });
 
 void test('reports deterministic parse-error in Vue <style lang="sass">', async () => {
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(
     '<template><div/></template><style lang="sass">.a\n  color: #fff</style>',
     'Comp.vue',
@@ -89,7 +104,10 @@ void test('reports deterministic parse-error in Vue <style lang="sass">', async 
 });
 
 void test('reports raw tokens in string style attributes', async () => {
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(
     `const C = () => <div style="color: #fff; margin: 5px; opacity: 0.5"></div>;`,
     'file.tsx',
@@ -99,7 +117,10 @@ void test('reports raw tokens in string style attributes', async () => {
 });
 
 void test('reports raw tokens in JSX object style attributes', async () => {
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(
     `const C = () => <div style={{ color: '#fff', marginTop: '8px' }}></div>;`,
     'file.tsx',
@@ -118,10 +139,10 @@ void test('normalizes JSX style object props to CSS-like names', async () => {
     }),
     rules: { 'design-token/font-size': 'error' },
   };
-  const linter = initLinter(
-    fontSizeConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(fontSizeConfig) },
-  );
+  const linter = initLinter(fontSizeConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(fontSizeConfig),
+  });
   const res = await linter.lintText(
     `const C = () => <div style={{ fontSize: '15px' }}></div>;`,
     'file.tsx',
@@ -137,10 +158,10 @@ void test('reports raw tokens once for single style property', async () => {
     }),
     rules: { 'design-token/colors': 'error' },
   };
-  const linter = initLinter(
-    singlePropConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(singlePropConfig) },
-  );
+  const linter = initLinter(singlePropConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(singlePropConfig),
+  });
   const res = await linter.lintText(
     `const C = () => <div style="color: #fff"></div>;`,
     'file.tsx',
@@ -150,7 +171,10 @@ void test('reports raw tokens once for single style property', async () => {
 });
 
 void test('reports static raw tokens in interpolated tagged templates', async () => {
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(
     [
       "import styled from 'styled-components';",

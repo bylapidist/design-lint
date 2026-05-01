@@ -10,7 +10,10 @@ void test('Linter integrates registry, parser and trackers', async () => {
     tokens: {},
     rules: { 'design-token/colors': 'error' },
   };
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText('a{color:#fff;}', 'file.css');
   assert.equal(res.messages.length, 1);
 });
@@ -30,7 +33,10 @@ void test('inline DTIF tokens attach flattened cache for reuse', async () => {
   } as const;
 
   const config = { tokens, rules: {} };
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
 
   await linter.lintText('a { color: #000; }', 'inline.css');
 
@@ -43,7 +49,10 @@ void test('inline DTIF tokens attach flattened cache for reuse', async () => {
 
 void test('unsupported file types produce parse-error diagnostics', async () => {
   const config = { tokens: {}, rules: {} };
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText('<div/>', 'index.html');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0]?.ruleId, 'parse-error');

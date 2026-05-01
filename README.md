@@ -12,20 +12,20 @@
 [![build](https://img.shields.io/github/actions/workflow/status/bylapidist/design-lint/ci.yml?label=CI&logo=github)](https://github.com/bylapidist/design-lint/actions)
 [![license](https://img.shields.io/npm/l/%40lapidist/design-lint.svg)](LICENSE)
 
-**@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, enforces configured component/import policies, and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif), using the canonical parser and schema as its reference implementation.
+**@lapidist/design-lint** is a Design System Runtime (DSR) for JavaScript, TypeScript, and style sheets. It enforces design token usage, component and import policies, and design system conventions across your entire codebase — backed by a long-lived kernel daemon that holds the authoritative token graph in memory and serves every lint invocation via a Unix socket.
 
-> Experimental: expect occasional breaking changes and bugs as the project evolves.
+The runtime is built on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif) and exposes an [MCP server](packages/mcp/) for AI assistant integration, an [LSP server](packages/lsp/) for editor diagnostics, a [snapshot format](docs/architecture.md) for portable offline use, and a [DSCP document](https://github.com/bylapidist/dscp) generator for AI context (`DESIGN_SYSTEM.md`).
 
 ## Quick start
 
-**@lapidist/design-lint** requires Node.js ≥22. The commands below either run the linter once via `npx` or install it locally, initialise configuration, and lint your `src` directory. For deeper CLI details, see the [Usage guide](docs/usage.md).
+**@lapidist/design-lint** requires Node.js ≥22. The first invocation starts the DSR kernel automatically; subsequent invocations connect to the running kernel.
 
 ```bash
 # run without installing
 npx @lapidist/design-lint@latest src
 
 # or add to your project
-npm install --save-dev @lapidist/design-lint
+pnpm add --save-dev @lapidist/design-lint
 npx design-lint init
 npx design-lint src
 ```

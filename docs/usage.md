@@ -11,6 +11,7 @@ This guide walks you through installing and running @lapidist/design-lint for th
 ## Table of contents
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [The DSR kernel](#the-dsr-kernel)
 - [Initial configuration](#initial-configuration)
 - [Run the linter](#run-the-linter)
 - [Autofix workflow](#autofix-workflow)
@@ -38,10 +39,10 @@ npx @lapidist/design-lint@latest .
 For long-term use, install design-lint as a development dependency. This keeps your team on the same version and allows custom configuration:
 
 ```bash
-npm install --save-dev @lapidist/design-lint
+pnpm add --save-dev @lapidist/design-lint
 ```
 
-Use `npx` for ad-hoc checks or CI where the package is not yet installed. For projects committing to design-lint, prefer a local installation so the binary is available via `npm scripts`.
+Use `npx` for ad-hoc checks or CI where the package is not yet installed. For projects committing to design-lint, prefer a local installation so the binary is available via scripts.
 
 ```json
 {
@@ -51,7 +52,50 @@ Use `npx` for ad-hoc checks or CI where the package is not yet installed. For pr
 }
 ```
 
-Run `npm run lint:design` to invoke the linter using the project-local version.
+Run `pnpm run lint:design` to invoke the linter using the project-local version.
+
+## The DSR kernel
+
+design-lint v8 is backed by the **Design System Runtime (DSR) kernel** — a long-lived Node.js daemon that holds the authoritative token graph in memory and serves rules and token data to every CLI invocation via a Unix socket.
+
+**Auto-start**: the first `design-lint` command you run will start the kernel automatically. You will see:
+
+```text
+[design-lint] Starting DSR kernel (socket: /tmp/designlint-kernel.sock)...
+```
+
+Subsequent commands connect to the already-running kernel instantly. The kernel persists across terminal sessions until you stop it or reboot.
+
+**Kernel lifecycle commands**:
+
+```bash
+# Start the kernel (and seed it with your config tokens)
+design-lint kernel start
+
+# Check whether the kernel is running
+design-lint kernel status
+
+# Stop the kernel
+design-lint kernel stop
+```
+
+**Troubleshooting the kernel**:
+
+- If `design-lint kernel status` shows stopped, run `design-lint kernel start` then retry.
+- If the socket path `/tmp/designlint-kernel.sock` is missing, the kernel is not running.
+- On a new machine or after a reboot, you must start the kernel before linting.
+
+**Snapshot export**: to capture the kernel's current token graph for offline use or CI caching:
+
+```bash
+design-lint export-runtime-snapshot --out .designlint/snapshot.bin
+```
+
+**AI context document**: generate a `DESIGN_SYSTEM.md` that describes every token, rule, and component — consumed by MCP tools and AI assistants:
+
+```bash
+design-lint export-design-system-md --out DESIGN_SYSTEM.md
+```
 
 ## Initial configuration
 Generate a starter configuration file:

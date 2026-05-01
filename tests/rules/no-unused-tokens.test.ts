@@ -38,10 +38,10 @@ void test('design-system/no-unused-tokens reports unused tokens', async () => {
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
@@ -80,10 +80,10 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
@@ -121,10 +121,10 @@ void test('design-system/no-unused-tokens passes when tokens used', async () => 
     tokens,
     rules: { 'design-system/no-unused-tokens': 'error' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
@@ -151,10 +151,10 @@ void test('design-system/no-unused-tokens can ignore tokens', async () => {
       'design-system/no-unused-tokens': ['warn', { ignore: ['#123456'] }],
     },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
@@ -176,10 +176,10 @@ void test('design-system/no-unused-tokens does not treat raw literals as semanti
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
@@ -206,10 +206,10 @@ void test('design-system/no-unused-tokens resets tracked usage for sequential ru
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
 
   const firstDoc: LintDocument = {
     id: 'first.ts',
@@ -263,10 +263,10 @@ void test('design-system/no-unused-tokens does not match token path substrings',
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
@@ -299,10 +299,10 @@ void test('design-system/no-unused-tokens does not match numeric overlaps', asyn
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
@@ -339,10 +339,10 @@ void test('design-system/no-unused-tokens recognizes explicit references across 
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
 
   const docs: LintDocument[] = [
     {
@@ -391,10 +391,10 @@ void test('design-system/no-unused-tokens matches transformed css vars by identi
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.css',
     type: 'css',
@@ -433,10 +433,10 @@ void test('design-system/no-unused-tokens tracks duplicate values by token ident
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',
@@ -465,10 +465,10 @@ void test('design-system/no-unused-tokens reports canonical DTIF color tokens', 
     tokens,
     rules: { 'design-system/no-unused-tokens': 'warn' },
   };
-  const linter = initLinter(
-    unusedConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(unusedConfig) },
-  );
+  const linter = initLinter(unusedConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(unusedConfig),
+  });
   const doc: LintDocument = {
     id: 'file.ts',
     type: 'ts',

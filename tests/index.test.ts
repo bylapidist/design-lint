@@ -49,7 +49,10 @@ void test('builtInRules are exposed for consumers', () => {
 
 void test('createLintService returns lint service configured with environment', async () => {
   const source = new StubDocumentSource();
-  const env: Environment = { documentSource: source, tokenProvider: createEmptyTokenProvider() };
+  const env: Environment = {
+    documentSource: source,
+    tokenProvider: createEmptyTokenProvider(),
+  };
   const config: Config = {};
   const service = createLintService(config, env);
 
@@ -72,7 +75,10 @@ void test('createLintService returns lint service configured with environment', 
 void test('createLintService accepts DocumentSource inputs directly', async () => {
   const source = new StubDocumentSource();
   const config: Config = {};
-  const service = createLintService(config, { documentSource: source, tokenProvider: createEmptyTokenProvider() });
+  const service = createLintService(config, {
+    documentSource: source,
+    tokenProvider: createEmptyTokenProvider(),
+  });
 
   await service.lintTargets(['src/**/*.ts'], false);
 
@@ -88,7 +94,10 @@ void test('createLintService accepts DocumentSource inputs directly', async () =
 void test('createLinter accepts DocumentSource inputs directly', async () => {
   const source = new StubDocumentSource();
   const config: Config = {};
-  const linter = createLinter(config, { documentSource: source, tokenProvider: createEmptyTokenProvider() });
+  const linter = createLinter(config, {
+    documentSource: source,
+    tokenProvider: createEmptyTokenProvider(),
+  });
   const result = await linter.lintTargets(['src/**/*.ts']);
 
   assert.deepEqual(result.results, []);
@@ -97,7 +106,10 @@ void test('createLinter accepts DocumentSource inputs directly', async () => {
 void test('createLinter accepts Environment inputs directly', async () => {
   const source = new StubDocumentSource();
   const config: Config = {};
-  const env: Environment = { documentSource: source, tokenProvider: createEmptyTokenProvider() };
+  const env: Environment = {
+    documentSource: source,
+    tokenProvider: createEmptyTokenProvider(),
+  };
   const linter = createLinter(config, env);
   const result = await linter.lintTargets(['src/**/*.ts']);
 
@@ -112,7 +124,10 @@ void test('namespace export getters are reachable from top-level index', async (
 
 void test('createLinter handles fully constructed Environment objects', async () => {
   const config: Config = {};
-  const linter = createLinter(config, { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() });
+  const linter = createLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createEmptyTokenProvider(),
+  });
   const result = await linter.lintTargets(['missing/**/*.ts']);
   assert.deepEqual(result.results, []);
 });

@@ -38,7 +38,10 @@ let linter: Linter;
 
 before(async () => {
   const config = await loadConfig(sampleFixture);
-  linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
 
   // Warm-up: prime any internal caches before the timed assertions
   await linter.lintDocument({

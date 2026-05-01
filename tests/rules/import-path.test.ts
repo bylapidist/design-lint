@@ -14,7 +14,10 @@ void test('design-system/import-path flags components from wrong package', async
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     "import { Button } from 'other';",
@@ -33,7 +36,10 @@ void test('design-system/import-path allows configured package', async () => {
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     "import { Button } from '@acme/design-system';",
@@ -52,7 +58,10 @@ void test('design-system/import-path handles default imports', async () => {
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText("import Button from 'other';", 'file.ts');
   assert.equal(res.messages.length, 1);
@@ -68,7 +77,10 @@ void test('design-system/import-path enforces package in Vue components', async 
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     "<script setup>import { Button } from 'other';</script>",
@@ -87,7 +99,10 @@ void test('design-system/import-path enforces package in Svelte components', asy
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     "<script>import { Button } from 'other';</script>",
@@ -106,7 +121,10 @@ void test('design-system/import-path flags aliased named imports by imported sym
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     "import { Button as LegacyButton } from 'other';",

@@ -16,12 +16,9 @@ const { normalizeTokens } = tokens;
  * The provider normalizes the `tokens` property to a consistent theme record
  * and validates each token set using the DTIF parser.
  *
- * @example
- * ```ts
- * import { ConfigTokenProvider } from '@lapidist/design-lint/config';
- * const provider = new ConfigTokenProvider({ tokens: {} });
- * const themes = await provider.load();
- * ```
+ * @internal Used by the kernel daemon to seed the DSR kernel on startup and
+ * by the test suite to supply inline tokens without a running kernel. Not part
+ * of the public API — do not import from `@lapidist/design-lint/config`.
  */
 export class ConfigTokenProvider {
   /**

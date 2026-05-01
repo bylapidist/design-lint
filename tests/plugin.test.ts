@@ -24,14 +24,11 @@ void test('external plugin rules execute', async () => {
     plugins: [pluginPath],
     rules: { 'plugin/test': 'error' },
   };
-  const linter = initLinter(
-    pluginConfig,
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new NodePluginLoader(),
-      tokenProvider: createConfigTokenProvider(pluginConfig),
-    },
-  );
+  const linter = initLinter(pluginConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(pluginConfig),
+  });
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'plugin/test');
@@ -56,14 +53,11 @@ void test('loads ESM plugin modules', async () => {
     plugins: [pluginPath],
     rules: { 'plugin/esm': 'error' },
   };
-  const linter = initLinter(
-    esmConfig,
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new NodePluginLoader(),
-      tokenProvider: createConfigTokenProvider(esmConfig),
-    },
-  );
+  const linter = initLinter(esmConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(esmConfig),
+  });
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'plugin/esm');
@@ -218,14 +212,11 @@ void test('captures listener exceptions and continues other rules', async () => 
       'plugin/healthy-listener': 'error',
     },
   };
-  const linter = initLinter(
-    throwingConfig,
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new ThrowingLoader(),
-      tokenProvider: createConfigTokenProvider(throwingConfig),
-    },
-  );
+  const linter = initLinter(throwingConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new ThrowingLoader(),
+    tokenProvider: createConfigTokenProvider(throwingConfig),
+  });
 
   const result = await linter.lintText('const value = 1;', 'sample.ts');
   const runtimeErrors = result.messages.filter(
@@ -249,14 +240,11 @@ void test('captures listener exceptions and continues other rules', async () => 
 void test('getPluginPaths returns resolved plugin paths', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
   const pathsConfig = { plugins: [pluginPath] };
-  const linter = initLinter(
-    pathsConfig,
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new NodePluginLoader(),
-      tokenProvider: createConfigTokenProvider(pathsConfig),
-    },
-  );
+  const linter = initLinter(pathsConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(pathsConfig),
+  });
   await linter.lintText('const a = 1;', 'file.ts');
   const paths = await linter.getPluginPaths();
   assert.deepEqual(paths, [pluginPath]);
@@ -290,10 +278,11 @@ void test('supports custom plugin loaders', async () => {
   }
   const loader = new MockLoader();
   const mockConfig = { plugins: ['mock'], rules: { 'mock/rule': 'error' } };
-  const linter = initLinter(
-    mockConfig,
-    { documentSource: new FileSource(), pluginLoader: loader, tokenProvider: createConfigTokenProvider(mockConfig) },
-  );
+  const linter = initLinter(mockConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: loader,
+    tokenProvider: createConfigTokenProvider(mockConfig),
+  });
   await linter.getPluginPaths();
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
@@ -323,14 +312,11 @@ void test('calls plugin init with environment', async () => {
 void test('exposes plugin metadata', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'init-plugin.ts');
   const metaConfig = { plugins: [pluginPath] };
-  const linter = initLinter(
-    metaConfig,
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new NodePluginLoader(),
-      tokenProvider: createConfigTokenProvider(metaConfig),
-    },
-  );
+  const linter = initLinter(metaConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(metaConfig),
+  });
   await linter.lintText('const a = 1;', 'file.ts');
   const meta = await linter.getPluginMetadata();
   assert.deepEqual(meta, [

@@ -283,7 +283,10 @@ void test("rule configured as 'off' is ignored", async () => {
     }),
   );
   const config = await loadConfig(tmp);
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText('const c = "#fff";', 'file.ts');
   assert.equal(res.messages.length, 0);
 });
@@ -296,7 +299,10 @@ void test('throws on unknown rule name', async () => {
     JSON.stringify({ rules: { 'unknown/rule': 'error' } }),
   );
   const config = await loadConfig(tmp);
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   await assert.rejects(
     () => linter.lintText('const x = 1;', 'file.ts'),
     (err) => {

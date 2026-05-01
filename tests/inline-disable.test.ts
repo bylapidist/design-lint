@@ -40,7 +40,13 @@ void test('inline directives disable linting', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
+      {
+        documentSource: new FileSource(),
+        tokenProvider: createConfigTokenProvider({
+          tokens,
+          rules: { 'design-system/deprecation': 'error' },
+        }),
+      },
     );
     const { results } = await linter.lintTargets([file]);
     const res = results[0];
@@ -63,7 +69,13 @@ void test('strings resembling directives do not disable next line', async () => 
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider({ tokens, rules: { 'design-system/deprecation': 'error' } }) },
+      {
+        documentSource: new FileSource(),
+        tokenProvider: createConfigTokenProvider({
+          tokens,
+          rules: { 'design-system/deprecation': 'error' },
+        }),
+      },
     );
     const { results } = await linter.lintTargets([file]);
     const res = results[0];
@@ -107,10 +119,10 @@ void test('rule-scoped inline directives only disable matching rules', async () 
         'design-token/spacing': 'error',
       },
     };
-    const linter = initLinter(
-      ruleConfig,
-      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(ruleConfig) },
-    );
+    const linter = initLinter(ruleConfig, {
+      documentSource: new FileSource(),
+      tokenProvider: createConfigTokenProvider(ruleConfig),
+    });
     const { results } = await linter.lintTargets([file]);
     const messages = results[0]?.messages ?? [];
     assert.equal(messages.length, 1);

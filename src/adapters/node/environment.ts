@@ -12,6 +12,27 @@ export interface DsrOptions {
   httpPort?: number;
   /** Timeout in milliseconds for the initial connection attempt. Defaults to 5000. */
   connectTimeoutMs?: number;
+  /**
+   * Optional async hook invoked by DsrTokenProvider immediately before
+   * connecting to the kernel socket. Programmatic callers (LSP, MCP, scripts)
+   * can use this to auto-start the kernel when no socket is present, without
+   * depending on the CLI's prepareEnvironment helper.
+   *
+   * @example
+   * ```ts
+   * createNodeEnvironment(config, {
+   *   dsr: {
+   *     socketPath: '/tmp/designlint-kernel.sock',
+   *     beforeConnect: async () => {
+   *       if (!existsSync('/tmp/designlint-kernel.sock')) {
+   *         kernelStart({ socketPath: '/tmp/designlint-kernel.sock' });
+   *       }
+   *     },
+   *   },
+   * });
+   * ```
+   */
+  beforeConnect?: () => Promise<void>;
 }
 
 export interface CreateNodeEnvironmentOptions {
@@ -39,6 +60,9 @@ export function createNodeEnvironment(
   const { cacheLocation, dsr } = options;
 
   const tokenProvider = new DsrTokenProvider(async () => {
+    if (dsr.beforeConnect) {
+      await dsr.beforeConnect();
+    }
     const { NodeEnvironment: Env } =
       await import('@lapidist/dsr/environments/node');
     return new Env(dsr);

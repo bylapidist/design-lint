@@ -15,7 +15,13 @@ void test('lintTargets expands glob patterns with globby', async () => {
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = initLinter({ tokens: {}, rules: {} }, { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() });
+    const linter = initLinter(
+      { tokens: {}, rules: {} },
+      {
+        documentSource: new FileSource(),
+        tokenProvider: createEmptyTokenProvider(),
+      },
+    );
     const { results, warning } = await linter.lintTargets([
       '**/*.module.{css,scss}',
     ]);

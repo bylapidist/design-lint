@@ -28,14 +28,17 @@ void test('lintTargets uses patterns option to include custom extensions', async
   const cwd = process.cwd();
   process.chdir(tmp);
   try {
-    const defaultLinter = initLinter(baseConfig, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(baseConfig) });
+    const defaultLinter = initLinter(baseConfig, {
+      documentSource: new FileSource(),
+      tokenProvider: createConfigTokenProvider(baseConfig),
+    });
     const { results: defaultResults } = await defaultLinter.lintTargets(['.']);
     assert.equal(defaultResults.length, 0);
     const customConfig = { ...baseConfig, patterns: ['**/*.foo'] };
-    const customLinter = initLinter(
-      customConfig,
-      { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(customConfig) },
-    );
+    const customLinter = initLinter(customConfig, {
+      documentSource: new FileSource(),
+      tokenProvider: createConfigTokenProvider(customConfig),
+    });
     const { results: customResults } = await customLinter.lintTargets(['.']);
     assert.equal(customResults.length, 1);
     assert.equal(customResults[0].sourceId, file);

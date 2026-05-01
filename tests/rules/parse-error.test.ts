@@ -11,7 +11,13 @@ import { RUNTIME_ERROR_RULE_ID } from '../../src/core/cache-manager.js';
 import { createEmptyTokenProvider } from '../helpers/token-provider.js';
 
 void test('reports CSS parse errors', async () => {
-  const linter = initLinter({}, { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() });
+  const linter = initLinter(
+    {},
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
+  );
   const res = await linter.lintText('.a { color: red;', 'bad.css');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].severity, 'error');

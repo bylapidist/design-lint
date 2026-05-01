@@ -35,7 +35,11 @@ void test('metadata propagates through report', async () => {
   }
   const linter = initLinter(
     { plugins: ['mock'], rules: { 'mock/rule': 'error' } },
-    { documentSource: new FileSource(), pluginLoader: new MockLoader(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      pluginLoader: new MockLoader(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages[0]?.metadata?.foo, 'bar');

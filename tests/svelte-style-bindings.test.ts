@@ -12,7 +12,10 @@ const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
 async function lint(file: string) {
   const config = await loadConfig(fixtureDir);
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const { results } = await linter.lintTargets(
     [path.join(fixtureDir, 'src', file)],
     false,
@@ -58,10 +61,10 @@ void test('style directives skip dynamic expression values', async () => {
     }),
     rules: { 'design-token/spacing': 'error' },
   };
-  const linter = initLinter(
-    svelteConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(svelteConfig) },
-  );
+  const linter = initLinter(svelteConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(svelteConfig),
+  });
   const res = await linter.lintText(
     [
       '<script>',

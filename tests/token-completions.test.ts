@@ -18,9 +18,9 @@ void test('getTokenCompletions returns token paths by theme', () => {
       },
     },
   };
-  const linter = initLinter(
-    completionsConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(completionsConfig) },
-  );
+  const linter = initLinter(completionsConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(completionsConfig),
+  });
   assert.deepEqual(linter.getTokenCompletions(), {});
 });

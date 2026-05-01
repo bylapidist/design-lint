@@ -12,7 +12,10 @@ const fixtureDir = path.join(__dirname, 'fixtures', 'vue');
 
 async function lint(file: string) {
   const config = await loadConfig(fixtureDir);
-  const linter = initLinter(config, { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(config) });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const {
     results: [res],
   } = await linter.lintTargets([path.join(fixtureDir, 'src', file)]);
@@ -67,10 +70,10 @@ void test('Vue style bindings normalize camelCase props for property-specific ru
     }),
     rules: { 'design-token/font-size': 'error' },
   };
-  const linter = initLinter(
-    camelConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(camelConfig) },
-  );
+  const linter = initLinter(camelConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(camelConfig),
+  });
   const res = await linter.lintText(
     `<template><div :style="{ fontSize: '15px' }" /></template>`,
     'Comp.vue',
@@ -88,10 +91,10 @@ void test('Vue style bindings skip dynamic expression values', async () => {
     }),
     rules: { 'design-token/spacing': 'error' },
   };
-  const linter = initLinter(
-    vueSpacingConfig,
-    { documentSource: new FileSource(), tokenProvider: createConfigTokenProvider(vueSpacingConfig) },
-  );
+  const linter = initLinter(vueSpacingConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(vueSpacingConfig),
+  });
   const res = await linter.lintText(
     [
       '<template>',

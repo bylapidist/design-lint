@@ -19,7 +19,10 @@ void test('design-system/component-usage suggests substitutions', async () => {
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText('const a = <button/>;', 'file.tsx');
   assert.equal(res.messages.length, 1);
@@ -36,7 +39,10 @@ void test('design-system/component-usage matches mixed-case tags', async () => {
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText('const a = <Button/>;', 'file.tsx');
   assert.equal(res.messages.length, 1);
@@ -53,7 +59,10 @@ void test('design-system/component-usage matches mixed-case substitution keys', 
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText('const a = <button/>;', 'file.tsx');
   assert.equal(res.messages.length, 1);
@@ -70,7 +79,10 @@ void test('design-system/component-usage fixes self-closing tags', async () => {
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const code = 'import { DSButton } from "./ds";\nconst a = <button/>;';
   const res = await linter.lintText(code, 'file.tsx');
@@ -93,7 +105,10 @@ void test('design-system/component-usage does not fix paired tags', async () => 
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const code = 'const a = <button></button>;';
   const res = await linter.lintText(code, 'file.tsx');
@@ -113,7 +128,10 @@ void test('design-system/component-usage does not fix when replacement is not in
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const code = 'const a = <button/>;';
   const res = await linter.lintText(code, 'file.tsx');
@@ -131,7 +149,10 @@ void test('design-system/component-usage reports paired tags once', async () => 
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
 
   const res = await linter.lintText(
@@ -151,7 +172,10 @@ void test('design-system/component-usage resolves aliased JSX components using T
         ],
       },
     },
-    { documentSource: new FileSource(), tokenProvider: createEmptyTokenProvider() },
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-lint-'));
