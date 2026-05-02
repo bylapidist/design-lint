@@ -21,17 +21,20 @@ AEP v1 is the initial stable release. It is implemented by the
 
 ---
 
-## 2. Envelope structure
+## 2. Response envelope (`AepResponseMeta`)
 
-Every AEP-compliant response MUST include the following fields at the top level of
-the JSON response object returned by the MCP tool:
+Every AEP-compliant response MUST include the following fields in the `meta` object
+at the top level of the JSON response object returned by the MCP tool:
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
+| `runId` | `string` | Yes | Unique identifier for this tool invocation (UUID) |
 | `aepVersion` | `string` | Yes | MUST be `"1"` for this revision |
-| `agentId` | `string` | Yes | Opaque identifier for the requesting agent session |
 | `kernelSnapshotHash` | `string` | Yes | SHA-256 of the DSR kernel snapshot (hex, 16-char prefix); `"local"` when no live snapshot is available |
-| `iterationDepth` | `integer >= 1` | Yes | Number of refinement iterations requested |
+
+Note: `agentId` and `iterationDepth` are **request** parameters (see §4), not response
+envelope fields. The response carries `iterationsUsed` (the actual count) and the
+per-diagnostic `agentId` attribution in `AEPDiagnostic`, not in the top-level envelope.
 
 The remaining fields in the response are tool-specific and defined in §4.
 
@@ -114,7 +117,6 @@ is not used for AEP — each version is a breaking change by definition.
 
 A response is considered AEP v1 conforming if and only if:
 
-1. `aepVersion` equals `"1"`
-2. `agentId` is a non-empty string
-3. `kernelSnapshotHash` is a non-empty string
-4. `iterationDepth` is an integer >= 1
+1. `meta.aepVersion` equals `"1"`
+2. `meta.runId` is a non-empty string
+3. `meta.kernelSnapshotHash` is a non-empty string
