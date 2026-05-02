@@ -1,7 +1,7 @@
 {
   "name": "@lapidist/design-lint",
   "version": "7.0.3",
-  "description": "Design system linter",
+  "description": "Design System Runtime — DSR kernel, DSQL, and lint surface for design token governance",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -41,9 +41,17 @@
     "lint:md": "markdownlint '**/*.md'"
   },
   "keywords": [
-    "design",
-    "linter",
-    "cli"
+    "design-system-runtime",
+    "dsr",
+    "dsql",
+    "dscp",
+    "design-tokens",
+    "dtif",
+    "kernel",
+    "lint",
+    "cli",
+    "mcp",
+    "lsp"
   ],
   "author": "Brett Dorrans <hello@lapidist.net>",
   "repository": {
