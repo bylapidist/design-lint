@@ -8,8 +8,10 @@
  * 1. **`rules` values**: string shorthand (`'error'`, `'warn'`, `'off'`) is
  *    now written as-is. Numeric severity codes (0, 1, 2) are replaced with
  *    the string equivalents (`'off'`, `'warn'`, `'error'`).
- * 2. **`tokens`** key: previously a flat record of DTIF tokens, still valid
- *    in v8 — no migration required.
+ * 2. **`tokens`** key: v7 used inline tokens in config; v8 uses the DSR kernel
+ *    as the sole token source. The `tokens` field is removed from the config
+ *    and the user is instructed to start the kernel and seed tokens from a
+ *    DTIF file via `design-lint kernel start --config <file>`.
  * 3. **`extends`** key: was an array of plugin package names; now expressed as
  *    spread imports. The codemod adds a comment directing the user to switch
  *    to `import`-based presets.
@@ -95,7 +97,18 @@ export function applyMigrations(original: RawConfig): {
     migrated.rules = migratedRules;
   }
 
-  // 2. `ignorePatterns` → `ignoreFiles`
+  // 2. `tokens` — v7 inline tokens; v8 uses the DSR kernel as the sole source
+  if ('tokens' in migrated) {
+    delete migrated.tokens;
+    changes.push(
+      'tokens: removed — v8 uses the DSR kernel as the sole token source. ' +
+        'Start the kernel with `design-lint kernel start --config <your-config>` ' +
+        'to seed tokens from your DTIF file. ' +
+        'See https://design-lint.lapidist.net/docs/migration for details.',
+    );
+  }
+
+  // 3. `ignorePatterns` → `ignoreFiles`
   if ('ignorePatterns' in migrated) {
     migrated.ignoreFiles = migrated.ignorePatterns;
     delete migrated.ignorePatterns;
