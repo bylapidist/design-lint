@@ -11,7 +11,8 @@ import type {
 } from '../types.js';
 
 const AEP_VERSION = '1';
-const KERNEL_SNAPSHOT_HASH = 'local';
+/** Sentinel used in the AEP envelope when no live DSR kernel snapshot is available. */
+const SNAPSHOT_HASH_DEGRADED = 'local';
 const DEFAULT_ITERATION_DEPTH = 3;
 
 function messageToAEPDiagnostic(
@@ -90,7 +91,7 @@ export async function handleLintSnippet(
   );
 
   const kernelSnapshotHash =
-    (await snapshotHashProvider?.getHash()) ?? KERNEL_SNAPSHOT_HASH;
+    (await snapshotHashProvider?.getHash()) ?? SNAPSHOT_HASH_DEGRADED;
   const meta: AepResponseMeta = {
     runId: randomUUID(),
     kernelSnapshotHash,
