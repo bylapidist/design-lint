@@ -50,7 +50,7 @@ and seed it from your DTIF token file:
 
 ```bash
 # Start the kernel daemon (persists across terminal sessions)
-design-lint kernel start --config designlint.config.json
+design-lint kernel start --config-path designlint.config.json
 ```
 
 If you previously passed a DTIF catalog path inside the config `tokens` field, you now
@@ -70,7 +70,7 @@ v8 CLI invocations require the kernel to be running **before** the lint command:
 ```yaml
 # .github/workflows/ci.yml
 - name: Start DSR kernel
-  run: design-lint kernel start --config designlint.config.json
+  run: design-lint kernel start --config-path designlint.config.json
 
 - name: Lint
   run: design-lint "src/**/*"
@@ -130,7 +130,7 @@ npx design-lint init
 Start the DSR kernel before your first lint run:
 
 ```bash
-design-lint kernel start --config designlint.config.json
+design-lint kernel start --config-path designlint.config.json
 ```
 
 Run once to establish a baseline:

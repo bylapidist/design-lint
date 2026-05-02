@@ -102,7 +102,7 @@ export function applyMigrations(original: RawConfig): {
     delete migrated.tokens;
     changes.push(
       'tokens: removed — v8 uses the DSR kernel as the sole token source. ' +
-        'Start the kernel with `design-lint kernel start --config <your-config>` ' +
+        'Start the kernel with `design-lint kernel start --config-path <your-config>` ' +
         'to seed tokens from your DTIF file. ' +
         'See https://design-lint.lapidist.net/docs/migration for details.',
     );
