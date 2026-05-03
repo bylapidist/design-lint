@@ -52,7 +52,7 @@ jobs:
 lint:
   image: node:22
   before_script:
-    - npm install -g pnpm
+    - corepack enable pnpm
     - pnpm install --frozen-lockfile
   script:
     - design-lint kernel start --config-path designlint.config.json
@@ -73,7 +73,7 @@ jobs:
       - image: cimg/node:22.0
     steps:
       - checkout
-      - run: npm install -g pnpm && pnpm install --frozen-lockfile
+      - run: corepack enable pnpm && pnpm install --frozen-lockfile
       - run: design-lint kernel start --config-path designlint.config.json
       - run: pnpm exec design-lint "src/**/*" --fail-on-empty --max-warnings 0
 workflows:

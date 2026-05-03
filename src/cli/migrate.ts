@@ -11,7 +11,7 @@
  * 2. **`tokens`** key: v7 used inline tokens in config; v8 uses the DSR kernel
  *    as the sole token source. The `tokens` field is removed from the config
  *    and the user is instructed to start the kernel and seed tokens from a
- *    DTIF file via `design-lint kernel start --config <file>`.
+ *    DTIF file via `design-lint kernel start --config-path <file>`.
  * 3. **`extends`** key: was an array of plugin package names; now expressed as
  *    spread imports. The codemod adds a comment directing the user to switch
  *    to `import`-based presets.

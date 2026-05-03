@@ -4,8 +4,6 @@
  * Utilities for resolving, loading and validating design-lint configuration
  * and associated design tokens.
  *
- * - `ConfigTokenProvider` – exposes a `load` method to normalize inline token
- *   objects into theme records.
  * - `defineConfig` – helper for authoring type-safe `designlint.config` files.
  * - `resolveConfigFile` – searches for configuration files on disk.
  * - `loadConfig` – high-level loader that resolves, validates and normalizes
