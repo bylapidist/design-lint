@@ -7,8 +7,11 @@
  * back to local/config-based defaults. No error is ever thrown to the caller.
  */
 import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import type { NodeEnvironment } from '@lapidist/dsr/environments/node';
 import type { ComponentInput, DeprecationEntryInput } from '@lapidist/dscp';
+
+const DEFAULT_KERNEL_SOCKET = '/tmp/designlint-kernel.sock';
 import { isJsonPointer } from '@lapidist/dtif-parser';
 import type { JsonPointer } from '../core/types.js';
 
@@ -37,6 +40,13 @@ export interface KernelData {
  * Always disconnects before returning, even on error.
  */
 export async function tryFetchKernelData(): Promise<KernelData | null> {
+  // Guard: skip the native addon import entirely when no kernel socket is
+  // present. Importing @lapidist/dsr/environments/node loads the
+  // msgpackr-extract N-API addon which registers with libuv and prevents
+  // process exit — causing the test runner to hang indefinitely.
+  if (!existsSync(DEFAULT_KERNEL_SOCKET)) {
+    return null;
+  }
   let env: NodeEnvironment | null = null;
   try {
     const { NodeEnvironment: Env } =
