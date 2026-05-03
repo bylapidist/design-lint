@@ -201,26 +201,33 @@ Use overrides to apply different settings to specific files. Create separate con
 - **Validate configs in CI.** Run design-lint as part of pull requests to catch misconfigurations early.
 
 ## JS and TS config files
-Configuration can be written in JavaScript or TypeScript for dynamic setups:
+
+Configuration can be written in JavaScript or TypeScript for dynamic setups.
+In v8 the DSR kernel is the sole token source — the `tokens:` field is not part
+of the public `Config` type. Token data is seeded into the kernel on startup via
+`design-lint kernel start --config-path <file>` and queried at lint time via DSQL.
 
 ```ts
 // designlint.config.ts
 import { defineConfig } from '@lapidist/design-lint';
 
 export default defineConfig({
-  tokens: {
-    $version: '1.0.0',
-    color: {
-      primary: {
-        $type: 'color',
-        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
-      },
-      secondary: { $type: 'color', $ref: '#/color/primary' },
-    },
+  rules: {
+    'design-token/colors': 'error',
+    'design-token/spacing': 'warn',
   },
-  rules: { 'design-token/colors': 'error' },
 });
 ```
+
+To seed the kernel with your DTIF token catalog before linting:
+
+```bash
+design-lint kernel start --config-path designlint.config.ts
+design-lint "src/**/*"
+```
+
+See [Step 3 of the migration guide](./migration.md#step-3--start-the-dsr-kernel-and-seed-tokens)
+for the full token seeding workflow.
 
 ## Common patterns
 - Share configs across repositories with npm packages.
