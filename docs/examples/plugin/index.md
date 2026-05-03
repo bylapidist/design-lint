@@ -10,7 +10,7 @@ Start a new plugin that exposes one rule.
 ## Steps
 1. Scaffold the project:
    ```bash
-   npm init -y
+   pnpm init
    pnpm add --save-dev @lapidist/design-lint typescript
    ```
 2. Create `index.ts` with a rule:
@@ -24,7 +24,9 @@ Start a new plugin that exposes one rule.
    import { createLinter, createNodeEnvironment } from '@lapidist/design-lint';
    import plugin from './index.js';
    const config = { plugins: [plugin], rules: { 'demo/no-raw-colors': 'error' } };
-   const linter = createLinter(config, createNodeEnvironment(config));
+   const linter = createLinter(config, createNodeEnvironment(config, {
+     dsr: { socketPath: '/tmp/designlint-kernel.sock' },
+   }));
    ```
 
 ## Next steps
