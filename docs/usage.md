@@ -33,7 +33,7 @@ Install Node using your preferred version manager and ensure `node --version` re
 Run the linter once without installing it locally:
 
 ```bash
-npx @lapidist/design-lint@latest .
+pnpm dlx @lapidist/design-lint@latest .
 ```
 
 For long-term use, install design-lint as a development dependency. This keeps your team on the same version and allows custom configuration:
@@ -42,7 +42,7 @@ For long-term use, install design-lint as a development dependency. This keeps y
 pnpm add --save-dev @lapidist/design-lint
 ```
 
-Use `npx` for ad-hoc checks or CI where the package is not yet installed. For projects committing to design-lint, prefer a local installation so the binary is available via scripts.
+Use `pnpm dlx` for ad-hoc checks before installing locally. For projects committing to design-lint, prefer a local installation so the binary is available via scripts.
 
 ```json
 {
@@ -101,7 +101,7 @@ design-lint export-design-system-md --out DESIGN_SYSTEM.md
 Generate a starter configuration file:
 
 ```bash
-npx design-lint init
+pnpm exec design-lint init
 ```
 
 The command creates `designlint.config.json`. See [configuration](./configuration.md) for all available options.
@@ -110,7 +110,7 @@ The command creates `designlint.config.json`. See [configuration](./configuratio
 Lint all files under `src`:
 
 ```bash
-npx design-lint "src/**/*"
+pnpm exec design-lint "src/**/*"
 ```
 
 Use quotes around globs to prevent shell expansion. By default the CLI exits with code `1` when errors are found and exits with code `0` if no files match.
@@ -118,14 +118,14 @@ Use quotes around globs to prevent shell expansion. By default the CLI exits wit
 In strict CI workflows, add `--fail-on-empty` to fail fast when a glob resolves to no files:
 
 ```bash
-npx design-lint "src/**/*" --fail-on-empty
+pnpm exec design-lint "src/**/*" --fail-on-empty
 ```
 
 ## Autofix workflow
 Many rules support auto-fix. Use the `--fix` flag to update files in place:
 
 ```bash
-npx design-lint "src/**/*" --fix
+pnpm exec design-lint "src/**/*" --fix
 ```
 
 Run `--fix` locally before committing to keep diffs small and intentional. In CI environments, avoid `--fix`; instead run design-lint in read-only mode and fail the build if fixes are required. There is currently no dry-run mode for previewing changes.
@@ -136,20 +136,20 @@ correctly. The command exits with `0` when the configuration is valid and non-ze
 on errors.
 
 ```bash
-npx design-lint validate
+pnpm exec design-lint validate
 ```
 
 Pass `--config` to specify a configuration file:
 
 ```bash
-npx design-lint validate --config designlint.config.json
+pnpm exec design-lint validate --config designlint.config.json
 ```
 
 ## Export resolved tokens
 Use the `tokens` subcommand to write the canonical flattened DTIF tokens to a file or stdout. Each theme maps JSON pointers to the `DtifFlattenedToken` entries produced by the parser, including metadata and resolution details:
 
 ```bash
-npx design-lint tokens --out tokens.json
+pnpm exec design-lint tokens --out tokens.json
 ```
 
 The output resembles:
@@ -188,7 +188,7 @@ import {
 Use `--watch` to rerun the linter when files change. Persistent caching is opt-in and only enabled when you pass `--cache`.
 
 ```bash
-npx design-lint "src/**/*" --watch --cache
+pnpm exec design-lint "src/**/*" --watch --cache
 ```
 
 When `--cache` is enabled, design-lint writes cache data to `.designlintcache` (or the path provided by `--cache-location`).
@@ -199,7 +199,7 @@ When `--cache` is enabled, design-lint writes cache data to `.designlintcache` (
 You can pass specific files or directories:
 
 ```bash
-npx design-lint src/button.tsx styles/*.css
+pnpm exec design-lint src/button.tsx styles/*.css
 ```
 
 ## Exit codes

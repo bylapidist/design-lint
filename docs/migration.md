@@ -31,7 +31,7 @@ pnpm add --save-dev @lapidist/design-lint@^8.0.0
 The bundled codemod removes v7-only config keys and flags what needs manual attention:
 
 ```bash
-npx design-lint migrate --config designlint.config.json
+pnpm exec design-lint migrate --config designlint.config.json
 ```
 
 The codemod handles:
@@ -105,7 +105,7 @@ const linter = createLinter(config, env);
 
 | v7 | v8 |
 | --- | --- |
-| `config.tokens` — inline DTIF token objects | Removed — use `kernel start --config` |
+| `config.tokens` — inline DTIF token objects | Removed — use `kernel start --config-path` |
 | `ConfigTokenProvider` — public class | Removed from public API; internal only |
 | `--no-kernel` CLI flag | Removed |
 | `--kernel` CLI flag | Removed — kernel is always required |
@@ -124,7 +124,7 @@ If you are introducing design-lint into an existing codebase for the first time:
 
 ```bash
 pnpm add --save-dev @lapidist/design-lint
-npx design-lint init
+pnpm exec design-lint init
 ```
 
 Start the DSR kernel before your first lint run:
@@ -136,7 +136,7 @@ design-lint kernel start --config-path designlint.config.json
 Run once to establish a baseline:
 
 ```bash
-npx design-lint "src/**/*"
+pnpm exec design-lint "src/**/*"
 ```
 
 ### Start with warnings
@@ -157,7 +157,7 @@ After violations trend down, promote to `"error"`.
 ### Prioritize auto-fix rules
 
 ```bash
-npx design-lint "src/**/*" --fix
+pnpm exec design-lint "src/**/*" --fix
 ```
 
 Bundle auto-fixed changes into small, reviewable commits before enabling stricter CI gates.
