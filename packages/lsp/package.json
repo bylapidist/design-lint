@@ -35,7 +35,7 @@
     "format:check": "prettier --check 'src/**/*.ts'"
   },
   "peerDependencies": {
-    "@lapidist/design-lint": ">=7"
+    "@lapidist/design-lint": ">=8"
   },
   "devDependencies": {
     "@lapidist/design-lint": "workspace:*"
