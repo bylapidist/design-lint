@@ -10,7 +10,7 @@ Demonstrates linting React components.
 ## Steps
 1. Install dependencies:
    ```bash
-   npm install --save-dev @lapidist/design-lint
+   pnpm add --save-dev @lapidist/design-lint
    ```
 2. Create `designlint.config.json` enabling React-specific rules:
    ```json

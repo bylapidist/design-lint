@@ -10,7 +10,7 @@ This example introduces design-lint with a single token and rule.
 ## Steps
 1. Install dependencies:
    ```bash
-   npm install --save-dev @lapidist/design-lint
+   pnpm add --save-dev @lapidist/design-lint
    ```
 2. Run the linter:
    ```bash

@@ -11,7 +11,7 @@ Start a new plugin that exposes one rule.
 1. Scaffold the project:
    ```bash
    npm init -y
-   npm install --save-dev @lapidist/design-lint typescript
+   pnpm add --save-dev @lapidist/design-lint typescript
    ```
 2. Create `index.ts` with a rule:
    ```ts

@@ -10,7 +10,7 @@ Shows how to lint `.vue` files with design-lint.
 ## Steps
 1. Install dependencies:
    ```bash
-   npm install --save-dev @lapidist/design-lint
+   pnpm add --save-dev @lapidist/design-lint
    ```
 2. Lint Vue files:
    ```bash
