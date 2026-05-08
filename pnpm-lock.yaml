@@ -93,8 +93,8 @@ importers:
         specifier: 6.0.3
         version: 6.0.3
       write-file-atomic:
-        specifier: 7.0.1
-        version: 7.0.1
+        specifier: 8.0.0
+        version: 8.0.0
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -2436,9 +2436,9 @@ packages:
     resolution: {integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==}
     engines: {node: '>=10'}
 
-  write-file-atomic@7.0.1:
-    resolution: {integrity: sha512-OTIk8iR8/aCRWBqvxrzxR0hgxWpnYBblY1S5hDWBQfk/VFmJwzmJgQFN3WsoUKHISv2eAwe+PpbUzyL1CKTLXg==}
-    engines: {node: ^20.17.0 || >=22.9.0}
+  write-file-atomic@8.0.0:
+    resolution: {integrity: sha512-dYwyZredl67GyLLIHJnRM3h2PcOmN5SkcgC7eM5DPDEOEl6dLFqVrMg3F1Ea32usj4VSVZtd2H4MtKTNOf6nPg==}
+    engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
 
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
@@ -4899,7 +4899,7 @@ snapshots:
       string-width: 4.2.3
       strip-ansi: 6.0.1
 
-  write-file-atomic@7.0.1:
+  write-file-atomic@8.0.0:
     dependencies:
       signal-exit: 4.1.0
 
