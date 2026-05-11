@@ -6,6 +6,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { startDaemon } from '../../src/cli/kernel-daemon.js';
 
 // ---------------------------------------------------------------------------
@@ -111,4 +114,27 @@ void test('startDaemon logs startup message', async () => {
   const stub = makeStubKernel();
   const lines = await captureLog(() => startDaemon([], stub.Ctor));
   assert.ok(lines.some((l) => l.includes('[kernel-daemon] started')));
+});
+
+void test('startDaemon writes PID to ready file when --ready-file is provided', async () => {
+  const stub = makeStubKernel();
+  const dir = path.join(tmpdir(), `daemon-ready-${Date.now().toString()}`);
+  fs.mkdirSync(dir, { recursive: true });
+  const readyFile = path.join(dir, 'kernel.ready');
+
+  try {
+    await startDaemon(['--ready-file', readyFile], stub.Ctor);
+    const content = fs.readFileSync(readyFile, 'utf8');
+    assert.equal(content, String(process.pid));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+void test('startDaemon continues when ready file write fails', async () => {
+  const stub = makeStubKernel();
+  // Use a path with a non-existent parent directory to trigger a write failure
+  const readyFile = path.join(tmpdir(), `nonexistent-${Date.now().toString()}`, 'no-parent', 'kernel.ready');
+  // Should not throw — write failure is non-fatal
+  await assert.doesNotReject(() => startDaemon(['--ready-file', readyFile], stub.Ctor));
 });

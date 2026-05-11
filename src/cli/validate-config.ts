@@ -32,7 +32,11 @@ export async function validateConfig(
     const config = await loadConfig(cwd, options.config);
     await getFormatter(config.format ?? 'stylish');
     // validate-config only checks rule configuration — no token loading required.
-    const linter = createLinter(config, { documentSource: new FileSource() });
+    // Provide a no-op tokenProvider so setupLinter succeeds without a kernel.
+    const linter = createLinter(config, {
+      documentSource: new FileSource(),
+      tokenProvider: { load: async () => ({}) },
+    });
     await linter.hasRunLevelRules();
 
     // Enforce policy if a designlint.policy.json is present
