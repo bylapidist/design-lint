@@ -218,7 +218,9 @@ void test('getFlattenedTokens accepts flattened DTIF tokens', () => {
 });
 
 void test('getFlattenedTokens returns empty array for an unknown theme name', () => {
-  const light = { $version: '1.0.0' } as unknown as import('../../src/core/types.js').DesignTokens;
+  const light = {
+    $version: '1.0.0',
+  } as unknown as import('../../src/core/types.js').DesignTokens;
   attachDtifFlattenedTokens(light, [lightPrimary]);
 
   const result = getFlattenedTokens({ light }, 'dark');
@@ -226,8 +228,12 @@ void test('getFlattenedTokens returns empty array for an unknown theme name', ()
 });
 
 void test('getFlattenedTokens deduplicates tokens with the same key when merging', () => {
-  const themeA = { $version: '1.0.0' } as unknown as import('../../src/core/types.js').DesignTokens;
-  const themeB = { $version: '1.0.0' } as unknown as import('../../src/core/types.js').DesignTokens;
+  const themeA = {
+    $version: '1.0.0',
+  } as unknown as import('../../src/core/types.js').DesignTokens;
+  const themeB = {
+    $version: '1.0.0',
+  } as unknown as import('../../src/core/types.js').DesignTokens;
   // Both themes share the same token path — only the first should appear.
   attachDtifFlattenedTokens(themeA, [lightPrimary]);
   attachDtifFlattenedTokens(themeB, [lightPrimary]);
@@ -238,7 +244,9 @@ void test('getFlattenedTokens deduplicates tokens with the same key when merging
 });
 
 void test('getFlattenedTokens applies name transform during merge deduplication', () => {
-  const theme = { $version: '1.0.0' } as unknown as import('../../src/core/types.js').DesignTokens;
+  const theme = {
+    $version: '1.0.0',
+  } as unknown as import('../../src/core/types.js').DesignTokens;
   const tokenA: import('../../src/core/types.js').DtifFlattenedToken = {
     id: '#/ColorGroup/PrimaryColor',
     pointer: '#/ColorGroup/PrimaryColor',

@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import type { DesignTokens, DtifFlattenedToken } from '../../../src/core/types.js';
+import type {
+  DesignTokens,
+  DtifFlattenedToken,
+} from '../../../src/core/types.js';
 import {
   attachDtifFlattenedTokens,
   getDtifFlattenedTokens,

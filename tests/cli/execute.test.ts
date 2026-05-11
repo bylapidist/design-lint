@@ -39,7 +39,9 @@ function makeServices(
   };
 }
 
-function noop(): void { /* intentionally empty */ }
+function noop(): void {
+  /* intentionally empty */
+}
 
 function suppressConsole(fn: () => Promise<unknown>): Promise<unknown> {
   const origLog = console.log;
@@ -61,9 +63,9 @@ void test('executeLint returns zero exitCode when no errors', async () => {
     results: [{ sourceId: 'app.tsx', messages: [] }],
     ignoreFiles: [],
   });
-  const result = await suppressConsole(() =>
+  const result = (await suppressConsole(() =>
     executeLint(['app.tsx'], {}, makeServices(linter)),
-  ) as Awaited<ReturnType<typeof executeLint>>;
+  )) as Awaited<ReturnType<typeof executeLint>>;
   assert.equal(result.exitCode, 0);
   assert.equal(result.results.length, 1);
 });
@@ -74,15 +76,21 @@ void test('executeLint returns non-zero exitCode when results have errors', asyn
       {
         sourceId: 'bad.tsx',
         messages: [
-          { ruleId: 'test', message: 'bad', severity: 'error', line: 1, column: 1 },
+          {
+            ruleId: 'test',
+            message: 'bad',
+            severity: 'error',
+            line: 1,
+            column: 1,
+          },
         ],
       },
     ],
     ignoreFiles: [],
   });
-  const result = await suppressConsole(() =>
+  const result = (await suppressConsole(() =>
     executeLint(['bad.tsx'], {}, makeServices(linter)),
-  ) as Awaited<ReturnType<typeof executeLint>>;
+  )) as Awaited<ReturnType<typeof executeLint>>;
   assert.equal(result.exitCode, 1);
 });
 
@@ -95,7 +103,9 @@ void test('executeLint passes warning message to console.warn when not quiet', a
   const warnings: string[] = [];
   const origWarn = console.warn;
   const origLog = console.log;
-  console.warn = (msg: unknown) => { warnings.push(String(msg)); };
+  console.warn = (msg: unknown) => {
+    warnings.push(String(msg));
+  };
   console.log = noop;
   try {
     await executeLint(['*.ts'], { quiet: false }, makeServices(linter));
@@ -112,13 +122,9 @@ void test('executeLint sets exitCode=1 when failOnEmpty and no files matched', a
     ignoreFiles: [],
     warning: 'No files matched the provided patterns.',
   });
-  const result = await suppressConsole(() =>
-    executeLint(
-      ['*.ts'],
-      { failOnEmpty: true },
-      makeServices(linter),
-    ),
-  ) as Awaited<ReturnType<typeof executeLint>>;
+  const result = (await suppressConsole(() =>
+    executeLint(['*.ts'], { failOnEmpty: true }, makeServices(linter)),
+  )) as Awaited<ReturnType<typeof executeLint>>;
   assert.equal(result.exitCode, 1);
 });
 
@@ -128,16 +134,28 @@ void test('executeLint sets exitCode=1 when warning count exceeds maxWarnings', 
       {
         sourceId: 'app.tsx',
         messages: [
-          { ruleId: 'test', message: 'warn1', severity: 'warn', line: 1, column: 1 },
-          { ruleId: 'test', message: 'warn2', severity: 'warn', line: 2, column: 1 },
+          {
+            ruleId: 'test',
+            message: 'warn1',
+            severity: 'warn',
+            line: 1,
+            column: 1,
+          },
+          {
+            ruleId: 'test',
+            message: 'warn2',
+            severity: 'warn',
+            line: 2,
+            column: 1,
+          },
         ],
       },
     ],
     ignoreFiles: [],
   });
-  const result = await suppressConsole(() =>
+  const result = (await suppressConsole(() =>
     executeLint(['app.tsx'], { maxWarnings: 1 }, makeServices(linter)),
-  ) as Awaited<ReturnType<typeof executeLint>>;
+  )) as Awaited<ReturnType<typeof executeLint>>;
   assert.equal(result.exitCode, 1);
 });
 
@@ -174,11 +192,7 @@ void test('executeLint writes report to file when opts.report is set', async () 
 
   try {
     await suppressConsole(() =>
-      executeLint(
-        ['app.tsx'],
-        { report: reportFile },
-        makeServices(linter),
-      ),
+      executeLint(['app.tsx'], { report: reportFile }, makeServices(linter)),
     );
     const content = JSON.parse(fs.readFileSync(reportFile, 'utf8')) as {
       results: unknown[];
@@ -195,7 +209,10 @@ void test('executeLint reads baseline file and passes to policy enforcement', as
   const dir = path.join(tmpdir(), `execute-baseline-${Date.now().toString()}`);
   fs.mkdirSync(dir, { recursive: true });
   const baselineFile = path.join(dir, 'baseline.json');
-  fs.writeFileSync(baselineFile, JSON.stringify({ totalCount: 10, score: 0.9 }));
+  fs.writeFileSync(
+    baselineFile,
+    JSON.stringify({ totalCount: 10, score: 0.9 }),
+  );
 
   const linter = makeStubLinter({
     results: [{ sourceId: 'app.tsx', messages: [] }],
@@ -238,13 +255,13 @@ void test('executeLint handles missing baseline file gracefully', async () => {
     agentPolicy: undefined,
   };
   // Non-existent baseline file should not throw — catch block silences the error.
-  const result = await suppressConsole(() =>
+  const result = (await suppressConsole(() =>
     executeLint(
       ['app.tsx'],
       { baseline: '/nonexistent/path/baseline.json' },
       makeServices(linter, { policy: fakePolicy as never }),
     ),
-  ) as Awaited<ReturnType<typeof executeLint>>;
+  )) as Awaited<ReturnType<typeof executeLint>>;
   assert.equal(result.exitCode, 0);
 });
 
@@ -255,7 +272,9 @@ void test('executeLint quiet mode suppresses output', async () => {
   });
   const logs: string[] = [];
   const origLog = console.log;
-  console.log = (msg: unknown) => { logs.push(String(msg)); };
+  console.log = (msg: unknown) => {
+    logs.push(String(msg));
+  };
   try {
     await executeLint(['app.tsx'], { quiet: true }, makeServices(linter));
   } finally {

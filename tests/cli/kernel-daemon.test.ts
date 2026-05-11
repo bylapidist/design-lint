@@ -134,7 +134,14 @@ void test('startDaemon writes PID to ready file when --ready-file is provided', 
 void test('startDaemon continues when ready file write fails', async () => {
   const stub = makeStubKernel();
   // Use a path with a non-existent parent directory to trigger a write failure
-  const readyFile = path.join(tmpdir(), `nonexistent-${Date.now().toString()}`, 'no-parent', 'kernel.ready');
+  const readyFile = path.join(
+    tmpdir(),
+    `nonexistent-${Date.now().toString()}`,
+    'no-parent',
+    'kernel.ready',
+  );
   // Should not throw — write failure is non-fatal
-  await assert.doesNotReject(() => startDaemon(['--ready-file', readyFile], stub.Ctor));
+  await assert.doesNotReject(() =>
+    startDaemon(['--ready-file', readyFile], stub.Ctor),
+  );
 });
