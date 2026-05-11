@@ -39,7 +39,7 @@ void test('attachDtifFlattenedTokens is idempotent — second call is a no-op', 
 
   const cached = getDtifFlattenedTokens(target);
   assert.strictEqual(cached, first);
-  assert.equal(cached?.length, 1);
+  assert.equal(cached.length, 1);
 });
 
 void test('ensureDtifFlattenedTokens skips parsing when cache already present', async () => {

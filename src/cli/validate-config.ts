@@ -35,7 +35,7 @@ export async function validateConfig(
     // Provide a no-op tokenProvider so setupLinter succeeds without a kernel.
     const linter = createLinter(config, {
       documentSource: new FileSource(),
-      tokenProvider: { load: async () => ({}) },
+      tokenProvider: { load: () => Promise.resolve({}) },
     });
     await linter.hasRunLevelRules();
 

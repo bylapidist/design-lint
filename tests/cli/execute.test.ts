@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
-import { executeLint, type ExecuteOptions, type ExecuteServices } from '../../src/cli/execute.js';
+import { executeLint, type ExecuteServices } from '../../src/cli/execute.js';
 import type { LintResult } from '../../src/core/types.js';
 import type { Linter } from '../../src/core/linter.js';
 
@@ -22,7 +22,7 @@ interface StubLintTargetsResult {
 
 function makeStubLinter(response: StubLintTargetsResult) {
   return {
-    lintTargets: async () => response,
+    lintTargets: () => Promise.resolve(response),
   } as unknown as Linter;
 }
 
@@ -39,11 +39,13 @@ function makeServices(
   };
 }
 
+function noop(): void { /* intentionally empty */ }
+
 function suppressConsole(fn: () => Promise<unknown>): Promise<unknown> {
   const origLog = console.log;
   const origWarn = console.warn;
-  console.log = () => {};
-  console.warn = () => {};
+  console.log = noop;
+  console.warn = noop;
   return fn().finally(() => {
     console.log = origLog;
     console.warn = origWarn;
@@ -94,7 +96,7 @@ void test('executeLint passes warning message to console.warn when not quiet', a
   const origWarn = console.warn;
   const origLog = console.log;
   console.warn = (msg: unknown) => { warnings.push(String(msg)); };
-  console.log = () => {};
+  console.log = noop;
   try {
     await executeLint(['*.ts'], { quiet: false }, makeServices(linter));
   } finally {

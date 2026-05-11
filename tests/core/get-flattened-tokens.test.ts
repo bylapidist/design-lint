@@ -255,5 +255,7 @@ void test('getFlattenedTokens applies name transform during merge deduplication'
     nameTransform: 'kebab-case',
   });
   assert.equal(result.length, 1);
-  assert.equal(getTokenPath(result[0]!, 'kebab-case'), 'color-group.primary-color');
+  const [first] = result;
+  assert(first);
+  assert.equal(getTokenPath(first, 'kebab-case'), 'color-group.primary-color');
 });
