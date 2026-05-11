@@ -8,7 +8,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
-import { spawn } from 'node:child_process';
 import { kernelStart, kernelStop, kernelStatus } from '../../src/cli/kernel.js';
 
 function makePidFile(): string {
@@ -143,15 +142,21 @@ void test('kernelStop removes stale PID file when process not found', () => {
   assert.ok(lines.some((l) => l.includes('not running')));
 });
 
-void test('kernelStop sends SIGTERM to a running process', async () => {
-  // Spawn a long-lived child process so we have a real PID to signal
-  const child = spawn('sleep', ['30']);
-  await new Promise<void>((resolve) => {
-    child.once('spawn', resolve);
-  });
-
+void test('kernelStop sends SIGTERM to a running process', () => {
   const pidFile = makePidFile();
-  fs.writeFileSync(pidFile, (child.pid ?? 0).toString());
+  // Use the current process PID — we intercept process.kill so SIGTERM is
+  // never actually delivered, keeping the test runner alive.
+  fs.writeFileSync(pidFile, process.pid.toString());
+
+  let killedPid: number | undefined;
+  let killedSignal: NodeJS.Signals | number | undefined;
+  const originalKill = process.kill.bind(process);
+  const stubKill = (pid: number, sig?: NodeJS.Signals | number): true => {
+    killedPid = pid;
+    killedSignal = sig;
+    return true;
+  };
+  process.kill = stubKill as typeof process.kill;
 
   const lines: string[] = [];
   const orig = console.log;
@@ -162,10 +167,16 @@ void test('kernelStop sends SIGTERM to a running process', async () => {
     kernelStop({ pidFile });
   } finally {
     console.log = orig;
-    // Ensure the child exits even if the test assertion fails
-    child.kill();
+    process.kill = originalKill;
+    try {
+      fs.unlinkSync(pidFile);
+    } catch {
+      /* already gone */
+    }
   }
 
+  assert.equal(killedPid, process.pid);
+  assert.equal(killedSignal, 'SIGTERM');
   assert.ok(lines.some((l) => l.includes('signalled to stop')));
 });
 

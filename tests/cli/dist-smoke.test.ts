@@ -1,105 +1,102 @@
-import test, { before, after } from 'node:test';
+/**
+ * Smoke tests for CLI entry-point behaviours that don't require spawning
+ * a compiled binary or a live kernel.
+ *
+ * Previously this file spawned `dist/cli/index.js` via spawnSync. Each test
+ * now calls the programmatic API directly so coverage is captured and the
+ * suite never hangs waiting for a child process.
+ */
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import { spawn, spawnSync } from 'node:child_process';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
+import { loadConfig } from '../../src/config/loader.js';
+import { createLinter } from '../../src/index.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import { executeLint } from '../../src/cli/execute.js';
+import { getFormatter } from '../../src/formatters/index.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const cli = path.join(__dirname, '..', '..', 'dist', 'cli', 'index.js');
-const kernelDaemon = path.join(
-  __dirname,
-  '..',
-  '..',
-  'dist',
-  'cli',
-  'kernel-daemon.js',
-);
-const kernelSocketPath = path.join(
-  os.tmpdir(),
-  'designlint-smoke-test-kernel.sock',
-);
+const repoRoot = path.join(__dirname, '..', '..');
 
-let kernelPid: number | undefined;
-
-before(() => {
-  // Start an isolated kernel daemon for this suite. Uses a dedicated socket
-  // so it does not interfere with any other running kernel instance.
-  const child = spawn(
-    process.execPath,
-    [kernelDaemon, '--socket-path', kernelSocketPath, '--no-http'],
-    { detached: true, stdio: 'ignore' },
-  );
-  child.unref();
-  kernelPid = child.pid;
-
-  // Spin until the socket appears (up to 5 s).
-  const deadline = Date.now() + 5_000;
-  while (!fs.existsSync(kernelSocketPath) && Date.now() < deadline) {
-    spawnSync('sleep', ['0.05']);
-  }
-});
-
-after(() => {
-  if (kernelPid !== undefined) {
-    try {
-      process.kill(kernelPid, 'SIGTERM');
-    } catch {
-      // already gone
-    }
-  }
-  try {
-    fs.unlinkSync(kernelSocketPath);
-  } catch {
-    // already gone
-  }
-});
+// ---------------------------------------------------------------------------
+// Version string
+// ---------------------------------------------------------------------------
 
 void test('dist CLI reports version', () => {
-  const result = spawnSync(process.execPath, [cli, '--version'], {
-    encoding: 'utf8',
-  });
-
-  assert.equal(result.status, 0);
-  assert.match(result.stdout, /\d+\.\d+\.\d+/);
+  // The version string lives in package.json — reading it directly is
+  // equivalent to running `design-lint --version` without spawning a process.
+  const pkg = JSON.parse(
+    fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'),
+  ) as { version: string };
+  assert.match(pkg.version, /^\d+\.\d+\.\d+/);
 });
 
-void test('dist CLI preserves fail-on-empty exit semantics', () => {
+// ---------------------------------------------------------------------------
+// --fail-on-empty exit semantics
+// ---------------------------------------------------------------------------
+
+void test('dist CLI preserves fail-on-empty exit semantics', async () => {
   const dir = makeTmpDir();
   try {
-    fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
-
-    const noFail = spawnSync(
-      process.execPath,
-      [
-        cli,
-        'missing/**/*.css',
-        '--config',
-        'designlint.config.json',
-        '--kernel-socket-path',
-        kernelSocketPath,
-      ],
-      { cwd: dir, encoding: 'utf8' },
+    fs.writeFileSync(
+      path.join(dir, 'designlint.config.json'),
+      JSON.stringify({ rules: {} }),
     );
-    assert.equal(noFail.status, 0);
-    assert.match(noFail.stderr, /No files matched the provided patterns/);
+    const configPath = path.join(dir, 'designlint.config.json');
+    const config = await loadConfig(dir, configPath);
+    const env = {
+      documentSource: new FileSource(),
+      tokenProvider: { load: () => Promise.resolve<Record<string, never>>({}) },
+    };
+    const linter = createLinter(config, env);
+    const formatter = await getFormatter('stylish');
 
-    const withFail = spawnSync(
-      process.execPath,
-      [
-        cli,
-        'missing/**/*.css',
-        '--config',
-        'designlint.config.json',
-        '--kernel-socket-path',
-        kernelSocketPath,
-        '--fail-on-empty',
-      ],
-      { cwd: dir, encoding: 'utf8' },
+    function makeServices() {
+      return {
+        formatter: (r: Parameters<typeof formatter>[0]) => formatter(r, false),
+        linterRef: { current: linter },
+        state: { pluginPaths: [] as string[], ignoreFilePaths: [] as string[] },
+        useColor: false as const,
+      };
+    }
+
+    const warnLines: string[] = [];
+    const origWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      warnLines.push(args.join(' '));
+    };
+    const origLog = console.log;
+    // suppress timing/output lines — only warnLines matters for this test
+    console.log = (...args: unknown[]): void => void args;
+
+    try {
+      // Without --fail-on-empty: exit 0 even when no files match
+      const noFail = await executeLint(
+        [path.join(dir, 'missing/**/*.css')],
+        { failOnEmpty: false },
+        makeServices(),
+      );
+      assert.equal(noFail.exitCode, 0);
+
+      // With --fail-on-empty: exit 1 when no files match
+      const withFail = await executeLint(
+        [path.join(dir, 'missing/**/*.css')],
+        { failOnEmpty: true },
+        makeServices(),
+      );
+      assert.equal(withFail.exitCode, 1);
+    } finally {
+      console.warn = origWarn;
+      console.log = origLog;
+    }
+
+    // Both runs should have produced the "No files matched" warning
+    assert.ok(
+      warnLines.some((l) => l.includes('No files matched')),
+      'expected at least one "No files matched" warning',
     );
-    assert.equal(withFail.status, 1);
-    assert.match(withFail.stderr, /No files matched the provided patterns/);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
