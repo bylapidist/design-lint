@@ -13,6 +13,19 @@ const fixturesDir = fileURLToPath(
 );
 const dataModelPath = join(fixturesDir, 'data-model.tokens.json');
 
+function makeToken(pointer: string, path: string[]): DtifFlattenedToken {
+  return {
+    id: pointer,
+    pointer,
+    path,
+    name: path[path.length - 1] ?? '',
+    type: 'color',
+    value: '#fff',
+    raw: '#fff',
+    metadata: { extensions: {} },
+  };
+}
+
 void test('DtifTokenRegistry retrieves tokens by pointer with theme fallback', async () => {
   const { tokens } = await parseDtifTokensFromFile(dataModelPath);
   const registry = new DtifTokenRegistry({ default: tokens });
@@ -92,4 +105,43 @@ void test('DtifTokenRegistry dedupes tokens across themes', () => {
     '#/color/base',
     '#/color/dark',
   ]);
+});
+
+void test('DtifTokenRegistry skips themes with $ prefix', () => {
+  const token = makeToken('#/color/a', ['color', 'a']);
+  const registry = new DtifTokenRegistry({
+    $schema: [token],
+    default: [token],
+  });
+  // $schema theme is skipped — only default contributes
+  const all = registry.getTokens();
+  assert.equal(all.length, 1);
+});
+
+void test('DtifTokenRegistry.getByPointer falls back to non-default themes', () => {
+  const token = makeToken('#/color/brand', ['color', 'brand']);
+  const registry = new DtifTokenRegistry({ dark: [token] });
+  // No default theme — should still find the token via the fallback loop
+  const found = registry.getByPointer('#/color/brand');
+  assert(found);
+  assert.equal(found.pointer, '#/color/brand');
+
+  // Unknown pointer returns undefined after exhausting all themes
+  assert.equal(registry.getByPointer('#/unknown'), undefined);
+});
+
+void test('DtifTokenRegistry.getByName falls back to non-default themes', () => {
+  const token = makeToken('#/color/brand', ['color', 'brand']);
+  const registry = new DtifTokenRegistry({ dark: [token] });
+  const found = registry.getByName('color.brand');
+  assert(found);
+  assert.equal(found.pointer, '#/color/brand');
+
+  assert.equal(registry.getByName('color.unknown'), undefined);
+});
+
+void test('DtifTokenRegistry.getTokens returns empty array for unknown theme', () => {
+  const token = makeToken('#/color/a', ['color', 'a']);
+  const registry = new DtifTokenRegistry({ default: [token] });
+  assert.deepEqual(registry.getTokens('nonexistent'), []);
 });

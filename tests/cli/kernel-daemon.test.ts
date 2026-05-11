@@ -145,3 +145,55 @@ void test('startDaemon continues when ready file write fails', async () => {
     startDaemon(['--ready-file', readyFile], stub.Ctor),
   );
 });
+
+void test('startDaemon bootstraps tokens from --config-path', async () => {
+  const dir = path.join(tmpdir(), `daemon-bootstrap-${Date.now().toString()}`);
+  fs.mkdirSync(dir, { recursive: true });
+
+  const tokensFile = path.join(dir, 'tokens.tokens.json');
+  fs.writeFileSync(
+    tokensFile,
+    JSON.stringify({
+      $version: '1.0.0',
+      color: {
+        primary: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+      },
+    }),
+  );
+  const configFile = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(
+    configFile,
+    JSON.stringify({ tokens: { default: './tokens.tokens.json' }, rules: {} }),
+  );
+
+  const addedTokens: { pointer: string }[] = [];
+  const BootstrapCtor = class {
+    start(): Promise<void> {
+      return Promise.resolve();
+    }
+    addToken(pointer: string): void {
+      addedTokens.push({ pointer });
+    }
+  };
+
+  const logs: string[] = [];
+  const origLog = console.log;
+  console.log = (...args: unknown[]) => {
+    logs.push(args.join(' '));
+  };
+  try {
+    await startDaemon(['--config-path', configFile], BootstrapCtor as never);
+  } finally {
+    console.log = origLog;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+
+  assert.ok(
+    addedTokens.some((t) => t.pointer === '#/color/primary'),
+    'expected color/primary token to be injected',
+  );
+  assert.ok(logs.some((l) => l.includes('bootstrapped')));
+});

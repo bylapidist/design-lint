@@ -127,3 +127,50 @@ void test('CacheManager classifies rule execution failures separately from parse
     'Rule failed while visiting declaration',
   );
 });
+
+void test('CacheManager uses sourceRule fallback when ruleId absent', async () => {
+  const manager = new CacheManager(undefined, false);
+  const doc: LintDocument = {
+    id: 'rules.css',
+    type: 'css',
+    getText() {
+      return Promise.resolve('.a { color: red; }');
+    },
+  };
+
+  const error = new Error('Rule failed');
+  Object.defineProperty(error, 'sourceRule', {
+    value: 'design-token/colors',
+    enumerable: true,
+  });
+
+  const result = await manager.processDocument(doc, () =>
+    Promise.reject(error),
+  );
+
+  const [message] = result.messages;
+  assert.equal(message.metadata.sourceRule, 'design-token/colors');
+});
+
+void test('CacheManager handles non-object thrown values', async () => {
+  const manager = new CacheManager(undefined, false);
+  const doc: LintDocument = {
+    id: 'rules.css',
+    type: 'css',
+    getText() {
+      return Promise.resolve('.a {}');
+    },
+  };
+
+  // Throw a non-object (null) — buildErrorDetails receives it as unknown
+  // and must degrade gracefully with no errorMessage/errorStack/sourceRule.
+  const result = await manager.processDocument(doc, () => {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
+    throw null;
+  });
+
+  const [message] = result.messages;
+  assert.equal(message.ruleId, RUNTIME_ERROR_RULE_ID);
+  assert.equal(message.message, 'Rule execution failed');
+  assert.equal(message.metadata.errorMessage, undefined);
+});

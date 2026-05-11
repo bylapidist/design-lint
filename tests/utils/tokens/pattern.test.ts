@@ -16,3 +16,8 @@ void test('closestToken skips non-string patterns and suggests best match', () =
   assert.equal(closestToken('--baz', ['--bar', /^--foo-/]), '--bar');
   assert.equal(closestToken('--baz', [/^--foo-/]), null);
 });
+
+void test('closestToken replaces best match when a later string is closer', () => {
+  // '--baz' distance-0 from itself beats '--bax-long-name' (high edit distance)
+  assert.equal(closestToken('--baz', ['--bax-long-name', '--baz']), '--baz');
+});
