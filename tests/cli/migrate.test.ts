@@ -41,7 +41,6 @@ function readConfig(p: string): unknown {
 void test('applyMigrations: no changes on an already-valid v8 config', () => {
   const { migrated, changes } = applyMigrations({
     rules: { 'design-token/colors': 'error' },
-    tokens: {},
   });
   assert.deepEqual(migrated.rules, { 'design-token/colors': 'error' });
   assert.equal(changes.length, 0);
@@ -301,7 +300,6 @@ void test('migrateConfig reports no changes needed when config is already v8-com
   const dir = makeTmpDir();
   const configPath = writeConfig(dir, 'designlint.config.json', {
     rules: { 'design-token/colors': 'error' },
-    tokens: {},
   });
 
   const lines: string[] = [];

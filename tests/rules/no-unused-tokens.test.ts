@@ -106,7 +106,7 @@ void test('design-system/no-unused-tokens includes token metadata', async () => 
   const superseded = deprecated.supersededBy;
   assert(superseded);
   assert.equal(superseded.pointer, '#/color/primary');
-  assert.equal(superseded.uri, 'memory://inline-config/default.json');
+  assert.equal(superseded.uri, 'memory://inline-tokens/default.json');
   assert.deepEqual(msg.metadata.extensions, { 'vendor.foo': true });
 });
 

@@ -167,6 +167,8 @@ export async function startDaemon(
 }
 
 // Run when invoked as a standalone process (not when imported in tests).
-if (!process.env.DESIGN_LINT_TEST_MODE) {
+// NODE_TEST_CONTEXT is set by the Node.js test runner for every test
+// subprocess, preventing auto-start from conflicting with a running kernel.
+if (!process.env.DESIGN_LINT_TEST_MODE && !process.env.NODE_TEST_CONTEXT) {
   await startDaemon();
 }

@@ -19,6 +19,11 @@ const stubSource = {
   scan: async () => ({ documents: [], ignoreFiles: [] }),
 };
 
+/** No-op TokenProvider — SnippetLinter injects tokens via TokenRegistry directly. */
+const stubTokenProvider = {
+  load: () => Promise.resolve({}),
+};
+
 /**
  * A stripped-down `Linter` subclass used internally by `RuleTester`.
  *
@@ -39,7 +44,7 @@ export class SnippetLinter extends Linter {
     options: unknown = undefined,
     tokens: DtifFlattenedToken[] = [],
   ) {
-    super({ rules: {} }, { documentSource: stubSource });
+    super({ rules: {} }, { documentSource: stubSource, tokenProvider: stubTokenProvider });
     this.#injected = { rule, options, severity: 'error' };
     if (tokens.length > 0) {
       // The base class's tokensReady promise resolves by setting this.tokenRegistry

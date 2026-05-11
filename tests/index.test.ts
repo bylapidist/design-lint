@@ -66,7 +66,7 @@ void test('createLintService returns lint service configured with environment', 
   assert.deepEqual(source.calls, [
     {
       targets: ['src/**/*.ts'],
-      config: { tokens: {} },
+      config: {},
       ignore: ['custom-ignore'],
     },
   ]);
@@ -85,7 +85,7 @@ void test('createLintService accepts DocumentSource inputs directly', async () =
   assert.deepEqual(source.calls, [
     {
       targets: ['src/**/*.ts'],
-      config: { tokens: {} },
+      config: {},
       ignore: [],
     },
   ]);
