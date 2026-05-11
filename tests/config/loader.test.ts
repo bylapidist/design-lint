@@ -208,7 +208,7 @@ void test('loads config from .ts with type annotations', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
   const rel = path
-    .relative(tmp, path.resolve('src/index.ts'))
+    .relative(tmp, path.resolve('src/config/define-config.ts'))
     .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
@@ -232,7 +232,7 @@ void test('loads .ts config with commonjs module output', async () => {
   );
   const configPath = path.join(tmp, 'designlint.config.ts');
   const rel = path
-    .relative(tmp, path.resolve('src/index.ts'))
+    .relative(tmp, path.resolve('src/config/define-config.ts'))
     .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,

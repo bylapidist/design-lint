@@ -23,8 +23,15 @@ const createExplorer = () =>
   cosmiconfig('designlint', {
     searchPlaces: [...CONFIG_SEARCH_PLACES],
     loaders: {
-      '.ts': TypeScriptLoader(),
-      '.mts': TypeScriptLoader(),
+      // Disable jiti source maps under the Node.js test runner so its CJS
+      // compilations are not source-mapped back to src/ files, which would
+      // otherwise produce phantom uncovered lines and skew c8 coverage.
+      '.ts': TypeScriptLoader(
+        process.env.NODE_TEST_CONTEXT ? { sourceMaps: false } : {},
+      ),
+      '.mts': TypeScriptLoader(
+        process.env.NODE_TEST_CONTEXT ? { sourceMaps: false } : {},
+      ),
     },
     searchStrategy: 'global',
   });
