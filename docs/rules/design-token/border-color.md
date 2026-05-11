@@ -6,28 +6,32 @@ description: "Enforce use of border color tokens."
 # design-token/border-color
 
 ## Summary
-Enforces `border-color` values to match the border color tokens defined in your configuration.
+Enforces `border-color` values to match the border color tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/border-color": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `color`-type tokens under a `borderColors` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "borderColors": {
-      "primary": {
-        "$type": "color",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [1, 1, 1]
-        }
-      },
-      "secondary": { "$type": "color", "$ref": "#/borderColors/primary" }
-    }
-  },
-  "rules": { "design-token/border-color": "error" }
+  "$version": "1.0.0",
+  "borderColors": {
+    "primary": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+    },
+    "secondary": { "$type": "color", "$ref": "#/borderColors/primary" }
+  }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
 ## Options

@@ -6,22 +6,29 @@ description: "Require animation values to reference defined tokens."
 # design-token/animation
 
 ## Summary
-Enforces `animation` values to match the animation tokens defined in your configuration.
+Enforces `animation` values to match the animation tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/animation": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `string`-type tokens under an `animations` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "animations": {
-      "spin": { "$type": "string", "$value": "spin 1s linear infinite" },
-      "wiggle": { "$type": "string", "$ref": "#/animations/spin" }
-    }
-  },
-  "rules": { "design-token/animation": "error" }
+  "$version": "1.0.0",
+  "animations": {
+    "spin": { "$type": "string", "$value": "spin 1s linear infinite" },
+    "wiggle": { "$type": "string", "$ref": "#/animations/spin" }
+  }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
 ## Options

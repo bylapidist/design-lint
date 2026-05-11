@@ -28,7 +28,11 @@ import {
 
 async function main() {
   const config = await loadConfig(process.cwd());
-  const env = createNodeEnvironment(config);
+  // The DSR kernel must be running before creating the environment.
+  // Start it with: design-lint kernel start --config-path designlint.config.json
+  const env = createNodeEnvironment(config, {
+    dsr: { socketPath: '/tmp/designlint-kernel.sock' },
+  });
   const linter = createLinter(config, env);
   const { results } = await linter.lintTargets(['src/**/*.{ts,tsx}'], true);
   const formatter = await getFormatter('stylish');
@@ -64,7 +68,9 @@ Stable `Linter` methods:
 ```ts
 import { createLinter, createNodeEnvironment } from '@lapidist/design-lint';
 
-const env = createNodeEnvironment(config);
+const env = createNodeEnvironment(config, {
+  dsr: { socketPath: '/tmp/designlint-kernel.sock' },
+});
 const linter = createLinter(config, env);
 const { results } = await linter.lintTargets(['src/**/*.ts']);
 ```

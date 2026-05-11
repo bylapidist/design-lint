@@ -6,28 +6,33 @@ description: "Enforce use of border radius tokens."
 # design-token/border-radius
 
 ## Summary
-Enforces `border-radius` values to match the tokens defined in your configuration.
+Enforces `border-radius` values to match the tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/border-radius": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `dimension`-type tokens with `dimensionType: "length"` under a `radius` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "radius": {
-      "sm": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 2, "unit": "px" }
-      },
-      "lg": { "$type": "dimension", "$ref": "#/radius/sm" }
-    }
-  },
-  "rules": { "design-token/border-radius": "error" }
+  "$version": "1.0.0",
+  "radius": {
+    "sm": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 2, "unit": "px" }
+    },
+    "lg": { "$type": "dimension", "$ref": "#/radius/sm" }
+  }
 }
 ```
 
-Border radius tokens use the `dimension` type with `dimensionType` set to `length`.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
 
 ## Options
 - `units` (`string[]`): CSS length units to validate for `border-radius` values. Defaults to `['px', 'rem', 'em']`.

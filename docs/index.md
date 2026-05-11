@@ -28,8 +28,8 @@ features:
     title: Token-native automation
     details: Parse DTIF documents, enforce naming, and validate usage with dedicated design-system and token rules.
   - icon: 🚦
-    title: CI compatible (experimental)
-    details: Static-analysis diagnostics, formatter outputs, and caching support CI pipelines while the project remains pre-production.
+    title: CI ready
+    details: Static-analysis diagnostics, formatter outputs, and DSR kernel setup integrate into GitHub Actions and other CI platforms out of the box.
 ---
 
 <!-- markdownlint-disable MD033 -->

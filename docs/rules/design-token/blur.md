@@ -6,28 +6,33 @@ description: "Ensure blur values use blur tokens."
 # design-token/blur
 
 ## Summary
-Enforces `blur()` values in `filter` or `backdrop-filter` to match the blur tokens defined in your configuration.
+Enforces `blur()` values in `filter` or `backdrop-filter` to match the blur tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/blur": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `dimension`-type tokens with `dimensionType: "length"` under a `blurs` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "blurs": {
-      "sm": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
-      },
-      "md": { "$type": "dimension", "$ref": "#/blurs/sm" }
-    }
-  },
-  "rules": { "design-token/blur": "error" }
+  "$version": "1.0.0",
+  "blurs": {
+    "sm": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
+    },
+    "md": { "$type": "dimension", "$ref": "#/blurs/sm" }
+  }
 }
 ```
 
-Blur tokens use the `dimension` type with `dimensionType` set to `length`.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
 
 ## Options
 - `units` (`string[]`): CSS length units to validate for `blur(...)` arguments. Defaults to `['px', 'rem', 'em']`.

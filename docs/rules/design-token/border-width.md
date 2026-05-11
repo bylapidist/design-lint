@@ -6,31 +6,36 @@ description: "Enforce use of border width tokens."
 # design-token/border-width
 
 ## Summary
-Enforces `border-width` values to match the border width tokens defined in your configuration.
+Enforces `border-width` values to match the border width tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/border-width": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `dimension`-type tokens with `dimensionType: "length"` under a `borderWidths` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "borderWidths": {
-      "sm": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 1, "unit": "px" }
-      },
-      "lg": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
-      }
+  "$version": "1.0.0",
+  "borderWidths": {
+    "sm": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 1, "unit": "px" }
+    },
+    "lg": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
     }
-  },
-  "rules": { "design-token/border-width": "error" }
+  }
 }
 ```
 
-Border width tokens use the `dimension` type with `dimensionType` set to `length`.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
 
 ## Options
 - `units` (`string[]`): CSS length units to validate for `border-width` values. Defaults to `['px', 'rem', 'em']`.

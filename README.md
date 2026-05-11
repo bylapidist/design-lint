@@ -64,15 +64,17 @@ For more background, read the [introductory blog post](https://lapidist.net/arti
 
 The complete documentation is available under the [`docs/`](docs) directory and on [design-lint.lapidist.net](https://design-lint.lapidist.net/). See [docs/index.md](docs/index.md) for the documentation landing page.
 
-| Document                               | Purpose                                                   |
-| -------------------------------------- | --------------------------------------------------------- |
-| [Usage](docs/usage.md)                 | Explains CLI flags, watch mode and caching.               |
-| [Configuration](docs/configuration.md) | Details tokens, rule levels and plugin activation.        |
-| [Rules](docs/rules/index.md)           | Provides a rule reference grouped by category.            |
-| [Formatters](docs/formatters.md)       | Describes built-in and custom output formats.             |
-| [CI](docs/ci.md)                       | Includes examples for GitHub Actions and other providers. |
-| [API](docs/api.md)                     | Shows programmatic usage with TypeScript types.           |
-| [Architecture](docs/architecture.md)   | Explains how the linter works internally.                 |
+| Document                               | Purpose                                                          |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| [Usage](docs/usage.md)                 | CLI flags, watch mode, kernel commands, and caching.             |
+| [Configuration](docs/configuration.md) | Rule levels, plugin activation, and ignore patterns.             |
+| [Rules](docs/rules/index.md)           | Rule reference grouped by category.                              |
+| [Formatters](docs/formatters.md)       | Built-in and custom output formats.                              |
+| [Migration](docs/migration.md)         | Upgrading from v7 to v8 (kernel architecture, DTIF tokens).      |
+| [Plugins](docs/plugins.md)             | Writing and loading custom rule plugins.                         |
+| [CI](docs/ci.md)                       | GitHub Actions examples and kernel setup for CI environments.    |
+| [API](docs/api.md)                     | Programmatic usage with TypeScript types.                        |
+| [Architecture](docs/architecture.md)   | How the DSR kernel, token graph, and lint surface work together. |
 
 ## Contributing
 

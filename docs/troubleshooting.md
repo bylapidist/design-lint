@@ -9,6 +9,7 @@ sidebar_position: 12
 This guide helps you resolve common issues when running design-lint.
 
 ## Table of contents
+- [DSR kernel not running](#dsr-kernel-not-running)
 - [Design tokens not recognized](#design-tokens-not-recognized)
 - [Config file not found](#config-file-not-found)
 - [Unknown rule](#unknown-rule)
@@ -19,12 +20,28 @@ This guide helps you resolve common issues when running design-lint.
 - [FAQ](#faq)
 - [See also](#see-also)
 
+## DSR kernel not running
+**Symptom:** `DSR kernel failed to start` or connection refused errors.
+
+**Cause:** The DSR kernel daemon is not running. It must be started before any lint command.
+
+**Resolution:** Start the kernel:
+```bash
+design-lint kernel start --config-path designlint.config.json
+design-lint kernel status
+```
+After a reboot or on a fresh CI runner, the kernel must be started explicitly. See the [usage guide](./usage.md#the-dsr-kernel) and [CI guide](./ci.md) for setup.
+
 ## Design tokens not recognized
-**Symptom:** Tokens defined in config are ignored.
+**Symptom:** Rules report "no tokens configured" or all token checks pass when they should fail.
 
-**Cause:** Token file path is wrong or the file contains invalid JSON.
+**Cause:** The DSR kernel is running but was not seeded with your token file.
 
-**Resolution:** Verify token paths and inspect loaded tokens. See [configuration](./configuration.md#tokens).
+**Resolution:** Restart the kernel with your config path so it loads your DTIF token catalog:
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
+Verify the kernel is running and has token data with `design-lint kernel status`.
 
 ## Config file not found
 **Symptom:** `Error: Config file not found`.
@@ -66,9 +83,9 @@ For stylesheet parsing failures, design-lint emits a deterministic `parse-error`
 ## CI job fails intermittently
 **Symptom:** Linting passes locally but fails in CI.
 
-**Cause:** Missing cache, differing Node versions, or nondeterministic rules.
+**Cause:** Kernel not started in CI, missing cache, differing Node versions, or nondeterministic rules.
 
-**Resolution:** Cache `node_modules`, pin Node to v22, and review custom rules for nondeterminism.
+**Resolution:** Ensure the DSR kernel is explicitly started before linting in your CI pipeline. Cache `node_modules`, pin Node to v22, and review custom rules for nondeterminism. See the [CI guide](./ci.md) for working pipeline examples.
 
 ## FAQ
 - **How do I disable a rule for a single line?**
