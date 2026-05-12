@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint-config-strict",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Strict rule configuration preset for @lapidist/design-lint.",
   "license": "MIT",
   "type": "module",
@@ -34,7 +34,7 @@
     "format:check": "prettier --check 'src/**/*.ts'"
   },
   "peerDependencies": {
-    "@lapidist/design-lint": ">=7"
+    "@lapidist/design-lint": ">=8.0.0"
   },
   "devDependencies": {
     "@lapidist/design-lint": "workspace:*"

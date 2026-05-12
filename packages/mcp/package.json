@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint-mcp",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Model Context Protocol server for @lapidist/design-lint — exposes lint_snippet, get_token_completions, and validate_component_usage tools to AI coding agents.",
   "license": "MIT",
   "type": "module",
@@ -36,7 +36,7 @@
     "format:check": "prettier --check 'src/**/*.ts'"
   },
   "peerDependencies": {
-    "@lapidist/design-lint": ">=7"
+    "@lapidist/design-lint": ">=8.0.0"
   },
   "devDependencies": {
     "@lapidist/design-lint": "workspace:*"
