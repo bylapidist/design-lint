@@ -67,7 +67,7 @@
   "homepage": "https://design-lint.lapidist.net",
   "license": "MIT",
   "dependencies": {
-    "@lapidist/dscp": "0.2.0",
+    "@lapidist/dscp": "0.2.4",
     "@lapidist/dsr": "0.2.0",
     "@lapidist/dtif-parser": "2.0.0",
     "@lapidist/dtif-schema": "2.0.0",
