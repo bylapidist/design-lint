@@ -57,6 +57,11 @@ This rule is not auto-fixable.
 .box { border-width: 4px; }
 ```
 
+```tsx
+/* TypeScript inline style — numeric literal checked against token values */
+<div style={{ borderWidth: 1 }} />
+```
+
 ## When Not To Use
 If border widths are not standardized with tokens, disable this rule.
 

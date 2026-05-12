@@ -6,7 +6,7 @@ description: "Require color tokens instead of hard-coded values."
 # design-token/colors
 
 ## Summary
-Disallows raw color values and enforces the color tokens loaded into the DSR kernel.
+Disallows raw color values and enforces the color tokens loaded into the DSR kernel. In addition to CSS declarations, the rule checks string literals and template literals inside TypeScript inline `style` attributes.
 
 ## Configuration
 Enable the rule in `designlint.config.*`:
@@ -73,6 +73,13 @@ Strict mode provides stronger design-system guarantees, but it can require broad
 
 ```css
 .button { color: #ff0000; }
+```
+
+```tsx
+/* TypeScript inline style — string literals are checked */
+<button style={{ color: '#ff0000' }} />
+/* CSS variable references are always allowed */
+<button style={{ color: 'var(--color-primary)' }} />
 ```
 
 ## When Not To Use

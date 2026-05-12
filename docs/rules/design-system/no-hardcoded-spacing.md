@@ -8,7 +8,7 @@ description: "Disallow hard-coded spacing and dimension values."
 ## Summary
 Flags numeric and string literals used directly as spacing or sizing values in JSX inline styles and CSS declarations. Zero is always allowed. This rule targets the common pattern where AI coding agents hard-code pixel values (`padding: 16`, `gap: '8px'`) instead of referencing spacing or dimension tokens.
 
-Checked CSS properties: `margin`, `padding`, `gap`, `row-gap`, `column-gap`, `top`, `right`, `bottom`, `left`, `inset`, `width`, `height`, `min-width`, `max-width`, `min-height`, `max-height` (and their camelCase JSX equivalents).
+Checked CSS properties: `margin`, `margin-top`, `margin-right`, `margin-bottom`, `margin-left`, `margin-inline`, `margin-block`, `padding`, `padding-top`, `padding-right`, `padding-bottom`, `padding-left`, `padding-inline`, `padding-block`, `gap`, `row-gap`, `column-gap`, `top`, `right`, `bottom`, `left`, `inset`, `width`, `height`, `min-width`, `max-width`, `min-height`, `max-height` (and their camelCase JSX equivalents).
 
 ## Configuration
 Enable this rule in `designlint.config.*`:
