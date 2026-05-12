@@ -6,38 +6,40 @@ sidebar_position: 3
 
 # Configuration
 
-This page explains every option in `designlint.config.*`. It targets developers adjusting the linter to their workflow.
+This page explains every option in `designlint.config.*`. It targets developers adjusting the
+linter to their workflow.
 
 ## Table of contents
+
 - [Basic config](#basic-config)
-- [Tokens](#tokens)
+- [Token seeding](#token-seeding)
 - [Name transforms](#name-transforms)
 - [Rules and severity](#rules-and-severity)
 - [Plugins](#plugins)
-- [Overrides](#overrides)
 - [Configuration best practices](#configuration-best-practices)
 - [JS and TS config files](#js-and-ts-config-files)
 - [Common patterns](#common-patterns)
 - [See also](#see-also)
 
 ## Basic config
+
 Create a configuration file at the project root:
 
 ```json
 {
-  "tokens": {},
   "rules": {}
 }
 ```
 
-The config file name may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`. design-lint searches from the current working directory to the filesystem root and merges every discovered config from root to leaf. `configPath` always points to the nearest (leaf) config for diagnostics. Merge behavior is deterministic:
+The config file name may be `designlint.config.json`, `.js`, `.ts`, `.mjs`, or `.mts`.
+design-lint searches from the current working directory to the filesystem root and merges every
+discovered config from root to leaf. Merge behavior is deterministic:
 
 - `plugins`, `ignoreFiles`, and `patterns` are concatenated in root → leaf order.
 - Scalar values (for example `concurrency`) are overwritten by the nearest config that defines them.
-- Object values (for example `tokens` and `rules`) are replaced by the nearest config that defines them.
+- Object values (for example `rules`) are replaced by the nearest config that defines them.
 
 This lets monorepos define shared defaults at the root and override selected fields per package.
-
 
 ### Monorepo layering example
 
@@ -80,80 +82,44 @@ Effective config in `packages/app`:
 
 ### Top-level options
 
-Each option tunes a specific aspect of design-lint. Use the table below as a quick reference.
-
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `tokens` | object | `undefined` | A [DTIF token document](./glossary.md#design-tokens) or a map of themes. Theme values may be inline DTIF objects or paths to `.tokens` files. |
 | `rules` | object | `undefined` | Enables [rules](./rules/index.md) and sets their severity. |
 | `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
 | `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
 | `patterns` | string[] | `[]` | File patterns to lint when none are passed on the CLI. |
-| `concurrency` | number | `os.cpus()` | Maximum parallel workers. Lower the value when running multiple linters in CI to avoid resource contention. |
+| `format` | string | `"stylish"` | Default output [formatter](./formatters.md). Overridden by `--format` on the CLI. |
+| `concurrency` | number | `os.cpus()` | Maximum parallel workers. |
 | `nameTransform` | string | `undefined` | Convert token paths to `kebab-case`, `camelCase`, or `PascalCase`. |
-| `templateTags` | string[] | `["styled", "css", "tw"]` | Tagged-template roots treated as CSS template sources. Add custom tags to enable semantic linting for your CSS-in-JS helpers. |
+| `templateTags` | string[] | `["styled", "css", "tw"]` | Tagged-template roots treated as CSS template sources. |
 
+---
 
-## Tokens
-Tokens describe the design system in a machine-readable form. Provide a DTIF document directly or supply a map of theme names.
+## Token seeding
 
-Inline example:
+In v8 the DSR kernel is the sole authoritative token source. Tokens are not declared in the
+config file — they are seeded into the running kernel from a DTIF catalog file at startup.
 
-```json
-{
-  "tokens": {
-    "$version": "1.0.0",
-    "color": {
-      "primary": {
-        "$type": "color",
-        "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
-      },
-      "secondary": { "$type": "color", "$ref": "#/color/primary" }
-    },
-    "space": {
-      "sm": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
-      },
-      "md": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 8, "unit": "px" }
-      }
-    }
-  }
-}
+To seed the kernel with your tokens before linting:
+
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
-Organise tokens by category—such as `color`, `space`, or `typography`—to mirror your design language. To support light and dark themes, supply an object keyed by theme name. Each theme may contain an inline token tree or a path to an external token file. Paths resolve relative to the configuration file:
+The kernel daemon reads token file references from the config (via the internal `KernelConfig`
+type) and loads them into its in-memory token graph. All lint commands then query the kernel
+via DSQL to retrieve token data.
 
-```json
-{
-  "tokens": {
-    "light": "./light.tokens.json",
-    "dark": {
-      "$version": "1.0.0",
-      "color": {
-        "primary": {
-          "$type": "color",
-          "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
-        },
-        "secondary": { "$type": "color", "$ref": "#/color/primary" }
-      }
-    }
-  }
-}
-```
+See the [migration guide](./migration.md#step-3--start-the-dsr-kernel-and-seed-tokens) for the
+full token seeding workflow, and the [usage guide](./usage.md#the-dsr-kernel) for kernel
+lifecycle commands.
 
-Token files should use the `.tokens` or `.tokens.json` extension and are typically served with the `application/design-tokens+json` MIME type.
+---
 
-Design token files are validated strictly:
-
-- DTIF structure, token value shapes, and alias resolution are validated using the canonical parser.
-- `$extensions` keys must contain at least one dot to avoid collisions.
-- Alias references must resolve to tokens of the same `$type` and cyclic or unknown aliases raise errors.
-- Composite token objects such as `shadow`, `strokeStyle`, `gradient`, and `typography` may only include the fields defined by the specification.
 ## Name transforms
-Token paths are normalized to dot notation. Set `nameTransform` to convert those paths into a preferred case during flattening and output generation.
+
+Token paths are normalized to dot notation. Set `nameTransform` to convert those paths into a
+preferred case during flattening and output generation.
 
 ```json
 {
@@ -164,6 +130,7 @@ Token paths are normalized to dot notation. Set `nameTransform` to convert those
 Flattened token exports and completion suggestions use the configured transform.
 
 ## Rules and severity
+
 Enable a rule by adding it to the `rules` map with a severity:
 
 ```json
@@ -175,9 +142,12 @@ Enable a rule by adding it to the `rules` map with a severity:
 }
 ```
 
-Severity values: `"off"`, `"warn"`, `"error"`, or numeric `0`, `1`, `2`. Many rules accept options; see the [rule reference](./rules/index.md).
+Severity values: `"off"`, `"warn"`, `"error"`. Numeric values `0`, `1`, `2` are accepted but
+deprecated — run `design-lint migrate` to convert them to string equivalents.
+Many rules accept options; see the [rule reference](./rules/index.md).
 
 ## Plugins
+
 Plugins bundle custom rules or formatters. Install the package and list it in `plugins`:
 
 ```json
@@ -186,48 +156,56 @@ Plugins bundle custom rules or formatters. Install the package and list it in `p
 }
 ```
 
-Only use trusted plugin packages. Plugins are loaded and executed with the same
-permissions as the design-lint process.
+Only use trusted plugin packages. Plugins are loaded and executed with the same permissions as
+the design-lint process.
 
 See the [plugins guide](./plugins.md) to author and publish your own.
 
-## Overrides
-Use overrides to apply different settings to specific files. Create separate configuration files in subdirectories or use a JavaScript config file to inspect file paths at runtime.
-
 ## Configuration best practices
-- **Layer configs in monorepos.** Place a root config with shared tokens and rules, then add package-level configs to tailor behavior.
-- **Keep tokens close to source.** Store token files alongside the components that consume them to simplify updates.
-- **Avoid global ignores.** Prefer targeted `ignoreFiles` entries over broad `.gitignore` patterns to reduce accidental omissions.
-- **Validate configs in CI.** Run design-lint as part of pull requests to catch misconfigurations early.
+
+- **Layer configs in monorepos.** Place a root config with shared rules, then add package-level
+  configs to tailor behavior.
+- **Avoid global ignores.** Prefer targeted `ignoreFiles` entries over broad `.gitignore`
+  patterns to reduce accidental omissions.
+- **Validate configs in CI.** Run design-lint as part of pull requests to catch misconfigurations
+  early.
+- **Start the kernel in CI.** Add `design-lint kernel start --config-path` before any lint step.
+  See the [CI integration guide](./ci.md).
 
 ## JS and TS config files
-Configuration can be written in JavaScript or TypeScript for dynamic setups:
+
+Configuration can be written in JavaScript or TypeScript for dynamic setups.
 
 ```ts
 // designlint.config.ts
 import { defineConfig } from '@lapidist/design-lint';
 
 export default defineConfig({
-  tokens: {
-    $version: '1.0.0',
-    color: {
-      primary: {
-        $type: 'color',
-        $value: { colorSpace: 'srgb', components: [1, 0, 0] },
-      },
-      secondary: { $type: 'color', $ref: '#/color/primary' },
-    },
+  rules: {
+    'design-token/colors': 'error',
+    'design-token/spacing': 'warn',
   },
-  rules: { 'design-token/colors': 'error' },
 });
 ```
 
+To seed the kernel with your DTIF token catalog before linting:
+
+```bash
+design-lint kernel start --config-path designlint.config.ts
+design-lint "src/**/*"
+```
+
 ## Common patterns
-- Share configs across repositories with npm packages.
+
+- Share configs across repositories with pnpm packages.
 - Combine with framework presets; see [framework integrations](./frameworks.md).
 - Set `patterns` to lint only changed files in CI.
 
 ## See also
+
 - [Rule reference](./rules/index.md)
+- [Config presets](./configuration-presets.md)
+- [Policy enforcement](./policy.md)
 - [Plugins](./plugins.md)
+- [Migration guide](./migration.md)
 - [Troubleshooting](./troubleshooting.md)

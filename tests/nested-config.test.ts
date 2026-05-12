@@ -1,17 +1,22 @@
+/**
+ * Tests for nested config loading and merging.
+ *
+ * Uses loadConfig and createLinter directly — no subprocess spawning.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createRequire } from 'node:module';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { loadConfig } from '../src/config/loader.js';
+import { createLinter } from '../src/index.js';
+import { FileSource } from '../src/adapters/node/file-source.js';
+import { ConfigTokenProvider } from '../src/config/config-token-provider.js';
 
-const tsxLoader = createRequire(import.meta.url).resolve('tsx/esm');
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-void test('CLI loads nearest config in nested project', () => {
+void test('loads nearest config and reports violations in nested project', async () => {
   const appDir = path.join(
     __dirname,
     'fixtures',
@@ -19,20 +24,16 @@ void test('CLI loads nearest config in nested project', () => {
     'packages',
     'app',
   );
-  const cli = path.join(__dirname, '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    ['--import', tsxLoader, cli, '.', '--format', 'json'],
-    { cwd: appDir, encoding: 'utf8' },
-  );
-  assert.notEqual(res.status, 0);
-  interface Result {
-    sourceId: string;
-    messages: { ruleId: string }[];
-  }
-  const parsed = JSON.parse(res.stdout) as unknown;
-  assert(Array.isArray(parsed));
-  const results = parsed as Result[];
+  const configPath = path.join(appDir, 'designlint.config.json');
+
+  const config = await loadConfig(appDir, configPath);
+  const linter = createLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: new ConfigTokenProvider(config),
+  });
+  const { results } = await linter.lintTargets([appDir]);
+
+  assert.ok(results.length > 0, 'Expected lint results');
   const files = results.map((r) => path.relative(appDir, r.sourceId)).sort();
   assert.deepEqual(files, ['src/App.module.css', 'src/App.tsx']);
   for (const r of results) {

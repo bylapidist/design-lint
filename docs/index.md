@@ -28,8 +28,8 @@ features:
     title: Token-native automation
     details: Parse DTIF documents, enforce naming, and validate usage with dedicated design-system and token rules.
   - icon: 🚦
-    title: CI compatible (experimental)
-    details: Static-analysis diagnostics, formatter outputs, and caching support CI pipelines while the project remains pre-production.
+    title: CI ready
+    details: Static-analysis diagnostics, formatter outputs, and DSR kernel setup integrate into GitHub Actions and other CI platforms out of the box.
 ---
 
 <!-- markdownlint-disable MD033 -->
@@ -77,10 +77,9 @@ adopt linting without changing their tools.
 
 ## Automate carefully {#automation}
 
-Integrate the linter in CI with explicit guardrails. The project is still pre-production and
-lint coverage is limited to supported static patterns.
+Integrate the linter in CI with explicit guardrails. Lint coverage is limited to supported static patterns.
 
-- Command-line usage fits into npm scripts, Nx workspaces, and other task runners.
+- Command-line usage fits into pnpm scripts, Nx workspaces, and other task runners.
 - CI recipes cover GitHub Actions, GitLab CI/CD, and other popular platforms.
 - Cached runs and incremental linting keep feedback loops fast for large repositories.
 

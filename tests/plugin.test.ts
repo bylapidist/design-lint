@@ -12,6 +12,7 @@ import type { PluginModule, RuleModule } from '../src/core/types.js';
 import type { Environment } from '../src/core/environment.js';
 import { PluginError } from '../src/core/errors.js';
 import { RUNTIME_ERROR_RULE_ID } from '../src/core/cache-manager.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -19,16 +20,15 @@ process.on('unhandledRejection', () => undefined);
 
 void test('external plugin rules execute', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
-  const linter = initLinter(
-    {
-      plugins: [pluginPath],
-      rules: { 'plugin/test': 'error' },
-    },
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new NodePluginLoader(),
-    },
-  );
+  const pluginConfig = {
+    plugins: [pluginPath],
+    rules: { 'plugin/test': 'error' },
+  };
+  const linter = initLinter(pluginConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(pluginConfig),
+  });
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'plugin/test');
@@ -40,6 +40,7 @@ void test('plugins resolve relative to config file', async () => {
   const linter = initLinter(config, {
     documentSource: new FileSource(),
     pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(config),
   });
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
@@ -48,16 +49,15 @@ void test('plugins resolve relative to config file', async () => {
 
 void test('loads ESM plugin modules', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin-esm.mjs');
-  const linter = initLinter(
-    {
-      plugins: [pluginPath],
-      rules: { 'plugin/esm': 'error' },
-    },
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new NodePluginLoader(),
-    },
-  );
+  const esmConfig = {
+    plugins: [pluginPath],
+    rules: { 'plugin/esm': 'error' },
+  };
+  const linter = initLinter(esmConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(esmConfig),
+  });
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.equal(res.messages[0].ruleId, 'plugin/esm');
@@ -84,7 +84,7 @@ void test('throws for invalid plugin rules', async () => {
     () =>
       manager.getPlugins({
         documentSource: new FileSource(),
-      } as Environment),
+      }),
     (err) => {
       assert.ok(err instanceof PluginError);
       assert.ok(err.context.includes('invalid-rule-plugin'));
@@ -130,7 +130,7 @@ void test('throws when plugin rule conflicts with existing rule', async () => {
     () =>
       manager.getPlugins({
         documentSource: new FileSource(),
-      } as Environment),
+      }),
     (err) => {
       assert.ok(err instanceof PluginError);
       assert.ok(err.context.includes('conflict-plugin.ts'));
@@ -155,7 +155,7 @@ void test('throws when two plugins define the same rule name', async () => {
     () =>
       manager.getPlugins({
         documentSource: new FileSource(),
-      } as Environment),
+      }),
     (err) => {
       assert.ok(err instanceof PluginError);
       assert.ok(err.context.includes('duplicate-rule-plugin.ts'));
@@ -205,19 +205,18 @@ void test('captures listener exceptions and continues other rules', async () => 
     }
   }
 
-  const linter = initLinter(
-    {
-      plugins: ['throwing-loader'],
-      rules: {
-        'plugin/throwing-listener': 'error',
-        'plugin/healthy-listener': 'error',
-      },
+  const throwingConfig = {
+    plugins: ['throwing-loader'],
+    rules: {
+      'plugin/throwing-listener': 'error',
+      'plugin/healthy-listener': 'error',
     },
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new ThrowingLoader(),
-    },
-  );
+  };
+  const linter = initLinter(throwingConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new ThrowingLoader(),
+    tokenProvider: createConfigTokenProvider(throwingConfig),
+  });
 
   const result = await linter.lintText('const value = 1;', 'sample.ts');
   const runtimeErrors = result.messages.filter(
@@ -240,13 +239,12 @@ void test('captures listener exceptions and continues other rules', async () => 
 
 void test('getPluginPaths returns resolved plugin paths', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'test-plugin.ts');
-  const linter = initLinter(
-    { plugins: [pluginPath] },
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new NodePluginLoader(),
-    },
-  );
+  const pathsConfig = { plugins: [pluginPath] };
+  const linter = initLinter(pathsConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(pathsConfig),
+  });
   await linter.lintText('const a = 1;', 'file.ts');
   const paths = await linter.getPluginPaths();
   assert.deepEqual(paths, [pluginPath]);
@@ -279,10 +277,12 @@ void test('supports custom plugin loaders', async () => {
     }
   }
   const loader = new MockLoader();
-  const linter = initLinter(
-    { plugins: ['mock'], rules: { 'mock/rule': 'error' } },
-    { documentSource: new FileSource(), pluginLoader: loader },
-  );
+  const mockConfig = { plugins: ['mock'], rules: { 'mock/rule': 'error' } };
+  const linter = initLinter(mockConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: loader,
+    tokenProvider: createConfigTokenProvider(mockConfig),
+  });
   await linter.getPluginPaths();
   const res = await linter.lintText('const a = 1;', 'file.ts');
   assert.equal(res.messages.length, 1);
@@ -291,11 +291,13 @@ void test('supports custom plugin loaders', async () => {
 
 void test('calls plugin init with environment', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'init-plugin.ts');
+  const initConfig = { plugins: [pluginPath] };
   const env = {
     documentSource: new FileSource(),
     pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(initConfig),
   };
-  const linter = initLinter({ plugins: [pluginPath] }, env);
+  const linter = initLinter(initConfig, env);
   await linter.getPluginMetadata();
   const req = createRequire(import.meta.url);
   const mod = req(pluginPath) as {
@@ -309,13 +311,12 @@ void test('calls plugin init with environment', async () => {
 
 void test('exposes plugin metadata', async () => {
   const pluginPath = path.join(__dirname, 'fixtures', 'init-plugin.ts');
-  const linter = initLinter(
-    { plugins: [pluginPath] },
-    {
-      documentSource: new FileSource(),
-      pluginLoader: new NodePluginLoader(),
-    },
-  );
+  const metaConfig = { plugins: [pluginPath] };
+  const linter = initLinter(metaConfig, {
+    documentSource: new FileSource(),
+    pluginLoader: new NodePluginLoader(),
+    tokenProvider: createConfigTokenProvider(metaConfig),
+  });
   await linter.lintText('const a = 1;', 'file.ts');
   const meta = await linter.getPluginMetadata();
   assert.deepEqual(meta, [

@@ -6,42 +6,42 @@ description: "Warn when using deprecated design system parts."
 # design-system/deprecation
 
 ## Summary
-Flags tokens marked with `$deprecated`. When a deprecated token is used as a string literal token path (for example `"colors.old"`), running the linter with `--fix` can substitute the suggested token. CSS declaration values are reported but are not currently auto-fixed.
+Flags tokens whose DTIF metadata includes a `deprecated` entry. Reports usages in string literal token paths (for example `"colors.old"`) and CSS declaration values.
 
 ## Configuration
-Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
+Enable this rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-system/deprecation": "error" } }
+```
+
+Deprecation metadata is read from the DSR kernel. Seed the kernel from a DTIF catalog that marks tokens with `$deprecated`:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "color": {
-      "old": {
-        "$type": "color",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0, 0, 0]
-        },
-        "$deprecated": { "$replacement": "#/color/new" }
-      },
-      "new": {
-        "$type": "color",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [1, 1, 1]
-        }
-      },
-      "alias": { "$type": "color", "$ref": "#/color/new" }
+  "$version": "1.0.0",
+  "color": {
+    "new": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+    },
+    "old": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [0, 0, 0] },
+      "$deprecated": { "$replacement": "#/color/new" }
     }
-  },
-  "rules": { "design-system/deprecation": "error" }
+  }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
 ## Options
 No additional options.
 
-*This rule is partially auto-fixable (string literal token paths only).*
+This rule is auto-fixable for string literal token paths (e.g. `"colors.old"` → `"colors.new"`). CSS declaration values are reported but not auto-fixed.
 
 ## Examples
 
@@ -71,7 +71,6 @@ If you do not track deprecated tokens, disable this rule.
 ## Related Rules
 - [design-system/component-prefix](./component-prefix.md)
 - [design-system/component-usage](./component-usage.md)
-
 
 ## See also
 - [Configuration](../../configuration.md)

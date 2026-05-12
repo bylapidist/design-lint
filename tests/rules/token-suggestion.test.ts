@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
-import { NodeTokenProvider } from '../../src/adapters/node/token-provider.js';
+import { ConfigTokenProvider } from '../../src/config/config-token-provider.js';
 import { createDtifTheme } from '../helpers/dtif.js';
 
 const tokens = createDtifTheme({
@@ -15,7 +15,7 @@ void test('suggests closest token name', async () => {
     { tokens, rules: { 'design-token/font-size': 'error' } },
     {
       documentSource: new FileSource(),
-      tokenProvider: new NodeTokenProvider(tokens),
+      tokenProvider: new ConfigTokenProvider({ tokens }),
     },
   );
   const res = await linter.lintText('a{font-size:18px;}', 'a.css');

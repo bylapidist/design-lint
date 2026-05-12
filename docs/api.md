@@ -28,7 +28,11 @@ import {
 
 async function main() {
   const config = await loadConfig(process.cwd());
-  const env = createNodeEnvironment(config);
+  // The DSR kernel must be running before creating the environment.
+  // Start it with: design-lint kernel start --config-path designlint.config.json
+  const env = createNodeEnvironment(config, {
+    dsr: { socketPath: '/tmp/designlint-kernel.sock' },
+  });
   const linter = createLinter(config, env);
   const { results } = await linter.lintTargets(['src/**/*.{ts,tsx}'], true);
   const formatter = await getFormatter('stylish');
@@ -64,7 +68,9 @@ Stable `Linter` methods:
 ```ts
 import { createLinter, createNodeEnvironment } from '@lapidist/design-lint';
 
-const env = createNodeEnvironment(config);
+const env = createNodeEnvironment(config, {
+  dsr: { socketPath: '/tmp/designlint-kernel.sock' },
+});
 const linter = createLinter(config, env);
 const { results } = await linter.lintTargets(['src/**/*.ts']);
 ```
@@ -97,10 +103,6 @@ Key methods:
   that back rule contexts without materializing compatibility views.
 - `RuleContext#getTokenPath(token)` – derive the normalized path for a DTIF
   token using the configured name transform.
-- `TokenRegistry#getDtifTokenByPointer(pointer, theme?)` /
-  `TokenRegistry#getDtifTokenByName(name, theme?)` /
-  `TokenRegistry#getDtifTokens(theme?)` – retrieve the cached DTIF entries that
-  power the registry when parsing DTIF documents.
 - `indexDtifTokens(tokens)` / `createDtifNameIndex(tokens)` – build pointer-
   based lookup maps for flattened DTIF tokens.
 - `DtifTokenRegistry(tokensByTheme, options?)` – aggregate flattened DTIF
@@ -127,9 +129,12 @@ design-lint ships with TypeScript definitions for `Config`, `LintResult`, `RuleM
 import type { Config, LintResult, RuleModule } from '@lapidist/design-lint';
 ```
 
+Policy-related types for advanced governance tooling are defined in `src/core/types.ts` but are not re-exported from the public index. See the [policy guide](./policy.md) for the `designlint.policy.json` shape.
+
 ## Versioning and stability
 The project targets semantic versioning for public API changes. Functions documented here are intended as the stable integration surface. Experimental exports are marked with `@experimental` in the source and may change without notice.
 
 ## See also
 - [Plugins](./plugins.md)
 - [Architecture overview](./architecture.md)
+- [Policy enforcement](./policy.md)

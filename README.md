@@ -12,20 +12,20 @@
 [![build](https://img.shields.io/github/actions/workflow/status/bylapidist/design-lint/ci.yml?label=CI&logo=github)](https://github.com/bylapidist/design-lint/actions)
 [![license](https://img.shields.io/npm/l/%40lapidist/design-lint.svg)](LICENSE)
 
-**@lapidist/design-lint** keeps JavaScript, TypeScript and style sheets aligned with your design system. It validates design tokens, enforces configured component/import policies, and offers rich formatting options for continuous integration pipelines. The linter operates solely on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif), using the canonical parser and schema as its reference implementation.
+**@lapidist/design-lint** is a Design System Runtime (DSR) for JavaScript, TypeScript, and style sheets. It enforces design token usage, component and import policies, and design system conventions across your entire codebase — backed by a long-lived kernel daemon that holds the authoritative token graph in memory and serves every lint invocation via a Unix socket.
 
-> Experimental: expect occasional breaking changes and bugs as the project evolves.
+The runtime is built on the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif) and exposes an [MCP server](packages/mcp/) for AI assistant integration, an [LSP server](packages/lsp/) for editor diagnostics, a [snapshot format](docs/architecture.md) for portable offline use, and a [DSCP document](https://github.com/bylapidist/dscp) generator for AI context (`DESIGN_SYSTEM.md`).
 
 ## Quick start
 
-**@lapidist/design-lint** requires Node.js ≥22. The commands below either run the linter once via `npx` or install it locally, initialise configuration, and lint your `src` directory. For deeper CLI details, see the [Usage guide](docs/usage.md).
+**@lapidist/design-lint** requires Node.js ≥22. The first invocation starts the DSR kernel automatically; subsequent invocations connect to the running kernel.
 
 ```bash
 # run without installing
 npx @lapidist/design-lint@latest src
 
 # or add to your project
-npm install --save-dev @lapidist/design-lint
+pnpm add --save-dev @lapidist/design-lint
 npx design-lint init
 npx design-lint src
 ```
@@ -38,7 +38,7 @@ General purpose linters understand code style, not design systems. `@lapidist/de
 
 ### Token awareness
 
-`@lapidist/design-lint` flags raw values against your configured token constraints to keep colour, spacing, and typography consistent. For strict token-reference-only enforcement, enable strict modes where supported (for example `strictReference` on token rules). Learn more in the [rule reference](docs/rules/index.md).
+`@lapidist/design-lint` flags raw values against your configured token constraints to keep colour, spacing, and typography consistent. Some rules (such as `design-token/spacing`) support a `strictReference` option to require CSS variable references rather than matching raw token values. Learn more in the [rule reference](docs/rules/index.md).
 
 ### Auto-fixes
 
@@ -64,15 +64,19 @@ For more background, read the [introductory blog post](https://lapidist.net/arti
 
 The complete documentation is available under the [`docs/`](docs) directory and on [design-lint.lapidist.net](https://design-lint.lapidist.net/). See [docs/index.md](docs/index.md) for the documentation landing page.
 
-| Document                               | Purpose                                                   |
-| -------------------------------------- | --------------------------------------------------------- |
-| [Usage](docs/usage.md)                 | Explains CLI flags, watch mode and caching.               |
-| [Configuration](docs/configuration.md) | Details tokens, rule levels and plugin activation.        |
-| [Rules](docs/rules/index.md)           | Provides a rule reference grouped by category.            |
-| [Formatters](docs/formatters.md)       | Describes built-in and custom output formats.             |
-| [CI](docs/ci.md)                       | Includes examples for GitHub Actions and other providers. |
-| [API](docs/api.md)                     | Shows programmatic usage with TypeScript types.           |
-| [Architecture](docs/architecture.md)   | Explains how the linter works internally.                 |
+| Document                                        | Purpose                                                          |
+| ----------------------------------------------- | ---------------------------------------------------------------- |
+| [Usage](docs/usage.md)                          | CLI flags, watch mode, kernel commands, and caching.             |
+| [Configuration](docs/configuration.md)          | Rule levels, plugin activation, and ignore patterns.             |
+| [Config presets](docs/configuration-presets.md) | `recommended`, `strict`, and `ai-agent` shareable configs.       |
+| [Rules](docs/rules/index.md)                    | Rule reference grouped by category.                              |
+| [Formatters](docs/formatters.md)                | Built-in and custom output formats.                              |
+| [Migration](docs/migration.md)                  | Upgrading from v7 to v8 (kernel architecture, DTIF tokens).      |
+| [Plugins](docs/plugins.md)                      | Writing and loading custom rule plugins.                         |
+| [Policy](docs/policy.md)                        | Centrally-owned guardrails that consumer configs cannot weaken.  |
+| [CI](docs/ci.md)                                | GitHub Actions examples and kernel setup for CI environments.    |
+| [API](docs/api.md)                              | Programmatic usage with TypeScript types.                        |
+| [Architecture](docs/architecture.md)            | How the DSR kernel, token graph, and lint surface work together. |
 
 ## Contributing
 

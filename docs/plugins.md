@@ -40,7 +40,7 @@ my-plugin/
 {
   "name": "design-lint-plugin-acme",
   "type": "module",
-  "peerDependencies": { "@lapidist/design-lint": "^6.0.0" }
+  "peerDependencies": { "@lapidist/design-lint": ">=8" }
 }
 ```
 
@@ -192,7 +192,9 @@ void test('reports raw colors', async () => {
     plugins: [plugin],
     rules: { 'acme/no-raw-colors': 'error' },
   };
-  const linter = createLinter(config, createNodeEnvironment(config));
+  const linter = createLinter(config, createNodeEnvironment(config, {
+    dsr: { socketPath: '/tmp/designlint-kernel.sock' },
+  }));
   const res = await linter.lintDocument({
     id: 'file.css',
     type: 'css',
@@ -205,7 +207,7 @@ void test('reports raw colors', async () => {
 ## Publishing and versioning
 - Build to CommonJS or ESM before publishing.
 - Follow semantic versioning and reference it in `peerDependencies`.
-- Publish with `npm publish` or a private registry.
+- Publish with `pnpm publish` or a private registry.
 
 ## Distributing within a team
 You can share plugins privately via Git repositories or internal registries. Document rule options in the plugin README so users can configure them correctly.
@@ -226,22 +228,22 @@ as standalone formatter modules, not as rule plugins.
 {
   "name": "design-lint-formatter-acme",
   "type": "module",
-  "peerDependencies": { "@lapidist/design-lint": "^6.0.0" }
+  "peerDependencies": { "@lapidist/design-lint": ">=8" }
 }
 ```
 
 After publishing, consumers can use the package name directly:
 
 ```bash
-npx design-lint src --format design-lint-formatter-acme
+pnpm exec design-lint src --format design-lint-formatter-acme
 ```
 
 For the exact invocation patterns (module name and relative path), see
 [Formatters](./formatters.md#writing-a-custom-formatter):
 
 ```bash
-npx design-lint src --format design-lint-formatter-acme
-npx design-lint src --format ./formatter.js
+pnpm exec design-lint src --format design-lint-formatter-acme
+pnpm exec design-lint src --format ./formatter.js
 ```
 
 ## See also

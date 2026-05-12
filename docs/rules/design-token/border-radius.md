@@ -6,28 +6,33 @@ description: "Enforce use of border radius tokens."
 # design-token/border-radius
 
 ## Summary
-Enforces `border-radius` values to match the tokens defined in your configuration.
+Enforces `border-radius` values in CSS and numeric literals in TypeScript inline style objects to match the tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/border-radius": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `dimension`-type tokens with `dimensionType: "length"` under a `radius` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "radius": {
-      "sm": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 2, "unit": "px" }
-      },
-      "lg": { "$type": "dimension", "$ref": "#/radius/sm" }
+  "$version": "1.0.0",
+  "radius": {
+    "lg": { "$type": "dimension", "$ref": "#/radius/sm" },
+    "sm": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 2, "unit": "px" }
     }
-  },
-  "rules": { "design-token/border-radius": "error" }
+  }
 }
 ```
 
-Border radius tokens use the `dimension` type with `dimensionType` set to `length`.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
 
 ## Options
 - `units` (`string[]`): CSS length units to validate for `border-radius` values. Defaults to `['px', 'rem', 'em']`.
@@ -36,17 +41,27 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given a `radius/sm` token with value `2px`:
+
 ### Invalid
 
 ```css
+/* 3px does not match any token value */
 .box { border-radius: 3px; }
 ```
 
 ### Valid
 
 ```css
-.box { border-radius: 4px; }
-.box { border-radius: var(--radius-lg); }
+/* matches token value */
+.box { border-radius: 2px; }
+/* CSS variable references are always allowed */
+.box { border-radius: var(--radius-sm); }
+```
+
+```tsx
+/* TypeScript inline style — numeric literal checked against token values */
+<div style={{ borderRadius: 2 }} />
 ```
 
 ## When Not To Use

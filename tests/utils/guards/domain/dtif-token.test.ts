@@ -146,3 +146,33 @@ void test('getTokenStringValue returns undefined for invalid color objects', () 
   };
   assert.equal(getTokenStringValue(token), undefined);
 });
+
+void test('getTokenStringValue returns undefined for non-record non-array color value', () => {
+  const token: DtifFlattenedToken = {
+    ...baseToken,
+    pointer: '#/color/primitive',
+    id: '#/color/primitive',
+    path: ['color', 'primitive'],
+    name: 'primitive',
+    type: 'color',
+    value: 42,
+  };
+  assert.equal(getTokenStringValue(token), undefined);
+});
+
+void test('getTokenStringValue returns undefined when alpha is non-finite', () => {
+  const token: DtifFlattenedToken = {
+    ...baseToken,
+    pointer: '#/color/bad-alpha',
+    id: '#/color/bad-alpha',
+    path: ['color', 'bad-alpha'],
+    name: 'bad-alpha',
+    type: 'color',
+    value: {
+      colorSpace: 'srgb',
+      components: [1, 0, 0],
+      alpha: 'not-a-number' as unknown as number,
+    },
+  };
+  assert.equal(getTokenStringValue(token), undefined);
+});

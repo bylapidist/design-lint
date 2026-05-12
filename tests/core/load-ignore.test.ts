@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
-import { loadIgnore } from '../../src/core/ignore.js';
+import { loadIgnore, getIgnorePatterns } from '../../src/core/ignore.js';
 
 void test('loadIgnore returns defaults when files missing', async () => {
   const dir = makeTmpDir();
@@ -34,6 +34,37 @@ void test('loadIgnore merges patterns from files and extra paths', async () => {
     assert.ok(patterns.includes('!node_modules/**'));
     assert.ok(patterns.includes('custom'));
     assert.ok(patterns.includes('extra.ts'));
+  } finally {
+    process.chdir(cwd);
+  }
+});
+
+void test('getIgnorePatterns includes config.ignoreFiles patterns', () => {
+  const patterns = getIgnorePatterns({
+    tokens: {},
+    rules: {},
+    ignoreFiles: ['dist/**', 'build\\output'],
+  });
+  assert.ok(patterns.includes('**/node_modules/**'));
+  assert.ok(patterns.includes('dist/**'));
+  // Backslashes should be normalized to forward slashes
+  assert.ok(patterns.includes('build/output'));
+});
+
+void test('loadIgnore includes config ignoreFiles alongside ignore files on disk', async () => {
+  const dir = makeTmpDir();
+  fs.writeFileSync(path.join(dir, '.gitignore'), 'vendor/**');
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    const { patterns } = await loadIgnore({
+      tokens: {},
+      rules: {},
+      ignoreFiles: ['custom-ignore/**'],
+    });
+    assert.ok(patterns.includes('**/node_modules/**'));
+    assert.ok(patterns.includes('custom-ignore/**'));
+    assert.ok(patterns.includes('vendor/**'));
   } finally {
     process.chdir(cwd);
   }

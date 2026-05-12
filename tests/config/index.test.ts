@@ -9,12 +9,13 @@ void test('config exposes expected members', () => {
   assert.deepEqual(
     Object.keys(config).sort(),
     [
-      'ConfigTokenProvider',
       'configSchema',
       'CONFIG_SEARCH_PLACES',
       'CONFIG_ARRAY_MERGE_KEYS',
       'defineConfig',
       'loadConfig',
+      'loadPolicy',
+      'enforcePolicy',
       'loadTokens',
       'normalizeTokens',
       'wrapTokenError',
@@ -32,7 +33,6 @@ void test('members are usable', () => {
   assert.equal(typeof config.resolveConfigFiles, 'function');
   assert.equal(typeof config.loadTokens, 'function');
   assert.equal(typeof config.normalizeTokens, 'function');
-  assert.equal(typeof config.ConfigTokenProvider, 'function');
   assert.ok(config.configSchema instanceof Object);
   assert.ok(Array.isArray(config.CONFIG_SEARCH_PLACES));
   assert.ok(Array.isArray(config.CONFIG_ARRAY_MERGE_KEYS));

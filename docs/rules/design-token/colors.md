@@ -6,37 +6,45 @@ description: "Require color tokens instead of hard-coded values."
 # design-token/colors
 
 ## Summary
-Disallows raw color values and enforces the color tokens defined in your configuration.
+Disallows raw color values and enforces the color tokens loaded into the DSR kernel. In addition to CSS declarations, the rule checks string literals and template literals inside TypeScript inline `style` attributes.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/colors": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `color`-type tokens:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "color": {
-      "primary": {
-        "$type": "color",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [1, 0, 0]
-        }
-      },
-      "secondary": { "$type": "color", "$ref": "#/color/primary" }
-    }
-  },
-  "rules": {
-    "design-token/colors": ["error", { "allow": ["named"] }]
+  "$version": "1.0.0",
+  "color": {
+    "primary": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [1, 0, 0], "hex": "#ff0000" }
+    },
+    "secondary": { "$type": "color", "$ref": "#/color/primary" }
   }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
+
+To allow specific raw formats alongside token enforcement, pass options:
+
+```json
+{ "rules": { "design-token/colors": ["error", { "allow": ["named"] }] } }
 ```
 
 ## Options
 - `allow` (`"hex" | "rgb" | "rgba" | "hsl" | "hsla" | "hwb" | "lab" | "lch" | "color" | "named"`[]): formats that may appear as raw values. Defaults to `[]`.
 - `strictReference` (`boolean`): when `true`, token-equivalent raw color literals are reported for the supported static color formats this rule parses (for example `#...`, `rgb(...)`, `hsl(...)`, `hwb(...)`, `lab(...)`, `lch(...)`, `color(...)`, named colors). Token references such as `var(--...)` are still allowed. Defaults to `false`.
 
-This rule is not auto-fixable.
+This rule is auto-fixable. Matched raw color values are replaced with `var(--token-name)` where the CSS variable name is derived from the matching token's pointer (e.g. `#/color/primary` → `var(--color-primary)`).
 
 ### Supported formats
 The rule detects and blocks the following color formats unless they are defined as tokens or explicitly allowed:
@@ -65,6 +73,13 @@ Strict mode provides stronger design-system guarantees, but it can require broad
 
 ```css
 .button { color: #ff0000; }
+```
+
+```tsx
+/* TypeScript inline style — string literals are checked */
+<button style={{ color: '#ff0000' }} />
+/* CSS variable references are always allowed */
+<button style={{ color: 'var(--color-primary)' }} />
 ```
 
 ## When Not To Use

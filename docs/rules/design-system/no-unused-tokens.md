@@ -6,59 +6,36 @@ description: "Report tokens defined but never used."
 # design-system/no-unused-tokens
 
 ## Summary
-Reports design tokens defined in your configuration that never appear in any linted file. This keeps the token set focused and helps uncover stale values left behind after refactors.
+Reports design tokens that are loaded in the DSR kernel but never referenced in any linted file. This keeps the token set focused and helps uncover stale values left behind after refactors.
 
-The rule is semantic-only: usage is resolved from explicit token references and
-normalised identities (for example token paths, JSON pointers, and CSS variable
-names). Raw literals are not treated as token usage.
+Usage is tracked across the entire lint run by the token tracker. A token is considered used when it is referenced via a CSS variable (`var(--color-primary)`), a token path, or a JSON pointer in any linted source file.
 
 > [!NOTE]
-> Run the linter on the full project to avoid false positives. Tokens referenced in files that are excluded from the run will be reported as unused.
+> Run the linter on the full project to avoid false positives. Tokens referenced in files excluded from the run will be reported as unused.
 >
-> This rule is strongest on statically analyzable patterns. Dynamic token
-> construction may produce false positives or false negatives.
+> This rule is strongest on statically analyzable patterns. Dynamic token construction may produce false positives or false negatives.
 
 ## Configuration
-Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
-
-Given this configuration:
+Enable this rule in `designlint.config.*`:
 
 ```json
-{
-  "tokens": {
-    "$version": "1.0.0",
-    "color": {
-      "primary": {
-        "$type": "color",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0, 0, 0]
-        }
-      },
-      "unused": { "$type": "color", "$ref": "#/color/primary" }
-    }
-  },
-  "rules": { "design-system/no-unused-tokens": "warn" }
-}
+{ "rules": { "design-system/no-unused-tokens": "warn" } }
 ```
 
-and the source:
+Tokens are not configured inline. Seed the DSR kernel from your DTIF catalog before linting so the rule knows which tokens exist:
 
-```ts
-const color = '{color.primary}';
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
-the `color.unused` token is reported as unused.
+If a catalog contains `color/primary` and `color/unused` but only `color/primary` is referenced across the codebase (e.g. via `var(--color-primary)`), `color/unused` is reported as unused.
 
-A CSS variable can also be ignored:
+To exclude specific tokens from usage reporting:
 
 ```json
 {
   "rules": {
-    "design-system/no-unused-tokens": [
-      "warn",
-      { "ignore": ["--custom-color"] }
-    ]
+    "design-system/no-unused-tokens": ["warn", { "ignore": ["--custom-color"] }]
   }
 }
 ```

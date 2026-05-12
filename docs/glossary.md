@@ -10,6 +10,10 @@ Key concepts used throughout the documentation.
 
 ## Table of contents
 - [Design tokens](#design-tokens)
+- [DTIF](#dtif)
+- [DSR / DSR kernel](#dsr--dsr-kernel)
+- [DSQL](#dsql)
+- [Token pointer](#token-pointer)
 - [Rule](#rule)
 - [Formatter](#formatter)
 - [Plugin](#plugin)
@@ -19,6 +23,18 @@ Key concepts used throughout the documentation.
 
 ## Design tokens
 Named values such as colours, spacing, or typography that describe your design system. design-lint uses the [Design Token Interchange Format (DTIF)](https://github.com/bylapidist/dtif) for all token files, validating documents with the canonical parser and schema.
+
+## DTIF
+**Design Token Interchange Format** — the open specification design-lint uses to represent token data. DTIF extends the W3C Design Tokens Community Group draft with richer type information and a JSON Pointer-based reference system.
+
+## DSR / DSR kernel
+**Design System Runtime** — the long-lived daemon process (`design-lint kernel`) that holds the authoritative token graph in memory. All CLI invocations and editor integrations query the kernel via a Unix socket rather than reloading token files on every run.
+
+## DSQL
+**Design System Query Language** — the protocol used by clients (CLI, LSP, MCP) to retrieve token data from a running DSR kernel. Queries are answered from the kernel's in-memory token graph.
+
+## Token pointer
+A JSON Pointer string (e.g. `#/color/button/background`) that uniquely identifies a token within a DTIF document. Rules and the DSR kernel use pointers as stable, globally-unique identifiers for tokens.
 
 ## Rule
 A check that validates code against the design system. Rules may be built-in or provided by plugins.

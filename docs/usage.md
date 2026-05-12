@@ -11,11 +11,19 @@ This guide walks you through installing and running @lapidist/design-lint for th
 ## Table of contents
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [The DSR kernel](#the-dsr-kernel)
 - [Initial configuration](#initial-configuration)
 - [Run the linter](#run-the-linter)
+  - [Commonly used flags](#commonly-used-flags)
 - [Autofix workflow](#autofix-workflow)
 - [Validate configuration](#validate-configuration)
 - [Export resolved tokens](#export-resolved-tokens)
+- [Generate documentation](#generate-documentation)
+- [Migrate configuration](#migrate-configuration)
+- [Token write commands](#token-write-commands)
+- [Component write commands](#component-write-commands)
+- [Rule write commands](#rule-write-commands)
+- [Diff snapshots](#diff-snapshots)
 - [Watch mode and caching](#watch-mode-and-caching)
 - [Target files and directories](#target-files-and-directories)
 - [Exit codes](#exit-codes)
@@ -32,16 +40,16 @@ Install Node using your preferred version manager and ensure `node --version` re
 Run the linter once without installing it locally:
 
 ```bash
-npx @lapidist/design-lint@latest .
+pnpm dlx @lapidist/design-lint@latest .
 ```
 
 For long-term use, install design-lint as a development dependency. This keeps your team on the same version and allows custom configuration:
 
 ```bash
-npm install --save-dev @lapidist/design-lint
+pnpm add --save-dev @lapidist/design-lint
 ```
 
-Use `npx` for ad-hoc checks or CI where the package is not yet installed. For projects committing to design-lint, prefer a local installation so the binary is available via `npm scripts`.
+Use `pnpm dlx` for ad-hoc checks before installing locally. For projects committing to design-lint, prefer a local installation so the binary is available via scripts.
 
 ```json
 {
@@ -51,22 +59,86 @@ Use `npx` for ad-hoc checks or CI where the package is not yet installed. For pr
 }
 ```
 
-Run `npm run lint:design` to invoke the linter using the project-local version.
+Run `pnpm run lint:design` to invoke the linter using the project-local version.
+
+## The DSR kernel
+
+design-lint v8 is backed by the **Design System Runtime (DSR) kernel** — a long-lived Node.js daemon that holds the authoritative token graph in memory and serves rules and token data to every CLI invocation via a Unix socket.
+
+**Auto-start**: the first `design-lint` command you run will start the kernel automatically. You will see:
+
+```text
+[design-lint] Starting DSR kernel (socket: /tmp/designlint-kernel.sock)...
+```
+
+Subsequent commands connect to the already-running kernel instantly. The kernel persists across terminal sessions until you stop it or reboot.
+
+**Kernel lifecycle commands**:
+
+```bash
+# Start the kernel (and seed it with your config tokens)
+design-lint kernel start --config-path designlint.config.json
+
+# Check whether the kernel is running
+design-lint kernel status
+
+# Stop the kernel
+design-lint kernel stop
+```
+
+`kernel start` advanced options:
+
+| Option | Description |
+| --- | --- |
+| `--config-path <path>` | Load tokens from this config file into the kernel on startup. |
+| `--socket-path <path>` | Override the default Unix socket path. |
+| `--http-port <n>` | Enable an HTTP fallback transport on this port. |
+| `--no-http` | Disable the HTTP fallback transport entirely. |
+| `--pid-file <path>` | Write the kernel PID to a custom file (used by `kernel stop` and `kernel status`). |
+
+**Troubleshooting the kernel**:
+
+- If `design-lint kernel status` shows stopped, run `design-lint kernel start` then retry.
+- If the socket path `/tmp/designlint-kernel.sock` is missing, the kernel is not running.
+- On a new machine or after a reboot, you must start the kernel before linting.
+
+**Snapshot export**: to capture the kernel's current token graph for offline use or CI caching:
+
+```bash
+design-lint export-runtime-snapshot --out .designlint/snapshot.bin
+```
+
+**AI context document**: generate a `DESIGN_SYSTEM.md` that describes every token, rule, and component — consumed by MCP tools and AI assistants:
+
+```bash
+design-lint export-design-system-md --out DESIGN_SYSTEM.md
+# add --lint to run a lint pass and populate the violations section
+design-lint export-design-system-md --out DESIGN_SYSTEM.md --lint
+```
 
 ## Initial configuration
 Generate a starter configuration file:
 
 ```bash
-npx design-lint init
+pnpm exec design-lint init
 ```
 
-The command creates `designlint.config.json`. See [configuration](./configuration.md) for all available options.
+The command creates `designlint.config.json`. Pass `--init-format` to control the file format:
+
+```bash
+pnpm exec design-lint init --init-format ts   # designlint.config.ts
+pnpm exec design-lint init --init-format json # designlint.config.json (default)
+```
+
+Accepted values: `js`, `cjs`, `mjs`, `ts`, `mts`, `json`.
+
+See [configuration](./configuration.md) for all available options.
 
 ## Run the linter
 Lint all files under `src`:
 
 ```bash
-npx design-lint "src/**/*"
+pnpm exec design-lint "src/**/*"
 ```
 
 Use quotes around globs to prevent shell expansion. By default the CLI exits with code `1` when errors are found and exits with code `0` if no files match.
@@ -74,14 +146,34 @@ Use quotes around globs to prevent shell expansion. By default the CLI exits wit
 In strict CI workflows, add `--fail-on-empty` to fail fast when a glob resolves to no files:
 
 ```bash
-npx design-lint "src/**/*" --fail-on-empty
+pnpm exec design-lint "src/**/*" --fail-on-empty
 ```
+
+### Commonly used flags
+
+| Flag | Description |
+| --- | --- |
+| `--config <path>` | Path to a specific configuration file. |
+| `--format <name\|path>` | Output formatter: `stylish` (default), `json`, `sarif`, or a path to a custom module. |
+| `--output <file>` | Write the formatted report to a file instead of stdout. |
+| `--report <file>` | Write raw JSON results to a file (separate from the formatted output). |
+| `--max-warnings <n>` | Exit with code `1` when the number of warnings exceeds `n`. Use `0` to treat any warning as a failure. |
+| `--quiet` | Suppress stdout output; only the exit code signals success or failure. |
+| `--no-color` | Disable ANSI colour in terminal output. |
+| `--concurrency <n>` | Maximum files linted in parallel (default: number of CPU cores). |
+| `--ignore-path <file>` | Load additional glob ignore patterns from a file. |
+| `--kernel-socket-path <path>` | Connect to a DSR kernel at a non-default Unix socket path. |
+| `--fix` | Apply auto-fixes in place. |
+| `--fail-on-empty` | Exit `1` when no files match the provided targets. |
+| `--watch` | Re-lint when files change. |
+| `--cache` | Enable persistent per-file caching (stored in `.designlintcache`). |
+| `--cache-location <path>` | Custom cache file path. |
 
 ## Autofix workflow
 Many rules support auto-fix. Use the `--fix` flag to update files in place:
 
 ```bash
-npx design-lint "src/**/*" --fix
+pnpm exec design-lint "src/**/*" --fix
 ```
 
 Run `--fix` locally before committing to keep diffs small and intentional. In CI environments, avoid `--fix`; instead run design-lint in read-only mode and fail the build if fixes are required. There is currently no dry-run mode for previewing changes.
@@ -92,20 +184,20 @@ correctly. The command exits with `0` when the configuration is valid and non-ze
 on errors.
 
 ```bash
-npx design-lint validate
+pnpm exec design-lint validate
 ```
 
 Pass `--config` to specify a configuration file:
 
 ```bash
-npx design-lint validate --config designlint.config.json
+pnpm exec design-lint validate --config designlint.config.json
 ```
 
 ## Export resolved tokens
 Use the `tokens` subcommand to write the canonical flattened DTIF tokens to a file or stdout. Each theme maps JSON pointers to the `DtifFlattenedToken` entries produced by the parser, including metadata and resolution details:
 
 ```bash
-npx design-lint tokens --out tokens.json
+pnpm exec design-lint tokens --out tokens.json
 ```
 
 The output resembles:
@@ -140,11 +232,102 @@ import {
 } from '@lapidist/design-lint';
 ```
 
+## Generate documentation
+
+Generate a documentation site for your design system's tokens and rules from the running kernel:
+
+```bash
+pnpm exec design-lint docs --out docs/design-system
+```
+
+Options:
+- `--out <dir>` – output directory (default: `docs/design-system`)
+- `--site-format <name>` – `vitepress` (default) or `markdown`
+- `--config <path>` – path to configuration file
+
+## Migrate configuration
+
+Run the v7 → v8 codemod to update config files automatically:
+
+```bash
+pnpm exec design-lint migrate --config designlint.config.json
+```
+
+Options:
+- `--config <path>` – path to the config file to migrate
+- `--out <path>` – write migrated config to a new file instead of overwriting
+- `--dry-run` – print changes without writing files
+
+See the [migration guide](./migration.md) for the full upgrade workflow.
+
+## Token write commands
+
+Write tokens directly into the running DSR kernel. These commands are useful for scripting or build integrations that seed tokens programmatically.
+
+```bash
+# Register a new token
+design-lint token add "#/color/button/primary" \
+  --name "Button primary" \
+  --type color \
+  --value '{"colorSpace":"srgb","components":[0,0.435,1]}'
+
+# Mark a token as deprecated
+design-lint token deprecate "#/color/old" --replacement "#/color/new"
+```
+
+Both subcommands accept `--socket-path` and `--http-port` to connect to a non-default kernel instance.
+
+## Component write commands
+
+Register design system components in the running kernel so that component-related rules know which components belong to the design system:
+
+```bash
+design-lint component register Button \
+  --package @acme/design-system \
+  --version 3.0.0 \
+  --replaces LegacyButton
+```
+
+Options:
+- `--package <name>` – (required) package that exports the component
+- `--version <semver>` – package version
+- `--replaces <names>` – comma-separated list of component names this supersedes
+- `--socket-path` / `--http-port` – kernel connection options
+
+## Rule write commands
+
+Update a rule's severity or options in the running kernel without restarting:
+
+```bash
+design-lint rule configure design-token/colors \
+  --severity error \
+  --options '{"allow":["named"]}'
+```
+
+Options:
+- `--severity <level>` – `error`, `warn`, or `off`
+- `--options <json>` – rule options as a JSON string
+- `--socket-path` / `--http-port` – kernel connection options
+
+## Diff snapshots
+
+Compare two DSR kernel snapshots to inspect what changed between two states:
+
+```bash
+design-lint diff before.bin after.bin
+design-lint diff before.bin after.bin --format json
+```
+
+Options:
+- `--format <name>` – `text` (default) or `json`
+
+Snapshots are produced with `design-lint export-runtime-snapshot --out <file>`.
+
 ## Watch mode and caching
 Use `--watch` to rerun the linter when files change. Persistent caching is opt-in and only enabled when you pass `--cache`.
 
 ```bash
-npx design-lint "src/**/*" --watch --cache
+pnpm exec design-lint "src/**/*" --watch --cache
 ```
 
 When `--cache` is enabled, design-lint writes cache data to `.designlintcache` (or the path provided by `--cache-location`).
@@ -155,7 +338,7 @@ When `--cache` is enabled, design-lint writes cache data to `.designlintcache` (
 You can pass specific files or directories:
 
 ```bash
-npx design-lint src/button.tsx styles/*.css
+pnpm exec design-lint src/button.tsx styles/*.css
 ```
 
 ## Exit codes

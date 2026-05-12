@@ -193,3 +193,18 @@ void test('flattenDesignTokens rejects non-DTIF objects', () => {
     /Expected DTIF token documents or pre-flattened DTIF tokens/i,
   );
 });
+
+void test('flattenDesignTokens accepts nameTransform option without effect on pre-flattened tokens', () => {
+  const tokens = [backgroundToken] as const;
+  // nameTransform is accepted but has no effect for single-document flattening
+  const flat = flattenDesignTokens(tokens, { nameTransform: 'kebab-case' });
+  assert.equal(flat.length, 1);
+  assert.strictEqual(flat[0], backgroundToken);
+});
+
+void test('flattenDesignTokens rejects null and primitive inputs', () => {
+  assert.throws(
+    () => flattenDesignTokens(null as unknown as DesignTokens),
+    /Expected DTIF token documents or pre-flattened DTIF tokens/i,
+  );
+});

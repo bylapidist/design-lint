@@ -15,7 +15,7 @@ export {
   type FlattenOptions,
 } from './flatten.js';
 export { toThemeRecord } from './theme.js';
-export { extractVarName } from './css.js';
+export { extractVarName, pointerToVarName } from './css.js';
 export { TOKEN_FILE_GLOB } from './files.js';
 export {
   compareTokenPath,

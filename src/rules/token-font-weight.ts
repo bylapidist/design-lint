@@ -10,7 +10,16 @@ const {
 
 export const fontWeightRule = tokenRule({
   name: 'design-token/font-weight',
-  meta: { description: 'enforce font-weight tokens', category: 'design-token' },
+  meta: {
+    description: 'enforce font-weight tokens',
+    category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw font weights bypass typographic hierarchy tokens and produce visual inconsistency when the type system is refactored.',
+      since: 'v8.0.0',
+    },
+  },
   tokens: 'fontWeight',
   message:
     'design-token/font-weight requires font weight tokens; configure tokens with $type "fontWeight" under a "fontWeights" group to enable this rule.',

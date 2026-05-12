@@ -14,6 +14,9 @@ import type { Linter } from '../index.js';
 import type { LintResult } from '../core/types.js';
 import { createNodeEnvironment } from '../adapters/node/environment.js';
 import { relFromCwd, realpathIfExists } from '../adapters/node/utils/paths.js';
+import type { DesignLintPolicy } from '../core/types.js';
+import { loadPolicy } from '../config/policy-loader.js';
+import { enforcePolicy } from '../config/policy-enforcer.js';
 
 /**
  * Represents the prepared environment used by CLI commands.
@@ -45,6 +48,8 @@ export interface Environment {
   state: { pluginPaths: string[]; ignoreFilePaths: string[] };
   /** Retrieve the active ignore matcher. */
   getIg: () => Ignore;
+  /** Active policy loaded from `designlint.policy.json`, if present. */
+  policy?: DesignLintPolicy;
   /** Options used when creating the environment. */
   envOptions: {
     cacheLocation?: string;
@@ -71,6 +76,8 @@ export interface PrepareEnvironmentOptions {
   ignorePath?: string;
   /** File patterns to lint. */
   patterns?: string[];
+  /** Path to the DSR kernel Unix socket. Defaults to /tmp/designlint-kernel.sock. */
+  kernelSocketPath?: string;
 }
 
 /**
@@ -99,13 +106,47 @@ export async function prepareEnvironment(
   if (config.configPath) {
     config.configPath = realpathIfExists(config.configPath);
   }
+
+  // Enforce designlint.policy.json when present. Static checks (required rules,
+  // min severity) throw a ConfigError before any linting begins.
+  const policyDir = config.configPath
+    ? path.dirname(config.configPath)
+    : process.cwd();
+  const policy = loadPolicy(policyDir);
+  if (policy !== undefined) {
+    enforcePolicy(config, policy);
+  }
+  // `policy` is retained and returned so the execute layer can apply runtime
+  // enforcement (tokenCoverage, ratchet, agentPolicy) after the lint run.
+
   const cacheLocation = options.cache
     ? path.resolve(process.cwd(), options.cacheLocation ?? '.designlintcache')
     : undefined;
+
+  const socketPath = options.kernelSocketPath ?? '/tmp/designlint-kernel.sock';
+
+  // In v8, the DSR kernel is the only token source. If the socket is not
+  // present, auto-launch the kernel daemon before connecting.
+  if (!fs.existsSync(socketPath)) {
+    const { kernelStart } = await import('./kernel.js');
+    // Write to stderr so kernel startup messages don't corrupt stdout (e.g. JSON formatter output)
+    process.stderr.write(
+      `[design-lint] Starting DSR kernel (socket: ${socketPath})...\n`,
+    );
+    kernelStart({ socketPath, configPath: config.configPath, quiet: true });
+    if (!fs.existsSync(socketPath)) {
+      throw new Error(
+        `DSR kernel failed to start (socket not found at ${socketPath}). ` +
+          "Run 'design-lint kernel start' manually and check system logs.",
+      );
+    }
+  }
+
   const env = createNodeEnvironment(config, {
     cacheLocation,
     configPath: config.configPath,
     patterns: options.patterns,
+    dsr: { socketPath },
   });
   const cache = env.cacheProvider;
   const linterRef = {
@@ -151,6 +192,7 @@ export async function prepareEnvironment(
     gitIgnore,
     refreshIgnore,
     state,
+    policy,
     getIg: () => ig,
     envOptions: {
       cacheLocation,

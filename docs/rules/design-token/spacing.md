@@ -6,30 +6,41 @@ description: "Use spacing tokens."
 # design-token/spacing
 
 ## Summary
-Enforces a spacing scale so that only configured token values or multiples of a base unit are allowed.
+Enforces a spacing scale across **all** CSS declarations — any dimension value (in `px`, `rem`, `em` by default) must either match a spacing token value or be a multiple of the configured base unit. JavaScript numeric literals and template literal values in style objects are also checked.
+
+For narrower enforcement limited to specific layout properties (margin, padding, gap, etc.), see [`design-system/no-hardcoded-spacing`](../design-system/no-hardcoded-spacing.md).
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/spacing": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `dimension`-type tokens with `dimensionType: "length"` under a `spacing` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "spacing": {
-      "sm": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
-      },
-      "md": { "$type": "dimension", "$ref": "#/spacing/sm" }
+  "$version": "1.0.0",
+  "spacing": {
+    "md": { "$type": "dimension", "$ref": "#/spacing/sm" },
+    "sm": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
     }
-  },
-  "rules": {
-    "design-token/spacing": ["error", { "base": 4, "units": ["rem", "vw"] }]
   }
 }
 ```
 
-Spacing tokens use the `dimension` type with `dimensionType` set to `length`.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
+
+To configure the base unit and allowed CSS units, pass options:
+
+```json
+{ "rules": { "design-token/spacing": ["error", { "base": 4, "units": ["px", "rem"] }] } }
+```
 
 ## Options
 - `base` (`number`): values must be multiples of this number. Defaults to `4`.
@@ -69,6 +80,7 @@ If spacing values do not follow a scale, disable this rule.
 ## Related Rules
 - [design-token/colors](./colors.md)
 - [design-token/font-size](./font-size.md)
+- [design-system/no-hardcoded-spacing](../design-system/no-hardcoded-spacing.md)
 
 ## See also
 - [Configuration](../../configuration.md)

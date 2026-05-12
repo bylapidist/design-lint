@@ -20,6 +20,12 @@ export const borderWidthRule = tokenRule<BorderWidthOptions>({
   meta: {
     description: 'enforce border-width tokens',
     category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw border widths bypass stroke scale tokens and produce visually inconsistent borders that cannot be centrally updated.',
+      since: 'v8.0.0',
+    },
     schema: z.object({ units: z.array(z.string()).optional() }).optional(),
   },
   tokens: 'dimension',

@@ -31,8 +31,6 @@ jobs:
               - '!**/*.md'
               - '!*.md'
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.33.4
       - uses: actions/setup-node@v6
         with:
           node-version: 24.15.0
@@ -43,12 +41,30 @@ jobs:
         run: pnpm audit --prod --audit-level high
       - run: pnpm run build
         if: steps.changes.outputs['non-docs'] == 'true'
+      - name: Start DSR kernel
+        if: steps.changes.outputs['non-docs'] == 'true'
+        run: |
+          node dist/cli/kernel-daemon.js --no-http &
+          echo $! > /tmp/designlint-kernel-ci.pid
+          for i in $(seq 1 40); do
+            [ -S /tmp/designlint-kernel.sock ] && echo "DSR kernel ready" && exit 0
+            sleep 0.25
+          done
+          echo "DSR kernel failed to start after 10s" && exit 1
       - run: pnpm run lint
       - run: pnpm run format:check
       - run: pnpm run lint:md
         if: steps.changes.outputs['docs'] == 'true'
+      - run: node scripts/validate-dtif-docs.mjs
+        if: steps.changes.outputs['docs'] == 'true'
       - run: pnpm run test:coverage
         if: steps.changes.outputs['non-docs'] == 'true'
+      - name: Stop DSR kernel
+        if: steps.changes.outputs['non-docs'] == 'true' && always()
+        run: |
+          if [ -f /tmp/designlint-kernel-ci.pid ]; then
+            kill "$(cat /tmp/designlint-kernel-ci.pid)" 2>/dev/null || true
+          fi
       - run: pnpm run docs:build
         if: steps.changes.outputs['docs'] == 'true'
       - run: node scripts/generate-coverage-comment.mjs

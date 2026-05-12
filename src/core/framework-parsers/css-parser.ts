@@ -61,11 +61,18 @@ export function parseCSS(
           ? lessSyntax.parse(text)
           : postcss.parse(text);
     root.walkDecls((d) => {
+      const startOffset = d.source?.start?.offset;
+      const between = d.raws.between ?? ': ';
+      const valueOffset =
+        startOffset !== undefined
+          ? startOffset + d.prop.length + between.length
+          : undefined;
       decls.push({
         prop: d.prop,
         value: d.value,
         line: d.source?.start?.line ?? 1,
         column: d.source?.start?.column ?? 1,
+        valueOffset,
       });
     });
   } catch (e: unknown) {

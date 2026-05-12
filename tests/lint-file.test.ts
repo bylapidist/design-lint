@@ -6,13 +6,17 @@ import { FileSource } from '../src/adapters/node/file-source.js';
 import { createFileDocument } from '../src/adapters/node/file-document.js';
 import { loadConfig } from '../src/config/loader.js';
 import type { DocumentSource, LintDocument } from '../src/core/environment.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const fixtureDir = path.join(__dirname, 'fixtures', 'svelte');
 
 void test('lintDocument matches lintTargets result', async () => {
   const config = await loadConfig(fixtureDir);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const file = path.join(fixtureDir, 'src', 'App.svelte');
   const doc = createFileDocument(file);
   const res1 = await linter.lintDocument(doc);
@@ -39,7 +43,10 @@ void test('lintDocument reports unreadable file', async () => {
       return { documents: [doc], ignoreFiles: [] };
     },
   };
-  const linter = initLinter(config, documentSource);
+  const linter = initLinter(config, {
+    documentSource,
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintDocument(doc);
   assert.equal(res.messages.length, 1);
   const msg = res.messages[0];
@@ -65,7 +72,10 @@ void test('lintTargets reports unreadable file', async () => {
       return { documents: [doc], ignoreFiles: [] };
     },
   };
-  const linter = initLinter(config, documentSource);
+  const linter = initLinter(config, {
+    documentSource,
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const { results } = await linter.lintTargets([file]);
   const res = results[0];
   assert.equal(res.messages.length, 1);

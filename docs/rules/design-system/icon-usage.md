@@ -29,7 +29,7 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 > The default mapping enforces `svg -> Icon`. If your codebase permits raw SVGs,
 > override `substitutions` or disable this rule.
 
-*This rule is auto-fixable.*
+*This rule provides fixes when the replacement component is already in scope. Both self-closing tags and paired open/close tags are auto-fixed independently (each part of a paired tag is fixed separately).*
 
 ## Examples
 

@@ -5,7 +5,10 @@
  */
 import type { DesignTokens } from '../../core/types.js';
 import { isDesignTokens, isThemeRecord } from '../guards/domain/index.js';
-import { attachDtifFlattenedTokens } from './dtif-cache.js';
+import {
+  attachDtifFlattenedTokens,
+  getDtifFlattenedTokens,
+} from './dtif-cache.js';
 import {
   parseTokensForTheme,
   type ParseTokensForThemeResult,
@@ -42,15 +45,19 @@ export async function normalizeTokens(
   if (isThemeRecord(tokens)) {
     for (const [theme, t] of Object.entries(tokens)) {
       if (theme.startsWith('$')) continue;
-      const result = await parseTokensForTheme(theme, t);
-      attachFlattenedTokens(t, result);
+      if (!getDtifFlattenedTokens(t)) {
+        const result = await parseTokensForTheme(theme, t);
+        attachFlattenedTokens(t, result);
+      }
     }
     return tokens;
   }
 
   if (isDesignTokens(tokens)) {
-    const result = await parseTokensForTheme('default', tokens);
-    attachFlattenedTokens(tokens, result);
+    if (!getDtifFlattenedTokens(tokens)) {
+      const result = await parseTokensForTheme('default', tokens);
+      attachFlattenedTokens(tokens, result);
+    }
     return { default: tokens };
   }
 

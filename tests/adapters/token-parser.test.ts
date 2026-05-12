@@ -136,3 +136,56 @@ void test('readDtifTokensFile attaches flattened DTIF tokens', async () => {
     flattened.some((token) => token.pointer === '#/color/button/background'),
   );
 });
+
+void test('parseDtifTokensFile passes options through without warn/onWarn handlers', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
+  const file = path.join(dir, 'theme.tokens.json');
+  const document: DesignTokens = {
+    $version: '1.0.0',
+    color: {
+      blue: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 1] },
+      },
+    },
+  };
+  await writeFile(file, JSON.stringify(document), 'utf8');
+
+  // Passing an empty options object reaches toDtifOptions line 164 and the
+  // handlers.length === 0 early-return in notifyWarnings.
+  const result = await parseDtifTokensFile(file, {});
+  assert.strictEqual(result.tokens.length, 1);
+});
+
+void test('parseDtifTokensFile invokes warn and onWarn handlers for warning diagnostics', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'tokens-'));
+  const file = path.join(dir, 'theme.tokens.json');
+  const document: DesignTokens = {
+    $version: '1.0.0',
+    color: {
+      blue: {
+        $type: 'color',
+        $value: { colorSpace: 'srgb', components: [0, 0, 1] },
+      },
+    },
+  };
+  await writeFile(file, JSON.stringify(document), 'utf8');
+
+  const warnDiagnostics: unknown[] = [];
+  const onWarnDiagnostics: unknown[] = [];
+
+  // Both handlers should be registered — notifyWarnings filters to warnings only.
+  const result = await parseDtifTokensFile(file, {
+    warn: (d) => {
+      warnDiagnostics.push(d);
+    },
+    onWarn: (d) => {
+      onWarnDiagnostics.push(d);
+    },
+  });
+
+  // The file is valid so no error is thrown; warn handlers are invoked for any
+  // warning-severity diagnostics present in the result (may be zero).
+  assert.ok(result.tokens.length >= 1);
+  assert.equal(warnDiagnostics.length, onWarnDiagnostics.length);
+});

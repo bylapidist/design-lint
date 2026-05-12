@@ -5,6 +5,7 @@ import path from 'node:path';
 import { makeTmpDir } from '../src/adapters/node/utils/tmp.js';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const tokens = {
   $version: '1.0.0',
@@ -39,7 +40,13 @@ void test('inline directives disable linting', async () => {
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      {
+        documentSource: new FileSource(),
+        tokenProvider: createConfigTokenProvider({
+          tokens,
+          rules: { 'design-system/deprecation': 'error' },
+        }),
+      },
     );
     const { results } = await linter.lintTargets([file]);
     const res = results[0];
@@ -62,7 +69,13 @@ void test('strings resembling directives do not disable next line', async () => 
   try {
     const linter = initLinter(
       { tokens, rules: { 'design-system/deprecation': 'error' } },
-      new FileSource(),
+      {
+        documentSource: new FileSource(),
+        tokenProvider: createConfigTokenProvider({
+          tokens,
+          rules: { 'design-system/deprecation': 'error' },
+        }),
+      },
     );
     const { results } = await linter.lintTargets([file]);
     const res = results[0];
@@ -99,16 +112,17 @@ void test('rule-scoped inline directives only disable matching rules', async () 
   const cwd = process.cwd();
   process.chdir(dir);
   try {
-    const linter = initLinter(
-      {
-        tokens: ruleTokens,
-        rules: {
-          'design-token/colors': 'error',
-          'design-token/spacing': 'error',
-        },
+    const ruleConfig = {
+      tokens: ruleTokens,
+      rules: {
+        'design-token/colors': 'error',
+        'design-token/spacing': 'error',
       },
-      new FileSource(),
-    );
+    };
+    const linter = initLinter(ruleConfig, {
+      documentSource: new FileSource(),
+      tokenProvider: createConfigTokenProvider(ruleConfig),
+    });
     const { results } = await linter.lintTargets([file]);
     const messages = results[0]?.messages ?? [];
     assert.equal(messages.length, 1);

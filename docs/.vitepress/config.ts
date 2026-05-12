@@ -22,9 +22,11 @@ const guideSidebar = [
     items: [
       { text: 'Usage', link: '/usage' },
       { text: 'Configuration', link: '/configuration' },
+      { text: 'Config presets', link: '/configuration-presets' },
       { text: 'Migration', link: '/migration' },
       { text: 'Frameworks', link: '/frameworks' },
       { text: 'CI integration', link: '/ci' },
+      { text: 'Policy enforcement', link: '/policy' },
       { text: 'Troubleshooting', link: '/troubleshooting' },
     ],
   },
@@ -86,7 +88,8 @@ export default defineConfig({
       {
         text: 'Guide',
         link: '/usage',
-        activeMatch: '^/(usage|configuration|migration|frameworks|ci|troubleshooting)$',
+        activeMatch:
+          '^/(usage|configuration|configuration-presets|migration|frameworks|ci|policy|troubleshooting)$',
       },
       { text: 'Rules', link: '/rules/', activeMatch: '^/rules/' },
       { text: 'Examples', link: '/examples/', activeMatch: '^/examples/' },

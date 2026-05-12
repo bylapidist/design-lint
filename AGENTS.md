@@ -4,12 +4,12 @@ This repository requires Node.js >= 22 and follows strict [Semantic Versioning](
 
 ## Before committing
 
-1. Ensure dependencies are installed with `npm install` if needed.
+1. Ensure dependencies are installed with `pnpm install` if needed.
 2. Run **and pass** the following commands:
-   - `npm run lint`
-   - `npm run format:check`
-   - `npm test`
-   - If Markdown files were modified, run `npm run lint:md`
+   - `pnpm run lint`
+   - `pnpm run format:check`
+   - `pnpm test`
+   - If Markdown files were modified, run `pnpm run lint:md`
 
 ## Changesets and releases
 
@@ -35,7 +35,7 @@ This repository requires Node.js >= 22 and follows strict [Semantic Versioning](
 
 ## Additional notes
 
-- Use `npm run format` to automatically format files when needed.
-- Run `npm run build` when modifying source files to ensure the TypeScript build succeeds.
+- Use `pnpm run format` to automatically format files when needed.
+- Run `pnpm run build` when modifying source files to ensure the TypeScript build succeeds.
 - Do not use `eslint ignore` or disable rules with `eslint-disable` comments; all code must satisfy ESLint rules without overrides.
 - Use clean TypeScript types and avoid type casting or assertions such as `as any`.

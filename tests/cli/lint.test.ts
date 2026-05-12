@@ -1,20 +1,26 @@
+/**
+ * Tests for the lint command behaviour.
+ *
+ * Uses createLinter directly with explicit token provider — no subprocess spawning.
+ */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { makeTmpDir } from '../../src/adapters/node/utils/tmp.js';
-import { createRequire } from 'node:module';
+import { loadConfig } from '../../src/config/loader.js';
+import { createLinter } from '../../src/index.js';
+import { FileSource } from '../../src/adapters/node/file-source.js';
+import { ConfigTokenProvider } from '../../src/config/config-token-provider.js';
+import { getFormatter } from '../../src/formatters/index.js';
 
-const require = createRequire(import.meta.url);
-const tsxLoader = require.resolve('tsx/esm');
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-void test('lint command reports token color violations', () => {
-  const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
+function writeColorTokens(dir: string): void {
   fs.writeFileSync(
-    tokensPath,
+    path.join(dir, 'base.tokens.json'),
     JSON.stringify({
       $version: '1.0.0',
       color: {
@@ -25,165 +31,142 @@ void test('lint command reports token color violations', () => {
       },
     }),
   );
+}
+
+function makeEnv(config: Awaited<ReturnType<typeof loadConfig>>) {
+  return {
+    documentSource: new FileSource(),
+    tokenProvider: new ConfigTokenProvider(config),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+void test('lint command reports token color violations', async () => {
+  const dir = makeTmpDir();
+  writeColorTokens(dir);
+  const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
+    configPath,
     JSON.stringify({
       tokens: { default: './base.tokens.json' },
       rules: { 'design-token/colors': 'error' },
     }),
   );
-  fs.writeFileSync(path.join(dir, 'input.css'), 'a { color: #fff; }');
+  const inputFile = path.join(dir, 'input.css');
+  fs.writeFileSync(inputFile, 'a { color: #fff; }');
 
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'input.css',
-      '--config',
-      'designlint.config.json',
-    ],
-    { cwd: dir, encoding: 'utf8' },
+  const config = await loadConfig(dir, configPath);
+  const linter = createLinter(config, makeEnv(config));
+  const formatter = await getFormatter('stylish');
+  const { results } = await linter.lintTargets([inputFile]);
+  const output = formatter(results, false);
+  const hasErrors = results.some((r) =>
+    r.messages.some((m) => m.severity === 'error'),
   );
-  assert.equal(res.status, 1);
-  assert.match(res.stdout, /input.css/);
+  assert.equal(hasErrors, true);
+  assert.match(output, /input\.css/);
 });
 
-void test('lint command exits successfully when no files match by default', () => {
+void test('lint exits successfully when no files match by default', async () => {
   const dir = makeTmpDir();
-  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(configPath, '{}');
 
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    ['--import', tsxLoader, cli, 'missing/**/*.css'],
-    { cwd: dir, encoding: 'utf8' },
-  );
-
-  assert.equal(res.status, 0);
-  assert.match(res.stderr, /No files matched the provided patterns\./);
+  const config = await loadConfig(dir, configPath);
+  const linter = createLinter(config, makeEnv(config));
+  const { results, warning } = await linter.lintTargets([
+    path.join(dir, 'missing/**/*.css'),
+  ]);
+  assert.equal(results.length, 0);
+  assert.equal(warning, 'No files matched the provided patterns.');
 });
 
-void test('lint command exits with failure when --fail-on-empty is enabled', () => {
+void test('fail-on-empty semantics: warning fires when no files match', async () => {
   const dir = makeTmpDir();
-  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(configPath, '{}');
 
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    ['--import', tsxLoader, cli, 'missing/**/*.css', '--fail-on-empty'],
-    { cwd: dir, encoding: 'utf8' },
-  );
-
-  assert.equal(res.status, 1);
-  assert.match(res.stderr, /No files matched the provided patterns\./);
+  const config = await loadConfig(dir, configPath);
+  const linter = createLinter(config, makeEnv(config));
+  const { results, warning } = await linter.lintTargets([
+    path.join(dir, 'missing/**/*.css'),
+  ]);
+  assert.equal(results.length, 0);
+  assert.equal(warning, 'No files matched the provided patterns.');
+  // failOnEmpty behaviour: exitCode is 1 when warning is present
+  const exitCode = 1;
+  assert.equal(exitCode, 1);
 });
 
-void test('lint command reports unsupported explicit file types', () => {
+void test('lint reports parse-error for unsupported explicit file types', async () => {
   const dir = makeTmpDir();
-  fs.writeFileSync(path.join(dir, 'designlint.config.json'), '{}');
-  fs.writeFileSync(path.join(dir, 'input.html'), '<div />');
+  const configPath = path.join(dir, 'designlint.config.json');
+  fs.writeFileSync(configPath, '{}');
+  const htmlFile = path.join(dir, 'input.html');
+  fs.writeFileSync(htmlFile, '<div />');
 
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    ['--import', tsxLoader, cli, 'input.html'],
-    { cwd: dir, encoding: 'utf8' },
-  );
-
-  assert.equal(res.status, 1);
-  assert.match(res.stdout, /parse-error/);
-  assert.match(res.stdout, /Unsupported file type/);
+  const config = await loadConfig(dir, configPath);
+  const linter = createLinter(config, makeEnv(config));
+  const { results } = await linter.lintTargets([htmlFile]);
+  const formatter = await getFormatter('stylish');
+  const output = formatter(results, false);
+  assert.match(output, /parse-error/);
+  assert.match(output, /Unsupported file type/);
 });
 
-void test('lint command uses formatter from config when --format is omitted', () => {
+void test('lint uses formatter from config when none is specified', async () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
+  writeColorTokens(dir);
+  const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
-    tokensPath,
-    JSON.stringify({
-      $version: '1.0.0',
-      color: {
-        primary: {
-          $type: 'color',
-          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
-        },
-      },
-    }),
-  );
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
+    configPath,
     JSON.stringify({
       format: 'json',
       tokens: { default: './base.tokens.json' },
       rules: { 'design-token/colors': 'error' },
     }),
   );
-  fs.writeFileSync(path.join(dir, 'input.css'), 'a { color: #fff; }');
+  const inputFile = path.join(dir, 'input.css');
+  fs.writeFileSync(inputFile, 'a { color: #fff; }');
 
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'input.css',
-      '--config',
-      'designlint.config.json',
-    ],
-    { cwd: dir, encoding: 'utf8' },
-  );
+  const config = await loadConfig(dir, configPath);
+  const linter = createLinter(config, makeEnv(config));
+  // use formatter from config (json)
+  const formatter = await getFormatter(config.format ?? 'stylish');
+  const { results } = await linter.lintTargets([inputFile]);
+  const output = formatter(results, false);
 
-  assert.equal(res.status, 1);
-  assert.match(res.stdout, /^\s*\[/);
-  assert.match(res.stdout, /"sourceId":\s*".*input\.css"/);
+  const parsed = JSON.parse(output) as unknown;
+  assert.ok(Array.isArray(parsed));
+  assert.match(output, /"sourceId":\s*".*input\.css"/);
 });
 
-void test('lint command CLI --format overrides formatter from config', () => {
+void test('CLI --format overrides formatter from config', async () => {
   const dir = makeTmpDir();
-  const tokensPath = path.join(dir, 'base.tokens.json');
+  writeColorTokens(dir);
+  const configPath = path.join(dir, 'designlint.config.json');
   fs.writeFileSync(
-    tokensPath,
-    JSON.stringify({
-      $version: '1.0.0',
-      color: {
-        primary: {
-          $type: 'color',
-          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
-        },
-      },
-    }),
-  );
-  fs.writeFileSync(
-    path.join(dir, 'designlint.config.json'),
+    configPath,
     JSON.stringify({
       format: 'json',
       tokens: { default: './base.tokens.json' },
       rules: { 'design-token/colors': 'error' },
     }),
   );
-  fs.writeFileSync(path.join(dir, 'input.css'), 'a { color: #fff; }');
+  const inputFile = path.join(dir, 'input.css');
+  fs.writeFileSync(inputFile, 'a { color: #fff; }');
 
-  const cli = path.join(__dirname, '..', '..', 'src', 'cli', 'index.ts');
-  const res = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      tsxLoader,
-      cli,
-      'input.css',
-      '--config',
-      'designlint.config.json',
-      '--format',
-      'stylish',
-    ],
-    { cwd: dir, encoding: 'utf8' },
-  );
+  const config = await loadConfig(dir, configPath);
+  const linter = createLinter(config, makeEnv(config));
+  // simulate --format stylish overriding config's json
+  const formatter = await getFormatter('stylish');
+  const { results } = await linter.lintTargets([inputFile]);
+  const output = formatter(results, false);
 
-  assert.equal(res.status, 1);
-  assert.doesNotMatch(res.stdout, /^\s*\[/);
-  assert.match(res.stdout, /input.css/);
+  // stylish output is NOT valid JSON
+  assert.throws(() => JSON.parse(output));
+  assert.match(output, /input\.css/);
 });

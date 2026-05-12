@@ -3,11 +3,8 @@ import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 interface NoInlineStylesOptions {
-  /** When true, the rule will ignore class/className attributes. */
   ignoreClassName?: boolean;
-  /** Explicit design system component names to target. */
   components?: string[];
-  /** Package specifiers considered design-system import origins. */
   importOrigins?: string[];
 }
 
@@ -17,6 +14,12 @@ export const noInlineStylesRule: RuleModule<NoInlineStylesOptions> = {
     description:
       'disallow inline style or className attributes on design system components',
     category: 'component',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Inline styles and ad-hoc class names on design system components circumvent the theming and variant model, making global appearance changes impossible.',
+      since: 'v8.0.0',
+    },
     schema: z
       .object({
         ignoreClassName: z.boolean().optional(),

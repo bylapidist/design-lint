@@ -2,25 +2,27 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
+import { createConfigTokenProvider } from '../helpers/token-provider.js';
 
 void test('design-system/deprecation flags deprecated token', async () => {
-  const linter = initLinter(
-    {
-      tokens: {
-        $version: '1.0.0',
-        colors: {
-          new: { $type: 'string', $value: 'colors.new' },
-          old: {
-            $type: 'string',
-            $value: 'colors.old',
-            $deprecated: { $replacement: '#/colors/new' },
-          },
+  const config = {
+    tokens: {
+      $version: '1.0.0',
+      colors: {
+        new: { $type: 'string', $value: 'colors.new' },
+        old: {
+          $type: 'string',
+          $value: 'colors.old',
+          $deprecated: { $replacement: '#/colors/new' },
         },
       },
-      rules: { 'design-system/deprecation': 'error' },
     },
-    new FileSource(),
-  );
+    rules: { 'design-system/deprecation': 'error' },
+  };
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText('const a = "colors.old";', 'file.ts');
   assert.equal(res.messages.length, 1);
   assert.ok(res.messages[0].message.includes('Use colors.new'));
@@ -31,23 +33,24 @@ void test('design-system/deprecation flags deprecated token', async () => {
 });
 
 void test('design-system/deprecation ignores tokens in non-style jsx attributes', async () => {
-  const linter = initLinter(
-    {
-      tokens: {
-        $version: '1.0.0',
-        colors: {
-          new: { $type: 'string', $value: 'colors.new' },
-          old: {
-            $type: 'string',
-            $value: 'colors.old',
-            $deprecated: { $replacement: '#/colors/new' },
-          },
+  const config = {
+    tokens: {
+      $version: '1.0.0',
+      colors: {
+        new: { $type: 'string', $value: 'colors.new' },
+        old: {
+          $type: 'string',
+          $value: 'colors.old',
+          $deprecated: { $replacement: '#/colors/new' },
         },
       },
-      rules: { 'design-system/deprecation': 'error' },
     },
-    new FileSource(),
-  );
+    rules: { 'design-system/deprecation': 'error' },
+  };
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText(
     'const a = <div aria-label="colors.old" />;',
     'file.tsx',
@@ -56,21 +59,22 @@ void test('design-system/deprecation ignores tokens in non-style jsx attributes'
 });
 
 void test('design-system/deprecation returns no diagnostics without deprecated metadata', async () => {
-  const linter = initLinter(
-    {
-      tokens: {
-        $version: '1.0.0',
-        colors: {
-          old: {
-            $type: 'string',
-            $value: 'colors.old',
-          },
+  const config = {
+    tokens: {
+      $version: '1.0.0',
+      colors: {
+        old: {
+          $type: 'string',
+          $value: 'colors.old',
         },
       },
-      rules: { 'design-system/deprecation': 'warn' },
     },
-    new FileSource(),
-  );
+    rules: { 'design-system/deprecation': 'warn' },
+  };
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText('const a = "colors.old";', 'file.ts');
   assert.equal(res.messages.length, 0);
 });

@@ -11,6 +11,7 @@ import { loadConfig } from '../../src/config/loader.js';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
 import { ConfigError } from '../../src/core/errors.js';
+import { createConfigTokenProvider } from '../helpers/token-provider.js';
 
 const srgb = (
   components: readonly [number, number, number],
@@ -207,7 +208,7 @@ void test('loads config from .ts with type annotations', async () => {
   const tmp = makeTmpDir();
   const configPath = path.join(tmp, 'designlint.config.ts');
   const rel = path
-    .relative(tmp, path.resolve('src/index.ts'))
+    .relative(tmp, path.resolve('src/config/define-config.ts'))
     .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
@@ -231,7 +232,7 @@ void test('loads .ts config with commonjs module output', async () => {
   );
   const configPath = path.join(tmp, 'designlint.config.ts');
   const rel = path
-    .relative(tmp, path.resolve('src/index.ts'))
+    .relative(tmp, path.resolve('src/config/define-config.ts'))
     .replace(/\\/g, '/');
   fs.writeFileSync(
     configPath,
@@ -282,7 +283,10 @@ void test("rule configured as 'off' is ignored", async () => {
     }),
   );
   const config = await loadConfig(tmp);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const res = await linter.lintText('const c = "#fff";', 'file.ts');
   assert.equal(res.messages.length, 0);
 });
@@ -295,7 +299,10 @@ void test('throws on unknown rule name', async () => {
     JSON.stringify({ rules: { 'unknown/rule': 'error' } }),
   );
   const config = await loadConfig(tmp);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   await assert.rejects(
     () => linter.lintText('const x = 1;', 'file.ts'),
     (err) => {

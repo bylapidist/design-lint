@@ -5,13 +5,17 @@ import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
 import { loadConfig } from '../src/config/loader.js';
 import { createDtifTheme } from './helpers/dtif.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const fixtureDir = path.join(__dirname, 'fixtures', 'vue');
 
 async function lint(file: string) {
   const config = await loadConfig(fixtureDir);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const {
     results: [res],
   } = await linter.lintTargets([path.join(fixtureDir, 'src', file)]);
@@ -57,18 +61,19 @@ void test('Vue style binding forms are linted for object, array, multiline and c
 });
 
 void test('Vue style bindings normalize camelCase props for property-specific rules', async () => {
-  const linter = initLinter(
-    {
-      tokens: createDtifTheme({
-        'fontSizes.base': {
-          type: 'dimension',
-          value: { value: 16, unit: 'px' },
-        },
-      }),
-      rules: { 'design-token/font-size': 'error' },
-    },
-    { documentSource: new FileSource() },
-  );
+  const camelConfig = {
+    tokens: createDtifTheme({
+      'fontSizes.base': {
+        type: 'dimension',
+        value: { value: 16, unit: 'px' },
+      },
+    }),
+    rules: { 'design-token/font-size': 'error' },
+  };
+  const linter = initLinter(camelConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(camelConfig),
+  });
   const res = await linter.lintText(
     `<template><div :style="{ fontSize: '15px' }" /></template>`,
     'Comp.vue',
@@ -80,15 +85,16 @@ void test('Vue style bindings normalize camelCase props for property-specific ru
 });
 
 void test('Vue style bindings skip dynamic expression values', async () => {
-  const linter = initLinter(
-    {
-      tokens: createDtifTheme({
-        'spacing.sm': { type: 'dimension', value: { value: 4, unit: 'px' } },
-      }),
-      rules: { 'design-token/spacing': 'error' },
-    },
-    { documentSource: new FileSource() },
-  );
+  const vueSpacingConfig = {
+    tokens: createDtifTheme({
+      'spacing.sm': { type: 'dimension', value: { value: 4, unit: 'px' } },
+    }),
+    rules: { 'design-token/spacing': 'error' },
+  };
+  const linter = initLinter(vueSpacingConfig, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(vueSpacingConfig),
+  });
   const res = await linter.lintText(
     [
       '<template>',

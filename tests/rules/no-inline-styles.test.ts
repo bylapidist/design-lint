@@ -6,13 +6,17 @@ import path from 'node:path';
 import ts from 'typescript';
 import { createLinter as initLinter } from '../../src/index.js';
 import { FileSource } from '../../src/adapters/node/file-source.js';
+import { createEmptyTokenProvider } from '../helpers/token-provider.js';
 
 void test('design-system/no-inline-styles reports missing targeting options', async () => {
   const linter = initLinter(
     {
       rules: { 'design-system/no-inline-styles': 'error' },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     'const a = <Button style={{ color: "red" }} />;',
@@ -32,7 +36,10 @@ void test('design-system/no-inline-styles flags style attribute on configured co
         'design-system/no-inline-styles': ['error', { components: ['Button'] }],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     'const a = <Button style={{ color: "red" }} />;',
@@ -48,7 +55,10 @@ void test('design-system/no-inline-styles flags className attribute on configure
         'design-system/no-inline-styles': ['error', { components: ['Button'] }],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     'const a = <Button className="foo" />;',
@@ -67,7 +77,10 @@ void test('design-system/no-inline-styles ignores className when configured', as
         ],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     'const a = <Button className="foo" />;',
@@ -86,7 +99,10 @@ void test('design-system/no-inline-styles keeps ignoreClassName behavior with ta
         ],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     'const a = <Button className="foo" style={{ color: "red" }} />;',
@@ -103,7 +119,10 @@ void test('design-system/no-inline-styles flags inline styles in Vue templates',
         'design-system/no-inline-styles': ['error', { components: ['Button'] }],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     '<template><Button style="color:red" /></template>',
@@ -119,7 +138,10 @@ void test('design-system/no-inline-styles flags inline styles in Svelte componen
         'design-system/no-inline-styles': ['error', { components: ['Button'] }],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     '<Button style="color:red" />',
@@ -138,7 +160,10 @@ void test('design-system/no-inline-styles flags inline styles on custom elements
         ],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
   const res = await linter.lintText(
     'const a = <my-button style="color:red"></my-button>;',
@@ -157,7 +182,10 @@ void test('design-system/no-inline-styles targets components by import origin', 
         ],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'design-lint-'));
@@ -219,7 +247,10 @@ void test('design-system/no-inline-styles resolves import origin from AST fallba
         ],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
 
   const res = await linter.lintText(
@@ -245,7 +276,10 @@ void test('design-system/no-inline-styles resolves import origin from AST fallba
         ],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
 
   const res = await linter.lintText(
@@ -271,7 +305,10 @@ void test('design-system/no-inline-styles resolves import origin from AST fallba
         ],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
 
   const res = await linter.lintText(
@@ -297,7 +334,10 @@ void test('design-system/no-inline-styles resolves import origin from AST fallba
         ],
       },
     },
-    new FileSource(),
+    {
+      documentSource: new FileSource(),
+      tokenProvider: createEmptyTokenProvider(),
+    },
   );
 
   const res = await linter.lintText(

@@ -6,13 +6,17 @@ import path from 'node:path';
 import { loadConfig } from '../src/config/loader.js';
 import { createLinter as initLinter } from '../src/index.js';
 import { FileSource } from '../src/adapters/node/file-source.js';
+import { createConfigTokenProvider } from './helpers/token-provider.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 void test('lints large projects without crashing', async () => {
   const dir = path.join(__dirname, 'fixtures', 'large-project');
   const config = await loadConfig(dir);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const { results } = await linter.lintTargets([dir]);
   assert.equal(results.length, 200);
 });
@@ -28,7 +32,10 @@ void test('lints very large projects without EMFILE', async () => {
     );
   }
   const config = await loadConfig(tmp);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const { results } = await linter.lintTargets([tmp]);
   assert.equal(results.length, count);
   fs.rmSync(tmp, { recursive: true, force: true });
@@ -77,7 +84,10 @@ void test('respects configured concurrency limit', async () => {
   fsp.stat = trackedStat;
 
   const config = await loadConfig(tmp);
-  const linter = initLinter(config, { documentSource: new FileSource() });
+  const linter = initLinter(config, {
+    documentSource: new FileSource(),
+    tokenProvider: createConfigTokenProvider(config),
+  });
   const { results } = await linter.lintTargets([tmp]);
   assert.equal(results.length, count);
   assert.ok(max <= 2);

@@ -37,6 +37,12 @@ export const letterSpacingRule = tokenRule({
   meta: {
     description: 'enforce letter-spacing tokens',
     category: 'design-token',
+    fixable: null,
+    stability: 'stable' as const,
+    rationale: {
+      why: 'Raw letter-spacing values detach text from the typographic scale and make tracking adjustments require manual search.',
+      since: 'v8.0.0',
+    },
   },
   tokens: 'dimension',
   message:
