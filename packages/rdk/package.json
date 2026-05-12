@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint-rdk",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Rule Development Kit for @lapidist/design-lint — file-watching dev server that re-runs RuleTester on every save.",
   "license": "MIT",
   "type": "module",
@@ -14,21 +14,31 @@
     "url": "https://github.com/bylapidist/design-lint.git",
     "directory": "packages/rdk"
   },
-  "bugs": { "url": "https://github.com/bylapidist/design-lint/issues" },
-  "keywords": ["dtif", "design tokens", "lint", "rdk", "rule-development-kit"],
+  "bugs": {
+    "url": "https://github.com/bylapidist/design-lint/issues"
+  },
+  "keywords": [
+    "dtif",
+    "design tokens",
+    "lint",
+    "rdk",
+    "rule-development-kit"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "format:check": "prettier --check 'src/**/*.ts'"
   },
   "peerDependencies": {
-    "@lapidist/design-lint": ">=7",
+    "@lapidist/design-lint": ">=8.0.0",
     "@lapidist/design-lint-testing": ">=0"
   },
   "devDependencies": {

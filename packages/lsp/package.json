@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint-lsp",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Language Server Protocol implementation for @lapidist/design-lint — diagnostics, code actions, completions, and hover over stdio.",
   "license": "MIT",
   "type": "module",
@@ -35,7 +35,7 @@
     "format:check": "prettier --check 'src/**/*.ts'"
   },
   "peerDependencies": {
-    "@lapidist/design-lint": ">=7"
+    "@lapidist/design-lint": ">=8.0.0"
   },
   "devDependencies": {
     "@lapidist/design-lint": "workspace:*"

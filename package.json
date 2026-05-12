@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint",
-  "version": "7.0.3",
+  "version": "8.0.0",
   "description": "Design System Runtime — DSR kernel, DSQL, and lint surface for design token governance",
   "type": "module",
   "main": "dist/index.js",

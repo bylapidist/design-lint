@@ -1,5 +1,265 @@
 # @lapidist/design-lint
 
+## 8.0.0
+
+### Major Changes
+
+- 5c9a371: v8: DSR kernel integration — remove v7 token fallback, require tokenProvider
+
+  `createLinter` and the `Linter` constructor now throw when `Environment.tokenProvider` is absent. The v7 inline-config fallback (`ConfigTokenProvider` loaded silently from `config.tokens`) has been removed from both `setup.ts` and `linter.ts`. Callers must supply a `tokenProvider` — the DSR kernel is the authoritative source.
+
+  `DsrOptions.beforeConnect` is a new optional async hook that programmatic callers (LSP, MCP, scripts) can use to auto-start the kernel without depending on the CLI's `prepareEnvironment`.
+
+- 5c9a371: feat!: v8 release — DSR kernel integration, MCP/LSP/telemetry packages, RuleTester, config presets, and RDK; the linter now delegates token resolution to the DSR kernel when running, removing internal token/rule state ownership
+- 5c9a371: Remove `TokenRegistry` from the public API surface
+
+  `TokenRegistry` and `TokenRegistryOptions` are no longer exported from
+  `@lapidist/design-lint` or `@lapidist/design-lint/core`. The class remains
+  an internal implementation detail of the linter. Consumers that previously
+  imported `TokenRegistry` directly should migrate to using the rule context's
+  `getDtifTokens()` callback, which provides the same DTIF token access without
+  depending on the registry class itself.
+
+  This is part of the Phase 3 design-lint v8 refactor to remove internal state
+  management from the public API surface in preparation for full DSR kernel
+  delegation.
+
+- 5c9a371: Add extends field to Config interface — configs can now compose base presets via defineConfig({ extends: [recommended, aiAgent] })
+- 5c9a371: Add DSR kernel integration via DsrTokenProvider and DsrOptions — connect to a running @lapidist/dsr kernel over Unix socket instead of parsing tokens inline
+- 5c9a371: Add five new rules targeting AI agent failure modes: design-token/easing, design-token/css-var-provenance, design-token/composite-equivalence, design-system/jsx-style-values, design-system/no-hardcoded-spacing
+- 5c9a371: Add DesignLintPolicy, AgentPolicy, and PolicyRatchet types for designlint.policy.json — centrally-owned policy files that downstream configs cannot weaken
+- 5c9a371: Add RuleMeta, RuleEdit, and FixContext types to RuleModule interface — rules can now declare fixability, stability, and rationale metadata and expose an optional fix() method
+
+### Minor Changes
+
+- 5c9a371: feat(config): add typed defineConfig API with BuiltInRuleId union and TypedConfig interface — provides IDE autocomplete for all 30 built-in rule IDs and typed rule severity/options entries
+- 5c9a371: feat(cli): add `docs` command to generate VitePress/markdown documentation site from kernel state (tokens + rules)
+  feat(cli): add `export-design-system-md` command to generate DSCP v1-compliant DESIGN_SYSTEM.md for AI agent consumption
+  feat(cli): add `migrate` command to codemod v7 config shapes to v8 format (numeric severity codes, plugins, extends)
+  fix(rules): promote composite-equivalence from experimental to stable
+- 5c9a371: unify DESIGN_SYSTEM.md generation via @lapidist/dscp; remove hand-rolled renderer helpers
+- 5c9a371: Populate violations in DESIGN_SYSTEM.md via opt-in lint pass
+
+  `export-design-system-md` now accepts a `--lint` flag. When set, the command
+  runs a lint pass against the configured patterns and aggregates the results
+  into DSCP `ViolationInput` patterns — grouped by CSS property and raw value
+  with frequency counts and correct-token suggestions where auto-fixes exist.
+
+  Without `--lint`, the command remains fast and produces a violations-free
+  snapshot (prior behavior). The `aggregateViolations` helper is exported for
+  programmatic use and is covered by six new unit tests.
+
+- 5c9a371: feat(cli): wire CLI to DSR kernel — auto-detect running kernel socket and pass dsr option to createNodeEnvironment; add --kernel/--no-kernel flags and --kernel-socket-path option so the v8 architecture is active by default when the kernel is running
+- 5c9a371: feat(cli): auto-detect DSR kernel socket and make export-design-system-md kernel-authoritative
+  - Auto-detect running kernel: when /tmp/designlint-kernel.sock exists (and
+    DESIGN_LINT_NO_KERNEL is unset), the kernel is used automatically for token
+    resolution without requiring --kernel; set DESIGN_LINT_NO_KERNEL=1 to opt out
+  - export-design-system-md: when the kernel is running, pull the token graph
+    from DSQL (via forProperty) instead of re-parsing local config, making the
+    document a true kernel projection
+  - kernel-client.ts: expose tokenEntries from kernel in KernelData
+  - Test script sets DESIGN_LINT_NO_KERNEL=1 to preserve test isolation
+
+- 5c9a371: feat(kernel): add --config-path to kernel start — when provided, design tokens are loaded from the designlint.config.\* file and injected into the kernel token graph on startup, so DSQL queries return meaningful results immediately without requiring explicit write-API calls
+- 5c9a371: feat(env): remove local config token fallback — DSR kernel is the only token source in v8
+  - `createNodeEnvironment` now requires `dsr` options; the `ConfigTokenProvider`
+    fallback is removed. Calling the function without a kernel connection throws
+    a descriptive error.
+  - `ConfigTokenProvider` is removed from the public API (`config/index.ts`).
+  - `prepareEnvironment` auto-launches the DSR kernel daemon when the socket is
+    absent, eliminating the need for `design-lint kernel start` as a separate step.
+  - Removed `--kernel` / `--no-kernel` CLI flags — kernel is always used in v8.
+  - `validate-config` no longer loads tokens (kernel not required for rule syntax checks).
+  - `watch.ts` passes the kernel socket path on config reload so the hot-reload
+    path also connects to the running kernel.
+
+- 5c9a371: Wire `docs` and `export-design-system-md` commands to live DSR kernel state
+
+  Both CLI commands now attempt a kernel connection at runtime via a shared
+  `tryFetchKernelData()` helper. When the kernel is reachable:
+  - `export-design-system-md` uses the real snapshot hash, component registry,
+    and deprecation ledger in the generated DSCP document instead of placeholder defaults.
+  - `docs` includes a generated `components.md` page sourced from the kernel's
+    component registry and links it from the index page.
+
+  When the kernel is not running both commands fall back to their previous
+  behaviour (empty registries, `'local'` snapshot hash) — no error is thrown.
+
+- 5c9a371: Add `KernelChangeSubscriber` to LSP server for targeted re-lint on token graph changes
+
+  `LSPServerOptions` now accepts an optional `kernelChangeSubscriber` field
+  that implements the new `KernelChangeSubscriber` interface. When provided,
+  the server subscribes to kernel token graph change events and re-lints all
+  currently-open documents when tokens are added, removed, or deprecated.
+
+  This closes the E2 gap from the ADDITIONAL_GAPS2 audit: token graph changes
+  now trigger targeted document re-lint without requiring a manual file save.
+  The `KernelChangeSubscriber` type is also re-exported from the server module
+  for consumers to implement against.
+
+- 5c9a371: Expose real token metadata in LSP hover and completions
+
+  `Linter` gains a new `getDtifTokenByPath(tokenPath)` method that looks up a
+  flattened DTIF token by its dot-separated path string (the same format returned
+  by `getTokenCompletions`).
+
+  The LSP server now uses this method in two places:
+  - **`textDocument/hover`** — `resolvedValue` is the actual token value from the
+    DTIF graph (e.g. `#FF0000`) instead of a synthesized `var(--...)` CSS
+    variable. The hover card also surfaces the token type and any deprecation
+    notice.
+  - **`textDocument/completion`** — each completion item's `detail` field shows
+    the real token value when available, falling back to the CSS variable string
+    when the token has no explicit value.
+
+  `LSPHover` gains an optional `type` field to carry the DTIF token type string.
+
+- 5c9a371: Add suppress-directive code actions to the LSP server
+
+  For every diagnostic in the open document, the `textDocument/codeAction`
+  handler now offers two additional `quickfix` code actions:
+  - **Disable for this line** — appends `// design-lint-disable-line <ruleId>`
+    at the end of the diagnostic's line.
+  - **Disable for this file** — inserts `/* design-lint-disable <ruleId> */` as
+    a new first line of the file.
+
+  Auto-fix actions (when the rule provides a fix) are still included alongside
+  the new suppress options.
+
+- 5c9a371: Track true DTIF token pointers in LSP dependency graph; add targeted re-lint
+
+  The `workspace/tokenDependencyGraph` endpoint now records real DTIF pointer
+  strings (`#/color/brand/primary`) rather than rule IDs as a proxy. Pointers
+  are extracted from `LintMessage.metadata.pointer` when rules provide them.
+
+  The `deprecation` rule now includes `metadata: { pointer }` in every report
+  so files referencing deprecated tokens are correctly indexed.
+
+  The `KernelChangeSubscriber` re-lint logic is now targeted: only documents
+  that reference at least one of the changed pointers are re-linted. An empty
+  `changedPointers` array signals full-graph invalidation and re-lints all open
+  documents. A non-matching pointer set skips documents with no overlap.
+
+- 5c9a371: Validate AEP version on incoming `lint_snippet` requests
+
+  The MCP server now reads an optional `aepVersion` field from
+  `LintSnippetParams`. When present and not equal to `'1'` the server
+  returns a structured JSON-RPC error (`-32602`) before any processing
+  occurs, preventing silent incompatibility with future protocol versions.
+
+- 5c9a371: add AepResponseMeta to MCP tool responses; GenerationResult and ComponentValidationResult now include meta.runId, meta.kernelSnapshotHash, and meta.aepVersion
+- 5c9a371: Resolve token completion values from the DSR kernel when available
+
+  `handleTokenCompletions` now accepts an optional `TokenValueResolver` third
+  parameter. When provided, each token's `resolvedValue` is sourced from the
+  resolver (e.g. a live kernel lookup) rather than a fabricated CSS variable
+  reference. Falls back to the existing fabricated value when the resolver
+  returns `undefined` or is not supplied.
+
+- 5c9a371: Add `SnapshotHashProvider` to MCP tool handlers and server
+
+  `handleLintSnippet`, `handleValidateComponent`, and `handleRequest` now
+  accept an optional `SnapshotHashProvider` parameter. When provided, the
+  resolved hash replaces the `'local'` fallback in
+  `AepResponseMeta.kernelSnapshotHash`, allowing the MCP server to emit the
+  authoritative kernel snapshot hash from a running DSR kernel. Falls back to
+  `'local'` when the provider is absent or returns `undefined`.
+
+  `createMCPServer` accepts an optional `MCPServerOptions` second argument
+  with a `snapshotHashProvider` field to wire this through the stdio transport.
+
+- 5c9a371: Extend migration codemod to cover all documented v7 config shapes
+
+  `design-lint migrate` now handles five additional v7 config shapes:
+  - `ignorePatterns` → renamed to `ignoreFiles` (v7 used the ESLint field name)
+  - `overrides` → removed; per-file rule overrides are not supported in v8
+  - `root` → removed; no-op in v8 (config is always project-relative)
+  - `env` → removed with a note; design-lint does not use environment globals
+  - `plugins` / `extends` → existing comment notes retained
+
+  `applyMigrations` is now an exported function so callers can apply the
+  transformation to an in-memory config object. A comprehensive test suite
+  covers every documented v7 shape as well as the dry-run and `--out` flags.
+
+- 5c9a371: Wire policy enforcement into the normal CLI lint flow
+
+  `prepareEnvironment` (the CLI's environment setup path used by all normal
+  lint invocations) now loads and enforces `designlint.policy.json` before any
+  linting begins. Previously policy was only checked during `design-lint validate`.
+
+  Static constraints (`requiredRules`, `minSeverity`) are enforced at startup
+  and throw a `ConfigError` when violated, preventing any lint run from
+  proceeding. Dynamic constraints (`tokenCoverage`, `ratchet`, `agentPolicy`)
+  still require DSR runtime data and are handled separately.
+
+- 5c9a371: add designlint.policy.json support — loadPolicy and enforcePolicy for workspace-level rule governance
+- 5c9a371: remove NodeTokenProvider in favour of ConfigTokenProvider; normalizeTokens now skips re-parsing when flattened tokens are already cached
+- 5c9a371: Add runtime policy enforcement for tokenCoverage, ratchet, and agentPolicy
+
+  `enforceRuntimePolicy` now handles all three dynamic policy constraints:
+  - **tokenCoverage**: when threshold is `1` (100%), any violation for the
+    mapped token category throws a `ConfigError`. Sub-100% thresholds require
+    total usage counts not yet available and are skipped.
+  - **ratchet** (`metric` mode): total violation count must not exceed
+    `baseline.totalCount + maxDelta`. (`entropy` mode): computed quality score
+    must meet `minScore`.
+  - **agentPolicy**: `requiredConvergence` fails on any remaining errors;
+    `maxViolationRate` fails when violations-per-file exceeds the threshold;
+    agents listed in `trustedAgents` bypass both checks.
+
+  `executeLint` now accepts `baseline` (path to a baseline JSON file) and
+  `agentId` options, reads the baseline automatically, and calls
+  `enforceRuntimePolicy` after every lint run when a policy is active.
+  The loaded policy is retained in the `Environment` object returned by
+  `prepareEnvironment` and forwarded to `executeLint` via the services spread.
+
+- 5c9a371: Complete OTel instrumentation bridge for all DLTS event types
+
+  `createOtelInstrumentation` now bridges the full DLTS v1 event taxonomy:
+  - `DiagnosticEvent` → child span with `ruleId`, `severity`, `file`, `line`, `column`
+  - `FixEvent` → span with `addEvent('fix.applied', { before, after })`
+  - `CorrectionEvent` → span with `addEvent('correction.cycle', { iterationsUsed, converged, violationsRemaining })`
+  - `KernelMutationEvent` → span with `addEvent('kernel.mutation', { mutationType, pointer })`
+  - `EntropyEvent` → six `OtelGauge` metric observations for every entropy component
+
+  `OtelSpan` gains `addEvent()`; `OtelMeter.createObservableGauge` now returns
+  the new `OtelGauge` interface (with `record()`) instead of `unknown`.
+
+- 5c9a371: Add kernel lifecycle CLI commands (start/stop/status), export-runtime-snapshot, and diff subcommands; migrate to shared @lapidist/eslint-config
+- 5c9a371: add design system mutation CLI commands — token add/deprecate, component register, rule configure backed by DSR write API
+
+### Patch Changes
+
+- 5c9a371: feat(rules): add meta.rationale and stability to all 26 built-in rules missing them; required v8.0.0 release gate
+- 5c9a371: feat(testing): export SnippetLinter from package index
+  test(config): add tests for config-recommended, config-strict, and config-ai-agent presets
+- 3a76856: update dependency @lapidist/dscp to v0.2.4
+- 5c9a371: test(adapters): add tests for DsrTokenProvider covering load, token mapping, dispose, and edge cases
+- 5c9a371: Use configured rule severity in `export-design-system-md`
+
+  `export-design-system-md` now reads each rule's severity and enabled state
+  from the loaded config rather than hardcoding `severity: 'warn'` and
+  `enabled: true` for all rules. Rules set to `'off'` in config are emitted
+  with `enabled: false`; rules set to `'error'` are emitted with
+  `severity: 'error'`.
+
+- 5c9a371: test(bench): add benchmark suite asserting ROADMAP release gate time bounds
+
+  Add tests/bench.test.ts with programmatic assertions for lint_snippet via MCP
+  (< 50ms), LSP diagnostics via lintDocument (< 100ms), and 10k file workspace
+  scan (tested at 1000 files / < 1s for equivalent throughput). Tests fail when
+  the implementation regresses past the required threshold.
+
+- 5c9a371: docs(architecture): replace stale token-provider.ts reference with current ConfigTokenProvider and DsrTokenProvider split; align DLTS schema URL to canonical telemetry.design-lint.lapidist.net path
+- 5c9a371: fix(file-source): exclude node_modules and .git from ignore-file discovery glob to prevent catastrophic directory traversal hang
+- 5c9a371: feat(lsp): implement createLSPServer with full LSP over stdio — diagnostics, code actions, completions, hover, and token dependency graph
+  feat(rdk): implement runTests runner and watchRule file watcher with CLI bin
+  test(telemetry): add 30 tests covering all SDK functions (parseDLTSStream, validateDLTSEvent, aggregateRunEvents, computeEntropyTrend, filterByAgent, groupByRule, createOtelInstrumentation)
+  test(mcp): add 23 tests covering all four MCP tool handlers (lint-snippet, token-completions, validate-component, explain-diagnostic)
+- 5c9a371: test(lsp): add tests for createLSPServer covering initialize, shutdown, didOpen/didClose/didChange, completion, codeAction, hover, tokenDependencyGraph, and unknown method handling
+- 5c9a371: test(rdk): add tests for runTests covering pass/fail/empty/mixed suites and RdkRunResult shape
+- 5c9a371: feat(testing): complete RuleTester coverage for all 30 built-in rules; add DtifFlattenedToken injection to ValidCase/InvalidCase so token-based rules can exercise real validation logic; fix TSX/JSX docType normalisation through FILE_TYPE_MAP so tsx snippets resolve to the TypeScript parser
+
 ## 7.0.3
 
 ### Patch Changes

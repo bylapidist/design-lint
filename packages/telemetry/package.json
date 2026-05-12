@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint-telemetry",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "DLTS v1 telemetry event types, SDK utilities, and OTel integration for @lapidist/design-lint.",
   "license": "MIT",
   "type": "module",

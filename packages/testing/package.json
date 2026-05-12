@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint-testing",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Testing utilities and RuleTester for @lapidist/design-lint rule authors.",
   "license": "MIT",
   "type": "module",
@@ -36,7 +36,7 @@
     "format:check": "prettier --check 'src/**/*.ts'"
   },
   "peerDependencies": {
-    "@lapidist/design-lint": ">=7"
+    "@lapidist/design-lint": ">=8.0.0"
   },
   "devDependencies": {
     "@lapidist/design-lint": "workspace:*"
