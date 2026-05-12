@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import type { Fix, RuleModule } from '../core/types.js';
+import { tokens } from '../utils/index.js';
+
+const { pointerToVarName } = tokens;
 
 export const compositeEquivalenceRule: RuleModule = {
   name: 'design-token/composite-equivalence',
@@ -71,9 +74,4 @@ export const compositeEquivalenceRule: RuleModule = {
 
 function normalise(value: string): string {
   return value.toLowerCase().replace(/\s+/g, ' ').trim();
-}
-
-function pointerToVarName(pointer: string): string {
-  const segments = pointer.replace(/^#\//, '').split('/');
-  return `--${segments.join('-')}`;
 }

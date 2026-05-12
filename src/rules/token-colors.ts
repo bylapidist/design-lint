@@ -3,7 +3,7 @@ import valueParser from 'postcss-value-parser';
 import colorString from 'color-string';
 import { z } from 'zod';
 import type { DtifFlattenedToken, Fix } from '../core/types.js';
-import { rules, guards, color } from '../utils/index.js';
+import { rules, guards, color, tokens } from '../utils/index.js';
 import type { ColorFormat } from '../core/index.js';
 
 const { tokenRule } = rules;
@@ -12,6 +12,7 @@ const {
   domain: { getTokenStringValue },
 } = guards;
 const { detectColorFormat } = color;
+const { pointerToVarName } = tokens;
 
 interface ColorRuleOptions {
   allow?: ColorFormat[];
@@ -199,8 +200,3 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
     };
   },
 });
-
-function pointerToVarName(pointer: string): string {
-  const segments = pointer.replace(/^#\//, '').split('/');
-  return `--${segments.join('-')}`;
-}

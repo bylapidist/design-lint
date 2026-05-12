@@ -50,9 +50,10 @@ jobs:
           node dist/cli/kernel-daemon.js --no-http &
           echo $! > /tmp/designlint-kernel-ci.pid
           for i in $(seq 1 40); do
-            [ -S /tmp/designlint-kernel.sock ] && echo "DSR kernel ready" && break
+            [ -S /tmp/designlint-kernel.sock ] && echo "DSR kernel ready" && exit 0
             sleep 0.25
           done
+          echo "DSR kernel failed to start after 10s" && exit 1
       - run: pnpm run lint
       - run: pnpm run format:check
       - run: pnpm run lint:md

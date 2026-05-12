@@ -14,3 +14,8 @@ export function extractVarName(value: string): string | null {
   const m = /^var\(\s*(--[A-Za-z0-9_-]+)\s*(?:,.*)?\)$/.exec(value.trim());
   return m ? m[1] : null;
 }
+
+export function pointerToVarName(pointer: string): string {
+  const segments = pointer.replace(/^#\//, '').split('/');
+  return `--${segments.join('-')}`;
+}
