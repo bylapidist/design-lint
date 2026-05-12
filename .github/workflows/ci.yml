@@ -32,16 +32,15 @@ jobs:
               - '!*.md'
       - uses: pnpm/action-setup@v6
         with:
-          version: 10.33.4
+          version: 11.1.1
       - uses: actions/setup-node@v6
         with:
           node-version: 24.15.0
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile --prefer-offline
-      # pnpm audit disabled — npm registry audit endpoints returning 410 (pnpm/pnpm#11265)
-      # - name: Audit dependencies
-      #   run: pnpm audit --prod --audit-level high
+      - name: Audit dependencies
+        run: pnpm audit --prod --audit-level high
       - run: pnpm run build
         if: steps.changes.outputs['non-docs'] == 'true'
       - name: Start DSR kernel
