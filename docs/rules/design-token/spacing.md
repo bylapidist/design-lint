@@ -6,7 +6,9 @@ description: "Use spacing tokens."
 # design-token/spacing
 
 ## Summary
-Enforces a spacing scale so that only token values loaded from the DSR kernel or multiples of a configured base unit are allowed.
+Enforces a spacing scale across **all** CSS declarations — any dimension value (in `px`, `rem`, `em` by default) must either match a spacing token value or be a multiple of the configured base unit. JavaScript numeric literals and template literal values in style objects are also checked.
+
+For narrower enforcement limited to specific layout properties (margin, padding, gap, etc.), see [`design-system/no-hardcoded-spacing`](../design-system/no-hardcoded-spacing.md).
 
 ## Configuration
 Enable the rule in `designlint.config.*`:
@@ -78,6 +80,7 @@ If spacing values do not follow a scale, disable this rule.
 ## Related Rules
 - [design-token/colors](./colors.md)
 - [design-token/font-size](./font-size.md)
+- [design-system/no-hardcoded-spacing](../design-system/no-hardcoded-spacing.md)
 
 ## See also
 - [Configuration](../../configuration.md)

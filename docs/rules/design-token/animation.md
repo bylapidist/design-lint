@@ -36,6 +36,8 @@ No additional options.
 
 This rule is not auto-fixable.
 
+Values containing `var(` (CSS variable references) are always allowed and not checked.
+
 ## Examples
 
 ### Invalid
