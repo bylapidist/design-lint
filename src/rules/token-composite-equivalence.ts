@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { RuleModule } from '../core/types.js';
+import type { Fix, RuleModule } from '../core/types.js';
 
 /**
  * Detects multi-part CSS values (e.g. borders, backgrounds, transitions) that
@@ -51,10 +51,22 @@ export const compositeEquivalenceRule: RuleModule = {
         const normValue = normalise(decl.value);
         const match = compositeValues.get(normValue);
         if (match) {
+          const varName = pointerToVarName(match);
+          const fix: Fix | undefined =
+            decl.valueOffset !== undefined
+              ? {
+                  range: [
+                    decl.valueOffset,
+                    decl.valueOffset + decl.value.length,
+                  ],
+                  text: `var(${varName})`,
+                }
+              : undefined;
           context.report({
-            message: `Raw value matches composite token "${match}"; use the token reference instead`,
+            message: `Raw value matches composite token "${match}"; use ${varName} instead`,
             line: decl.line,
             column: decl.column,
+            fix,
           });
         }
       },
@@ -64,4 +76,9 @@ export const compositeEquivalenceRule: RuleModule = {
 
 function normalise(value: string): string {
   return value.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function pointerToVarName(pointer: string): string {
+  const segments = pointer.replace(/^#\//, '').split('/');
+  return `--${segments.join('-')}`;
 }

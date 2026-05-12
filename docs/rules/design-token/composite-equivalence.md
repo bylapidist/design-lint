@@ -33,7 +33,7 @@ design-lint kernel start --config-path designlint.config.json
 ## Options
 No additional options.
 
-This rule is marked as fixable in metadata but does not yet provide automatic fix output. Manual replacement with a CSS variable reference is required.
+This rule is auto-fixable. Matched raw values are replaced with `var(--derived-name)` where the CSS variable name is derived from the token pointer (e.g. `#/borders/focus` → `var(--borders-focus)`).
 
 ## Examples
 

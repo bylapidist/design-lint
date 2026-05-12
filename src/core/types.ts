@@ -228,6 +228,8 @@ export interface CSSDeclaration {
   value: string;
   line: number;
   column: number;
+  /** Character offset of the value start within the source document. */
+  valueOffset?: number;
 }
 
 export interface TokenReferenceCandidate {
