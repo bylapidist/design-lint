@@ -21,8 +21,8 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "fonts": {
-    "sans": { "$type": "fontFamily", "$value": "Inter" },
-    "mono": { "$type": "fontFamily", "$value": "JetBrains Mono" }
+    "mono": { "$type": "fontFamily", "$value": "JetBrains Mono" },
+    "sans": { "$type": "fontFamily", "$value": "Inter" }
   }
 }
 ```

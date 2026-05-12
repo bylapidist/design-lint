@@ -21,14 +21,14 @@ Deprecation metadata is read from the DSR kernel. Seed the kernel from a DTIF ca
 {
   "$version": "1.0.0",
   "color": {
+    "new": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
+    },
     "old": {
       "$type": "color",
       "$value": { "colorSpace": "srgb", "components": [0, 0, 0] },
       "$deprecated": { "$replacement": "#/color/new" }
-    },
-    "new": {
-      "$type": "color",
-      "$value": { "colorSpace": "srgb", "components": [1, 1, 1] }
     }
   }
 }

@@ -21,7 +21,15 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "borders": {
-    "focus": { "$type": "border", "$value": "2px solid #000" }
+    "focus": {
+      "$type": "border",
+      "$value": {
+        "borderType": "css.border",
+        "color": { "colorSpace": "srgb", "components": [0, 0, 0] },
+        "style": "solid",
+        "width": { "dimensionType": "length", "value": 2, "unit": "px" }
+      }
+    }
   }
 }
 ```
@@ -40,7 +48,7 @@ This rule is auto-fixable. Matched raw values are replaced with `var(--derived-n
 ### Invalid
 
 ```css
-/* matches a composite token exactly */
+/* raw composite value that could reference a token instead */
 .card { border: 2px solid #000; }
 ```
 

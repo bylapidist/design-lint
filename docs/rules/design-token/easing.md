@@ -21,13 +21,13 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "easing": {
-    "standard": {
-      "$type": "cubicBezier",
-      "$value": "cubic-bezier(0.4, 0, 0.2, 1)"
-    },
     "decelerate": {
       "$type": "cubicBezier",
       "$value": "cubic-bezier(0, 0, 0.2, 1)"
+    },
+    "standard": {
+      "$type": "cubicBezier",
+      "$value": "cubic-bezier(0.4, 0, 0.2, 1)"
     }
   }
 }

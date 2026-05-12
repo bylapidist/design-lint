@@ -21,9 +21,9 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "fontWeights": {
-    "regular": { "$type": "fontWeight", "$value": 400 },
     "bold": { "$type": "fontWeight", "$value": 700 },
-    "emphasis": { "$type": "fontWeight", "$ref": "#/fontWeights/bold" }
+    "emphasis": { "$type": "fontWeight", "$ref": "#/fontWeights/bold" },
+    "regular": { "$type": "fontWeight", "$value": 400 }
   }
 }
 ```

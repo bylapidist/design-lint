@@ -21,8 +21,8 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "opacity": {
-    "low": { "$type": "number", "$value": 0.2 },
-    "high": { "$type": "number", "$ref": "#/opacity/low" }
+    "high": { "$type": "number", "$ref": "#/opacity/low" },
+    "low": { "$type": "number", "$value": 0.2 }
   }
 }
 ```

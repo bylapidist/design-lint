@@ -21,8 +21,8 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "zIndex": {
-    "modal": { "$type": "number", "$value": 1000 },
-    "dropdown": { "$type": "number", "$ref": "#/zIndex/modal" }
+    "dropdown": { "$type": "number", "$ref": "#/zIndex/modal" },
+    "modal": { "$type": "number", "$value": 1000 }
   }
 }
 ```

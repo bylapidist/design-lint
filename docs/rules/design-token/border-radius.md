@@ -21,11 +21,11 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "radius": {
+    "lg": { "$type": "dimension", "$ref": "#/radius/sm" },
     "sm": {
       "$type": "dimension",
       "$value": { "dimensionType": "length", "value": 2, "unit": "px" }
-    },
-    "lg": { "$type": "dimension", "$ref": "#/radius/sm" }
+    }
   }
 }
 ```

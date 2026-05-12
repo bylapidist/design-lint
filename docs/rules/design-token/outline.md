@@ -21,8 +21,8 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "outlines": {
-    "focus": { "$type": "string", "$value": "2px solid #000" },
-    "active": { "$type": "string", "$ref": "#/outlines/focus" }
+    "active": { "$type": "string", "$ref": "#/outlines/focus" },
+    "focus": { "$type": "string", "$value": "2px solid #000" }
   }
 }
 ```

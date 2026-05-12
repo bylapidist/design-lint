@@ -21,18 +21,18 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "shadows": {
+    "md": { "$type": "shadow", "$ref": "#/shadows/sm" },
     "sm": {
       "$type": "shadow",
       "$value": {
-        "shadowType": "css.box-shadow",
+        "blur": { "dimensionType": "length", "value": 2, "unit": "px" },
+        "color": { "colorSpace": "srgb", "components": [0, 0, 0, 0.1] },
         "offsetX": { "dimensionType": "length", "value": 0, "unit": "px" },
         "offsetY": { "dimensionType": "length", "value": 1, "unit": "px" },
-        "blur": { "dimensionType": "length", "value": 2, "unit": "px" },
-        "spread": { "dimensionType": "length", "value": 0, "unit": "px" },
-        "color": { "$ref": "#/color/shadow" }
+        "shadowType": "css.box-shadow",
+        "spread": { "dimensionType": "length", "value": 0, "unit": "px" }
       }
-    },
-    "md": { "$type": "shadow", "$ref": "#/shadows/sm" }
+    }
   }
 }
 ```

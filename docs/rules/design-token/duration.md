@@ -25,13 +25,13 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "durations": {
-    "short": {
-      "$type": "duration",
-      "$value": { "durationType": "css.transition-duration", "value": 0.1, "unit": "s" }
-    },
     "long": {
       "$type": "duration",
       "$value": { "durationType": "css.transition-duration", "value": 0.3, "unit": "s" }
+    },
+    "short": {
+      "$type": "duration",
+      "$value": { "durationType": "css.transition-duration", "value": 0.1, "unit": "s" }
     }
   }
 }
