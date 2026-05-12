@@ -68,6 +68,7 @@ The complete documentation is available under the [`docs/`](docs) directory and 
 | -------------------------------------- | ---------------------------------------------------------------- |
 | [Usage](docs/usage.md)                 | CLI flags, watch mode, kernel commands, and caching.             |
 | [Configuration](docs/configuration.md) | Rule levels, plugin activation, and ignore patterns.             |
+| [Config presets](docs/configuration-presets.md) | `recommended`, `strict`, and `ai-agent` shareable configs. |
 | [Rules](docs/rules/index.md)           | Rule reference grouped by category.                              |
 | [Formatters](docs/formatters.md)       | Built-in and custom output formats.                              |
 | [Migration](docs/migration.md)         | Upgrading from v7 to v8 (kernel architecture, DTIF tokens).      |

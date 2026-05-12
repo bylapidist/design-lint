@@ -47,8 +47,8 @@ This rule is auto-fixable. Matched raw values are replaced with `var(--derived-n
 ### Valid
 
 ```css
-/* uses a token reference */
-.card { border: var(--border-focus); }
+/* uses a token reference derived from pointer #/borders/focus */
+.card { border: var(--borders-focus); }
 ```
 
 ## When Not To Use

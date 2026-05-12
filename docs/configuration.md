@@ -204,6 +204,7 @@ design-lint "src/**/*"
 ## See also
 
 - [Rule reference](./rules/index.md)
+- [Config presets](./configuration-presets.md)
 - [Policy enforcement](./policy.md)
 - [Plugins](./plugins.md)
 - [Migration guide](./migration.md)
