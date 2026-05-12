@@ -64,19 +64,19 @@ For more background, read the [introductory blog post](https://lapidist.net/arti
 
 The complete documentation is available under the [`docs/`](docs) directory and on [design-lint.lapidist.net](https://design-lint.lapidist.net/). See [docs/index.md](docs/index.md) for the documentation landing page.
 
-| Document                               | Purpose                                                          |
-| -------------------------------------- | ---------------------------------------------------------------- |
-| [Usage](docs/usage.md)                 | CLI flags, watch mode, kernel commands, and caching.             |
-| [Configuration](docs/configuration.md) | Rule levels, plugin activation, and ignore patterns.             |
-| [Config presets](docs/configuration-presets.md) | `recommended`, `strict`, and `ai-agent` shareable configs. |
-| [Rules](docs/rules/index.md)           | Rule reference grouped by category.                              |
-| [Formatters](docs/formatters.md)       | Built-in and custom output formats.                              |
-| [Migration](docs/migration.md)         | Upgrading from v7 to v8 (kernel architecture, DTIF tokens).      |
-| [Plugins](docs/plugins.md)             | Writing and loading custom rule plugins.                         |
-| [Policy](docs/policy.md)               | Centrally-owned guardrails that consumer configs cannot weaken.  |
-| [CI](docs/ci.md)                       | GitHub Actions examples and kernel setup for CI environments.    |
-| [API](docs/api.md)                     | Programmatic usage with TypeScript types.                        |
-| [Architecture](docs/architecture.md)   | How the DSR kernel, token graph, and lint surface work together. |
+| Document                                        | Purpose                                                          |
+| ----------------------------------------------- | ---------------------------------------------------------------- |
+| [Usage](docs/usage.md)                          | CLI flags, watch mode, kernel commands, and caching.             |
+| [Configuration](docs/configuration.md)          | Rule levels, plugin activation, and ignore patterns.             |
+| [Config presets](docs/configuration-presets.md) | `recommended`, `strict`, and `ai-agent` shareable configs.       |
+| [Rules](docs/rules/index.md)                    | Rule reference grouped by category.                              |
+| [Formatters](docs/formatters.md)                | Built-in and custom output formats.                              |
+| [Migration](docs/migration.md)                  | Upgrading from v7 to v8 (kernel architecture, DTIF tokens).      |
+| [Plugins](docs/plugins.md)                      | Writing and loading custom rule plugins.                         |
+| [Policy](docs/policy.md)                        | Centrally-owned guardrails that consumer configs cannot weaken.  |
+| [CI](docs/ci.md)                                | GitHub Actions examples and kernel setup for CI environments.    |
+| [API](docs/api.md)                              | Programmatic usage with TypeScript types.                        |
+| [Architecture](docs/architecture.md)            | How the DSR kernel, token graph, and lint surface work together. |
 
 ## Contributing
 
