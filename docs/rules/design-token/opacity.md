@@ -6,7 +6,7 @@ description: "Use opacity tokens."
 # design-token/opacity
 
 ## Summary
-Enforces `opacity` values to match the opacity tokens loaded into the DSR kernel.
+Enforces `opacity` values in CSS and numeric literals in TypeScript inline style objects to match the opacity tokens loaded into the DSR kernel.
 
 ## Configuration
 Enable the rule in `designlint.config.*`:

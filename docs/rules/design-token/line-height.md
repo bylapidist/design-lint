@@ -6,7 +6,9 @@ description: "Use line height tokens."
 # design-token/line-height
 
 ## Summary
-Enforces `line-height` values to match the line-height tokens loaded into the DSR kernel.
+Enforces `line-height` values in CSS and `lineHeight` numeric literals in TypeScript inline style objects to match the line-height tokens loaded into the DSR kernel.
+
+Plain number values (e.g. `1.5`), `px`/`rem`/`em` lengths, and percentages are all parsed and normalised for comparison.
 
 ## Configuration
 Enable the rule in `designlint.config.*`:
@@ -38,17 +40,26 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given `base` and `tight` tokens both with value `1.5`:
+
 ### Invalid
 
 ```css
+/* 2 is not a token value */
 .text { line-height: 2; }
+/* 20px normalises to 20 — not a token value */
+.text { line-height: 20px; }
 ```
 
 ### Valid
 
 ```css
 .text { line-height: 1.5; }
-.text { line-height: 20px; }
+```
+
+```tsx
+/* TypeScript inline style — lineHeight property specifically */
+<p style={{ lineHeight: 1.5 }} />
 ```
 
 ## When Not To Use

@@ -6,7 +6,9 @@ description: "Use letter spacing tokens."
 # design-token/letter-spacing
 
 ## Summary
-Enforces `letter-spacing` values to match the letter-spacing tokens loaded into the DSR kernel.
+Enforces `letter-spacing` values in CSS and numeric literals in TypeScript inline style objects to match the letter-spacing tokens loaded into the DSR kernel.
+
+Values are normalised to pixel equivalents before comparison (`rem × 16`, `px × 1`).
 
 ## Configuration
 Enable the rule in `designlint.config.*`:
@@ -41,17 +43,23 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given a `tight` token with value `-0.05rem` (= `-0.8px`):
+
 ### Invalid
 
 ```css
+/* 2px does not match any token */
 .text { letter-spacing: 2px; }
+/* 0 is not a token value */
+.text { letter-spacing: 0; }
 ```
 
 ### Valid
 
 ```css
+/* matches tight token (-0.05rem = -0.8px) */
 .text { letter-spacing: -0.05rem; }
-.text { letter-spacing: 0; }
+.text { letter-spacing: -0.8px; }
 ```
 
 ## When Not To Use

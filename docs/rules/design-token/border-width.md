@@ -6,7 +6,7 @@ description: "Enforce use of border width tokens."
 # design-token/border-width
 
 ## Summary
-Enforces `border-width` values to match the border width tokens loaded into the DSR kernel.
+Enforces `border-width` values in CSS and numeric literals in TypeScript inline style objects to match the border width tokens loaded into the DSR kernel.
 
 ## Configuration
 Enable the rule in `designlint.config.*`:

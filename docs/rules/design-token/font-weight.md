@@ -6,7 +6,7 @@ description: "Use font weight tokens."
 # design-token/font-weight
 
 ## Summary
-Enforces `font-weight` values to match the font weight tokens loaded into the DSR kernel.
+Enforces `font-weight` values in CSS and numeric literals in TypeScript inline style objects to match the font weight tokens loaded into the DSR kernel.
 
 ## Configuration
 Enable the rule in `designlint.config.*`:
@@ -32,7 +32,7 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 design-lint kernel start --config-path designlint.config.json
 ```
 
-Font-weight tokens may be numbers or strings (e.g., `"bold"`). Numeric tokens allow equivalent numeric CSS values and JavaScript numeric literals.
+Font-weight tokens may be numbers (e.g. `400`) or keyword strings (e.g. `"bold"`). Numeric tokens are checked against CSS numeric values and TypeScript numeric literals. String tokens are checked against CSS keyword values.
 
 ## Options
 No additional options.
@@ -41,17 +41,33 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given tokens `regular = 400` and `bold = 700` (numeric):
+
 ### Invalid
 
 ```css
+/* 500 does not match any token */
 .text { font-weight: 500; }
+/* "bold" keyword is not in the token set (only numeric 400 and 700 are) */
+.text { font-weight: bold; }
 ```
 
 ### Valid
 
 ```css
 .text { font-weight: 400; }
-.text { font-weight: bold; }
+.text { font-weight: 700; }
+```
+
+```tsx
+/* TypeScript inline style — numeric literal */
+<p style={{ fontWeight: 400 }} />
+```
+
+If you want to allow the `bold` keyword, add a string-valued token:
+
+```json
+{ "boldKeyword": { "$type": "fontWeight", "$value": "bold" } }
 ```
 
 ## When Not To Use

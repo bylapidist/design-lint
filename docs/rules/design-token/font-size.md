@@ -8,6 +8,8 @@ description: "Use font size tokens."
 ## Summary
 Ensures `font-size` declarations use values loaded from the DSR kernel.
 
+Values are normalised to pixel equivalents before comparison (`rem × 16`, `px × 1`), so `1rem` and `16px` match the same token value.
+
 ## Configuration
 Enable the rule in `designlint.config.*`:
 
@@ -25,7 +27,10 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
       "$type": "dimension",
       "$value": { "dimensionType": "length", "value": 1, "unit": "rem" }
     },
-    "lg": { "$type": "dimension", "$ref": "#/fontSizes/base" }
+    "lg": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 1.25, "unit": "rem" }
+    }
   }
 }
 ```
@@ -41,16 +46,23 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given tokens `base = 1rem (16px)` and `lg = 1.25rem (20px)`:
+
 ### Invalid
 
 ```css
+/* 18px does not match any token */
 .title { font-size: 18px; }
 ```
 
 ### Valid
 
 ```css
+/* matches base token (1rem = 16px) */
 .title { font-size: 1rem; }
+.title { font-size: 16px; }
+/* matches lg token (1.25rem = 20px) */
+.title { font-size: 1.25rem; }
 .title { font-size: 20px; }
 ```
 

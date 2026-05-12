@@ -6,7 +6,7 @@ description: "Use z-index tokens."
 # design-token/z-index
 
 ## Summary
-Enforces `z-index` values to match the `zIndex` tokens loaded into the DSR kernel.
+Enforces `z-index` values in CSS and `zIndex` numeric literals in TypeScript inline style objects to match the `zIndex` tokens loaded into the DSR kernel.
 
 ## Configuration
 Enable the rule in `designlint.config.*`:
@@ -41,11 +41,13 @@ This rule is not auto-fixable.
 ### Invalid
 
 ```css
+/* 5 is not a token value */
 .layer { z-index: 5; }
 ```
 
-```ts
-const layer = 5;
+```tsx
+/* zIndex inline style checked against token values */
+<div style={{ zIndex: 5 }} />
 ```
 
 ### Valid
@@ -54,8 +56,8 @@ const layer = 5;
 .layer { z-index: 1000; }
 ```
 
-```ts
-const layer = 1000;
+```tsx
+<div style={{ zIndex: 1000 }} />
 ```
 
 ## When Not To Use

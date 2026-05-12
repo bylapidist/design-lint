@@ -26,6 +26,11 @@ Enable this rule in `designlint.config.*`. See [configuration](../../configurati
 - `packages` (`string[]`): allowed package names for design system components.
 - `components` (`string[]`): component names that must come from the specified packages.
 
+> [!NOTE]
+> Both `packages` and `components` must be configured for the rule to produce diagnostics.
+> If `components` is empty, no imports are flagged. If `packages` is empty, all imports of
+> the listed components are reported regardless of source.
+
 This rule is not auto-fixable.
 
 ## Examples

@@ -6,7 +6,7 @@ description: "Enforce use of border radius tokens."
 # design-token/border-radius
 
 ## Summary
-Enforces `border-radius` values to match the tokens loaded into the DSR kernel.
+Enforces `border-radius` values in CSS and numeric literals in TypeScript inline style objects to match the tokens loaded into the DSR kernel.
 
 ## Configuration
 Enable the rule in `designlint.config.*`:
@@ -57,6 +57,11 @@ Given a `radius/sm` token with value `2px`:
 .box { border-radius: 2px; }
 /* CSS variable references are always allowed */
 .box { border-radius: var(--radius-sm); }
+```
+
+```tsx
+/* TypeScript inline style — numeric literal checked against token values */
+<div style={{ borderRadius: 2 }} />
 ```
 
 ## When Not To Use
