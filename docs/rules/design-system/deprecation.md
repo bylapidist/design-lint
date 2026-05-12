@@ -41,7 +41,7 @@ design-lint kernel start --config-path designlint.config.json
 ## Options
 No additional options.
 
-This rule is not auto-fixable.
+This rule is auto-fixable for string literal token paths (e.g. `"colors.old"` → `"colors.new"`). CSS declaration values are reported but not auto-fixed.
 
 ## Examples
 

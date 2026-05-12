@@ -13,7 +13,7 @@ export const deprecationRule: RuleModule = {
   meta: {
     description: 'flag deprecated tokens',
     category: 'design-token',
-    fixable: null,
+    fixable: 'code' as const,
     stability: 'stable' as const,
     rationale: {
       why: 'Deprecated token usage accumulates silently and blocks token removal. Surfacing these at lint time gives teams a clear migration signal.',

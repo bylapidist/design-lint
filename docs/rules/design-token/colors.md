@@ -44,7 +44,7 @@ To allow specific raw formats alongside token enforcement, pass options:
 - `allow` (`"hex" | "rgb" | "rgba" | "hsl" | "hsla" | "hwb" | "lab" | "lch" | "color" | "named"`[]): formats that may appear as raw values. Defaults to `[]`.
 - `strictReference` (`boolean`): when `true`, token-equivalent raw color literals are reported for the supported static color formats this rule parses (for example `#...`, `rgb(...)`, `hsl(...)`, `hwb(...)`, `lab(...)`, `lch(...)`, `color(...)`, named colors). Token references such as `var(--...)` are still allowed. Defaults to `false`.
 
-This rule is not auto-fixable.
+This rule is auto-fixable. Matched raw color values are replaced with `var(--token-name)` where the CSS variable name is derived from the matching token's pointer (e.g. `#/color/primary` → `var(--color-primary)`).
 
 ### Supported formats
 The rule detects and blocks the following color formats unless they are defined as tokens or explicitly allowed:

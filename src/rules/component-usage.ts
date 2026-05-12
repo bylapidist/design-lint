@@ -12,7 +12,7 @@ export const componentUsageRule: RuleModule<ComponentUsageOptions> = {
     description:
       'disallow raw HTML elements when design system components exist',
     category: 'component',
-    fixable: null,
+    fixable: 'code' as const,
     stability: 'stable' as const,
     rationale: {
       why: 'Raw HTML elements bypass design system semantics, accessibility enhancements, and theming — eroding the component abstraction layer over time.',

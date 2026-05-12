@@ -13,7 +13,7 @@ export const iconUsageRule: RuleModule<IconUsageOptions> = {
     description:
       'disallow raw svg elements or non design system icon components',
     category: 'component',
-    fixable: null,
+    fixable: 'code' as const,
     stability: 'stable' as const,
     rationale: {
       why: 'Raw SVG elements and third-party icon imports bypass the design system icon registry, making icon audits and replacements require grep-level searches.',
