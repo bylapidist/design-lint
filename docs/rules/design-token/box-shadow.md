@@ -21,6 +21,17 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 {
   "$version": "1.0.0",
   "shadows": {
+    "lg": {
+      "$type": "shadow",
+      "$value": {
+        "blur": { "dimensionType": "length", "value": 4, "unit": "px" },
+        "color": { "colorSpace": "srgb", "components": [0, 0, 0, 0.2] },
+        "offsetX": { "dimensionType": "length", "value": 0, "unit": "px" },
+        "offsetY": { "dimensionType": "length", "value": 2, "unit": "px" },
+        "shadowType": "css.box-shadow",
+        "spread": { "dimensionType": "length", "value": 0, "unit": "px" }
+      }
+    },
     "md": { "$type": "shadow", "$ref": "#/shadows/sm" },
     "sm": {
       "$type": "shadow",
@@ -41,7 +52,7 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 design-lint kernel start --config-path designlint.config.json
 ```
 
-Shadow tokens use the `shadow` type with a `shadowType` context and sub-values for offsets, blur, spread, and color.
+Shadow tokens use the `shadow` type with a `shadowType` context and sub-values for offsets, blur, spread, and color. The rule converts each token's `color` field from an sRGB object to a CSS `rgba()`/`rgb()` string for comparison. Zero-valued dimensions are matched without a unit (e.g. `0` not `0px`) to match common CSS authoring conventions.
 
 ## Options
 No additional options.
@@ -50,16 +61,21 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given tokens `sm` = `0 1px 2px 0 rgba(0,0,0,0.1)` and `lg` = `0 2px 4px 0 rgba(0,0,0,0.2)`:
+
 ### Invalid
 
 ```css
-.box { box-shadow: 0 2px 4px 0 rgba(0,0,0,0.1); }
+/* 0 3px 6px 0 rgba(0,0,0,0.15) does not match any token */
+.box { box-shadow: 0 3px 6px 0 rgba(0,0,0,0.15); }
 ```
 
 ### Valid
 
 ```css
+/* matches sm token */
 .box { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.1); }
+/* multi-shadow: each segment must match a token */
 .box { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.1), 0 2px 4px 0 rgba(0,0,0,0.2); }
 ```
 
