@@ -6,7 +6,7 @@ description: "Disallow raw values inside JSX inline style objects."
 # design-system/jsx-style-values
 
 ## Summary
-Flags hard-coded string and numeric literals inside JSX `style={{ ... }}` object expressions. Values that are clearly token references (`var(--...)`) or zero are allowed. This rule is particularly useful for catching AI-generated code that injects raw style values without using design tokens.
+Flags hard-coded string and numeric literals inside JSX inline style objects (the object passed to the `style` prop). Values that are clearly token references (`var(--...)`) or zero are allowed. This rule is particularly useful for catching AI-generated code that injects raw style values without using design tokens.
 
 ## Configuration
 Enable this rule in `designlint.config.*`:
