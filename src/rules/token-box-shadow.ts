@@ -9,8 +9,14 @@ const {
 } = guards;
 const { toArray } = collections;
 
-const normalize = (val: string): string =>
-  valueParser.stringify(valueParser(val).nodes).trim();
+// Strip units from zero-valued dimensions so that "0px" and "0" compare equal.
+const ZERO_UNIT_RE =
+  /\b0(px|rem|em|%|vh|vw|vmin|vmax|cm|mm|in|pt|pc|ex|ch|fr)\b/g;
+
+const normalize = (val: string): string => {
+  const stringified = valueParser.stringify(valueParser(val).nodes).trim();
+  return stringified.replace(ZERO_UNIT_RE, '0');
+};
 
 export const boxShadowRule = tokenRule({
   name: 'design-token/box-shadow',
@@ -36,8 +42,6 @@ export const boxShadowRule = tokenRule({
         typeof v.value === 'number' &&
         typeof v.unit === 'string'
       ) {
-        // Omit units on zero values to match how authors write CSS.
-        if (v.value === 0) return '0';
         return `${String(v.value)}${v.unit}`;
       }
       return null;
