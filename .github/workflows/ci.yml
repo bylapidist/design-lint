@@ -57,6 +57,8 @@ jobs:
       - run: pnpm run format:check
       - run: pnpm run lint:md
         if: steps.changes.outputs['docs'] == 'true'
+      - run: node scripts/validate-dtif-docs.mjs
+        if: steps.changes.outputs['docs'] == 'true'
       - run: pnpm run test:coverage
         if: steps.changes.outputs['non-docs'] == 'true'
       - name: Stop DSR kernel
