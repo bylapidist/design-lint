@@ -88,6 +88,7 @@ Effective config in `packages/app`:
 | `plugins` | string[] | `[]` | Loads additional [plugins](./plugins.md). |
 | `ignoreFiles` | string[] | `[]` | Glob patterns ignored during linting. |
 | `patterns` | string[] | `[]` | File patterns to lint when none are passed on the CLI. |
+| `format` | string | `"stylish"` | Default output [formatter](./formatters.md). Overridden by `--format` on the CLI. |
 | `concurrency` | number | `os.cpus()` | Maximum parallel workers. |
 | `nameTransform` | string | `undefined` | Convert token paths to `kebab-case`, `camelCase`, or `PascalCase`. |
 | `templateTags` | string[] | `["styled", "css", "tw"]` | Tagged-template roots treated as CSS template sources. |
@@ -203,6 +204,7 @@ design-lint "src/**/*"
 ## See also
 
 - [Rule reference](./rules/index.md)
+- [Policy enforcement](./policy.md)
 - [Plugins](./plugins.md)
 - [Migration guide](./migration.md)
 - [Troubleshooting](./troubleshooting.md)

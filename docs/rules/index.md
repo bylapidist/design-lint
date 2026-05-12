@@ -67,4 +67,5 @@ To propose a new rule or retire an existing one, open an issue or pull request f
 
 ## See also
 - [Configuration](../configuration.md)
+- [Policy enforcement](../policy.md)
 - [Plugins](../plugins.md)

@@ -6,7 +6,7 @@ description: "Warn when using deprecated design system parts."
 # design-system/deprecation
 
 ## Summary
-Flags tokens marked with `$deprecated`. When a deprecated token is used as a string literal token path (for example `"colors.old"`), running the linter with `--fix` can substitute the suggested token. CSS declaration values are reported but are not currently auto-fixed.
+Flags tokens whose DTIF metadata includes a `deprecated` entry. Reports usages in string literal token paths (for example `"colors.old"`) and CSS declaration values.
 
 ## Configuration
 Enable this rule in `designlint.config.*`:
@@ -41,7 +41,7 @@ design-lint kernel start --config-path designlint.config.json
 ## Options
 No additional options.
 
-*This rule is partially auto-fixable (string literal token paths only).*
+This rule is not auto-fixable.
 
 ## Examples
 

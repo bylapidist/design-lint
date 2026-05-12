@@ -129,9 +129,18 @@ design-lint ships with TypeScript definitions for `Config`, `LintResult`, `RuleM
 import type { Config, LintResult, RuleModule } from '@lapidist/design-lint';
 ```
 
+Policy-related types for advanced governance tooling:
+
+```ts
+import type { DesignLintPolicy } from '@lapidist/design-lint';
+```
+
+`DesignLintPolicy` describes the shape of `designlint.policy.json`. See the [policy guide](./policy.md) for details.
+
 ## Versioning and stability
 The project targets semantic versioning for public API changes. Functions documented here are intended as the stable integration surface. Experimental exports are marked with `@experimental` in the source and may change without notice.
 
 ## See also
 - [Plugins](./plugins.md)
 - [Architecture overview](./architecture.md)
+- [Policy enforcement](./policy.md)

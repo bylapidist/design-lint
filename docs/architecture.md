@@ -60,6 +60,9 @@ Supplies design tokens to rules. In v8 the only public token provider is [`DsrTo
 ### Token tracker
 Keeps track of token usage across linted files and reports unused values for the [`design-system/no-unused-tokens`](./rules/design-system/no-unused-tokens.md) rule. Implementation: [`src/core/token-tracker.ts`](https://github.com/bylapidist/design-lint/blob/main/src/core/token-tracker.ts).
 
+### Policy enforcement
+A `designlint.policy.json` file placed next to your config adds static guardrails on top of the rule set. Policies can require specific rules to be enabled, set a minimum severity floor, enforce token coverage thresholds, and activate ratchet mode (preventing new violations from being introduced). Policy files support `extends` for shared presets. See [`src/config/policy-loader.ts`](https://github.com/bylapidist/design-lint/blob/main/src/config/policy-loader.ts) and [`src/config/policy-enforcer.ts`](https://github.com/bylapidist/design-lint/blob/main/src/config/policy-enforcer.ts).
+
 ## Performance and caching
 design-lint processes files concurrently across CPU cores. File-level lint results are cached between runs in `.designlintcache` to reduce repeated work.
 

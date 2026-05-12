@@ -72,6 +72,7 @@ The complete documentation is available under the [`docs/`](docs) directory and 
 | [Formatters](docs/formatters.md)       | Built-in and custom output formats.                              |
 | [Migration](docs/migration.md)         | Upgrading from v7 to v8 (kernel architecture, DTIF tokens).      |
 | [Plugins](docs/plugins.md)             | Writing and loading custom rule plugins.                         |
+| [Policy](docs/policy.md)               | Centrally-owned guardrails that consumer configs cannot weaken.  |
 | [CI](docs/ci.md)                       | GitHub Actions examples and kernel setup for CI environments.    |
 | [API](docs/api.md)                     | Programmatic usage with TypeScript types.                        |
 | [Architecture](docs/architecture.md)   | How the DSR kernel, token graph, and lint surface work together. |

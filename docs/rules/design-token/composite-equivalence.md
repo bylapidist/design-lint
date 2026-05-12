@@ -33,7 +33,7 @@ design-lint kernel start --config-path designlint.config.json
 ## Options
 No additional options.
 
-This rule is auto-fixable (replaces matched raw values with a `var()` reference where possible).
+This rule is marked as fixable in metadata but does not yet provide automatic fix output. Manual replacement with a CSS variable reference is required.
 
 ## Examples
 

@@ -17,6 +17,12 @@ This guide walks you through installing and running @lapidist/design-lint for th
 - [Autofix workflow](#autofix-workflow)
 - [Validate configuration](#validate-configuration)
 - [Export resolved tokens](#export-resolved-tokens)
+- [Generate documentation](#generate-documentation)
+- [Migrate configuration](#migrate-configuration)
+- [Token write commands](#token-write-commands)
+- [Component write commands](#component-write-commands)
+- [Rule write commands](#rule-write-commands)
+- [Diff snapshots](#diff-snapshots)
 - [Watch mode and caching](#watch-mode-and-caching)
 - [Target files and directories](#target-files-and-directories)
 - [Exit codes](#exit-codes)
@@ -183,6 +189,97 @@ import {
   generateTsDeclarations,
 } from '@lapidist/design-lint';
 ```
+
+## Generate documentation
+
+Generate a documentation site for your design system's tokens and rules from the running kernel:
+
+```bash
+pnpm exec design-lint docs --out docs/design-system
+```
+
+Options:
+- `--out <dir>` – output directory (default: `docs/design-system`)
+- `--site-format <name>` – `vitepress` (default) or `markdown`
+- `--config <path>` – path to configuration file
+
+## Migrate configuration
+
+Run the v7 → v8 codemod to update config files automatically:
+
+```bash
+pnpm exec design-lint migrate --config designlint.config.json
+```
+
+Options:
+- `--config <path>` – path to the config file to migrate
+- `--out <path>` – write migrated config to a new file instead of overwriting
+- `--dry-run` – print changes without writing files
+
+See the [migration guide](./migration.md) for the full upgrade workflow.
+
+## Token write commands
+
+Write tokens directly into the running DSR kernel. These commands are useful for scripting or build integrations that seed tokens programmatically.
+
+```bash
+# Register a new token
+design-lint token add "#/color/button/primary" \
+  --name "Button primary" \
+  --type color \
+  --value '{"colorSpace":"srgb","components":[0,0.435,1]}'
+
+# Mark a token as deprecated
+design-lint token deprecate "#/color/old" --replacement "#/color/new"
+```
+
+Both subcommands accept `--socket-path` and `--http-port` to connect to a non-default kernel instance.
+
+## Component write commands
+
+Register design system components in the running kernel so that component-related rules know which components belong to the design system:
+
+```bash
+design-lint component register Button \
+  --package @acme/design-system \
+  --version 3.0.0 \
+  --replaces LegacyButton
+```
+
+Options:
+- `--package <name>` – (required) package that exports the component
+- `--version <semver>` – package version
+- `--replaces <names>` – comma-separated list of component names this supersedes
+- `--socket-path` / `--http-port` – kernel connection options
+
+## Rule write commands
+
+Update a rule's severity or options in the running kernel without restarting:
+
+```bash
+design-lint rule configure design-token/colors \
+  --severity error \
+  --options '{"allow":["named"]}'
+```
+
+Options:
+- `--severity <level>` – `error`, `warn`, or `off`
+- `--options <json>` – rule options as a JSON string
+- `--socket-path` / `--http-port` – kernel connection options
+
+## Diff snapshots
+
+Compare two DSR kernel snapshots to inspect what changed between two states:
+
+```bash
+design-lint diff before.bin after.bin
+design-lint diff before.bin after.bin --format json
+```
+
+Options:
+- `--format <name>` – `text` (default) or `json`
+
+Snapshots are produced with `design-lint export-runtime-snapshot --out <file>`.
 
 ## Watch mode and caching
 Use `--watch` to rerun the linter when files change. Persistent caching is opt-in and only enabled when you pass `--cache`.
