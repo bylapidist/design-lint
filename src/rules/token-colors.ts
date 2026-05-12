@@ -129,7 +129,12 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
       });
     };
 
-    const checkNode = (text: string, line: number, column: number, contentOffset: number) => {
+    const checkNode = (
+      text: string,
+      line: number,
+      column: number,
+      contentOffset: number,
+    ) => {
       const parsed = valueParser(text);
       parsed.walk((node) => {
         const value = valueParser.stringify(node);
@@ -159,14 +164,33 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
         ) {
           const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart());
           // +1 to skip the opening quote character
-          checkNode(node.text, pos.line + 1, pos.character + 2, node.getStart() + 1);
+          checkNode(
+            node.text,
+            pos.line + 1,
+            pos.character + 2,
+            node.getStart() + 1,
+          );
         } else if (ts.isTemplateExpression(node)) {
-          const headPos = sourceFile.getLineAndCharacterOfPosition(node.head.getStart());
-          checkNode(node.head.text, headPos.line + 1, headPos.character + 2, node.head.getStart() + 1);
+          const headPos = sourceFile.getLineAndCharacterOfPosition(
+            node.head.getStart(),
+          );
+          checkNode(
+            node.head.text,
+            headPos.line + 1,
+            headPos.character + 2,
+            node.head.getStart() + 1,
+          );
           for (const span of node.templateSpans) {
-            const litPos = sourceFile.getLineAndCharacterOfPosition(span.literal.getStart());
+            const litPos = sourceFile.getLineAndCharacterOfPosition(
+              span.literal.getStart(),
+            );
             // Template middle/tail starts with }, so content is at +1
-            checkNode(span.literal.text, litPos.line + 1, litPos.character + 2, span.literal.getStart() + 1);
+            checkNode(
+              span.literal.text,
+              litPos.line + 1,
+              litPos.character + 2,
+              span.literal.getStart() + 1,
+            );
           }
         }
       },
