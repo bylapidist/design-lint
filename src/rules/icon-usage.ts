@@ -3,7 +3,6 @@ import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 interface IconUsageOptions {
-  /** Map of disallowed icon elements or components to their replacements. */
   substitutions?: Record<string, string>;
 }
 

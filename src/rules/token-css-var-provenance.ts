@@ -2,11 +2,6 @@ import valueParser from 'postcss-value-parser';
 import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
-/**
- * Detects CSS custom property references (var(--foo)) that are not backed by
- * a DTIF token. Helps prevent "ghost" variables that exist in CSS but are not
- * part of the design system and therefore drift silently.
- */
 export const cssVarProvenanceRule: RuleModule = {
   name: 'design-token/css-var-provenance',
   meta: {

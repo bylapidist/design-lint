@@ -64,7 +64,6 @@ function extractJsonBlocks(text) {
 
 /** Heuristic: is this JSON block a DTIF catalog? */
 function isDtifCatalog(json) {
-  // Must have $version at top level, and at least one group with $type tokens
   return (
     Object.prototype.hasOwnProperty.call(json, '$version') &&
     Object.values(json).some(

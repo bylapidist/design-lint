@@ -2,15 +2,6 @@ import ts from 'typescript';
 import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
-/**
- * Detects raw hard-coded values inside JSX inline style objects.
- * AI coding agents frequently produce JSX with inline styles that bypass the
- * design token system entirely, e.g. `style={{ color: '#3B82F6' }}`.
- *
- * This rule flags any string literal or numeric literal that appears as the
- * value of a JSX style property, excluding values that are clearly token
- * references (`var(--…)`) or zero.
- */
 export const jsxStyleValuesRule: RuleModule = {
   name: 'design-system/jsx-style-values',
   meta: {

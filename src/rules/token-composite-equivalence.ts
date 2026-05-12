@@ -1,11 +1,6 @@
 import { z } from 'zod';
 import type { Fix, RuleModule } from '../core/types.js';
 
-/**
- * Detects multi-part CSS values (e.g. borders, backgrounds, transitions) that
- * match an existing composite token exactly, meaning the author could have
- * used the token instead.
- */
 export const compositeEquivalenceRule: RuleModule = {
   name: 'design-token/composite-equivalence',
   meta: {

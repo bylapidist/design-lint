@@ -19,29 +19,18 @@ interface TokenRuleConfig<TOptions, TAllowed> {
   /** The rule name, e.g. `design-token/example`. */
   name: string;
   meta: RuleMeta;
-  /** Token type(s) the rule should operate on. */
   tokens: string | string[];
   /** Message to report when no allowed tokens are found. */
   message: string;
-  /**
-   * Computes the set of allowed values based on available tokens.
-   */
   getAllowed: (
     context: RuleContext<TOptions>,
     tokens: readonly DtifFlattenedToken[],
   ) => TAllowed;
-  /** Creates the actual rule listener using the allowed set. */
   create: (context: RuleContext<TOptions>, allowed: TAllowed) => RuleListener;
   /** Determines whether the allowed set is effectively empty. */
   isEmpty?: (allowed: TAllowed) => boolean;
 }
 
-/**
- * Determines whether a value has a numeric `size` property.
- *
- * @param value - The value to inspect.
- * @returns `true` if the value exposes a numeric `size` property.
- */
 const hasSize = (value: unknown): value is { size: number } =>
   isObject(value) && typeof Reflect.get(value, 'size') === 'number';
 
@@ -77,24 +66,13 @@ export function tokenRule<TOptions = unknown, TAllowed = Set<unknown>>(
     name: config.name,
     meta: { ...config.meta, schema: config.meta.schema ?? z.void() },
     create(context) {
-      // Normalize `tokens` to an array so rule authors can supply either a
-      // single token type or multiple types.
       const types = toArray(config.tokens);
-
-      // Retrieve the available tokens for each requested type.
       const dtifTokens = types.flatMap((t) => context.getDtifTokens(t));
-
-      // Compute the set of allowed values using the rule's callback.
       const allowed = config.getAllowed(context, dtifTokens);
-
-      // Determine whether the allowed set is effectively empty, either via a
-      // custom `isEmpty` check or by inspecting a `size` property when present.
       const empty = config.isEmpty
         ? config.isEmpty(allowed)
         : hasSize(allowed) && allowed.size === 0;
       if (empty) {
-        // Report an informative message and exit early when no allowed tokens
-        // exist to lint against.
         context.report({
           message: config.message,
           line: 1,
@@ -102,8 +80,6 @@ export function tokenRule<TOptions = unknown, TAllowed = Set<unknown>>(
         });
         return {};
       }
-
-      // Delegate to the rule-specific factory with the prepared allowed set.
       return config.create(context, allowed);
     },
   };

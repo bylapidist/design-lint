@@ -78,7 +78,6 @@ export const colorsRule = tokenRule<ColorRuleOptions>({
       'named',
     ]);
 
-    // Build value → CSS variable name map for fix suggestions.
     const valueToVar = new Map<string, string>();
     for (const token of context.getDtifTokens('color')) {
       const v = getTokenStringValue(token);

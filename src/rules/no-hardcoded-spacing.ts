@@ -71,11 +71,6 @@ const CSS_SPACING_PROPS = new Set([
 
 const NUMERIC_PX_PATTERN = /^-?\d+(\.\d+)?(px|rem|em|vh|vw|%)?$/;
 
-/**
- * Flags numeric literals used as spacing/sizing values in JSX and CSS.
- * AI agents frequently hard-code pixel values rather than referencing spacing
- * or dimension tokens, causing layout inconsistency across the design system.
- */
 export const noHardcodedSpacingRule: RuleModule = {
   name: 'design-system/no-hardcoded-spacing',
   meta: {

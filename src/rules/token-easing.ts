@@ -4,9 +4,6 @@ import { rules } from '../utils/index.js';
 
 const { tokenRule } = rules;
 
-/**
- * Matches cubic-bezier(...) and steps(...) timing function notations.
- */
 const EASING_PATTERN =
   /\bcubic-bezier\s*\(|steps\s*\(|step-start\b|step-end\b/i;
 

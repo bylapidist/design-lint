@@ -3,11 +3,8 @@ import { z } from 'zod';
 import type { RuleModule } from '../core/types.js';
 
 interface NoInlineStylesOptions {
-  /** When true, the rule will ignore class/className attributes. */
   ignoreClassName?: boolean;
-  /** Explicit design system component names to target. */
   components?: string[];
-  /** Package specifiers considered design-system import origins. */
   importOrigins?: string[];
 }
 
