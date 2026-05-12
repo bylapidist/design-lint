@@ -84,7 +84,7 @@ void test('throws for invalid plugin rules', async () => {
     () =>
       manager.getPlugins({
         documentSource: new FileSource(),
-      } as Environment),
+      }),
     (err) => {
       assert.ok(err instanceof PluginError);
       assert.ok(err.context.includes('invalid-rule-plugin'));
@@ -130,7 +130,7 @@ void test('throws when plugin rule conflicts with existing rule', async () => {
     () =>
       manager.getPlugins({
         documentSource: new FileSource(),
-      } as Environment),
+      }),
     (err) => {
       assert.ok(err instanceof PluginError);
       assert.ok(err.context.includes('conflict-plugin.ts'));
@@ -155,7 +155,7 @@ void test('throws when two plugins define the same rule name', async () => {
     () =>
       manager.getPlugins({
         documentSource: new FileSource(),
-      } as Environment),
+      }),
     (err) => {
       assert.ok(err instanceof PluginError);
       assert.ok(err.context.includes('duplicate-rule-plugin.ts'));

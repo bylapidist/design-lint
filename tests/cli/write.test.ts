@@ -72,7 +72,7 @@ test('tokenAdd sends write.addToken with correct pointer and name', async () => 
 
   await tokenAdd(
     { pointer: '/color/brand/primary', name: 'Brand Primary' },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   assert.equal(calls.length, 1);
@@ -93,7 +93,7 @@ test('tokenAdd normalises pointer without leading slash', async () => {
 
   await tokenAdd(
     { pointer: 'color/brand/secondary', name: 'Brand Secondary' },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   const p = calls[0]?.payload as Record<string, unknown>;
@@ -114,7 +114,7 @@ test('tokenAdd includes type and parsed value when provided', async () => {
       type: 'color',
       value: '"#ff0000"',
     },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   const tok = (calls[0]?.payload as Record<string, unknown>).token as Record<
@@ -138,7 +138,7 @@ test('tokenAdd uses raw string value when JSON parse fails', async () => {
       name: 'Base Size',
       value: 'not-valid-json',
     },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   const tok = (calls[0]?.payload as Record<string, unknown>).token as Record<
@@ -158,8 +158,8 @@ test('tokenAdd throws on kernel error response', async () => {
       tokenAdd(
         { pointer: '/x', name: 'X' },
         {
-          UnixSocketClient: StubClient as never,
-          HttpClient: StubClient as never,
+          UnixSocketClient: StubClient,
+          HttpClient: StubClient,
         },
       ),
     /Kernel error/,
@@ -179,7 +179,7 @@ test('tokenDeprecate sends write.deprecateToken with pointer', async () => {
 
   await tokenDeprecate(
     { pointer: '/color/legacy/red' },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   assert.equal(calls[0]?.method, 'write.deprecateToken');
@@ -197,7 +197,7 @@ test('tokenDeprecate includes replacement when provided', async () => {
 
   await tokenDeprecate(
     { pointer: '/color/legacy/red', replacement: '/color/brand/primary' },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   const p = calls[0]?.payload as Record<string, unknown>;
@@ -217,7 +217,7 @@ test('componentRegister sends write.registerComponent with name and package', as
 
   await componentRegister(
     { name: 'Button', packageName: '@acme/ui' },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   assert.equal(calls[0]?.method, 'write.registerComponent');
@@ -242,7 +242,7 @@ test('componentRegister includes version and replaces when provided', async () =
       version: '2.0.0',
       replaces: 'LegacyButton, OldButton',
     },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   const def = (calls[0]?.payload as Record<string, unknown>)
@@ -264,7 +264,7 @@ test('ruleConfigure sends write.configureRule with severity', async () => {
 
   await ruleConfigure(
     { ruleId: 'color/no-raw-value', severity: 'error' },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   assert.equal(calls[0]?.method, 'write.configureRule');
@@ -284,7 +284,7 @@ test('ruleConfigure sets enabled=false when severity is off', async () => {
 
   await ruleConfigure(
     { ruleId: 'color/no-raw-value', severity: 'off' },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   const partial = (calls[0]?.payload as Record<string, unknown>)
@@ -305,7 +305,7 @@ test('ruleConfigure sends options when provided', async () => {
       ruleId: 'color/no-raw-value',
       options: '{"allowedColors":["#fff"]}',
     },
-    { UnixSocketClient: StubClient as never, HttpClient: StubClient as never },
+    { UnixSocketClient: StubClient, HttpClient: StubClient },
   );
 
   const partial = (calls[0]?.payload as Record<string, unknown>)
@@ -321,8 +321,8 @@ test('ruleConfigure throws for invalid JSON options', async () => {
       ruleConfigure(
         { ruleId: 'color/no-raw-value', options: '{bad}' },
         {
-          UnixSocketClient: StubClient as never,
-          HttpClient: StubClient as never,
+          UnixSocketClient: StubClient,
+          HttpClient: StubClient,
         },
       ),
     /Invalid JSON/,
@@ -337,8 +337,8 @@ test('ruleConfigure throws when no severity or options provided', async () => {
       ruleConfigure(
         { ruleId: 'color/no-raw-value' },
         {
-          UnixSocketClient: StubClient as never,
-          HttpClient: StubClient as never,
+          UnixSocketClient: StubClient,
+          HttpClient: StubClient,
         },
       ),
     /at least one/,
@@ -353,8 +353,8 @@ test('ruleConfigure throws for invalid severity value', async () => {
       ruleConfigure(
         { ruleId: 'color/no-raw-value', severity: 'critical' },
         {
-          UnixSocketClient: StubClient as never,
-          HttpClient: StubClient as never,
+          UnixSocketClient: StubClient,
+          HttpClient: StubClient,
         },
       ),
     /Invalid severity/,

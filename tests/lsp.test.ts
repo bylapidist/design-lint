@@ -567,7 +567,7 @@ function isCodeActionResult(f: unknown): f is CodeActionResult {
     typeof f === 'object' &&
     f !== null &&
     'result' in f &&
-    Array.isArray((f as { result: unknown }).result)
+    Array.isArray((f).result)
   );
 }
 

@@ -156,7 +156,7 @@ void test('kernelStop sends SIGTERM to a running process', () => {
     killedSignal = sig;
     return true;
   };
-  process.kill = stubKill as typeof process.kill;
+  process.kill = stubKill;
 
   const lines: string[] = [];
   const orig = console.log;

@@ -185,7 +185,7 @@ void test('startDaemon bootstraps tokens from --config-path', async () => {
     logs.push(args.join(' '));
   };
   try {
-    await startDaemon(['--config-path', configFile], BootstrapCtor as never);
+    await startDaemon(['--config-path', configFile], BootstrapCtor);
   } finally {
     console.log = origLog;
     fs.rmSync(dir, { recursive: true, force: true });

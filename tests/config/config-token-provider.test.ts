@@ -29,7 +29,7 @@ void test('wraps single DTIF token set as default theme', async () => {
   cfg.tokens = {
     $version: '1.0.0',
     color: { primary: srgb([0, 0, 0]) },
-  } as KernelConfig['tokens'];
+  };
   const provider = new ConfigTokenProvider(cfg);
   const tokens = await provider.load();
   const light = tokens.default as {
@@ -51,7 +51,7 @@ void test('handles multiple DTIF themes', async () => {
       $version: '1.0.0',
       color: { primary: srgb([0.1, 0.1, 0.1]) },
     },
-  } as KernelConfig['tokens'];
+  };
   const provider = new ConfigTokenProvider(cfg);
   const tokens = await provider.load();
   assert.deepEqual(Object.keys(tokens).sort(), ['dark', 'light']);
@@ -59,7 +59,7 @@ void test('handles multiple DTIF themes', async () => {
 
 void test('rejects invalid token structures', async () => {
   const cfg = baseConfig();
-  cfg.tokens = { foo: '#000' } as unknown as KernelConfig['tokens'];
+  cfg.tokens = { foo: '#000' };
   const provider = new ConfigTokenProvider(cfg);
   await assert.rejects(provider.load(), (err) => {
     return (
@@ -76,7 +76,7 @@ void test('includes theme in parse errors for theme records', async () => {
       $version: '1.0.0',
       color: { primary: { $type: 'color' } },
     },
-  } as KernelConfig['tokens'];
+  };
   const provider = new ConfigTokenProvider(cfg);
   await assert.rejects(provider.load(), (err) => {
     if (!(err instanceof DtifTokenParseError)) return false;
@@ -89,7 +89,7 @@ void test('throws on invalid design token object', async () => {
   cfg.tokens = {
     $version: '1.0.0',
     color: { primary: { $type: 'color' } },
-  } as KernelConfig['tokens'];
+  };
   const provider = new ConfigTokenProvider(cfg);
   await assert.rejects(provider.load(), DtifTokenParseError);
 });

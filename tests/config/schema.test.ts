@@ -4,7 +4,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { configSchema } from '../../src/config/schema.js';
-import type { Config } from '../../src/core/linter.js';
 
 const srgb = (
   components: readonly [number, number, number],
@@ -27,7 +26,7 @@ void test('accepts formatter selection in configuration', () => {
 });
 
 void test('rejects unknown properties', () => {
-  assert.throws(() => configSchema.parse({ foo: 1 } as unknown as Config));
+  assert.throws(() => configSchema.parse({ foo: 1 }));
 });
 
 void test('rejects invalid rule severity', () => {

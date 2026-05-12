@@ -155,7 +155,7 @@ void test('getTokenStringValue returns undefined for non-record non-array color 
     path: ['color', 'primitive'],
     name: 'primitive',
     type: 'color',
-    value: 42 as unknown as string,
+    value: 42,
   };
   assert.equal(getTokenStringValue(token), undefined);
 });

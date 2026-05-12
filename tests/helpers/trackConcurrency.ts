@@ -4,10 +4,7 @@ import { CacheManager } from '../../src/core/cache-manager.js';
 const originalProcess = Reflect.get(
   CacheManager.prototype,
   'processDocument',
-) as (
-  this: CacheManager,
-  ...args: Parameters<CacheManager['processDocument']>
-) => ReturnType<CacheManager['processDocument']>;
+);
 
 const runOriginal = (
   self: CacheManager,
