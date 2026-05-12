@@ -38,8 +38,8 @@
     "format:check": "prettier --check 'src/**/*.ts'"
   },
   "peerDependencies": {
-    "@lapidist/design-lint": ">=8.0.0",
-    "@lapidist/design-lint-testing": ">=0"
+    "@lapidist/design-lint": "8.0.0",
+    "@lapidist/design-lint-testing": "1.0.0"
   },
   "devDependencies": {
     "@lapidist/design-lint": "workspace:*",
