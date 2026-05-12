@@ -44,16 +44,22 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given a `color/border/primary` token with value `#000000`:
+
 ### Invalid
 
 ```css
-.box { border-color: #000000; }
+/* raw value not matching any token */
+.box { border-color: #ff0000; }
 ```
 
 ### Valid
 
 ```css
-.box { border-color: #ffffff; }
+/* matches token value exactly */
+.box { border-color: #000000; }
+/* or use a CSS variable reference */
+.box { border-color: var(--color-border-primary); }
 ```
 
 ## When Not To Use

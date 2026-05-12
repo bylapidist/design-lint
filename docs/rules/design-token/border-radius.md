@@ -41,17 +41,22 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given a `radius/sm` token with value `2px`:
+
 ### Invalid
 
 ```css
+/* 3px does not match any token value */
 .box { border-radius: 3px; }
 ```
 
 ### Valid
 
 ```css
-.box { border-radius: 4px; }
-.box { border-radius: var(--radius-lg); }
+/* matches token value */
+.box { border-radius: 2px; }
+/* CSS variable references are always allowed */
+.box { border-radius: var(--radius-sm); }
 ```
 
 ## When Not To Use

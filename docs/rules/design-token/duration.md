@@ -6,7 +6,11 @@ description: "Use duration tokens for transitions and animations."
 # design-token/duration
 
 ## Summary
-Enforces transition and animation duration values to match the duration tokens loaded into the DSR kernel.
+Enforces duration values in CSS transitions and animations — and numeric literals in TypeScript style objects — to match the duration tokens loaded into the DSR kernel.
+
+Checked CSS properties: `transition`, `transition-duration`, `animation`, `animation-duration`.
+
+Unit conversion: `s` values are converted to `ms` before matching, so a token of `0.1s` (100 ms) accepts `0.1s` or `100ms` in CSS.
 
 ## Configuration
 Enable the rule in `designlint.config.*`:
@@ -25,7 +29,10 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
       "$type": "duration",
       "$value": { "durationType": "css.transition-duration", "value": 0.1, "unit": "s" }
     },
-    "long": { "$type": "duration", "$ref": "#/durations/short" }
+    "long": {
+      "$type": "duration",
+      "$value": { "durationType": "css.transition-duration", "value": 0.3, "unit": "s" }
+    }
   }
 }
 ```
@@ -34,8 +41,6 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
 design-lint kernel start --config-path designlint.config.json
 ```
 
-Duration tokens identify the timing context via `durationType` and provide a numeric `value` with a corresponding `unit` such as `ms` or `s`.
-
 ## Options
 No additional options.
 
@@ -43,18 +48,24 @@ This rule is not auto-fixable.
 
 ## Examples
 
+Given tokens `short` = 100 ms and `long` = 300 ms:
+
 ### Invalid
 
 ```css
-.box { transition: all 300ms ease; }
+/* 200ms does not match any token */
+.box { transition: all 200ms ease; }
 .box { animation: fade 0.5s linear; }
 ```
 
 ### Valid
 
 ```css
+/* matches short token (100ms = 0.1s) */
 .box { transition: all 100ms ease; }
-.box { animation-duration: 250ms; }
+.box { transition: all 0.1s ease; }
+/* matches long token */
+.box { animation-duration: 300ms; }
 ```
 
 ## When Not To Use

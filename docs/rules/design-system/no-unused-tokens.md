@@ -6,17 +6,14 @@ description: "Report tokens defined but never used."
 # design-system/no-unused-tokens
 
 ## Summary
-Reports design tokens defined in your configuration that never appear in any linted file. This keeps the token set focused and helps uncover stale values left behind after refactors.
+Reports design tokens that are loaded in the DSR kernel but never referenced in any linted file. This keeps the token set focused and helps uncover stale values left behind after refactors.
 
-The rule is semantic-only: usage is resolved from explicit token references and
-normalised identities (for example token paths, JSON pointers, and CSS variable
-names). Raw literals are not treated as token usage.
+Usage is tracked across the entire lint run by the token tracker. A token is considered used when it is referenced via a CSS variable (`var(--color-primary)`), a token path, or a JSON pointer in any linted source file.
 
 > [!NOTE]
-> Run the linter on the full project to avoid false positives. Tokens referenced in files that are excluded from the run will be reported as unused.
+> Run the linter on the full project to avoid false positives. Tokens referenced in files excluded from the run will be reported as unused.
 >
-> This rule is strongest on statically analyzable patterns. Dynamic token
-> construction may produce false positives or false negatives.
+> This rule is strongest on statically analyzable patterns. Dynamic token construction may produce false positives or false negatives.
 
 ## Configuration
 Enable this rule in `designlint.config.*`:
@@ -31,13 +28,7 @@ Tokens are not configured inline. Seed the DSR kernel from your DTIF catalog bef
 design-lint kernel start --config-path designlint.config.json
 ```
 
-Given a catalog with `color.primary` and `color.unused`, and the source:
-
-```ts
-const color = '{color.primary}';
-```
-
-the `color.unused` token is reported as unused.
+If a catalog contains `color/primary` and `color/unused` but only `color/primary` is referenced across the codebase (e.g. via `var(--color-primary)`), `color/unused` is reported as unused.
 
 To exclude specific tokens from usage reporting:
 
