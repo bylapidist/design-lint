@@ -6,30 +6,39 @@ description: "Use spacing tokens."
 # design-token/spacing
 
 ## Summary
-Enforces a spacing scale so that only configured token values or multiples of a base unit are allowed.
+Enforces a spacing scale so that only token values loaded from the DSR kernel or multiples of a configured base unit are allowed.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/spacing": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `dimension`-type tokens with `dimensionType: "length"` under a `spacing` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "spacing": {
-      "sm": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
-      },
-      "md": { "$type": "dimension", "$ref": "#/spacing/sm" }
-    }
-  },
-  "rules": {
-    "design-token/spacing": ["error", { "base": 4, "units": ["rem", "vw"] }]
+  "$version": "1.0.0",
+  "spacing": {
+    "sm": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 4, "unit": "px" }
+    },
+    "md": { "$type": "dimension", "$ref": "#/spacing/sm" }
   }
 }
 ```
 
-Spacing tokens use the `dimension` type with `dimensionType` set to `length`.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
+
+To configure the base unit and allowed CSS units, pass options:
+
+```json
+{ "rules": { "design-token/spacing": ["error", { "base": 4, "units": ["px", "rem"] }] } }
+```
 
 ## Options
 - `base` (`number`): values must be multiples of this number. Defaults to `4`.

@@ -6,28 +6,33 @@ description: "Use letter spacing tokens."
 # design-token/letter-spacing
 
 ## Summary
-Enforces `letter-spacing` values to match the letter-spacing tokens defined in your configuration.
+Enforces `letter-spacing` values to match the letter-spacing tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/letter-spacing": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `dimension`-type tokens with `dimensionType: "length"` under a `letterSpacings` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "letterSpacings": {
-      "tight": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": -0.05, "unit": "rem" }
-      },
-      "loose": { "$type": "dimension", "$ref": "#/letterSpacings/tight" }
-    }
-  },
-  "rules": { "design-token/letter-spacing": "error" }
+  "$version": "1.0.0",
+  "letterSpacings": {
+    "tight": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": -0.05, "unit": "rem" }
+    },
+    "loose": { "$type": "dimension", "$ref": "#/letterSpacings/tight" }
+  }
 }
 ```
 
-Letter-spacing tokens use the `dimension` type with `dimensionType` set to `length`.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
 
 ## Options
 No additional options.

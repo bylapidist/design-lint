@@ -92,7 +92,10 @@ For stylesheet parsing failures, design-lint emits a deterministic `parse-error`
   ```js
   // design-lint-disable-next-line design-token/colors
   const color = '#fff';
+
+  const other = '#000'; // design-lint-disable-line design-token/colors
   ```
+  To suppress all rules for a block, use `/* design-lint-disable */` and `/* design-lint-enable */`.
  - **How do I share configurations across repos?** Publish an npm package that exports a configuration object and import it from `designlint.config.js` or `designlint.config.ts`.
 
 ## See also

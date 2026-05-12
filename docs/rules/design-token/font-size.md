@@ -6,28 +6,33 @@ description: "Use font size tokens."
 # design-token/font-size
 
 ## Summary
-Ensures `font-size` declarations use values from your `fontSizes` tokens.
+Ensures `font-size` declarations use values loaded from the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/font-size": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `dimension`-type tokens with `dimensionType: "length"` under a `fontSizes` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "fontSizes": {
-      "base": {
-        "$type": "dimension",
-        "$value": { "dimensionType": "length", "value": 1, "unit": "rem" }
-      },
-      "lg": { "$type": "dimension", "$ref": "#/fontSizes/base" }
-    }
-  },
-  "rules": { "design-token/font-size": "error" }
+  "$version": "1.0.0",
+  "fontSizes": {
+    "base": {
+      "$type": "dimension",
+      "$value": { "dimensionType": "length", "value": 1, "unit": "rem" }
+    },
+    "lg": { "$type": "dimension", "$ref": "#/fontSizes/base" }
+  }
 }
 ```
 
-Font-size tokens use the `dimension` type with `dimensionType` set to `length` and explicit units.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
 
 ## Options
 No additional options.

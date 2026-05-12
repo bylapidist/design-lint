@@ -6,22 +6,29 @@ description: "Use z-index tokens."
 # design-token/z-index
 
 ## Summary
-Enforces `z-index` values to match the `zIndex` tokens defined in your configuration.
+Enforces `z-index` values to match the `zIndex` tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/z-index": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `number`-type tokens under a `zIndex` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "zIndex": {
-      "modal": { "$type": "number", "$value": 1000 },
-      "dropdown": { "$type": "number", "$ref": "#/zIndex/modal" }
-    }
-  },
-  "rules": { "design-token/z-index": "error" }
+  "$version": "1.0.0",
+  "zIndex": {
+    "modal": { "$type": "number", "$value": 1000 },
+    "dropdown": { "$type": "number", "$ref": "#/zIndex/modal" }
+  }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
 ## Options

@@ -6,33 +6,35 @@ description: "Use duration tokens for transitions and animations."
 # design-token/duration
 
 ## Summary
-Enforces transition and animation duration values to match the duration tokens defined in your configuration.
+Enforces transition and animation duration values to match the duration tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/duration": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `duration`-type tokens under a `durations` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "durations": {
-      "short": {
-        "$type": "duration",
-        "$value": {
-          "durationType": "css.transition-duration",
-          "value": 0.1,
-          "unit": "s"
-        }
-      },
-      "long": { "$type": "duration", "$ref": "#/durations/short" }
-    }
-  },
-  "rules": { "design-token/duration": "error" }
+  "$version": "1.0.0",
+  "durations": {
+    "short": {
+      "$type": "duration",
+      "$value": { "durationType": "css.transition-duration", "value": 0.1, "unit": "s" }
+    },
+    "long": { "$type": "duration", "$ref": "#/durations/short" }
+  }
 }
 ```
 
-Duration tokens identify the timing context via `durationType` and provide a numeric `value`
-with a corresponding `unit` such as `ms` or `s`.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
+
+Duration tokens identify the timing context via `durationType` and provide a numeric `value` with a corresponding `unit` such as `ms` or `s`.
 
 ## Options
 No additional options.

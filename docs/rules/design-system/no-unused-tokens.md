@@ -19,30 +19,19 @@ names). Raw literals are not treated as token usage.
 > construction may produce false positives or false negatives.
 
 ## Configuration
-Enable this rule in `designlint.config.*`. See [configuration](../../configuration.md) for details on configuring tokens and rules.
-
-Given this configuration:
+Enable this rule in `designlint.config.*`:
 
 ```json
-{
-  "tokens": {
-    "$version": "1.0.0",
-    "color": {
-      "primary": {
-        "$type": "color",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0, 0, 0]
-        }
-      },
-      "unused": { "$type": "color", "$ref": "#/color/primary" }
-    }
-  },
-  "rules": { "design-system/no-unused-tokens": "warn" }
-}
+{ "rules": { "design-system/no-unused-tokens": "warn" } }
 ```
 
-and the source:
+Tokens are not configured inline. Seed the DSR kernel from your DTIF catalog before linting so the rule knows which tokens exist:
+
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
+
+Given a catalog with `color.primary` and `color.unused`, and the source:
 
 ```ts
 const color = '{color.primary}';
@@ -50,15 +39,12 @@ const color = '{color.primary}';
 
 the `color.unused` token is reported as unused.
 
-A CSS variable can also be ignored:
+To exclude specific tokens from usage reporting:
 
 ```json
 {
   "rules": {
-    "design-system/no-unused-tokens": [
-      "warn",
-      { "ignore": ["--custom-color"] }
-    ]
+    "design-system/no-unused-tokens": ["warn", { "ignore": ["--custom-color"] }]
   }
 }
 ```

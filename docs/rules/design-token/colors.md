@@ -6,30 +6,38 @@ description: "Require color tokens instead of hard-coded values."
 # design-token/colors
 
 ## Summary
-Disallows raw color values and enforces the color tokens defined in your configuration.
+Disallows raw color values and enforces the color tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/colors": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `color`-type tokens:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "color": {
-      "primary": {
-        "$type": "color",
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [1, 0, 0]
-        }
-      },
-      "secondary": { "$type": "color", "$ref": "#/color/primary" }
-    }
-  },
-  "rules": {
-    "design-token/colors": ["error", { "allow": ["named"] }]
+  "$version": "1.0.0",
+  "color": {
+    "primary": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
+    },
+    "secondary": { "$type": "color", "$ref": "#/color/primary" }
   }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
+
+To allow specific raw formats alongside token enforcement, pass options:
+
+```json
+{ "rules": { "design-token/colors": ["error", { "allow": ["named"] }] } }
 ```
 
 ## Options

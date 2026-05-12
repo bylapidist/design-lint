@@ -6,25 +6,30 @@ description: "Use line height tokens."
 # design-token/line-height
 
 ## Summary
-Enforces `line-height` values to match the line-height tokens defined in your configuration.
+Enforces `line-height` values to match the line-height tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/line-height": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `number`-type tokens under a `lineHeights` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "lineHeights": {
-      "base": { "$type": "number", "$value": 1.5 },
-      "tight": { "$type": "number", "$ref": "#/lineHeights/base" }
-    }
-  },
-  "rules": { "design-token/line-height": "error" }
+  "$version": "1.0.0",
+  "lineHeights": {
+    "base": { "$type": "number", "$value": 1.5 },
+    "tight": { "$type": "number", "$ref": "#/lineHeights/base" }
+  }
 }
 ```
 
-Line-height tokens use the `number` type.
+```bash
+design-lint kernel start --config-path designlint.config.json
+```
 
 ## Options
 No additional options.

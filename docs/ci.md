@@ -35,6 +35,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - name: Start DSR kernel
         run: design-lint kernel start --config-path designlint.config.json

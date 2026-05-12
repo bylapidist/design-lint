@@ -6,22 +6,29 @@ description: "Use opacity tokens."
 # design-token/opacity
 
 ## Summary
-Enforces `opacity` values to match the opacity tokens defined in your configuration.
+Enforces `opacity` values to match the opacity tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/opacity": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `number`-type tokens under an `opacity` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "opacity": {
-      "low": { "$type": "number", "$value": 0.2 },
-      "high": { "$type": "number", "$ref": "#/opacity/low" }
-    }
-  },
-  "rules": { "design-token/opacity": "error" }
+  "$version": "1.0.0",
+  "opacity": {
+    "low": { "$type": "number", "$value": 0.2 },
+    "high": { "$type": "number", "$ref": "#/opacity/low" }
+  }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
 ## Options

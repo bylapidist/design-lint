@@ -6,22 +6,29 @@ description: "Use outline tokens."
 # design-token/outline
 
 ## Summary
-Enforces `outline` values to match the outline tokens defined in your configuration.
+Enforces `outline` values to match the outline tokens loaded into the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/outline": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `string`-type tokens under an `outlines` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "outlines": {
-      "focus": { "$type": "string", "$value": "2px solid #000" },
-      "active": { "$type": "string", "$ref": "#/outlines/focus" }
-    }
-  },
-  "rules": { "design-token/outline": "error" }
+  "$version": "1.0.0",
+  "outlines": {
+    "focus": { "$type": "string", "$value": "2px solid #000" },
+    "active": { "$type": "string", "$ref": "#/outlines/focus" }
+  }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
 ## Options

@@ -6,25 +6,32 @@ description: "Use font family tokens in typography."
 # design-token/font-family
 
 ## Summary
-Ensures `font-family` declarations use values from your `fonts` tokens.
+Ensures `font-family` declarations use values loaded from the DSR kernel.
 
 ## Configuration
-Enable the rule in `designlint.config.*`. See [configuration](../../configuration.md) for defining tokens.
+Enable the rule in `designlint.config.*`:
+
+```json
+{ "rules": { "design-token/font-family": "error" } }
+```
+
+Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that includes `fontFamily`-type tokens under a `fonts` group:
 
 ```json
 {
-  "tokens": {
-    "$version": "1.0.0",
-    "fonts": {
-      "sans": {
-        "$type": "fontFamily",
-        "$value": ["Inter", "Arial", "sans-serif"]
-      },
-      "alt": { "$type": "fontFamily", "$ref": "#/fonts/sans" }
-    }
-  },
-  "rules": { "design-token/font-family": "error" }
+  "$version": "1.0.0",
+  "fonts": {
+    "sans": {
+      "$type": "fontFamily",
+      "$value": ["Inter", "Arial", "sans-serif"]
+    },
+    "alt": { "$type": "fontFamily", "$ref": "#/fonts/sans" }
+  }
 }
+```
+
+```bash
+design-lint kernel start --config-path designlint.config.json
 ```
 
 ## Options

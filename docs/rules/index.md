@@ -26,7 +26,10 @@ Validate usage of design tokens in code and style sheets.
 - [design-token/border-width](./design-token/border-width.md)
 - [design-token/box-shadow](./design-token/box-shadow.md)
 - [design-token/colors](./design-token/colors.md)
+- [design-token/composite-equivalence](./design-token/composite-equivalence.md)
+- [design-token/css-var-provenance](./design-token/css-var-provenance.md)
 - [design-token/duration](./design-token/duration.md)
+- [design-token/easing](./design-token/easing.md)
 - [design-token/font-family](./design-token/font-family.md)
 - [design-token/font-size](./design-token/font-size.md)
 - [design-token/font-weight](./design-token/font-weight.md)
@@ -49,6 +52,8 @@ Ensure components follow naming and usage conventions.
 ## Styling
 Rules that govern styles inside components.
 
+- [design-system/jsx-style-values](./design-system/jsx-style-values.md)
+- [design-system/no-hardcoded-spacing](./design-system/no-hardcoded-spacing.md)
 - [design-system/no-inline-styles](./design-system/no-inline-styles.md)
 
 ## Misc

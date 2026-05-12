@@ -77,10 +77,9 @@ adopt linting without changing their tools.
 
 ## Automate carefully {#automation}
 
-Integrate the linter in CI with explicit guardrails. The project is still pre-production and
-lint coverage is limited to supported static patterns.
+Integrate the linter in CI with explicit guardrails. Lint coverage is limited to supported static patterns.
 
-- Command-line usage fits into npm scripts, Nx workspaces, and other task runners.
+- Command-line usage fits into pnpm scripts, Nx workspaces, and other task runners.
 - CI recipes cover GitHub Actions, GitLab CI/CD, and other popular platforms.
 - Cached runs and incremental linting keep feedback loops fast for large repositories.
 
