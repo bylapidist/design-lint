@@ -50,23 +50,42 @@ export const boxShadowRule = tokenRule({
       if (typeof color === 'string') return color;
       if (!isRecord(color)) return null;
       const { colorSpace, components } = color;
-      if (colorSpace !== 'srgb' || !Array.isArray(components)) return null;
-      const r: unknown = components[0];
-      const g: unknown = components[1];
-      const b: unknown = components[2];
-      const a: unknown = components[3];
-      if (
-        typeof r !== 'number' ||
-        typeof g !== 'number' ||
-        typeof b !== 'number'
-      )
+      if (typeof colorSpace !== 'string' || !Array.isArray(components))
         return null;
-      const R = Math.round(r * 255);
-      const G = Math.round(g * 255);
-      const B = Math.round(b * 255);
-      if (typeof a === 'number')
-        return `rgba(${String(R)},${String(G)},${String(B)},${String(a)})`;
-      return `rgb(${String(R)},${String(G)},${String(B)})`;
+      const nums = components.map(Number);
+      if (nums.some(isNaN)) return null;
+      const [c0, c1, c2, c3] = nums;
+      const alpha = typeof c3 === 'number' ? c3 : undefined;
+      const alphaStr = alpha !== undefined ? ` / ${String(alpha)}` : '';
+
+      // sRGB: use legacy rgba() so CSS authors can match with familiar notation.
+      if (colorSpace === 'srgb') {
+        const R = Math.round(c0 * 255);
+        const G = Math.round(c1 * 255);
+        const B = Math.round(c2 * 255);
+        if (alpha !== undefined)
+          return `rgba(${String(R)},${String(G)},${String(B)},${String(alpha)})`;
+        return `rgb(${String(R)},${String(G)},${String(B)})`;
+      }
+
+      // CSS functions for perceptual spaces — components are already in the
+      // natural range the CSS function expects.
+      if (colorSpace === 'hsl')
+        return `hsl(${String(c0)} ${String(c1 * 100)}% ${String(c2 * 100)}%${alphaStr})`;
+      if (colorSpace === 'hwb')
+        return `hwb(${String(c0)} ${String(c1 * 100)}% ${String(c2 * 100)}%${alphaStr})`;
+      if (colorSpace === 'lab')
+        return `lab(${String(c0)} ${String(c1)} ${String(c2)}${alphaStr})`;
+      if (colorSpace === 'lch')
+        return `lch(${String(c0)} ${String(c1)} ${String(c2)}${alphaStr})`;
+      if (colorSpace === 'oklab')
+        return `oklab(${String(c0)} ${String(c1)} ${String(c2)}${alphaStr})`;
+      if (colorSpace === 'oklch')
+        return `oklch(${String(c0)} ${String(c1)} ${String(c2)}${alphaStr})`;
+
+      // display-p3, a98-rgb, prophoto-rgb, rec2020 and any future spaces use
+      // the CSS color() function.
+      return `color(${colorSpace} ${String(c0)} ${String(c1)} ${String(c2)}${alphaStr})`;
     };
     const toString = (val: unknown): string | null => {
       const items = toArray(val);
