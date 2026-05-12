@@ -36,9 +36,33 @@ export const boxShadowRule = tokenRule({
         typeof v.value === 'number' &&
         typeof v.unit === 'string'
       ) {
+        // Omit units on zero values to match how authors write CSS.
+        if (v.value === 0) return '0';
         return `${String(v.value)}${v.unit}`;
       }
       return null;
+    };
+    const colorToString = (color: unknown): string | null => {
+      if (typeof color === 'string') return color;
+      if (!isRecord(color)) return null;
+      const { colorSpace, components } = color;
+      if (colorSpace !== 'srgb' || !Array.isArray(components)) return null;
+      const r: unknown = components[0];
+      const g: unknown = components[1];
+      const b: unknown = components[2];
+      const a: unknown = components[3];
+      if (
+        typeof r !== 'number' ||
+        typeof g !== 'number' ||
+        typeof b !== 'number'
+      )
+        return null;
+      const R = Math.round(r * 255);
+      const G = Math.round(g * 255);
+      const B = Math.round(b * 255);
+      if (typeof a === 'number')
+        return `rgba(${String(R)},${String(G)},${String(B)},${String(a)})`;
+      return `rgb(${String(R)},${String(G)},${String(B)})`;
     };
     const toString = (val: unknown): string | null => {
       const items = toArray(val);
@@ -46,13 +70,14 @@ export const boxShadowRule = tokenRule({
       for (const item of items) {
         if (!isRecord(item)) return null;
         const { offsetX, offsetY, blur, spread, color, inset } = item;
-        if (typeof color !== 'string') return null;
+        const col = colorToString(color);
+        if (!col) return null;
         const ox = parseDim(offsetX);
         const oy = parseDim(offsetY);
         const bl = parseDim(blur);
         const sp = spread === undefined ? null : parseDim(spread);
         if (!ox || !oy || !bl) return null;
-        const seg = [inset === true ? 'inset' : null, ox, oy, bl, sp, color]
+        const seg = [inset === true ? 'inset' : null, ox, oy, bl, sp, col]
           .filter((p): p is string => !!p)
           .join(' ');
         parts.push(seg);

@@ -14,6 +14,7 @@ This guide walks you through installing and running @lapidist/design-lint for th
 - [The DSR kernel](#the-dsr-kernel)
 - [Initial configuration](#initial-configuration)
 - [Run the linter](#run-the-linter)
+  - [Commonly used flags](#commonly-used-flags)
 - [Autofix workflow](#autofix-workflow)
 - [Validate configuration](#validate-configuration)
 - [Export resolved tokens](#export-resolved-tokens)
@@ -76,7 +77,7 @@ Subsequent commands connect to the already-running kernel instantly. The kernel 
 
 ```bash
 # Start the kernel (and seed it with your config tokens)
-design-lint kernel start
+design-lint kernel start --config-path designlint.config.json
 
 # Check whether the kernel is running
 design-lint kernel status
@@ -84,6 +85,16 @@ design-lint kernel status
 # Stop the kernel
 design-lint kernel stop
 ```
+
+`kernel start` advanced options:
+
+| Option | Description |
+| --- | --- |
+| `--config-path <path>` | Load tokens from this config file into the kernel on startup. |
+| `--socket-path <path>` | Override the default Unix socket path. |
+| `--http-port <n>` | Enable an HTTP fallback transport on this port. |
+| `--no-http` | Disable the HTTP fallback transport entirely. |
+| `--pid-file <path>` | Write the kernel PID to a custom file (used by `kernel stop` and `kernel status`). |
 
 **Troubleshooting the kernel**:
 
@@ -101,6 +112,8 @@ design-lint export-runtime-snapshot --out .designlint/snapshot.bin
 
 ```bash
 design-lint export-design-system-md --out DESIGN_SYSTEM.md
+# add --lint to run a lint pass and populate the violations section
+design-lint export-design-system-md --out DESIGN_SYSTEM.md --lint
 ```
 
 ## Initial configuration
@@ -110,7 +123,16 @@ Generate a starter configuration file:
 pnpm exec design-lint init
 ```
 
-The command creates `designlint.config.json`. See [configuration](./configuration.md) for all available options.
+The command creates `designlint.config.json`. Pass `--init-format` to control the file format:
+
+```bash
+pnpm exec design-lint init --init-format ts   # designlint.config.ts
+pnpm exec design-lint init --init-format json # designlint.config.json (default)
+```
+
+Accepted values: `js`, `cjs`, `mjs`, `ts`, `mts`, `json`.
+
+See [configuration](./configuration.md) for all available options.
 
 ## Run the linter
 Lint all files under `src`:
@@ -126,6 +148,26 @@ In strict CI workflows, add `--fail-on-empty` to fail fast when a glob resolves 
 ```bash
 pnpm exec design-lint "src/**/*" --fail-on-empty
 ```
+
+### Commonly used flags
+
+| Flag | Description |
+| --- | --- |
+| `--config <path>` | Path to a specific configuration file. |
+| `--format <name\|path>` | Output formatter: `stylish` (default), `json`, `sarif`, or a path to a custom module. |
+| `--output <file>` | Write the formatted report to a file instead of stdout. |
+| `--report <file>` | Write raw JSON results to a file (separate from the formatted output). |
+| `--max-warnings <n>` | Exit with code `1` when the number of warnings exceeds `n`. Use `0` to treat any warning as a failure. |
+| `--quiet` | Suppress stdout output; only the exit code signals success or failure. |
+| `--no-color` | Disable ANSI colour in terminal output. |
+| `--concurrency <n>` | Maximum files linted in parallel (default: number of CPU cores). |
+| `--ignore-path <file>` | Load additional glob ignore patterns from a file. |
+| `--kernel-socket-path <path>` | Connect to a DSR kernel at a non-default Unix socket path. |
+| `--fix` | Apply auto-fixes in place. |
+| `--fail-on-empty` | Exit `1` when no files match the provided targets. |
+| `--watch` | Re-lint when files change. |
+| `--cache` | Enable persistent per-file caching (stored in `.designlintcache`). |
+| `--cache-location <path>` | Custom cache file path. |
 
 ## Autofix workflow
 Many rules support auto-fix. Use the `--fix` flag to update files in place:

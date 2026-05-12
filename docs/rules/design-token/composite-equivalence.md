@@ -43,6 +43,9 @@ No additional options.
 
 This rule is auto-fixable. Matched raw values are replaced with `var(--derived-name)` where the CSS variable name is derived from the token pointer (e.g. `#/borders/focus` → `var(--borders-focus)`).
 
+> [!NOTE]
+> The rule compares the normalized CSS declaration value against the token value's string representation. For DTIF typed composite tokens (border, shadow, etc.) whose `$value` is an object, the comparison uses the JSON serialization of that object — so a hand-written CSS shorthand like `border: 2px solid #000` will not match the token. The rule is most effective when composite tokens are string-valued (e.g. custom DTIF extensions) or when the CSS value exactly matches the serialized token object.
+
 ## Examples
 
 ### Invalid

@@ -23,7 +23,7 @@ Tokens are not configured inline. Seed the DSR kernel from a DTIF catalog that i
   "color": {
     "primary": {
       "$type": "color",
-      "$value": { "colorSpace": "srgb", "components": [1, 0, 0] }
+      "$value": { "colorSpace": "srgb", "components": [1, 0, 0], "hex": "#ff0000" }
     },
     "secondary": { "$type": "color", "$ref": "#/color/primary" }
   }
