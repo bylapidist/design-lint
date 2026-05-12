@@ -1,10 +1,7 @@
 import fs from 'node:fs';
 import { CacheManager } from '../../src/core/cache-manager.js';
 
-const originalProcess = Reflect.get(
-  CacheManager.prototype,
-  'processDocument',
-);
+const originalProcess = Reflect.get(CacheManager.prototype, 'processDocument');
 
 const runOriginal = (
   self: CacheManager,
