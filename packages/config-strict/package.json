@@ -22,6 +22,7 @@
   ],
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
@@ -31,12 +32,17 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "format:check": "prettier --check 'src/**/*.ts'"
+    "format:check": "prettier --check 'src/**/*.ts'",
+    "prepack": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
     "@lapidist/design-lint": "8.0.0"
   },
   "devDependencies": {
     "@lapidist/design-lint": "workspace:*"
-  }
+  },
+  "files": [
+    "dist",
+    "src"
+  ]
 }
