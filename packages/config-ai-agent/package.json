@@ -1,7 +1,7 @@
 {
   "name": "@lapidist/design-lint-config-ai-agent",
-  "version": "1.0.0",
-  "description": "AI agent rule configuration preset for @lapidist/design-lint \u2014 enables all rules targeting AI code generation failure modes.",
+  "version": "1.0.1",
+  "description": "AI agent rule configuration preset for @lapidist/design-lint — enables all rules targeting AI code generation failure modes.",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
