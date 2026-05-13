@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint-config-recommended",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Recommended rule configuration preset for @lapidist/design-lint.",
   "license": "MIT",
   "type": "module",

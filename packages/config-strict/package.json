@@ -1,6 +1,6 @@
 {
   "name": "@lapidist/design-lint-config-strict",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Strict rule configuration preset for @lapidist/design-lint.",
   "license": "MIT",
   "type": "module",
