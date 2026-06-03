@@ -19,7 +19,7 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - uses: changesets/action@v1.8.0
+      - uses: changesets/action@v1.9.0
         with:
           commit: 'chore: update versions'
           publish: pnpm run release
