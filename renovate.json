@@ -4,7 +4,7 @@
   "rangeStrategy": "pin",
   "automerge": true,
   "constraints": {
-    "node": "26.2.0"
+    "node": "26.3.0"
   },
   "packageRules": [
     {
