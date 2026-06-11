@@ -80,7 +80,7 @@
     "color-name": "2.1.0",
     "color-string": "2.1.4",
     "commander": "15.0.0",
-    "cosmiconfig": "9.0.1",
+    "cosmiconfig": "9.0.2",
     "cosmiconfig-typescript-loader": "6.3.0",
     "culori": "4.0.2",
     "flat-cache": "6.1.22",
