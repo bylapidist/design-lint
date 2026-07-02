@@ -3,7 +3,7 @@ packages:
   - packages/*
 
 overrides:
-  fast-uri: "4.0.0"
+  fast-uri: "4.1.0"
 
 allowBuilds:
   esbuild: true
