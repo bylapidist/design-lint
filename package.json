@@ -89,7 +89,7 @@
     "leven": "4.1.0",
     "p-limit": "7.3.0",
     "picomatch": "4.0.5",
-    "postcss": "8.5.16",
+    "postcss": "8.5.19",
     "postcss-less": "6.0.0",
     "postcss-scss": "4.0.9",
     "postcss-value-parser": "4.2.0",
