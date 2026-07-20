@@ -95,7 +95,7 @@
     "postcss-value-parser": "4.2.0",
     "svelte": "5.56.6",
     "tempy": "3.2.0",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "write-file-atomic": "8.0.0",
     "zod": "4.4.3"
   },
