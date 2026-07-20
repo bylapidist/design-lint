@@ -87,7 +87,7 @@
     "globby": "16.2.2",
     "ignore": "7.0.6",
     "leven": "4.1.0",
-    "p-limit": "7.3.0",
+    "p-limit": "7.3.1",
     "picomatch": "4.0.5",
     "postcss": "8.5.19",
     "postcss-less": "6.0.0",
