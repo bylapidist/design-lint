@@ -93,7 +93,7 @@
     "postcss-less": "6.0.0",
     "postcss-scss": "4.0.9",
     "postcss-value-parser": "4.2.0",
-    "svelte": "5.56.6",
+    "svelte": "5.56.7",
     "tempy": "3.2.0",
     "typescript": "6.0.3",
     "write-file-atomic": "8.0.0",
